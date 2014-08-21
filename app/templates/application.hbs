@@ -1,0 +1,10 @@
+{{partial 'navigation-bar'}}
+{{render 'views/action-bar'}}
+
+{{outlet}}
+
+{{#modal-dialog}}
+    {{outlet modal}}
+{{/modal-dialog}}
+
+{{partial 'footer'}}

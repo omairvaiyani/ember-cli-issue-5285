@@ -1,0 +1,40 @@
+<div class="container">
+    <div class="card padding-bottom-0">
+        <h3>Result overview</h3>
+        <hr>
+        <div class="row margin-bottom-16">
+            <div class="col-md-12">
+                <h4>You scored <span style="font-size:x-large;">{{score}}% </span> in {{#link-to 'test' test tagName='a'}}{{test.title}}{{/link-to}}.
+                    <small class="pull-right">Test taken {{view "from-now" valueBinding="createdAt"}}.</small>
+                </h4>
+            </div>
+        </div>
+        <div class="row">
+            <div {{bind-attr class=":col-md-4 :my-tab isTabAll:is-active"}} {{action 'switchTab' 'all'}}>
+                <h5 class="text-uppercase">All ({{allResponses.length}})</h5>
+            </div>
+            <div {{bind-attr class=":col-md-4 :my-tab isTabCorrect:is-active"}} {{action 'switchTab' 'correct'}}>
+                <h5 class="text-uppercase">Correct ({{correctResponses.length}})</h5>
+            </div>
+            <div {{bind-attr class=":col-md-4 :my-tab isTabIncorrect:is-active"}} {{action 'switchTab' 'incorrect'}}>
+                <h5 class="text-uppercase">Incorrect ({{incorrectResponses.length}})</h5>
+            </div>
+        </div>
+    </div>
+    {{#if isTabAll}}
+        {{#each response in allResponses itemController='result.item.response-card'}}
+            {{partial 'result/response-card'}}
+        {{/each}}
+    {{/if}}
+    {{#if isTabCorrect}}
+        {{#each response in correctResponses itemController='result.item.response-card'}}
+            {{partial 'result/response-card'}}
+        {{/each}}
+    {{/if}}
+    {{#if isTabIncorrect}}
+        {{#each response in incorrectResponses itemController='result.item.response-card'}}
+            {{partial 'result/response-card'}}
+        {{/each}}
+    {{/if}}
+
+</div>

@@ -1,0 +1,65 @@
+<div class="container">
+    <div class="card">
+        <div class="cover-image" {{bind-attr style=coverImageStyle}}>
+            <div class="scrim"></div>
+            {{render 'profile-image' this}}
+
+            <h2>{{#link-to 'user' this}}{{name}}{{/link-to}}</h2>
+        </div>
+        <div class="row">
+            <div class="col-md-4 col-sm-4 col-xs-4 text-center">
+                <h4>
+                    {{#link-to 'user.tests' this}}
+                        {{#if numberOfTests}}{{numberOfTests}}{{else}}0{{/if}}
+                        <small> Tests</small>
+                    {{/link-to}}
+                </h4>
+            </div>
+            <div class="col-md-4 col-sm-4 col-xs-4 text-center">
+                <h4>
+                    {{#link-to 'user.following' this}}
+                        {{#if numberFollowing}}{{numberFollowing}}{{else}}0{{/if}}
+                        <small> Following</small>
+                    {{/link-to}}
+                </h4>
+            </div>
+            <div class="col-md-4 col-sm-4 col-xs-4 text-center">
+                <h4>
+                    {{#link-to 'user.followers' this}}
+                        {{#if numberOfFollowers}}{{numberOfFollowers}}{{else}}0{{/if}}
+                        <small> Followers</small>
+                    {{/link-to}}
+                </h4>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-3 col-sm-6 col-xs-12">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card margin-top-16">
+                        {{#if course}}
+                            <p>In year {{year.year}} of <a {{bind-attr href=courseFacebookPageUrl}}
+                                    >{{course.name}}</a> at <a {{bind-attr href=institutionFacebookPageUrl}}
+                                    >{{institution.fullName}}</a>
+                            </p>
+
+                            <p>
+                                <a href='javascript:void(0)'
+                                    {{action 'openModal' 'user/modal/course-selection' 'user'}}>Edit course details</a>
+                            </p>
+                        {{else}}
+                            <p><a href='javascript:void(0)'
+                                {{action 'openModal' 'user/modal/course-selection' 'user'}}>Add course details</a></p>
+                        {{/if}}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 col-md-push-7 col-sm-6 col-xs-12">
+        </div>
+        <div class="col-md-7 col-md-pull-2 action-column">
+            {{outlet}}
+        </div>
+    </div>
+</div>

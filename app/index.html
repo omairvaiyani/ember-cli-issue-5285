@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>MyCQs - A Social Learning Network</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    {{BASE_TAG}}
+
+    <link rel="stylesheet" href="style/social.css">
+    <link rel="stylesheet" href="assets/vendor.css">
+    <link rel="stylesheet" href="assets/mycqs-web.css">
+  </head>
+  <body>
+      <script>
+          window.fbAsyncInit = function() {
+              FB.init({
+                  appId      : '394753023893264',
+                  xfbml      : true,
+                  version    : 'v2.0'
+              });
+          };
+
+          (function(d, s, id){
+              var js, fjs = d.getElementsByTagName(s)[0];
+              if (d.getElementById(id)) {return;}
+              js = d.createElement(s); js.id = id;
+              js.src = "//connect.facebook.net/en_US/sdk.js";
+              fjs.parentNode.insertBefore(js, fjs);
+          }(document, 'script', 'facebook-jssdk'));
+      </script>
+    <script>
+      window.MycqsWebENV = {{ENV}};
+      window.EmberENV = window.MycqsWebENV.EmberENV;
+    </script>
+    <script src="assets/vendor.js"></script>
+    <script src="assets/mycqs-web.js"></script>
+    <script src="js/ember-parse-mixin.js"></script>
+    <script src="js/ember-parse-adapter.js"></script>
+
+    <script>
+      window.MycqsWeb = require('mycqs-web/app')['default'].create(MycqsWebENV.APP);
+    </script>
+  </body>
+</html>

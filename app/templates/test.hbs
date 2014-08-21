@@ -1,0 +1,47 @@
+<div class="container">
+    {{#unless preparingTest}}
+        <div class="card">
+            <h3>{{title}}
+                <small>{{category.name}}</small>
+            </h3>
+            <div class="row margin-bottom-16">
+                <div class="col-md-12 progress-blocks">
+                    {{#each question in shuffledQuestions itemController='test.item.progressBlock'}}
+                        <div {{bind-attr style=question.progressBlockWidth
+                        class=":progress-block question.isCurrentItem:is-current-item"}}></div>
+                    {{/each}}
+                </div>
+            </div>
+            <div class="row margin-bottom-16">
+                <div class="col-md-12">
+                    <span class="question-stem"><strong>Q{{currentQuestionNumber}}</strong> {{currentQuestion.stem}}</span>
+                </div>
+            </div>
+
+            {{#each option in currentQuestion.shuffledOptions}}
+                <div class="row" {{action 'optionSelected' _view.contentIndex}}>
+                    <div {{bind-attr class=":col-md-12 :option option.isSelected"}}>
+                        <span class="option-label margin-right-16">{{alphabetise-index _view.contentIndex}}</span>
+                        <span class="phrase">{{option.phrase}}</span>
+                    </div>
+                </div>
+            {{/each}}
+            <div class="row margin-top-16">
+                <div class="col-md-6">
+                    <button class="flat-button" {{action 'previousQuestion'}}>Previous</button>
+                    <button class="flat-button" {{action 'nextQuestion'}}>Next</button>
+                </div>
+                <div class="col-md-6">
+                    <button class="flat-button pull-right"
+                        {{action 'confirmFinish'}}>Finish
+                    </button>
+                </div>
+            </div>
+        </div>
+    {{else}}
+        <div class="card text-center">
+            <h3>Preparing the test...</h3>
+        </div>
+    {{/unless}}
+
+</div>

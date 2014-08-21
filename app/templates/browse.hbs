@@ -1,0 +1,23 @@
+<div class="mycqs-page-header">
+    <div class="container">
+        <h1>Browse</h1>
+
+        <p>Search thousands of tests from hundreds of categories.</p>
+    </div>
+</div>
+<div class="container">
+    {{#each category in topLevelCategories}}
+        <div class="row margin-bottom-16">
+            <div class="col-md-12">
+                <div class="card">
+                    <span class="title margin-right-16">
+                        {{#link-to 'category' category tagName='a'}}
+                            {{category.name}}
+                        {{/link-to}}
+                    </span>
+                    <span class="subtitle">{{category.totalTests}} tests</span>
+                </div>
+            </div>
+        </div>
+    {{/each}}
+</div>

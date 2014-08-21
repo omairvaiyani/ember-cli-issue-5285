@@ -1,0 +1,84 @@
+<div class="row">
+    <div class="col-md-12">
+        <h5><strong>QUESTION</strong></h5>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <div {{bind-attr class="validity.stem.errors.length:has-error validity.stem.warnings.length:has-warning"}}>
+            {{textarea placeholder="Type your question or statement here" classNames="form-control"
+            rows="3" value=stem}}
+        </div>
+    </div>
+</div>
+{{render "edit/question/views/input-validation-message" validity.stem}}
+<div class="row">
+    <div class="col-md-12">
+        <h5><strong>OPTIONS</strong></h5>
+    </div>
+</div>
+{{#each option in options itemController='edit.question.item.option'}}
+    {{#unless option.itemIndex}}
+        <div class="row">
+            <div class="col-md-12">
+                <h5>CORRECT ANSWER</h5>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <div {{bind-attr class="option.validityOption.errors.length:has-error
+                            option.validityOption.warnings.length:has-warning"}}>
+                    {{textarea placeholder="Type the single correct answers here"
+                    classNames="form-control" value=option.phrase}}
+                </div>
+            </div>
+        </div>
+        {{render "edit/question/views/input-validation-message" option.validityOption}}
+    {{else}}
+        <div class="row">
+            <div class="col-md-12">
+                <h5>INCORRECT ANSWER</h5>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <div {{bind-attr class="option.validityOption.errors.length:has-error
+                            option.validityOption.warnings.length:has-warning"}}>
+                    {{textarea placeholder="Type one of the incorrect answers here"
+                    classNames="form-control" value=option.phrase}}
+                </div>
+            </div>
+        </div>
+        {{render "edit/question/views/input-validation-message" option.validityOption}}
+    {{/unless}}
+{{/each}}
+<!--<div class="row margin-top-16">-->
+<!--<div class="col-md-12">-->
+<!--<a href="javascript:void(0)" {{action addOption}}-->
+<!--{{bind-attr class="canAddMoreOptions::link-disabled"}}>+ Add another option</a>-->
+<!--</div>-->
+<!--</div>-->
+<div class="row">
+    <div class="col-md-12">
+        <h5><strong>FEEDBACK</strong></h5>
+    </div>
+</div>
+<div class="row margin-bottom-16">
+    <div class="col-md-12">
+        {{textarea placeholder="Give some feedback or an explanation for test takers."
+        classNames="form-control" value=feedback}}
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <h5><strong>TAGS</strong></h5>
+    </div>
+</div>
+<div class="row margin-bottom-16">
+    <div class="col-md-12">
+        {{textarea placeholder="Enter some keywords for the question, comma-separated, e.g 'Duodenum, Asthma, Atenolol'."
+        classNames="form-control" value=tagsStringified}}
+    </div>
+</div>

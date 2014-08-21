@@ -1,0 +1,36 @@
+<div class="card margin-top-16">
+    {{#if response.chosenAnswer}}
+        <div {{bind-attr class=":response-indicator :pull-left response.isCorrect:is-correct"}}></div>
+    {{else}}
+        <div class="response-indicator pull-left is-unimportant"></div>
+    {{/if}}
+    <div class="container-fluid response-right-container ">
+        <p class="lead">Q{{response.itemNumber}}: {{response.question.stem}}</p>
+    </div>
+    <div class="row no-margin">
+        <div class="col-md-6">
+            {{#if response.chosenAnswer}}
+            <p {{bind-attr class=":text-uppercase response.isCorrect:text-color-green:text-color-red"}}
+                    >You {{#if response.isCorrect}}correctly {{/if}}chose:</p>
+
+            <p>{{response.chosenAnswer}}</p>
+            {{else}}
+                <p class="text-uppercase text-color-unimportant">You skipped this question</p>
+            {{/if}}
+            {{#unless response.isCorrect}}
+                <p class="text-uppercase text-color-green">Correct answer:</p>
+
+                <p>{{response.correctAnswer}}</p>
+            {{/unless}}
+            {{#if response.question.feedback}}
+                <p class="text-uppercase">Feedback:</p>
+
+                <p>{{response.question.feedback}}</p>
+            {{/if}}
+        </div>
+        <div class="col-md-6">
+
+        </div>
+    </div>
+
+</div>

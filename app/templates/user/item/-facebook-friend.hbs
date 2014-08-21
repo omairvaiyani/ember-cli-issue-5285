@@ -1,0 +1,54 @@
+<div class="row">
+    <div class="col-md-12">
+        <div class="card action-card margin-top-16">
+            {{#link-to 'user' friend
+            tagName='a'}}{{render 'profile-image' friend}}{{/link-to}}
+
+            <div class="action-title">
+                <p>{{#link-to 'user' friend}}
+                    {{friend.name}}{{/link-to}}
+                </p>
+
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class=col-md-4>
+                            <p class="lead">
+                                {{#link-to 'user.tests' friend}}
+                                    {{#if friend.numberOfTests}}{{friend.numberOfTests}}{{else}}0{{/if}}
+                                    <small> Tests</small>
+                                {{/link-to}}
+                            </p>
+                        </div>
+                        <div class=col-md-4>
+                            <p class="lead">
+                                {{#link-to 'user.following' friend}}
+                                    {{#if friend.numberFollowing}}{{friend.numberFollowing}}{{else}}0{{/if}}
+                                    <small> Following</small>
+                                {{/link-to}}
+                            </p>
+
+                        </div>
+                        <div class=col-md-4>
+                            <p class="lead">
+                                {{#link-to 'user.followers' friend}}
+                                    {{#if friend.numberOfFollowers}}{{friend.numberOfFollowers}}{{else}}0{{/if}}
+                                    <small> Followers</small>
+                                {{/link-to}}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="actions-top-right">
+                {{#unless friend.isFollowing}}
+                    <a {{action 'followFriend' friend}}><span class="glyphicon glyphicon-unchecked"></span> follow</a>
+                {{else}}
+                    <a {{action 'unfollowFriend' friend}}><span class="glyphicon glyphicon-ok-circle"></span> following</a>
+                {{/unless}}
+            </div>
+
+        </div>
+    </div>
+</div>

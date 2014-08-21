@@ -1,0 +1,14 @@
+{{#if objects.length}}
+    <nav class="navbar-inverse navbar-fixed-top action-bar">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12 action-bar-content">
+                    <span class="glyphicon glyphicon-list margin-right-16"></span>
+                    {{title}}
+                    <a href="javascript:void(0)" {{action "deleteAllObjects"}}><span
+                            class="glyphicon glyphicon-trash pull-right"></span></a>
+                </div>
+            </div>
+        </div>
+    </nav>
+{{/if}}

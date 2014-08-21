@@ -1,0 +1,81 @@
+<div class="row margin-top-16">
+    <div class="col-md-12">
+        <h5>TITLE</h5>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        {{input type="text" placeholder="Enter a title for your test" classNames="form-control" value=title}}
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <h5>CATEGORY</h5>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <div {{bind-attr class=":form-control category.name:text-input-div-with-tag:text-input-div"}}
+            {{action categorySelectionInputChanged on="keyUp"}}>
+            {{#if category}}
+                <span class="category-tag" {{action removeCategory false}}>
+                            {{#if category.parent}}{{category.parent.name}} - {{/if}}<strong>{{category.name}}</strong>
+                            <span class="glyphicon glyphicon-remove delete-tag" {{action removeCategory true}}></span>
+                        </span>
+            {{/if}}
+            {{#unless category}}
+                {{input type="text" value=categorySelectionInput classNames="form-control no-border-input"
+                placeholder="Type a category name, e.g. Cardiology, Microbiology"}}
+            {{/unless}}
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        {{#unless category}}
+            {{#if categorySelectionInput}}
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="category-selection-field" {{action "openModal" "edit/modal/category-creator" "create"}}>
+                            Create the category "{{categorySelectionInput}}"
+                        </div>
+                    </div>
+                </div>
+            {{/if}}
+            {{#each categorySelectionList}}
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="category-selection-field"  {{action categorySelected this}}>
+                            {{#if parent}}
+                                {{parent.name}} -
+                            {{/if}}
+                            <strong>{{name}}</strong>
+                        </div>
+                    </div>
+                </div>
+            {{/each}}
+        {{/unless}}
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <h5 >DESCRIPTION</h5>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        {{textarea placeholder="Enter a brief description of your test" classNames="form-control" value=description}}
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <h5 >TAGS</h5>
+    </div>
+</div>
+<div class="row" style="margin-bottom:48px;">
+    <div class="col-md-12">
+        {{textarea placeholder="Type some comma-separated keywords like 'Anatomy, Cranial'"
+        classNames="form-control" value=tagsStringified}}
+    </div>
+</div>

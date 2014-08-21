@@ -1,0 +1,18 @@
+<div class="row">
+    <div class="col-md-12">
+        {{#each errors}}
+            <div class="row">
+                <div class="col-md-12">
+                    <span class="label label-danger">{{title}}</span> - {{message}}
+                </div>
+            </div>
+        {{/each}}
+        {{#each warnings}}
+            <div class="row">
+                <div class="col-md-12">
+                    <span class="label label-warning">{{title}}</span> - {{message}}
+                </div>
+            </div>
+        {{/each}}
+    </div>
+</div>

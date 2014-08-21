@@ -1,0 +1,86 @@
+<div class="mycqs-page-header">
+    <div class="container">
+        <h1>{{name}}</h1>
+
+        <p>Search from {{totalTests}} tests in {{name}}.</p>
+    </div>
+</div>
+<div class="container">
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card">
+                <h5>Search:</h5>
+                <div class="search-box">
+                    {{input type='text' value=searchTerm placeholder='Type here to search' action='searchTests'
+                    classNames='form-control margin-bottom-16'}}
+                    <span class="glyphicon glyphicon-search" {{action 'searchTests'}}></span>
+                </div>
+                <h5>Filter {{tests.count}} results</h5>
+
+                <!--<p>{{input type="checkbox" checked=areAllCategoriesSelected}} Toggle all</p>-->
+                {{#each category in childCategories itemController='category.item.childCategory'}}
+                    <div class="row">
+                        <div class="col-md-12">
+                            <p>{{input type="checkbox" checked=category.isChecked}}
+                                {{#link-to 'category' this
+                                    (query-params filterCategoryIds=category.id page=1)}}
+                                    {{category.name}}
+                                {{/link-to}}
+                                <small>({{category.totalTests}})</small>
+                            </p>
+                        </div>
+                    </div>
+                {{/each}}
+            </div>
+        </div>
+        <div class="col-md-9">
+            <div class="card">
+                <div class="row">
+                    <div class="col-md-6">
+                        <!-- Order selection -->
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-default dropdown-toggle text-capitalize"
+                                    data-toggle="dropdown">
+                                {{order}} <span class="caret"></span>
+                            </button>
+                            <ul class="dropdown-menu" role="menu">
+                                <li><a href="javascript:void(0)" {{action 'changeOrder' 'title'}}>Title</a></li>
+                                <li><a href="javascript:void(0)" {{action 'changeOrder' 'recent'}}>Recent</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <!-- Pagination -->
+                        <ul class="pagination pull-right">
+                            <li {{bind-attr class='previousPage::disabled'}}>
+                                {{#if previousPage}}
+                                    {{#link-to 'category' (query-params page=previousPage)
+                                    tagName='a'}}Prev{{/link-to}}
+                                {{else}}
+                                    <a href="javascript:void(0)" {{action 'changePage' previousPage}}>Prev</a>
+                                {{/if}}
+                            </li>
+                            {{#each page in pagesInPagination}}
+                                {{#link-to 'category' (query-params page=page) tagName='li'}}
+                                    {{#link-to 'category' (query-params page=page) tagName='a'}}{{page}}{{/link-to}}
+                                {{/link-to}}
+                            {{/each}}
+                            <li {{bind-attr class='nextPage::disabled'}}>
+                                {{#if nextPage}}
+                                    {{#link-to 'category' (query-params page=nextPage)
+                                    tagName='a'}}Next{{/link-to}}
+                                {{else}}
+                                    <a href="javascript:void(0)" {{action 'changePage' nextPage}}>Next</a>
+                                {{/if}}
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            {{#each testsOnPage itemController='browse.item.test'}}
+                {{partial 'browse/test-card'}}
+            {{/each}}
+        </div>
+    </div>
+</div>

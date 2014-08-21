@@ -1,0 +1,22 @@
+<div class="row">
+    <div class="col-md-12">
+        <div class="card action-card margin-top-16">
+            {{#link-to 'user' userAction.user.id
+            tagName='a'}}{{render 'profile-image' userAction.user}}{{/link-to}}
+
+            <div class="action-title">
+                <p>{{#link-to 'user' userAction.user.id}}
+                    {{userAction.user.name}}{{/link-to}}
+                    {{userAction.title}}</p>
+                <p class="lead">
+                    {{#if userAction.test}}
+                        {{#link-to 'test' userAction.test}}{{userAction.test.title}}{{/link-to}}
+                    {{else}}
+                    {{/if}}
+                </p>
+            </div>
+            <small class="moments-ago pull-right"
+                    >{{view 'from-now' valueBinding="userAction.createdAt"}}</small>
+        </div>
+    </div>
+</div>

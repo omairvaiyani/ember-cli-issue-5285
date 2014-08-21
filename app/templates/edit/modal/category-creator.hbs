@@ -1,0 +1,58 @@
+<div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span
+            class="sr-only">Close</span></button>
+    <h4 class="modal-title">Create a new category</h4>
+</div>
+<div class="modal-body">
+    <div class="row">
+        <div class="col-md-12">
+            <label>CATEGORY NAME</label>
+        </div>
+    </div>
+    <div class="row margin-bottom-16">
+        <div class="col-md-12">
+            {{input type='text' classNames='form-control' value=categorySelectionInput placeholder='e.g. Cardiology'}}
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <label>PARENT CATEGORY (OPTIONAL)</label>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div {{bind-attr class=":form-control newCategoryParent.name:text-input-div-with-tag:text-input-div"}}>
+                {{#if newCategoryParent}}
+                    <span class="category-tag" {{action removeNewCategoryParent false}}>
+                            {{#if newCategoryParent.parent}}{{newCategoryParent.parent.name}} - {{/if}}
+                        <strong>{{newCategoryParent.name}}</strong>
+                            <span class="glyphicon glyphicon-remove delete-tag" {{action removeNewCategoryParent true}}></span>
+                        </span>
+                {{else}}
+                    {{input type="text" value=newCategoryParentInput classNames="form-control no-border-input"
+                    placeholder="e.g. Medicine"}}
+                {{/if}}
+            </div>
+        </div>
+    </div>
+    {{#unless newCategoryParent}}
+        {{#each newCategoryParentSelectionList}}
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="category-selection-field"  {{action newCategoryParentSelected this}}>
+                        {{#if parent}}
+                            {{parent.name}} -
+                        {{/if}}
+                        <strong>{{name}}</strong>
+                    </div>
+                </div>
+            </div>
+        {{/each}}
+    {{/unless}}
+
+
+</div>
+<div class="modal-footer">
+    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+    <button type="button" class="btn btn-primary" {{action 'createNewCategory'}}>Create category</button>
+</div>
