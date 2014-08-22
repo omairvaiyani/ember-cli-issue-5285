@@ -622,33 +622,26 @@ Parse.Cloud.define("findTestsForUser", function (request, response) {
     });
 
 });
-
 /*
- * SAVE LOGIC
+ * Useful functions
  */
-
-Parse.Cloud.afterSave("Test", function (request, response) {
-    if (!request.object.existed()) {
-        var userObjectId = request.object.get("author").id;
-        console.log("AFTER SAVE TEST: USER OBJECT: " + userObjectId);
-
-        var query = new Parse.Query(Parse.User);
-        query.get(userObjectId, {
-            success: function (user) {
-                var relation = user.relation("savedTests");
-                relation.add(request.object);
-                user.save();
-            },
-            error: function (error) {
-                console.log("AFTER SAVE TEST ERROR: " + error.description);
-            }
-        });
-    }
-});
 /*
  * Index Tests' info for searching
  * Also done beforeSave on new Tests, hence
  * separating the code into its own function
+ */
+/**
+ * ------------------
+ * generateSearchTags
+ * ------------------
+ * Used for indexing tests by splitting title into
+ * a string array without 'stop words' such as
+ * 'the, of, and'. Array is saved in 'tags' and
+ * should be queried like so:
+ * where: { "tags": { "$all" : ["user's", "search", "terms"] } }
+ *
+ * @param test
+ * @returns []
  */
 var generateSearchTags = function (test) {
     var toLowerCase = function (w) {
@@ -664,48 +657,184 @@ var generateSearchTags = function (test) {
     words = _.uniq(words);
     return words;
 };
-var slugify = function (string) {
-    return string.toLowerCase().replace(/ /g, '-').replace(/[-]+/g, '-').replace(/[^\w-]+/g, '');
+/**
+ * --------
+ * slugify
+ * -------
+ *
+ * @param className
+ * @param string
+ * @returns {*}
+ */
+var slugify = function (className, string) {
+    if (className !== "_User")
+        return string.toLowerCase().replace(/ /g, '-').replace(/[-]+/g, '-').replace(/[^\w-]+/g, '');
+    else {
+        var firstInitial = string.charAt(0),
+            lastName = string.split(" ")[string.split(" ").length - 1],
+            slug = (firstInitial + lastName).toLowerCase();
+        return slug;
+    }
 }
-Parse.Cloud.beforeSave("Test", function (request, response) {
-    var author;
 
+
+/*
+ * SAVE LOGIC
+ */
+/*
+ * Slugs
+ * - For users: first initial + lastName + duplicateCount
+ * - For tests: authorSlug + '-' + titleSlugged + '-' + duplicateCount
+ * - For categories: categoryNameSlugged | For now, no duplicates allowed
+ **
+ * POTENTIAL BREAK VULNERABILITY
+ * If for e.g. ovaiyani-test-name, ovaiyani-test-name-2 and ovaiyani-test-name-3 exists,
+ * but ovaiyani-test-name-2 is deleted: our code will create another ovaiyani-test-name-3 slug.
+ * This is because it currently uses the slug row count to determine number of duplicates.
+ * Easiest solution, never permenantly delete tests, simply add isDeleted row with no-read ACL?
+ */
+/**
+ * ----------------
+ * beforeSave _User
+ * ----------------
+ * SET slug IF object.isNew() || !slug && !anonymous
+ * UPDATE numberFollowing and numberOfFollowers IF:
+ * - NOT setting slug &&
+ * - existed()
+ */
+Parse.Cloud.beforeSave('_User', function (request, response) {
+    Parse.Cloud.useMasterKey();
+    if ( (request.object.isNew() ||
+        !request.object.get('slug') || !request.object.get('slug').length) &&
+        request.object.get('name') && request.object.get('name').length) {
+        /*
+         * Create a unique slug
+         */
+        var slug = slugify('_User', request.object.get('name'));
+        /*
+         * Check if slug is unique before saving
+         */
+        var query = new Parse.Query(Parse.User);
+        query.startsWith('slug', slug);
+        query.count().then(function (count) {
+            if (!count)
+                request.object.set('slug', slug);
+            else
+                request.object.set('slug', slug + (count + 1));
+
+            response.success();
+        });
+    } else if (request.object.existed()) {
+        /*
+         * Followers and following count update
+         */
+        var followingRelation = request.object.relation("following");
+        followingRelation.query().count()
+            .then(function(count) {
+                request.object.set("numberFollowing", count);
+                var followersRelation = request.object.relation("followers");
+                return followersRelation.query().count();
+            }).then(function(count) {
+                user.set("numberOfFollowers", count);
+                response.success();
+            });
+    } else
+        response.success();
+});
+/**
+ * ----------------
+ * afterSave _User
+ * ----------------
+ * No use for this yet
+ * Followers and following moved to beforeSave
+ */
+/*Parse.Cloud.afterSave("_User", function (request, response) {
+    Parse.Cloud.useMasterKey();
+
+});*/
+Parse.Cloud.beforeSave('Category', function(request, response) {
+   if(request.object.isNew() || !request.object.get('slug') || !request.object.get('slug').length) {
+       /*
+        * Create a unique slug
+        */
+       var slug = slugify('Category', request.object.get('name'));
+       /*
+        * Check if slug is unique before saving
+        */
+       var Category = Parse.Object.extend('Category'),
+           query = new Parse.Query(Category);
+
+       query.startsWith('slug', slug);
+       query.count().then(function (count) {
+           if (!count)
+               request.object.set('slug', slug);
+           else
+               request.object.set('slug', slug + (count + 1));
+
+           response.success();
+       });
+   } else
+    response.success();
+});
+
+
+/**
+ * ----------------
+ * beforeSave Test
+ * ----------------
+ * ALWAYS
+ * - UPDATE 'tags' for up-to-date search index
+ * IF test.isNew():
+ * - SET default values for statistical properties
+ * - INCREMENT test.author's numberOfTests and Points count
+ * - SET slug
+ * ELSE
+ * - response.success()
+ */
+Parse.Cloud.beforeSave("Test", function (request, response) {
     request.object.set("tags", generateSearchTags(request.object));
 
 
-    if (request.object.isNew()) {
-        request.object.set("difficulty", 0);
-        request.object.set("quality", 5);
-        request.object.set("cumulativeScore", 0);
-        request.object.set("averageScore", 0);
-        request.object.set("numberOfAttempts", 0);
+    if (request.object.isNew() || !request.object.get('slug') || !request.object.get('slug').length) {
+        if(request.object.isNew()) {
+            request.object.set("difficulty", 0);
+            request.object.set("quality", 5);
+            request.object.set("cumulativeScore", 0);
+            request.object.set("averageScore", 0);
+            request.object.set("numberOfAttempts", 0);
 
-        request.object.set("uniqueCumulativeScore", 0);
-        request.object.set("uniqueAverageScore", 0);
-        request.object.set("uniqueNumberOfAttempts", 0);
+            request.object.set("uniqueCumulativeScore", 0);
+            request.object.set("uniqueAverageScore", 0);
+            request.object.set("uniqueNumberOfAttempts", 0);
+        }
 
         var query = new Parse.Query(Parse.User);
         query.get(request.object.get("author").id, function (user) {
-                user.increment("numberOfTests");
-                user.set("numberOfPoints", user.get("numberOfPoints") + 10);
-                user.save();
-
+                if(request.object.isNew()) {
+                    user.increment("numberOfTests");
+                    user.set("numberOfPoints", user.get("numberOfPoints") + 10);
+                    user.save();
+                }
                 /*
                  * Create a unique slug
                  */
-                if (!request.object.get('slug.length')) {
-                    var slug = slugify(user.get('name')) + '-' + slugify(request.object.get('title'));
-                    /*
-                     * Check if slug is unique before saving
-                     */
-                    /*for(var i = 0; i < user.get('tests').length; i++) {
-                        if(user.get('tests')[i].slug === slug) {
-                            slug += '-' + slugify(request.object.getObjectId());
-                            break;
-                        }
-                    }*/
-                }
-                response.success();
+                var slug = user.get('slug') + '-' + slugify('Test', request.object.get('title'));
+                /*
+                 * Check if slug is unique before saving
+                 */
+                var Test = Parse.Object.extend('Test'),
+                    query = new Parse.Query(Test);
+                query.startsWith('slug', slug);
+                query.count().then(function (count) {
+                    if (!count)
+                        request.object.set('slug', slug);
+                    else
+                        request.object.set('slug', slug + '-' + (count + 1));
+
+                    response.success();
+                });
+
+
             },
             function (error) {
 
@@ -715,79 +844,31 @@ Parse.Cloud.beforeSave("Test", function (request, response) {
         response.success();
     }
 });
-
-Parse.Cloud.afterSave("_User", function (request, response) {
-    Parse.Cloud.useMasterKey();
-    console.log("After save called");
-    if (request.object.existed()) {
-        var friendFacebookIds = request.object.get("facebookFriends");
+/**
+ * ----------------
+ * afterSave Test
+ * ----------------
+ * SET test to author.savedTests relations IF test.isNew()
+ * * Questionable whether this is necessary *
+ */
+Parse.Cloud.afterSave("Test", function (request, response) {
+    if (request.object.isNew()) {
+        var userObjectId = request.object.get('author').id;
 
         var query = new Parse.Query(Parse.User);
-        query.containedIn("fbid", friendFacebookIds);
-
-        query.find({
-            success: function (results) {
-                console.log("Found results: " + JSON.stringify(results));
-
-                if (results.length > 0) {
-                    console.log("Found " + results.length + " friends!");
-
-                }
+        query.get(userObjectId, {
+            success: function (user) {
+                var relation = user.relation('savedTests');
+                relation.add(request.object);
+                user.save();
+                response.success();
             },
             error: function (error) {
-
+                console.log("AFTER SAVE TEST ERROR: " + error.description);
             }
         });
-
-        query = new Parse.Query(Parse.User);
-        query.get(request.object.id, {
-            success: function (user) {
-                console.log("Checking relations");
-
-                var followingRelation = request.object.relation("following");
-                followingRelation.query().count({
-                    success: function (count) {
-                        console.log("Setting number following to " + count);
-                        user.set("numberFollowing", count);
-
-
-                        var followersRelation = request.object.relation("followers");
-                        followersRelation.query().count({
-                            success: function (count) {
-                                console.log("Setting number of followers to " + count);
-                                user.set("numberOfFollowers", count);
-
-
-                                user.save(null, {
-                                    success: function (gameScore) {
-                                        console.log("Saved user");
-                                    },
-                                    error: function (gameScore, error) {
-                                        console.log("error saving user: " + JSON.stringify(error));
-                                    }
-                                });
-                            },
-                            error: function (error) {
-
-                            }
-                        });
-
-
-                    },
-                    error: function (error) {
-
-                    }
-                });
-            }, error: function (error) {
-                console.log("Error finding user");
-            }
-        });
-
-
     }
-
 });
-
 
 Parse.Cloud.beforeSave("Question", function (request, response) {
     if (request.object.isNew()) {
@@ -807,7 +888,14 @@ Parse.Cloud.beforeSave("Question", function (request, response) {
     }
     response.success();
 });
-
+/**
+ * ------------------
+ * beforeSave Attempt
+ * ------------------
+ * - Update Test objects score stats
+ * - Create an Action object for User 'attemptFinished'
+ * - Replace this attempt in the User's latestAttempts pointers for this test
+ */
 Parse.Cloud.beforeSave("Attempt", function (request, response) {
 
     if (request.object.isNew()) {
@@ -850,8 +938,10 @@ Parse.Cloud.beforeSave("Attempt", function (request, response) {
     }
 
 });
-/*
- * After Save on Attempt:
+/**
+ * -----------------
+ * afterSave Attempt
+ * -----------------
  * - Update Test objects score stats
  * - Create an Action object for User 'attemptFinished'
  * - Replace this attempt in the User's latestAttempts pointers for this test
@@ -940,35 +1030,36 @@ Parse.Cloud.afterSave("Response", function (request) {
     var Question = Parse.Object.extend("Question");
     var query = new Parse.Query(Question);
 
+    /*
+     query.get(request.object.get("question").id, {
+     success: function (question) {
+     console.log("Query successful, found question: " + JSON.stringify(question));
 
-    query.get(request.object.get("question").id, {
-        success: function (question) {
-            console.log("Query successful, found question: " + JSON.stringify(question));
+     question.increment("numberOfTimesTaken");
 
-            question.increment("numberOfTimesTaken");
+     if (request.object.get("chosenAnswer") === request.object.get("correctAnswer")) {
+     question.increment("numberAnsweredCorrectly");
+     }
 
-            if (request.object.get("chosenAnswer") === request.object.get("correctAnswer")) {
-                question.increment("numberAnsweredCorrectly");
-            }
+     var options = question.get("options");
 
-            var options = question.get("options");
+     for (var i = 0; i < options.length; i++) {
+     console.log("Looping through options");
+     if (options[i].phrase === request.object.get("chosenAnswer")) {
+     console.log("Found chosen option");
+     options[i].numberOfTimesChosen = options[i].numberOfTimesChosen + 1;
+     }
+     }
 
-            for (var i = 0; i < options.length; i++) {
-                console.log("Looping through options");
-                if (options[i].phrase === request.object.get("chosenAnswer")) {
-                    console.log("Found chosen option");
-                    options[i].numberOfTimesChosen = options[i].numberOfTimesChosen + 1;
-                }
-            }
-
-            question.set("options", options);
-            console.log("Query successful, updated question: " + JSON.stringify(question));
-            question.save();
-        },
-        error: function (object, error) {
-            console.log("Error retrieving test");
-            // The object was not retrieved successfully.
-            // error is a Parse.Error with an error code and description.
-        }
-    });
+     question.set("options", options);
+     console.log("Query successful, updated question: " + JSON.stringify(question));
+     question.save();
+     },
+     error: function (object, error) {
+     console.log("Error retrieving test");
+     // The object was not retrieved successfully.
+     // error is a Parse.Error with an error code and description.
+     }
+     });
+     */
 });

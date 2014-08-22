@@ -1,22 +1,22 @@
 <div class="row">
     <div class="col-md-12">
         <div class="card test-info-card margin-top-16">
-            {{#link-to 'user' author.id tagName="a"}}{{render 'profile-image' author}}{{/link-to}}
+            {{#link-to 'user' author.slug tagName="a"}}{{render 'profile-image' author}}{{/link-to}}
 
             <small class="moments-ago pull-right"
                     >{{view 'from-now' valueBinding="updatedAt"}}</small><br>
             <small class="test-actions">
                 {{#if isCurrentUsersTest}}
-                    {{#link-to 'edit' this tagName='a'}}Edit{{/link-to}}
+                    {{#link-to 'edit' this.slug tagName='a'}}Edit{{/link-to}}
                 {{/if}}
             </small>
 
             <div class="title-and-category">
                 <p class="lead">
-                    {{#link-to 'test' this tagName='a'}}{{title}}{{/link-to}}
+                    {{#link-to 'test' this.slug tagName='a'}}{{title}}{{/link-to}}
                 </p>
                 <p>
-                    {{#link-to 'category' category.id tagName='a'}}{{category.name}}{{/link-to}}
+                    {{#link-to 'category' category.slug tagName='a'}}{{category.name}}{{/link-to}}
                 </p>
             </div>
 

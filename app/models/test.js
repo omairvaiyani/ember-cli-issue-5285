@@ -21,6 +21,7 @@ export default DS.Model.extend(ParseMixin, {
     uniqueAverageScore: DS.attr('number', {defaultValue:0}),
     module: DS.belongsTo('module'),
     tags: DS.attr(),
+    slug: DS.attr('string'),
     parseClassName: function() {
         return "Test";
     }

@@ -494,7 +494,8 @@ EmberParseAdapter.ParseUser = DS.Model.extend({
     followers: DS.hasMany('parse-user', {async: true}),
     numberFollowing: DS.attr('number', {defaultValue: 0}),
     numberOfFollowers: DS.attr('number', {defaultValue: 0}),
-    latestAttempts: DS.hasMany('attempt', {async: true})
+    latestAttempts: DS.hasMany('attempt', {async: true}),
+    slug: DS.attr('string')
 });
 
 EmberParseAdapter.ParseUser.reopenClass({

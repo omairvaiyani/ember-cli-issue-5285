@@ -1,11 +1,11 @@
 <div class="row">
     <div class="col-md-12">
         <div class="card action-card margin-top-16">
-            {{#link-to 'user' friend
+            {{#link-to 'user' friend.slug
             tagName='a'}}{{render 'profile-image' friend}}{{/link-to}}
 
             <div class="action-title">
-                <p>{{#link-to 'user' friend}}
+                <p>{{#link-to 'user' friend.slug}}
                     {{friend.name}}{{/link-to}}
                 </p>
 
@@ -13,7 +13,7 @@
                     <div class="row">
                         <div class=col-md-4>
                             <p class="lead">
-                                {{#link-to 'user.tests' friend}}
+                                {{#link-to 'user.tests' friend.slug}}
                                     {{#if friend.numberOfTests}}{{friend.numberOfTests}}{{else}}0{{/if}}
                                     <small> Tests</small>
                                 {{/link-to}}
@@ -21,7 +21,7 @@
                         </div>
                         <div class=col-md-4>
                             <p class="lead">
-                                {{#link-to 'user.following' friend}}
+                                {{#link-to 'user.following' friend.slug}}
                                     {{#if friend.numberFollowing}}{{friend.numberFollowing}}{{else}}0{{/if}}
                                     <small> Following</small>
                                 {{/link-to}}
@@ -30,7 +30,7 @@
                         </div>
                         <div class=col-md-4>
                             <p class="lead">
-                                {{#link-to 'user.followers' friend}}
+                                {{#link-to 'user.followers' friend.slug}}
                                     {{#if friend.numberOfFollowers}}{{friend.numberOfFollowers}}{{else}}0{{/if}}
                                     <small> Followers</small>
                                 {{/link-to}}
@@ -43,9 +43,9 @@
 
             <div class="actions-top-right">
                 {{#unless friend.isFollowing}}
-                    <a {{action 'followFriend' friend}}><span class="glyphicon glyphicon-unchecked"></span> follow</a>
+                    <a {{action 'followFriend' friend.slug}}><span class="glyphicon glyphicon-unchecked"></span> follow</a>
                 {{else}}
-                    <a {{action 'unfollowFriend' friend}}><span class="glyphicon glyphicon-ok-circle"></span> following</a>
+                    <a {{action 'unfollowFriend' friend.slug}}><span class="glyphicon glyphicon-ok-circle"></span> following</a>
                 {{/unless}}
             </div>
 
