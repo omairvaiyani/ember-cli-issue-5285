@@ -3,9 +3,9 @@
         <div class="card test-info-card margin-top-16">
             {{#link-to 'user' author.slug tagName="a"}}{{render 'profile-image' author}}{{/link-to}}
 
-            <small class="moments-ago pull-right"
-                    >{{view 'from-now' valueBinding="updatedAt"}}</small>
-            <br>
+            <!--<small class="moments-ago pull-right"-->
+            <!-- {{view 'from-now' valueBinding="createdAt"}}</small> -->
+            <!--<br>-->
             <small class="test-actions">
                 {{#if isCurrentUsersTest}}
                     {{#link-to 'edit' slug tagName='a'}}Edit{{/link-to}}
@@ -13,9 +13,9 @@
             </small>
 
             <div class="title-and-category">
-                <p class="lead">
+                <h4>
                     {{#link-to 'test' slug tagName='a'}}{{title}}{{/link-to}}
-                </p>
+                </h4>
 
                 <p>
                     {{#link-to 'category' category.slug tagName='a'}}{{category.name}}{{/link-to}}
@@ -25,12 +25,13 @@
             <div class="statistics">
                 <div class="container-fluid">
                     <div class="row">
-                        <div class="col-md-4">
-                            <div class="text-center"><p class="lead">Q - {{_data.questions.length}}</p></div>
+                        <div class="col-md-3">
+                            <div class="text-center"><p>Q{{_data.questions.length}}</p></div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-5">
                             {{#if latestAttempt}}
-                                <div class="text-center"><p class="lead">LA - {{latestAttempt.score}}%</p></div>
+                                <div class="text-center">{{#link-to 'result' latestAttempt}}
+                                    <p>Last score {{latestAttempt.score}}%</p>{{/link-to}}</div>
                             {{else}}
                                 <div class="text-center"><p>No attempts</p></div>
                             {{/if}}

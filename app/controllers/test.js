@@ -10,7 +10,7 @@ from
 
 export default
 Ember.ObjectController.extend({
-    preparingTest: true,
+    loading: 'Preparing test...',
 
     setTimeStarted: function () {
         if (!this.get('preparingTest')) {
@@ -117,8 +117,17 @@ Ember.ObjectController.extend({
 
             this.send('openModal', 'test/modals/finish-test', 'test');
         },
-
+        /**
+         * ---------
+         * Mark Test
+         * ---------
+         * Currently the responses objects are all saved individually
+         * It takes too long and the results page requires the objects
+         */
+        isMarking: false,
         markTest: function () {
+            this.send('closeModal');
+            this.set('loading', 'Marking test...');
             var attempt = this.store.createRecord('attempt', {
                 test: this.get('model'),
                 user: this.get('currentUser'),
@@ -138,7 +147,6 @@ Ember.ObjectController.extend({
                 responsesArray = [];
 
             this.get('questionsAnswered').forEach(function (question) {
-                // TODO Add currentUser to 'user' in response
                 var chosenAnswer, correctAnswer, isCorrect = false;
                 question.get('shuffledOptions').forEach(function (option) {
                     if (option.isSelected)
@@ -170,23 +178,30 @@ Ember.ObjectController.extend({
             var arrayOfPromises = [],
                 savedResponses;
 
-            responsesArray.forEach(function(response) {
-               arrayOfPromises.push(response.save());
+            responsesArray.forEach(function (response) {
+                arrayOfPromises.push(response.save());
             });
 
-            Em.RSVP.Promise.all(arrayOfPromises).then(function(result) {
-               savedResponses = result;
-               return attempt.get('responses');
-            }).then(function(responses) {
+            Em.RSVP.Promise.all(arrayOfPromises).then(function (result) {
+                savedResponses = result;
+                return attempt.get('responses');
+            }).then(function (responses) {
                 responses.addObjects(savedResponses);
                 return attempt.get('questions');
-            }).then(function(questions) {
-                questions.addObjects(this.get('shuffledQuestions'));
-                return attempt.save();
-            }.bind(this)).then(function(attempt) {
-                this.send('closeModal');
-                this.transitionToRoute('result', attempt);
-            }.bind(this));
+            }).then(function (questions) {
+                    questions.addObjects(this.get('shuffledQuestions'));
+                    return attempt.save();
+                }.bind(this)).then(function (attempt) {
+                    this.store.createRecord('action', {
+                        user: this.get('currentUser'),
+                        type: 'attemptFinished',
+                        test: this.get('model'),
+                        attempt: attempt,
+                        value: score
+                    });
+                    this.get('currentUser').incrementProperty('numberOfAttempts');
+                    this.transitionToRoute('result', attempt);
+                }.bind(this));
 
         }
     }

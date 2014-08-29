@@ -480,18 +480,23 @@ EmberParseAdapter.ParseUser = DS.Model.extend({
     year: DS.belongsTo('year', {async: true}),
     profileImageURL: function () {
         if (this.get('fbid')) {
-            return "https://graph.facebook.com/v2.0/" + this.get('fbid') + "/picture?height=150";
+            return "http://res.cloudinary.com/mycqs/image/facebook/c_thumb,e_improve,g_faces:center,r_150,w_150/"+this.get('fbid');
         } else {
             return "http://upload.wikimedia.org/wikipedia/commons/0/09/Man_Silhouette.png";
         }
     }.property('fbid'),
     coverImageURL: DS.attr('string'),
     numberOfTests: DS.attr('number', {defaultValue: 0}),
+    numberOfQuestions: DS.attr('number', {defaultValue: 0}),
     numberOfAttempts: DS.attr('number', {defaultValue: 0}),
-    points: DS.attr('number', {defaultValue: 0}),
+    averageScore: DS.attr('number', {defaultValue: 0}),
+    numberOfUniqueAttempts: DS.attr('number', {defaultValue: 0}),
+    uniqueAverageScore: DS.attr('number', {defaultValue: 0}),
+    communityNumberOfAttempts:  DS.attr('number', {defaultValue: 0}),
+    communityAverageScore: DS.attr('number', {defaultValue: 0}),
     facebookFriends: DS.attr(),
-    following: DS.hasMany('parse-user', {async: true}),
-    followers: DS.hasMany('parse-user', {async: true}),
+    /*following: DS.attr(),
+    followers: DS.attr(),*/
     numberFollowing: DS.attr('number', {defaultValue: 0}),
     numberOfFollowers: DS.attr('number', {defaultValue: 0}),
     latestAttempts: DS.hasMany('attempt', {async: true}),

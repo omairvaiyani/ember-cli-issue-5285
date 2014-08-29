@@ -4,14 +4,29 @@ from
 'ember';
 
 import
+CurrentUser
+from
+'../mixins/current-user';
+
+import
 ParseHelper
 from
 '../utils/parse-helper';
 
 export default
-Ember.ObjectController.extend({
+Ember.ObjectController.extend(CurrentUser, {
     isMainListRecentActivity: true,
     isMainListTests: false,
+
+    isCurrentUser: function() {
+        return this.get('currentUser.id') === this.get('model.id');
+    }.property('model.id'),
+
+    isFollowing: function() {
+        if(!this.get('isCurrentUser')) {
+
+        }
+    }.property('isCurrentUser'),
 
     coverImageStyle: function () {
         var coverImageURL = this.get('coverImageURL');
@@ -66,7 +81,6 @@ Ember.ObjectController.extend({
         };
         this.store.findQuery('action', {
             where: JSON.stringify(query),
-            //include: "test,attempt,question,user",
             order: "-createdAt",
             limit: 15
         }).then(function (userActions) {
@@ -157,7 +171,6 @@ Ember.ObjectController.extend({
 
         saveCourseChanges: function () {
             var selectedCourse = this.get('selectedCourse');
-            console.dir(selectedCourse);
             /*
              * See if the selectedCourse.school exists
              * as an institution on our database

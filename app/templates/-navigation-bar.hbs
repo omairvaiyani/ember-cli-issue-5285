@@ -24,7 +24,7 @@
             {{#if currentUser}}
                 <ul class="nav navbar-nav navbar-right">
                     <li>
-                        {{#link-to 'user' currentUser tagName='a' classNames='navbar-right-adjust'}}
+                        {{#link-to 'user' currentUser.slug tagName='a' classNames='navbar-right-adjust'}}
                             <img {{bind-attr src=currentUser.profileImageURL}} />
                             <div>{{currentUser.firstName}}</div>
                         {{/link-to}}
@@ -33,7 +33,7 @@
                         <a href='javascript:void(0)' id="accountDropdown"
                            data-toggle="dropdown"><span class="caret"></span></a>
                         <ul class="dropdown-menu" role="menu" aria-labelledby="accountDropdown">
-                            <li role="presentation"><a role="menuitem" tabindex="-1" href="javascript:void(0)"
+                            <li role="presentation"><a role="menuitem" tabindex="-1"
                                 {{action logout}}>Logout</a>
                             </li>
                         </ul>

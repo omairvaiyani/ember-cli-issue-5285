@@ -1,9 +1,13 @@
 import Ember from 'ember';
 
-export default Ember.Route.extend({
+import
+CurrentUser
+from
+'../mixins/current-user';
+
+export default Ember.Route.extend(CurrentUser, {
     model: function () {
-        var user = this.get('currentUser');
-        if(!user) {
+        if(!this.get('currentUser')) {
             this.controllerFor('application').transitionToRoute('index');
             return {};
         }

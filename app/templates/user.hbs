@@ -5,6 +5,25 @@
             {{render 'profile-image' this}}
 
             <h2>{{#link-to 'user' this.slug}}{{name}}{{/link-to}}</h2>
+            {{#unless isCurrentUser}}
+                {{#if isFollowing}}
+                    <a {{action 'unfollowUser' this}}
+                            style="position: absolute;
+                            cursor:pointer;
+                        right: 16px;
+                        bottom: 16px;
+                        color: whitesmoke;
+                        font-size: 18px;">Following</a>
+                {{else}}
+                    <a {{action 'followUser' this}}
+                            style="position: absolute;
+                            cursor:pointer;
+                        right: 16px;
+                        bottom: 16px;
+                        color: whitesmoke;
+                        font-size: 18px;">Follow</a>
+                {{/if}}
+            {{/unless}}
         </div>
         <div class="row">
             <div class="col-md-4 col-sm-4 col-xs-4 text-center">
@@ -43,14 +62,19 @@
                                     >{{course.name}}</a> at <a {{bind-attr href=institutionFacebookPageUrl}}
                                     >{{institution.fullName}}</a>
                             </p>
-
-                            <p>
-                                <a href='javascript:void(0)'
-                                    {{action 'openModal' 'user/modal/course-selection' 'user'}}>Edit course details</a>
-                            </p>
-                        {{else}}
-                            <p><a href='javascript:void(0)'
-                                {{action 'openModal' 'user/modal/course-selection' 'user'}}>Add course details</a></p>
+                        {{/if}}
+                        {{#if isCurrentUser}}
+                            {{#if course}}
+                                <p>
+                                    <a href='javascript:void(0)'
+                                        {{action 'openModal' 'user/modal/course-selection' 'user'}}>Edit course
+                                        details</a>
+                                </p>
+                            {{else}}
+                                <p><a href='javascript:void(0)'
+                                    {{action 'openModal' 'user/modal/course-selection' 'user'}}>Add course details</a>
+                                </p>
+                            {{/if}}
                         {{/if}}
                     </div>
                 </div>

@@ -3,31 +3,39 @@ Ember
 from
 'ember';
 
+import
+CurrentUser
+from
+'../mixins/current-user';
+
 export default
-Ember.Route.extend({
+Ember.Route.extend(CurrentUser, {
+    controllerName: 'create',
+
     beforeModel: function () {
         if (!this.get('currentUser'))
             this.transitionTo('index');
     },
     model: function (params) {
-        var user = this.get('currentUser');
-        var model;
-        return this.store.find('test', params.test_id).then(
-                function (test) {
-                    model = test;
-                    return test.get('author');
-                }.bind(this)).then(function (author) {
-
-                if (author.get('id') === user.get('id'))
-                    return model;
-                else {
-                    this.transitionTo('index');
-                    return {};
-                }
-            });
-    },
-    controllerName: 'create',
-    setupController: function (controller, model) {
-        controller.set('model', model);
+        var model,
+            where = {
+                'slug': params.test_slug
+            };
+        return this.store.findQuery('test', {where: JSON.stringify(where)})
+            .then(
+                function (results) {
+                    if(results) {
+                        model = results.objectAt(0);
+                        if (model.get('_data.author.id') === this.get('currentUser.id'))
+                            return model;
+                        else {
+                            this.transitionTo('index');
+                            return {};
+                        }
+                    } else {
+                        console.log("Test with slug not found!");
+                    }
+                }.bind(this));
     }
+
 });

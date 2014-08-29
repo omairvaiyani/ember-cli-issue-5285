@@ -3,6 +3,11 @@ Ember
 from
 'ember';
 
+import
+ParseHelper
+from
+'../utils/parse-helper';
+
 export default
 Ember.ObjectController.extend({
     didPass: function () {
@@ -40,10 +45,10 @@ Ember.ObjectController.extend({
             }.bind(this));
             if (!questionHasResponse) {
                 var responseForSkippedQuestion = this.store.createRecord('response', {
-                   question: question,
-                   isCorrect: false,
-                   chosenAnswer: "",
-                   correctAnswer: question.get('options').findBy('isCorrect', true).phrase
+                    question: question,
+                    isCorrect: false,
+                    chosenAnswer: "",
+                    correctAnswer: question.get('options').findBy('isCorrect', true).phrase
                 });
                 allResponses.pushObject(responseForSkippedQuestion);
             }
@@ -57,11 +62,29 @@ Ember.ObjectController.extend({
     }.property('responses.length'),
 
     incorrectResponses: function () {
-        if(this.get('allResponses.length'))
+        if (this.get('allResponses.length'))
             return this.get('allResponses').filterBy('isCorrect', false);
         else
             return this.get('responses').filterBy('isCorrect', false);
     }.property('allResponses.length'),
+
+    categoryTests: [],
+    getCategoryTests: function () {
+        if (!this.get('test.category.id'))
+            return;
+
+        var categoryTests = [],
+            where = {
+                'category': ParseHelper.generatePointer(this.get('test.category.content'))
+            };
+        this.store.findQuery('test', {where: JSON.stringify(where), order: '-createdAt', limit: '5'})
+            .then(function (tests) {
+                this.get('categoryTests').clear();
+                this.get('categoryTests').addObjects(tests);
+                console.dir(this.get('categoryTests'));
+            }.bind(this));
+        return categoryTests;
+    }.observes('test.category.id'),
 
     actions: {
         switchTab: function (tab) {

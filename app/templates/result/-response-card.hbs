@@ -5,32 +5,25 @@
         <div class="response-indicator pull-left is-unimportant"></div>
     {{/if}}
     <div class="container-fluid response-right-container ">
-        <p class="lead">Q{{response.itemNumber}}: {{response.question.stem}}</p>
+        <p class="margin-bottom-16"><strong>Q{{response.itemNumber}}: {{response.question.stem}}</strong></p>
     </div>
     <div class="row no-margin">
-        <div class="col-md-6">
+        <div class="col-md-12">
             {{#if response.chosenAnswer}}
-            <p {{bind-attr class=":text-uppercase response.isCorrect:text-color-green:text-color-red"}}
-                    >You {{#if response.isCorrect}}correctly {{/if}}chose:</p>
+            <p {{bind-attr class="response.isCorrect:text-color-green:text-color-red"}}
+                    >YOU {{#if response.isCorrect}}CORRECTLY {{/if}}CHOSE:<br>{{response.chosenAnswer}}</p>
 
-            <p>{{response.chosenAnswer}}</p>
             {{else}}
-                <p class="text-uppercase text-color-unimportant">You skipped this question</p>
+                <p class="text-color-unimportant">YOU SKIPPED THIS QUESTION</p>
             {{/if}}
             {{#unless response.isCorrect}}
-                <p class="text-uppercase text-color-green">Correct answer:</p>
+                <p class="text-color-green">CORRECT ANSWER:<br>{{response.correctAnswer}}</p>
 
-                <p>{{response.correctAnswer}}</p>
             {{/unless}}
             {{#if response.question.feedback}}
-                <p class="text-uppercase">Feedback:</p>
+                <p class="">FEEDBACK:<br>{{response.question.feedback}}</p>
 
-                <p>{{response.question.feedback}}</p>
             {{/if}}
         </div>
-        <div class="col-md-6">
-
-        </div>
     </div>
-
 </div>

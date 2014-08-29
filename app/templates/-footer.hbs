@@ -1,7 +1,34 @@
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-md-12 footer">
-            Copyright myLabs Ltd 2014
+<div class="footer">
+    <div class="container-fluid">
+        <div class="card">
+            <div class="row">
+                <div class="col-md-12 text-center">
+                    {{#link-to 'index' tagName='a'}}Home{{/link-to}} |
+                    {{#link-to 'browse' tagName='a'}}Browse{{/link-to}} |
+                    {{#link-to 'create' tagName='a'}}Create a test{{/link-to}}<br>
+
+                    <div class="inline-block">Copyright 2014
+                        <a href="http://www.mylabs.io" target="_blank">myLabs Ltd</a> |
+                    </div>
+                    <div class="inline-block">
+                        <a href="https://twitter.com/share" class="twitter-share-button" data-via="MyCQs"
+                           data-size="medium" data-hashtags="edtech">Tweet</a>
+                        <script>!function (d, s, id) {
+                            var js, fjs = d.getElementsByTagName(s)[0], p = /^http:/.test(d.location) ? 'http' : 'https';
+                            if (!d.getElementById(id)) {
+                                js = d.createElement(s);
+                                js.id = id;
+                                js.src = p + '://platform.twitter.com/widgets.js';
+                                fjs.parentNode.insertBefore(js, fjs);
+                            }
+                        }(document, 'script', 'twitter-wjs');</script>
+                    </div>
+                    <p>
+                        <small>MyCQs Beta. Send us a tweet!
+                            <a href="https://twitter.com/GenderMedKI" target="_blank">@MyCQs</a></small>
+                    </p>
+                </div>
+            </div>
         </div>
     </div>
 </div>

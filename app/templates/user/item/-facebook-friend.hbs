@@ -43,9 +43,9 @@
 
             <div class="actions-top-right">
                 {{#unless friend.isFollowing}}
-                    <a {{action 'followFriend' friend.slug}}><span class="glyphicon glyphicon-unchecked"></span> follow</a>
+                    <a {{action 'followFriend' friend}}><span class="glyphicon glyphicon-unchecked"></span> follow</a>
                 {{else}}
-                    <a {{action 'unfollowFriend' friend.slug}}><span class="glyphicon glyphicon-ok-circle"></span> following</a>
+                    <a {{action 'unfollowFriend' friend}}><span class="glyphicon glyphicon-ok-circle"></span> following</a>
                 {{/unless}}
             </div>
 

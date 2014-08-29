@@ -4,8 +4,9 @@
         <hr>
         <div class="row margin-bottom-16">
             <div class="col-md-12">
-                <h4>You scored <span style="font-size:x-large;">{{score}}% </span> in {{#link-to 'test' test.slug tagName='a'}}{{test.title}}{{/link-to}}.
-                    <small class="pull-right">Test taken {{view "from-now" valueBinding="createdAt"}}.</small>
+                <h4>You scored <span style="font-size:x-large;">{{score}}% </span>
+                    in {{#link-to 'test' test.slug tagName='a'}}{{test.title}}{{/link-to}}.
+                    <small class="pull-right">Test taken {{view "from-now" valueBinding="createdAt"}}</small>
                 </h4>
             </div>
         </div>
@@ -21,20 +22,53 @@
             </div>
         </div>
     </div>
-    {{#if isTabAll}}
-        {{#each response in allResponses itemController='result.item.response-card'}}
-            {{partial 'result/response-card'}}
-        {{/each}}
-    {{/if}}
-    {{#if isTabCorrect}}
-        {{#each response in correctResponses itemController='result.item.response-card'}}
-            {{partial 'result/response-card'}}
-        {{/each}}
-    {{/if}}
-    {{#if isTabIncorrect}}
-        {{#each response in incorrectResponses itemController='result.item.response-card'}}
-            {{partial 'result/response-card'}}
-        {{/each}}
-    {{/if}}
+    <div class="row">
+        <div class="col-md-9">
+            {{#if isTabAll}}
+                {{#each response in allResponses itemController='result.item.response-card'}}
+                    {{partial 'result/response-card'}}
+                {{/each}}
+            {{/if}}
+            {{#if isTabCorrect}}
+                {{#each response in correctResponses itemController='result.item.response-card'}}
+                    {{partial 'result/response-card'}}
+                {{/each}}
+            {{/if}}
+            {{#if isTabIncorrect}}
+                {{#each response in incorrectResponses itemController='result.item.response-card'}}
+                    {{partial 'result/response-card'}}
+                {{/each}}
+            {{/if}}
+        </div>
+        <div class="col-md-3 margin-top-16 col-adjust-right">
+            {{#if test.author}}
+                <div class="card author-info">
+                    <h4>Author info</h4>
+                    {{#link-to 'user' test.author.slug}}{{render 'profile-image' test.author}}{{/link-to}}
+                    {{#link-to 'user' test.author.slug}}<p class="name">{{test.author.name}}</p>{{/link-to}}
+                    <hr>
+                    <p>Tests
+                        <small class="pull-right">{{#link-to 'user.tests' test.author.slug}}
+                            {{test.author.numberOfTests}}{{/link-to}}</small>
+                    </p>
+                    <p>Followers
+                        <small class="pull-right">{{#link-to 'user.followers' test.author.slug}}
+                            {{test.author.numberOfFollowers}}{{/link-to}}</small>
+                    </p>
+                </div>
+            {{/if}}
+            {{#if categoryTests.length}}
+                <div class="card margin-top-16">
+                    <h4 class="margin-bottom-16">Recent {{test.category.name}} tests</h4>
+                    {{#each categoryTest in categoryTests}}
+                        <p>{{#link-to 'test' categoryTest.slug}}{{categoryTest.title}}{{/link-to}}</p>
+                    {{/each}}
+                    <p class="margin-top-16">{{#link-to 'category' test.category.slug}}
+                        See all {{test.category.totalTests}} tests!
+                    {{/link-to}}</p>
+                </div>
+            {{/if}}
+        </div>
+    </div>
 
 </div>

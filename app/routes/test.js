@@ -43,7 +43,7 @@ Ember.Route.extend({
             /*
              * Allow page to display the test
              */
-            controller.set('preparingTest', false);
+            controller.set('loading', null);
         }.bind(this));
     },
     shuffle: function (o) {

@@ -10,7 +10,7 @@ from
 
 export default
 Ember.ObjectController.extend({
-    queryParams: ['page', 'order', 'subCategory', 'filterCategoryIds', 'search'],
+    queryParams: ['page', 'order', 'categoryFilter', 'filterCategoryIds', 'search'],
 
     /*
      * Query paramaters
@@ -20,7 +20,7 @@ Ember.ObjectController.extend({
 
     order: 'title',
 
-    subCategory: '',
+    categoryFilter: '',
 
     filterCategoryIds: '',
 
@@ -81,75 +81,43 @@ Ember.ObjectController.extend({
      * the checkboxes to update on 'child-category' views.
      * It does not seem to be working.
      */
-    filterCategories: function () {
+    categoryFilterSlugs: function () {
         var array;
-        if(!this.get('filterCategoryIds.length'))
+        if(!this.get('categoryFilter.length'))
             array = [];
         else
-            array = this.get('filterCategoryIds').split("-");
+            array = this.get('categoryFilter').split("-");
         return array;
-    }.property('filterCategoryIds.length'),
+    }.property('categoryFilter.length'),
     readyForFilter: false,
     filterTheseCategories: function () {
         if (!this.get('readyForFilter')) {
             return;
         }
-        if(!this.get('filterCategoryIds.length')) {
+        if(!this.get('categoryFilter.length')) {
             if(this.get('selectedCategories.length') !== this.get('childCategories.length')) {
                 this.get('selectedCategories').clear();
                 this.get('selectedCategories').addObjects(this.get('childCategories.content'));
             }
             return;
         }
-        var filterCategoryIds = this.get('filterCategories'),
-            filterCategories = [];
+        var categoryFilterSlugs = this.get('categoryFilterSlugs'),
+            categories = [];
 
         this.get('selectedCategories').clear();
 
-        for (var i = 0; i < filterCategoryIds.length; i++) {
-            var filterCategoryId = filterCategoryIds[i];
-            var filterCategory = this.get('childCategories.content').findBy('id', filterCategoryId);
-            if (filterCategory)
-                filterCategories.pushObject(filterCategory);
+        for (var i = 0; i < categoryFilterSlugs.length; i++) {
+            var categorySlug = categoryFilterSlugs[i];
+            var category = this.get('childCategories.content').findBy('slug', categorySlug);
+            if (category)
+                categories.pushObject(category);
 
         }
-        this.get('selectedCategories').addObjects(filterCategories);
+        this.get('selectedCategories').addObjects(categories);
         this.set('readyToGetTests', true);
-    }.observes('readyForFilter', 'filterCategories.length'),
+    }.observes('readyForFilter', 'categoryFilterSlugs.length'),
 
-    /*filterThisCategory: function () {
-        if (!this.get('readyForFilter') || !this.get('subCategory.length')) {
-            return;
-        }
 
-        this.get('selectedCategories').clear();
-        if (!this.get('subCategory') || !this.get('childCategories').findBy('id', this.get('subCategory'))) {
-            this.transitionToRoute({queryParams:{filterCategoryIds: ''}});
-            this.get('selectedCategories').addObjects(this.get('childCategories'));
-        } else {
-            this.get('selectedCategories')
-                .pushObject(this.get('childCategories').findBy('id', this.get('subCategory')));
-        }
-        this.set('readyToGetTests', true);
-    }.observes('readyForFilter', 'subCategory'),*/
-
-    /*
-     * Toggle all selectedCategories
-     */
-    /*areAllCategoriesSelected: true,
-    toggleAllSelectedCatgories: function () {
-        this.get('selectedCategories').clear();
-        if (this.get('areAllCategoriesSelected'))
-            this.get('selectedCategories').pushObjects(this.get('childCategories.content'));
-
-    }.observes('areAllCategoriesSelected'),*/
-
-    /*
-     * For properties that require promises,
-     * it's better to set them from an observer
-     * hook, rather than making them a
-     * computed property.
-     */
     tests: [],
     childCategories: null,
     selectedCategories: null,
@@ -184,7 +152,7 @@ Ember.ObjectController.extend({
                  * wait or those to filter the selectedCategories before
                  * retrieving tests
                  */
-                if(!this.get('filterCategories.length')) {
+                if(!this.get('categoryFilterSlugs.length')) {
                     this.set('readyToGetTests', true);
                 }
                 /*

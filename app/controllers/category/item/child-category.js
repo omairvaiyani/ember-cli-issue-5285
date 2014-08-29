@@ -16,56 +16,56 @@ Ember.ObjectController.extend(EachItem, {
         return this.get('controllers.category');
     }.property('controllers.category'),
 
-    filterCategories: function () {
-        return this.get('categoryController.filterCategories');
-    }.property('categoryController.filterCategories.length'),
+    categoryFilterSlugs: function () {
+        return this.get('categoryController.categoryFilterSlugs');
+    }.property('categoryController.categoryFilterSlugs.length'),
 
     isChecked: function () {
-        if (this.get('filterCategories').indexOf(this.get('model.id')) > -1) {
+        if (this.get('categoryFilterSlugs').indexOf(this.get('model.slug')) > -1) {
             return true;
         }
         else {
             return false;
         }
-    }.property('filterCategories.length'),
+    }.property('categoryFilterSlugs.length'),
 
     modelCheckChanged: function () {
-        if (this.get('filterCategories').indexOf(this.get('model.id')) > -1) {
+        if (this.get('categoryFilterSlugs').indexOf(this.get('model.slug')) > -1) {
             this.set('isChecked', true);
         }
         else {
             this.set('isChecked', false);
         }
-    }.observes('filterCategories.length', 'categoryController.readyToGetTests'),
+    }.observes('categoryFilterSlugs.length', 'categoryController.readyToGetTests'),
 
     viewCheckChanged: function () {
         if (this.get('isChecked')) {
-            if(this.get('filterCategories').contains(this.get('model.id')))
+            if(this.get('categoryFilterSlugs').contains(this.get('model.slug')))
                 return;
-            var filterCategoryIds = '';
-            filterCategoryIds += this.get('categoryController.filterCategoryIds');
-            if (filterCategoryIds.length)
-                filterCategoryIds += '-';
-            filterCategoryIds += this.get('model.id');
+            var categoryFilter = '';
+            categoryFilter += this.get('categoryController.categoryFilter');
+            if (categoryFilter.length)
+                categoryFilter += '-';
+            categoryFilter += this.get('model.slug');
             this.get('categoryController').transitionToRoute({queryParams:
-                {filterCategoryIds: filterCategoryIds, page: 1}});
+                {categoryFilter: categoryFilter, page: 1}});
         } else {
             var isCurrent = false;
-            if(this.get('categoryController.filterCategories').contains(this.get('model.id'))) {
+            if(this.get('categoryFilterSlugs').contains(this.get('model.slug'))) {
                 isCurrent =true;
-                console.log("Unchecked: "+ this.get('model.id'));
+                console.log("Unchecked: "+ this.get('model.slug'));
 
-                var filterCategories = [];
-                filterCategories.addObjects(this.get('categoryController.filterCategories'));
-                filterCategories.removeObject(this.get('model.id'));
-                var filterCategoryIds = '';
-                for (var i = 0; i < filterCategories.length; i++) {
-                    filterCategoryIds += filterCategories[i];
-                    if (i < (filterCategories.length - 1))
-                        filterCategoryIds += '-';
+                var categoryFilterSlugs = [];
+                categoryFilterSlugs.addObjects(this.get('categoryFilterSlugs'));
+                categoryFilterSlugs.removeObject(this.get('model.slug'));
+                var categoryFilter = '';
+                for (var i = 0; i < categoryFilterSlugs.length; i++) {
+                    categoryFilter += categoryFilterSlugs[i];
+                    if (i < (categoryFilterSlugs.length - 1))
+                        categoryFilter += '-';
                 }
                 this.get('categoryController').transitionToRoute({queryParams:
-                    {filterCategoryIds: '', page: 1}});
+                    {categoryFilter: categoryFilter, page: 1}});
             }
         }
     }.observes('isChecked'),

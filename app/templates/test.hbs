@@ -1,5 +1,5 @@
 <div class="container">
-    {{#unless preparingTest}}
+    {{#unless loading}}
         <div class="card">
             <h3>{{title}}
                 <small>{{category.name}}</small>
@@ -40,7 +40,7 @@
         </div>
     {{else}}
         <div class="card text-center">
-            <h3>Preparing the test...</h3>
+            <h3>{{loading}}</h3>
         </div>
     {{/unless}}
 

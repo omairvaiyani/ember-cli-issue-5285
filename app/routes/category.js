@@ -32,9 +32,11 @@ Ember.Route.extend({
                 }
             }.bind(this))
             .then(function (topLevelCategory) {
-                if (topLevelCategory.get('slug') !== category.get('slug'))
+                if (topLevelCategory.get('slug') !== params.category_slug) {
+                    console.dir({queryParams: {categoryFilter: params.category_slug, page: 1}});
                     this.transitionTo('category', topLevelCategory.get('slug'),
-                        {queryParams: {filterCategoryIds: category.get('id')}});
+                        {queryParams: {categoryFilter: params.category_slug, page: 1}});
+                }
                 else
                     return topLevelCategory;
             }.bind(this));

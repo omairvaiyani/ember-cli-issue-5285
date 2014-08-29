@@ -4,33 +4,38 @@ from
 'ember';
 
 import
+CurrentUser
+from
+'../../../mixins/current-user';
+
+import
 EachItem
 from
 '../../../mixins/each-item';
 
 export default
-Ember.ObjectController.extend(EachItem, {
-    needs: 'user',
-
+Ember.ObjectController.extend(CurrentUser, EachItem, {
     latestAttempt: function () {
-        var latestAttemptsReceived = this.get('controllers.user.latestAttemptsReceived'),
-            latestAttempts = this.get('controllers.user.latestAttempts'),
-            latestAttempt;
-        if(!latestAttemptsReceived)
+        if (!this.get('isCurrentUsersTest'))
             return;
 
-        latestAttempts.forEach(function(attempt) {
-            if(attempt.get('_data.test.id') === this.get('model.id'))
+        var latestAttempt;
+        this.get('currentUser.latestAttempts').forEach(function (attempt) {
+            if (attempt.get('_data.test.id') === this.get('model.id')) {
                 latestAttempt = attempt;
+                return;
+            }
         }.bind(this));
-        if(latestAttempt) {
-            console.log("Found latest attempt");
-            console.dir(latestAttempt);
-        }
+
         return latestAttempt;
-    }.property('controllers.user.latestAttemptsReceived'),
+    }.property('isCurrentUsersTest'),
+
+    isCurrentUsersTest: function () {
+        return this.get('currentUser.id') === this.get('model._data.author.id');
+    }.property('currentUser.id'),
 
     array: function () {
+        this.propertyDidChange('isCurrentUsersTest');
         return this.get('parentController.tests');
     }.property('parentController.tests.length')
 

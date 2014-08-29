@@ -3,26 +3,42 @@
         <div class="card test-info-card margin-top-16">
             {{#link-to 'user' author.slug tagName="a"}}{{render 'profile-image' author}}{{/link-to}}
 
-            <small class="moments-ago pull-right"
-                    >{{view 'from-now' valueBinding="updatedAt"}}</small><br>
+            <!--<small class="moments-ago pull-right"-->
+            <!-- {{view 'from-now' valueBinding="createdAt"}}</small> -->
+            <!--<br>-->
             <small class="test-actions">
                 {{#if isCurrentUsersTest}}
-                    {{#link-to 'edit' this.slug tagName='a'}}Edit{{/link-to}}
+                    {{#link-to 'edit' slug tagName='a'}}Edit{{/link-to}}
                 {{/if}}
             </small>
 
             <div class="title-and-category">
-                <p class="lead">
-                    {{#link-to 'test' this.slug tagName='a'}}{{title}}{{/link-to}}
-                </p>
+                <h4>
+                    {{#link-to 'test' slug tagName='a'}}{{title}}{{/link-to}}
+                </h4>
+
                 <p>
                     {{#link-to 'category' category.slug tagName='a'}}{{category.name}}{{/link-to}}
                 </p>
             </div>
 
             <div class="statistics">
-                <div class="inline-block"><p class="lead">Q - {{_data.questions.length}}</p></div>
-                <div class="inline-block"><p class="lead">U - {{uniqueAverageScore}}%</p></div>
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="text-center"><p>Q{{_data.questions.length}}</p></div>
+                        </div>
+                        <div class="col-md-4">
+                                <div class="text-center">
+                                    <p>Attempts {{numberOfAttempts}}</p></div>
+                        </div>
+                        <div class="col-md-5">
+                            <div class="text-center">
+                                <p>Avg Score {{math-round averageScore 2}}%</p></div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
         </div>

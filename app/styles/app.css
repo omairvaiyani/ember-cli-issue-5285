@@ -68,6 +68,14 @@ body {
     color: white;
     background-color: #4f6640;
 }
+.btn-facebook {
+    width: 80%;
+    padding: 8px;
+    font-size: large;
+}
+.btn-facebook:hover, .btn-facebook:focus {
+    color:white;
+}
 
 /*
  * Don't like Bootstrap's use of cursor: not-allow;
@@ -103,12 +111,12 @@ body {
 }
 
 .navbar-main .navbar-nav > .active > a {
-    background-color: inherit;
+    background-color: whitesmoke;
     font-weight: bold;
 }
 
 .navbar-main .navbar-nav > .active > a:hover {
-    background-color: inherit;
+    background-color: whitesmoke;
 }
 
 .navbar-main .navbar-toggle .icon-bar {
@@ -211,6 +219,13 @@ body {
     color: white;
     font-weight: 700;
 }
+/* Login Modal */
+.sign-up-validation {
+    padding-top: 6px;
+}
+.sign-up-validation > span {
+    padding: 6px;
+}
 
 /* TEMPLATE - USER */
 .cover-image {
@@ -282,6 +297,7 @@ body {
 }
 
 .action-card {
+    padding-bottom: 0px;
 }
 
 .action-card .profile-image {
@@ -340,7 +356,57 @@ body {
     top: 48px;
     cursor: pointer;
 }
+/* TEMPLATE - INDEX (HOME) */
+.home-overview .profile-image {
+    height: 40px;
+    width: 40px;
+    border-radius: 20px;
+    display: inline-block;
+    margin-right: 16px;
+    vertical-align: middle;
+    background-size: cover;
+}
+.home-overview .name {
+    display:inline-block;
+    vertical-align: top;
+}
 
+.card.home-navigation {
+    padding: 0px;
+}
+.home-navigation > button {
+    width: 100px;
+    border:none;
+    border-radius: 2px 0px 0px 2px;
+    background-color: inherit;
+    color: grey;
+    padding: 8px;
+}
+.home-navigation > button:focus, button:active, button:active:focus {
+    outline: none;
+}
+.home-navigation > button.current {
+    background-color: inherit;
+    color: black;
+    box-shadow: none;
+    border-bottom: 3px solid #4f6640;
+    margin-bottom: -2px;
+}
+.home-navigation > button:hover {
+    color:grey;
+    text-decoration: none;
+}
+.home-navigation > button.current:hover {
+    color: black;
+    text-decoration: none;
+}
+.home-navigation .order-tests {
+}
+.home-navigation .order-tests > button {
+    border:none;
+    border-radius: 0px 2px 2px 0px;
+    padding: 9px 8px 8px 8px;
+}
 /* TEMPLATE - BROWSE */
 .test-info-card {
 }
@@ -360,12 +426,16 @@ body {
     position: absolute;
     top: 16px;
     left: 82px;
+    right: 16px;
 }
-.test-info-card .title-and-category p.lead {
-    margin-bottom: 0px; !important
+.test-info-card .title-and-category h4, p.lead {
+    margin-top: 0px;
+    margin-bottom: 0px;
 }
 .test-info-card .statistics {
     margin-left: 66px;
+    height: 20px;
+    margin-top: -30px;
 }
 .test-info-card .statistics > div p.lead {
     margin-bottom:0px;
@@ -493,16 +563,44 @@ body {
     background-color: #97A07D;
 }
 
-/* TEMPLATE - FOOTER */
-
-.footer {
-    padding-top: 12px;
-    height: 100px;
-    background-color: white;
-    margin-top: 40px;
-    text-align: center;
-    font-size: 18px;
+.author-info .profile-image {
+    width: 50px;
+    height: 50px;
+    background-size: cover;
+    display:inline-block;
+    vertical-align:middle;
+    margin-right:8px;
 }
+.author-info .name {
+    display:inline-block;
+    vertical-align:middle;
+}
+/* TEMPLATE - FOOTER */
+/*
+ * Footer
+ */
+html,
+body {
+    margin:0;
+    padding:0;
+    height:100%;
+}
+#body-wrap {
+    min-height:calc(100% - 26px);
+    position:relative;
+    padding-bottom:90px;
+}
+.footer {
+    position:absolute;
+    bottom:0px;
+    left: 0px;
+    width:100%;
+    height:90px;   /* Height of the footer */
+    text-align: center;
+    font-size: 12px;
+    padding-top: 16px;
+}
+
 
 /* HELPERS */
 @media (min-width: 992px) {

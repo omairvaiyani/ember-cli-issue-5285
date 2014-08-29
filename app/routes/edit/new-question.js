@@ -1,6 +1,8 @@
 import Ember from 'ember';
 
 export default Ember.Route.extend({
+    controllerName: 'editQuestion',
+
     model: function () {
         var initialOptions = [];
         for(var i = 0; i < 5; i++) {
@@ -14,10 +16,7 @@ export default Ember.Route.extend({
             options: initialOptions
         });
     },
-    controllerName: 'editQuestion',
-    setupController: function(controller, model) {
-        controller.set('model', model);
-    },
+
     actions: {
         refreshRoute: function() {
             this.refresh();

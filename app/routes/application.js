@@ -3,11 +3,69 @@ Ember
 from
 'ember';
 
+import
+FormValidation
+from
+'../utils/form-validation';
+
+/*import
+CurrentUser
+from
+'../mixins/current-user';*/
+
 export default
 Ember.Route.extend({
     actions: {
-        login: function (email, password) {
+        signUp: function() {
+            var name = this.controllerFor('application').get('newUser.name'),
+                email = this.controllerFor('application').get('newUser.email'),
+                password = this.controllerFor('application').get('newUser.password'),
+                confirmPassword = this.controllerFor('application').get('newUser.confirmPassword'),
+                errors = false;
+
+            if(!FormValidation.name(name.trim())) {
+                this.controllerFor('application').set('signUpValidationErrors.name', true);
+                errors = true;
+            }
+            if(!FormValidation.email(email.trim())) {
+                this.controllerFor('application').set('signUpValidationErrors.email', true);
+                errors = true;
+            }
+            if(!FormValidation.password(password)) {
+                this.controllerFor('application').set('signUpValidationErrors.password', true);
+                errors = true;
+            }
+            if(!FormValidation.confirmPassword(password, confirmPassword)) {
+                this.controllerFor('application').set('signUpValidationErrors.confirmPassword', true);
+                errors = true;
+            }
+            if(!errors) {
+                var data = {
+                    name: name.trim(),
+                    email: email.trim(),
+                    username: email.trim(),
+                    password: password
+                    },
+                    ParseUser = this.store.modelFor('parse-user');
+
+                ParseUser.signup(this.store, data).then(
+                    function (userMinimal) {
+                        userMinimal.set('name', name);
+                        userMinimal.set('email', email);
+                        console.log("Successfull registered");
+                        console.dir(userMinimal);
+                    }.bind(this),
+                    function (error) {
+                        console.log("Error with ParseUser.signup() in: " + "signUpWithEmail");
+                        console.dir(error);
+                    }
+                );
+            }
+        },
+        login: function () {
             var controller = this.controllerFor('application'),
+                email = controller.get('loginUser.email'),
+                password = controller.get('loginUser.password'),
                 ParseUser = this.store.modelFor('parse-user'),
                 data = {
                     username: email,
@@ -16,9 +74,12 @@ Ember.Route.extend({
             controller.set('loginMessage.connecting', "Logging in...");
             ParseUser.login(this.store, data).then(
                 function (user) {
+                    console.log("successfuly logged in");
                     controller.set('currentUser', user);
                     controller.set('loginMessage.connecting', "");
-                },
+                    this.send('closeModal');
+                    this.transitionTo('index');
+                }.bind(this),
                 function (error) {
                     console.dir(error);
                     if (error.code === 101)
@@ -72,7 +133,6 @@ Ember.Route.extend({
          */
         signUpAuthorisedFacebookUser: function (authResponse) {
             FB.api('/me', {fields: 'name,education,gender,cover,email,friends'}, function (response) {
-                console.dir(response);
                 var fbFriendsArray = [],
                     fbFriendsData = response.friends.data;
                 for (var i = 0; i < fbFriendsData.length; i++) {
@@ -98,21 +158,28 @@ Ember.Route.extend({
                         }
                     };
                 ParseUser.signup(this.store, data).then(
-                    function (userMinimal) {
+                    function (user) {
+                        console.dir(user);
                         /*
-                         * Need to temporarily reasign all the values to this user object
-                         * Parse annoyingly does not send all the user info
-                         * If we do a second .find() query, ember-data just uses the cache version
+                         * Sometimes user info is missing,
+                         * let's add some of it here:
                          */
-                        userMinimal.set('name', response.name);
-                        userMinimal.set('fbid', response.id);
-                        userMinimal.set('email', response.email);
-                        userMinimal.set('gender', response.gender);
-                        userMinimal.set('coverImageURL', response.cover.source);
-                        userMinimal.set('facebookFriends', fbFriendsArray);
-                        this.controllerFor('application').set('currentUser', userMinimal);
+                        if(!user.get('name'))
+                            user.set('name', response.name);
+                        if(!user.get('fbid'))
+                            user.set('fbid', response.id);
+                        if(!user.get('email'))
+                            user.set('email', response.email);
+                        if(!user.get('coverImageURL'))
+                            user.set('coverImageURL', response.cover.source);
+
+                        /*
+                         * Update FB Friends list everytime
+                         */
+                        user.set('facebookFriends', fbFriendsArray);
+                        this.controllerFor('application').set('currentUser', user);
                         this.send('closeModal');
-                        this.transitionTo('user', userMinimal);
+                        this.transitionTo('index');
                     }.bind(this),
                     function (error) {
                         console.log("Error with ParseUser.signup() in: " + "signUpAuthorisedFacebookUser");
@@ -124,8 +191,9 @@ Ember.Route.extend({
 
         logout: function () {
             this.controllerFor('application').set('currentUser', null);
+            console.log("CurrentUser set to : "+this.controllerFor('application').get('currentUser'));
             this.transitionTo('index');
-            this.refresh();
+//            this.refresh();
         },
         openModal: function (modalName, controller) {
             var myModal = jQuery('#myModal');
@@ -145,6 +213,49 @@ Ember.Route.extend({
                 outlet: 'modal',
                 parentView: 'application'
             });
+        },
+
+        followUser: function (user) {
+            var currentUser = this.get('currentUser');
+            currentUser.incrementProperty('numberFollowing');
+            user.incrementProperty('numberOfFollowers');
+            user.set('isFollowing', true);
+
+            Parse.Cloud.run('followUser',
+                {
+                    mainUser: currentUser.get('id'),
+                    userToFollow: user.get('id')
+                }, {
+                    success: function (success) {
+                    }.bind(this),
+                    error: function (error) {
+                        console.log("There was an error: " + error);
+                        currentUser.decrementProperty('numberFollowing');
+                        user.decrementProperty('numberOfFollowers');
+                        user.set('isFollowing', false);
+                    }.bind(this)
+                });
+        },
+
+        unfollowUser: function (user) {
+            var currentUser = this.get('currentUser');
+            currentUser.decrementProperty('numberFollowing');
+            user.decrementProperty('numberOfFollowers');
+            user.set('isFollowing', false);
+            Parse.Cloud.run('unfollowUser',
+                {
+                    mainUser: currentUser.get('id'),
+                    userToUnfollow: user.get('id')
+                }, {
+                    success: function (success) {
+                    }.bind(this),
+                    error: function (error) {
+                        console.log("There was an error: " + error);
+                        currentUser.incrementProperty('numberFollowing');
+                        user.incrementProperty('numberOfFollowers');
+                        user.set('isFollowing', true);
+                    }.bind(this)
+                });
         }
     }
 });
