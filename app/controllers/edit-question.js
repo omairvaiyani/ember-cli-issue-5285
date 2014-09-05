@@ -15,7 +15,48 @@ from
  */
 export default
 Ember.ObjectController.extend({
-    needs: ['create'],
+    needs: ['application', 'create'],
+
+    featherEditor: null,
+
+    initializeFeatherEditor: function () {
+        var featherEditor = new Aviary.Feather({
+            apiKey: 'f1e1a7583f443151',
+            apiVersion: 3,
+            theme: 'light', // Check out our new 'light' and 'dark' themes!
+            tools: ['text', 'draw', 'crop', 'resize', 'orientation', 'brightness'],
+            appendTo: '',
+            fileFormat: 'jpg',
+            enableCORS: true,
+            maxSize: '1000',
+            onSave: function (imageID, newURL) {
+                var base64 = $('#avpw_canvas_element')[0].toDataURL("image/jpeg", 0.8),
+                    base64String = base64.replace(/^data:image\/(png|jpeg);base64,/, "");
+                this.set('imageFile.base64', base64String);
+                this.set('imageFile.url', newURL);
+                this.set('imageFile.style', "background-image:url('"+newURL+"');");
+                this.get('featherEditor').close();
+            }.bind(this),
+            onError: function (errorObj) {
+                alert(errorObj.message);
+            }
+        });
+        this.set('featherEditor', featherEditor);
+    }.observes('model.id'),
+
+    imageFile: function () {
+        if (this.get('model.image'))
+            return {name: 'image', url: this.get('model.image.url'), base64: null,
+                style: "background-image:url('"+this.get('model.image.url')+"');"};
+        else
+            return {name: 'image', url: '', base64: null, style: ''};
+    }.property('model.image'),
+
+    loadingItems: function () {
+        return this.get('controllers.application.loadingItems');
+    }.property('controllers.application.loadingItems.length'),
+    saving: false,
+    updating: false,
 
     test: function () {
         return this.get('controllers.create.model');
@@ -181,46 +222,98 @@ Ember.ObjectController.extend({
             this.set('canAddMoreOptions', false);
         },
         saveQuestion: function (shouldCheckValidity) {
-            if (shouldCheckValidity && !this.isQuestionValid())
+            if (this.get('saving') || shouldCheckValidity && !this.isQuestionValid())
                 return;
+            this.send('incrementLoadingItems');
+            this.set('saving', true);
             this.set('tags', this.get('tagsStringified').split(', '));
 
-            var unsavedQuestion = this.get('model'),
-                test = this.get('test'),
-                questions = this.get('questions'),
-                question;
 
-            unsavedQuestion.save()
-                .then(function (result) {
-                    question = result;
-                    questions.pushObject(question);
-                    return test.save();
-                }).then(function (test) {
+            if (this.get('imageFile.url.length')) {
+                var image = new EmberParseAdapter.File('question-image.jpg', this.get('imageFile.url'));
+                this.set('model.image', image);
+            }
+            this.get('model').save()
+                .then(function (question) {
+                    this.get('questions').pushObject(question);
+                    return this.get('test').save();
+                }.bind(this)).then(function (test) {
                     window.scrollTo(0, 0);
                     this.send("refreshRoute");
+                    this.send('decrementLoadingItems');
+                    this.set('saving', false);
                 }.bind(this));
-
-            /*this.get('model').save().then(function (question) {
-                var test = this.get('controllers.create.model');
-                test.get('questions').then(function (questions) {
-                    questions.pushObject(question);
-                    test.save().then(function (test) {
-                        window.scrollTo(0, 0);
-                        //this.send("refreshRoute");
-                        this.transitionToRoute('editQuestion', question);
-                        this.transitionToRoute('edit.newQuestion');
-                    }.bind(this));
-                }.bind(this));
-            }.bind(this));*/
         },
         updateQuestion: function (shouldCheckValidity) {
-            if (shouldCheckValidity && !this.isQuestionValid())
+            if (this.get('updating') || shouldCheckValidity && !this.isQuestionValid())
                 return;
+
+            this.send('incrementLoadingItems');
+            this.set('updating', true);
             this.set('tags', this.get('tagsStringified').split(', '));
-            this.get('model').save().then(function () {
-                window.scrollTo(0, 0);
-                this.transitionToRoute('edit');
-            }.bind(this));
+
+            /*
+             * Check if our temporary imageFile object has been used
+             * If so, use the Parse SDK to save the image first.
+             * Then, use the returned url and name to create an
+             * EmberParseAdapter.File object and set it on the
+             * question.image property.
+             */
+            if (this.get('imageFile.base64.length')) {
+                // this.imageUrlToBase64(this.get('imageFile.url'), 'image/jpeg', function (base64Image) {
+                var file = document.getElementById("fileInput").files[0];
+                var parseFile = new Parse.File('image.jpg', {base64: this.get('imageFile.base64')});
+                return parseFile.save().then(function (image) {
+                        var image = new EmberParseAdapter.File(image.name(), image.url());
+                        this.set('model.image', image);
+                        return this.get('model').save();
+                    }.bind(this), function (error) {
+                        alert(error);
+                        // The file either could not be read, or could not be saved to Parse.
+                    }.bind(this)).then(function () {
+                        window.scrollTo(0, 0);
+                        this.set('updating', false);
+                        this.transitionToRoute('edit');
+                        this.send('decrementLoadingItems');
+                    }.bind(this));
+                // });
+            } else {
+                this.get('model').save().then(function () {
+                    window.scrollTo(0, 0);
+                    this.set('updating', false);
+                    this.transitionToRoute('edit');
+                    this.send('decrementLoadingItems');
+                }.bind(this));
+            }
+        },
+        addImage: function () {
+            var oFReader = new FileReader();
+            oFReader.readAsDataURL(document.getElementById("fileInput").files[0]);
+
+            oFReader.onload = function (oFREvent) {
+                var base64 = oFREvent.target.result;
+                this.set('imageFile.url', base64);
+                this.set('imageFile.base64', base64);
+                this.set('imageFile.style', "background-image:url('"+base64+"');");
+                /*this.send('editImage');*/
+            }.bind(this);
+        },
+        viewImage: function() {
+            this.set('modalImageUrl', this.get('imageFile.url'));
+            this.send('openModal', 'application/modal/image', 'edit-question');
+        },
+        editImage: function () {
+            this.get('featherEditor').launch({
+                image: 'question-image-holder',
+                url: this.get('imageFile.url')
+            });
+        },
+        removeImage: function () {
+            document.getElementById("fileInput").value = '';
+            this.set('imageFile.url', '');
+            this.set('imageFile.base64', '');
+            this.set('imageFile.style', '');
+            this.set('model.image', null);
         }
     }
 });

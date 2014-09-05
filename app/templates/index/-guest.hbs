@@ -1,0 +1,65 @@
+<div class="mycqs-page-header index-page">
+    <div class="container relative-container text-center">
+        <h1>MyCQs</h1>
+
+        <p>Create, practice and share multiple-choice questions</p>
+
+        {{#if stats}}
+            <div class="row index-stats">
+                <div class="col-md-3">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h2>{{stats.numberOfUsers}}</h2>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h3>Users</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h2>{{stats.numberOfTests}}</h2>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h3>Tests</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h2>{{stats.numberOfQuestions}}</h2>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h3>Questions</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h2>{{stats.numberOfAttempts}}</h2>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h3>Attempts</h3>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        {{/if}}
+
+    </div>
+</div>

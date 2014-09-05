@@ -4,7 +4,7 @@ export default DS.Model.extend(ParseMixin, {
     stem: DS.attr('string', {defaultValue:""}),
     options: DS.attr(),
     areOptionsDirty: DS.attr('boolean', {defaultValue: false}),
-    image: DS.attr(),
+    image: DS.attr('parse-file'),
     feedback: DS.attr('string'),
     numberOfTimesTaken: DS.attr('number'),
     numberAnsweredCorrectly: DS.attr('number'),

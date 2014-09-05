@@ -42,13 +42,14 @@
             </div>
 
             <div class="actions-top-right">
-                {{#unless friend.isFollowing}}
-                    <a {{action 'followFriend' friend}}><span class="glyphicon glyphicon-unchecked"></span> follow</a>
-                {{else}}
-                    <a {{action 'unfollowFriend' friend}}><span class="glyphicon glyphicon-ok-circle"></span> following</a>
+                {{#unless friend.isCurrentUser}}
+                    {{#unless friend.isFollowing}}
+                        <a {{action 'followFriend' friend}}><span class="glyphicon glyphicon-unchecked"></span> follow</a>
+                    {{else}}
+                        <a {{action 'unfollowFriend' friend}}><span class="glyphicon glyphicon-ok-circle"></span> following</a>
+                    {{/unless}}
                 {{/unless}}
             </div>
-
         </div>
     </div>
 </div>

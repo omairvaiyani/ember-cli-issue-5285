@@ -3,9 +3,14 @@ Ember
 from
 'ember';
 
+import
+ParseHelper
+from
+'../utils/parse-helper';
+
 export default
 Ember.Controller.extend({
-    needs: ['index', 'create'],
+    loadingItems: 0,
 
     currentUser: null,
 
@@ -29,21 +34,61 @@ Ember.Controller.extend({
         connecting: ''
     },
 
-    resetLoginMessage: function() {
+    resetLoginMessage: function () {
         this.set('loginMessage.error', '');
         this.set('loginMessage.connection', '');
     }.observes('loginUser.email.length', 'loginUser.password.length'),
 
-    currentUserChanged: function () {
+    manageCurrentUserSession: function () {
         var currentUser = this.get('currentUser');
 
         if (currentUser) {
             localStorage.sessionToken = currentUser.get('sessionToken');
-            this.get('controllers.index').set('currentUser', currentUser);
-            this.get('controllers.create').set('currentUser', currentUser);
         }
         else
             localStorage.clear();
+
+    }.observes('currentUser'),
+
+    /**
+     * This hook gets the currentUser's
+     * attempts, latestAttempts, followers and following
+     * It is called on ApplicationRoute.setupController
+     * as well as anytime the currentUser is changed.
+     */
+    initializeCurrentUser: function () {
+        if (!this.get('currentUser')) {
+            this.send('decrementLoadingItems');
+            return;
+        }
+        this.send('incrementLoadingItems');
+        var currentUser = this.get('currentUser'),
+            arrayOfPromises = [];
+
+        EmberParseAdapter.ParseUser.getFollowing(this.store, currentUser).then(function () {
+                return EmberParseAdapter.ParseUser.getFollowers(this.store, currentUser);
+            }.bind(this)).then(function () {
+                return EmberParseAdapter.ParseUser.getMessages(this.store, currentUser);
+            }.bind(this)).then(function() {
+                this.send('decrementLoadingItems');
+            }.bind(this));
+
+
+        this.incrementProperty('loadingItems');
+        currentUser.get('latestAttempts').then(function () {
+                var where = {
+                    "user": ParseHelper.generatePointer(currentUser)
+                };
+                return this.store.findQuery('attempt', {
+                    where: JSON.stringify(where),
+                    order: '-createdAt',
+                    include: ['test.category', 'user']
+                });
+            }.bind(this)).then(function (attempts) {
+                console.dir(attempts);
+                currentUser.set('attempts', attempts);
+                this.send('decrementLoadingItems');
+            }.bind(this));
 
     }.observes('currentUser'),
 
@@ -67,5 +112,16 @@ Ember.Controller.extend({
         this.set('signUpValidationErrors.password', false);
         this.set('signUpValidationErrors.confirmPassword', false);
     }.observes('newUser.name.length', 'newUser.email.length',
-            'newUser.password.length', 'newUser.confirmPassword.length')
+            'newUser.password.length', 'newUser.confirmPassword.length'),
+
+    actions: {
+        incrementLoadingItems: function () {
+            this.incrementProperty('loadingItems');
+        },
+
+        decrementLoadingItems: function () {
+            if (this.get('loadingItems'))
+                this.decrementProperty('loadingItems');
+        }
+    }
 });

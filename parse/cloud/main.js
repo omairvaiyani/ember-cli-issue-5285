@@ -3,17 +3,21 @@ var _ = require("underscore");
 /*
  * Temporarily a job: ideally will be a beforeSave hook
  */
-Parse.Cloud.job("findAndStoreFriends", function (request, status) {
-    var query = new Parse.Query(Parse.User);
-    query.doesNotExist('friends');
-    query.each(function (user) {
-
-    }).then(function () {
-        status.success('Friends set');
+Parse.Cloud.job("indexObjectsForClass", function (request, status) {
+    console.log(JSON.stringify(request.params));
+    var className = request.params.className;
+    console.log("className: "+ className);
+    var query = new Parse.Query(className);
+    query.doesNotExist('tags');
+    query.count().then(function(count) {console.log("Unindexed objects: "+count); });
+    query.each(function(object) {
+       object.set('tags', generateSearchTags(className, object));
+       object.save();
+    }).then(function() {
+       status.success();
     });
 
 });
-
 /*
  * CALCULATIONS
  */
@@ -622,6 +626,39 @@ Parse.Cloud.define("findTestsForUser", function (request, response) {
     });
 
 });
+Parse.Cloud.define("preFacebookConnect", function (request, response) {
+    Parse.Cloud.useMasterKey();
+    var authResponse = request.params.authResponse,
+        query = new Parse.Query(Parse.User);
+    query.equalTo('fbid', authResponse.userID);
+    query.find().then(function (results) {
+            if (results) {
+                var user = results[0];
+                if (user.get('authData')) {
+                    response.success();
+                    return;
+                } else {
+                    var authData = {
+                        facebook: {
+                            access_token: authResponse.accessToken,
+                            id: authResponse.userID,
+                            expiration_date: (new Date(2032, 2, 2)).toISOString()
+                        }
+                    };
+                    user.set('authData', authData);
+                    user.save();
+                }
+            }
+            response.success();
+        },
+        function (error) {
+
+            response.error(error);
+        }
+    );
+});
+
+
 /*
  * Useful functions
  */
@@ -634,21 +671,33 @@ Parse.Cloud.define("findTestsForUser", function (request, response) {
  * ------------------
  * generateSearchTags
  * ------------------
- * Used for indexing tests by splitting title into
+ * Used for indexing objects by splitting titles, names, etc into
  * a string array without 'stop words' such as
  * 'the, of, and'. Array is saved in 'tags' and
  * should be queried like so:
  * where: { "tags": { "$all" : ["user's", "search", "terms"] } }
  *
- * @param test
+ * @param className
+ * @param object
  * @returns []
  */
-var generateSearchTags = function (test) {
+var generateSearchTags = function (className, object) {
     var toLowerCase = function (w) {
         return w.toLowerCase();
     };
-
-    var words = (test.get("title") + test.get('description')).split(/\b/);
+    var words = "";
+    switch(className) {
+        case 'Test':
+            words += object.get('title') + object.get('description');
+            break;
+        case 'InstitutionList':
+            words += object.get('fullName');
+            break;
+        case 'CourseList':
+            words += object.get('name');
+            break;
+    }
+    words = words.split(/\b/);
     words = _.map(words, toLowerCase);
     var stopWords = ["the", "in", "and", "test", "mcqs", "of", "a", "an"]
     words = _.filter(words, function (w) {
@@ -702,10 +751,11 @@ var slugify = function (className, string) {
  * - NOT setting slug &&
  * - existed()
  */
-Parse.Cloud.beforeSave('_User', function (request, response) {
+Parse.Cloud.beforeSave(Parse.User, function (request, response) {
     Parse.Cloud.useMasterKey();
     if ((request.object.isNew() || !request.object.get('slug') || !request.object.get('slug').length) &&
         request.object.get('name') && request.object.get('name').length) {
+
         /*
          * Create a unique slug
          */
@@ -730,23 +780,6 @@ Parse.Cloud.beforeSave('_User', function (request, response) {
             action.save();
             response.success();
         });
-    } else if (request.object.existed()) {
-        response.success();
-        /*
-         * Followers and following count update
-         */
-        /*
-         var followingRelation = request.object.relation("following");
-         followingRelation.query().count()
-         .then(function (count) {
-         request.object.set("numberFollowing", count);
-         var followersRelation = request.object.relation("followers");
-         return followersRelation.query().count();
-         }).then(function (count) {
-         request.object.set("numberOfFollowers", count);
-         response.success();
-         });
-         */
     } else
         response.success();
 });
@@ -801,7 +834,7 @@ Parse.Cloud.beforeSave('Category', function (request, response) {
  * - response.success()
  */
 Parse.Cloud.beforeSave("Test", function (request, response) {
-    request.object.set("tags", generateSearchTags(request.object));
+    request.object.set("tags", generateSearchTags('Test', request.object));
 
 
     if (request.object.isNew() || !request.object.get('slug') || !request.object.get('slug').length) {
@@ -873,28 +906,30 @@ Parse.Cloud.afterSave("Test", function (request, response) {
             relation.add(request.object);
         }
         var Test = Parse.Object.extend('Test');
-            query = new Parse.Query(Test);
+        query = new Parse.Query(Test);
         query.equalTo('author', author);
         query.include('questions');
         return query.find();
-    }).then(function(tests) {
+    }).then(function (tests) {
         var numberOfQuestions = 0;
-        for(var i = 0; i < tests.length; i++) {
+        for (var i = 0; i < tests.length; i++) {
             var test = tests[i];
-            if(test.get('questions'))
+            if (test.get('questions'))
                 numberOfQuestions += test.get('questions').length;
         }
         author.set('numberOfQuestions', numberOfQuestions);
         author.save();
-        /*
-         * AttemptFinished Action
-         */
-        var Action = Parse.Object.extend('Action');
-        var action = new Action();
-        action.set('user', author);
-        action.set('test', request.object);
-        action.set('type', 'testCreated');
-        action.save();
+        if (!request.object.existed()) {
+            /*
+             * Test Created Action
+             */
+            var Action = Parse.Object.extend('Action');
+            var action = new Action();
+            action.set('user', author);
+            action.set('test', request.object);
+            action.set('type', 'testCreated');
+            action.save();
+        }
     });
 });
 
@@ -1010,10 +1045,10 @@ Parse.Cloud.afterSave("Attempt", function (request, response) {
              * Increment test author's communityNumberOfAttempts and
              * update communityAverageScore;
              */
-            if(test.get('author').id !== request.object.get('user').id) {
+            if (test.get('author').id !== request.object.get('user').id) {
                 test.get('author').increment('communityNumberOfAttempts');
                 var communityAverageScore = test.get('author').get('communityAverageScore');
-                if(!communityAverageScore)
+                if (!communityAverageScore)
                     communityAverageScore = 0;
                 communityTotalScoreProjection = communityAverageScore * test.get('author').get('communityNumberOfAttempts');
                 communityTotalScoreProjection += request.object.get('score');
@@ -1075,12 +1110,12 @@ Parse.Cloud.afterSave("Attempt", function (request, response) {
          */
         user.increment('numberOfAttempts');
         var averageScore = user.get('averageScore');
-        if(!averageScore)
+        if (!averageScore)
             averageScore = 0;
         var totalScoreProjection = averageScore * user.get('numberOfAttempts');
         totalScoreProjection += request.object.get('score');
         user.set('averageScore', Math.round(totalScoreProjection / user.get('numberOfAttempts')));
-        if(!previousAttemptFound) {
+        if (!previousAttemptFound) {
             /*
              * This is a unique attempt
              * Increment numberOfUniqueAttempts and
@@ -1088,7 +1123,7 @@ Parse.Cloud.afterSave("Attempt", function (request, response) {
              */
             user.increment('numberOfUniqueAttempts');
             var uniqueAverageScore = user.get('uniqueAverageScore');
-            if(!uniqueAverageScore)
+            if (!uniqueAverageScore)
                 uniqueAverageScore = 0;
             var totalUniqueScoreProjection = uniqueAverageScore * user.get('numberOfUniqueAttempts');
             totalUniqueScoreProjection += request.object.get('score');

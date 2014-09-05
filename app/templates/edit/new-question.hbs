@@ -21,8 +21,17 @@
         {{/if}}
     {{/if}}
     <div class="row">
-        <div class="col-md-12">
+        <div class="col-md-6">
             <button class="btn btn-primary" {{action "saveQuestion" true}}>Save Question</button>
+        </div>
+        <div class="col-md-6">
+            {{#if loadingItems}}
+                <div class="saving-loader pull-right">
+                    <div class="bounce1"></div>
+                    <div class="bounce2"></div>
+                    <div class="bounce3"></div>
+                </div>
+            {{/if}}
         </div>
     </div>
 </div>

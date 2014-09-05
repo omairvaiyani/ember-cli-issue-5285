@@ -375,7 +375,13 @@ EmberParseAdapter.Adapter = DS.RESTAdapter.extend({
         });
     },
 
+    /*
+     * Modified by Omair
+     * converts parseUser key to _User
+     */
     parseClassName: function (key) {
+        if(key === 'parseUser')
+            key = '_User';
         return Ember.String.capitalize(key);
     },
 
@@ -384,6 +390,14 @@ EmberParseAdapter.Adapter = DS.RESTAdapter.extend({
      * objects.
      */
     findHasMany: function (store, record, relatedInfo) {
+        /*
+         * Modified by Omair
+         * record.typeKey is sometimes undefined
+         * but record.constructor.typeKey fixes
+         * this issue.
+         */
+        if(!record.typeKey)
+            record.typeKey = record.constructor.typeKey;
         var query = {
             where: {
                 "$relatedTo": {
@@ -495,12 +509,13 @@ EmberParseAdapter.ParseUser = DS.Model.extend({
     communityNumberOfAttempts:  DS.attr('number', {defaultValue: 0}),
     communityAverageScore: DS.attr('number', {defaultValue: 0}),
     facebookFriends: DS.attr(),
-    /*following: DS.attr(),
-    followers: DS.attr(),*/
+    /*following: DS.hasMany('parse-user', {async: true, relation: true, inverse: 'following'}),
+    followers: DS.hasMany('parse-user', {async: true, relation: true, inverse: 'followers'}),*/
     numberFollowing: DS.attr('number', {defaultValue: 0}),
     numberOfFollowers: DS.attr('number', {defaultValue: 0}),
-    latestAttempts: DS.hasMany('attempt', {async: true}),
-    slug: DS.attr('string')
+    latestAttempts: DS.hasMany('attempt', {async: true, array: true}),
+    slug: DS.attr('string'),
+    savedTests: DS.hasMany('test', {async: true, relation: true})
 });
 
 EmberParseAdapter.ParseUser.reopenClass({

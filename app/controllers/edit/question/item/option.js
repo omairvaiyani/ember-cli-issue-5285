@@ -20,6 +20,10 @@ Ember.ObjectController.extend(EachItem, {
         this.send('optionAltered', this.get('itemIndex'));
     }.observes('model.phrase'),
 
+    isRequired: function() {
+        return this.get('itemIndex') === 1;
+    }.property('itemIndex'),
+
     array: function() {
         return this.get('parentController.options');
     }.property('parentController.options.length')

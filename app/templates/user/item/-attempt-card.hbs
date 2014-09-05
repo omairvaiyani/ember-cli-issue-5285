@@ -9,11 +9,19 @@
 
             <div class="title-and-category">
                 <h4>
-                    {{#link-to 'result' attempt.id tagName='a'}}{{attempt.test.title}}{{/link-to}}
+                    {{#link-to 'test' attempt._data.test._data.slug tagName='a'}}
+                        {{#if attempt._data.test._data.title.length}}
+                            {{attempt._data.test._data.title}}
+                        {{else}}
+                            {{attempt.test.title}}
+                        {{/if}}
+                    {{/link-to}}
                 </h4>
 
                 <p>
-                    {{#link-to 'category' attempt.test.category.slug tagName='a'}}{{attempt.test.category.name}}{{/link-to}}
+                    {{#link-to 'category' attempt._data.test.category.slug tagName='a'}}
+                        {{attempt._data.test.category.name}}
+                    {{/link-to}}
                 </p>
             </div>
 
@@ -21,13 +29,17 @@
                 <div class="container-fluid">
                     <div class="row">
                         <div class="col-md-4">
-                            <div class="text-center">Questions {{attempt.test._data.questions.length}}</div>
+                            <div class="text-center">Questions {{attempt._data.test._data.questions.length}}</div>
                         </div>
                         <div class="col-md-3">
-                            <div class="text-center"><p>Scored {{math-round attempt.score 2}}%</p></div>
+                            <div class="text-center">
+                                {{#link-to 'result' attempt.id tagName='a'}}
+                                    <p>Scored {{math-round attempt.score 2}}%</p>
+                                {{/link-to}}</div>
                         </div>
                         <div class="col-md-5">
-                            <div class="text-center">Community Avg. {{math-round attempt.test.averageScore 2}}%</div>
+                            <div class="text-center">Community Avg. {{math-round attempt._data.test.averageScore 2}}%
+                            </div>
                         </div>
                     </div>
                 </div>

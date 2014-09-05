@@ -11,8 +11,62 @@
         <div class="carousel-inner">
             <div class="item active">
                 <div class="container-fluid course-selection">
+                    <p class="lead">Enter course information</p>
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <p class="margin-top-16">Institution</p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-11">
+                            {{autocomplete-field data=autocompleteInstitutionNames key='fullName'
+                                value=newCourse.institutionName}}
+                        </div>
+                        <div class="col-md-1 text-center">
+                            {{#if loading.autocompleteInstitutionNames}}
+                                <div class="loading-spinner"></div>
+                            {{/if}}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <p>Course</p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-11">
+                            {{autocomplete-field data=autocompleteCourseNames key='name'
+                            value=newCourse.courseName}}
+                        </div>
+                        <div class="col-md-1 text-center">
+                            {{#if loading.autocompleteCourseNames}}
+                                <div class="loading-spinner"></div>
+                            {{/if}}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <p class="margin-bottom-16">Current study year</p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-11">
+                            {{view Ember.Select
+                            classNames='form-control'
+                            content=courseYearsToChooseFrom
+                            optionValuePath="content"
+                            optionLabelPath="content"
+                            selection=newCourse.yearName}}
+                        </div>
+                        <div class="col-md-1">
+                        </div>
+                    </div>
+                    <hr>
+                    <p class="lead">Or select one of these</p>
                     {{#each education}}
-                        <div class="row">
+                        <div class="row hover-row" {{action 'courseSelected' this}}>
                             <div class="col-md-11">
                                 <p class="margin-top-16">Institution: {{school.name}}</p>
 
@@ -23,7 +77,7 @@
                             <div class="col-md-1">
                                 <a href="#course-selection" role="button"
                                    data-slide="next">
-                                    <span class="glyphicon glyphicon-chevron-right" {{action 'courseSelected' this}}></span>
+                                    <span class="glyphicon glyphicon-chevron-right"></span>
                                 </a>
                             </div>
                         </div>
@@ -33,10 +87,12 @@
             <div class="item">
                 <div class="container-fluid">
                     <a href="#course-selection" role="button"
-                       data-slide="prev">
+                       data-slide="prev" class="margin-bottom-16">
                         <span class="glyphicon glyphicon-chevron-left"></span> Go back
                     </a>
+
                     <p class="lead margin-top-16">Are these details correct?</p>
+
                     <p class="margin-top-16">Institution: {{selectedCourse.school.name}}</p>
 
                     <p>Course: {{selectedCourse.concentration.0.name}}</p>

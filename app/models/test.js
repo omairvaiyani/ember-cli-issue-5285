@@ -5,7 +5,7 @@ export default DS.Model.extend(ParseMixin, {
     author: DS.belongsTo('parse-user', {defaultValue: null, async: true}),
     category: DS.belongsTo('category', {defaultValue: null, async: true}),
     description: DS.attr('string'),
-    questions: DS.hasMany('question', {async: true}),
+    questions: DS.hasMany('question', {async: true, array: true}),
     privacy: DS.attr('number', {defaultValue: 0}),
     isActive: DS.attr('boolean'),
     isGenerated: DS.attr('boolean'),

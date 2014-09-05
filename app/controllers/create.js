@@ -43,13 +43,13 @@ Ember.ObjectController.extend({
         }
     }.property('newCategoryParentInput'),
     tagsStringified: "",
-    stringifyTags: function() {
+    stringifyTags: function () {
         var tagsStringified = "";
-        for(var i = 0; i < this.get('tags.length'); i++) {
-            tagsStringified += this.get('tags.'+i) + ", ";
+        for (var i = 0; i < this.get('tags.length'); i++) {
+            tagsStringified += this.get('tags.' + i) + ", ";
         }
-        if(tagsStringified)
-            this.set('tagsStringified',tagsStringified.slice('0', -2));
+        if (tagsStringified)
+            this.set('tagsStringified', tagsStringified.slice('0', -2));
         else
             this.set('tagsStringified', tagsStringified);
     }.observes('content.objectId'),
@@ -136,9 +136,11 @@ Ember.ObjectController.extend({
                 return;
             }
             test.set('author', this.get('currentUser'));
+            this.send('incrementLoadingItems');
             test.save().then(function (test) {
                 this.set('categorySelectionInput', '');
-                this.transitionToRoute('edit.newQuestion', test);
+                this.transitionToRoute('edit.newQuestion', test.get('slug'));
+                this.send('decrementLoadingItems');
             }.bind(this));
         },
         deleteObjectsInActionBar: function (objects) {
@@ -154,5 +156,4 @@ Ember.ObjectController.extend({
             this.get('model').save();
         }
     }
-})
-;
+});

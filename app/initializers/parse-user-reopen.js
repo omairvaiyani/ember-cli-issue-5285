@@ -46,6 +46,30 @@ export default
                        object.set('following', following);
                        return following;
                     });
+            },
+
+            getFollowers: function (store, object) {
+                var where = {
+                    "$relatedTo": {
+                        "object": ParseHelper.generatePointer(object),
+                        "key": "followers"
+                    }
+                };
+                return store.findQuery('parse-user', {where: JSON.stringify(where)})
+                    .then(function(followers) {
+                        object.set('followers', followers);
+                        return followers;
+                    });
+            },
+
+            getMessages: function (store, object) {
+                var where = {
+                    "to": ParseHelper.generatePointer(object)
+                };
+                return store.findQuery('message', {where: JSON.stringify(where), order: '-createdAt'})
+                    .then(function(messages) {
+                       object.set('messages', messages);
+                    });
             }
 
         });

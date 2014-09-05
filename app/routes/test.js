@@ -5,7 +5,12 @@ from
 
 export default
 Ember.Route.extend({
-    model: function (params) {
+    beforeModel: function(transition) {
+        this.controllerFor('test').set('loading', "Preparing test");
+    },
+
+    model: function (params, transition) {
+        transition.send('incrementLoadingItems');
         var where = {
             "slug": params.test_slug
         };
@@ -16,10 +21,19 @@ Ember.Route.extend({
                 } else {
                     console.log("No test with this slug found");
                 }
-            });
+            }.bind(this));
     },
     setupController: function (controller, model) {
         model.get('questions').then(function(questions) {
+            /*
+             * This ensures that the loadingItems
+             * is at least 1 at this point.
+             * On route transitions, sending actions
+             * is buggy and therefore this is a backup call.
+             */
+            this.send('decrementLoadingItems');
+            this.send('incrementLoadingItems');
+
             controller.set('model', model);
             /*
              * Create a new property which holds
@@ -32,6 +46,7 @@ Ember.Route.extend({
              * - Shuffle the remaining options
              * - Set a new property in the question: shuffledOptions
              */
+
             controller.get('shuffledQuestions').forEach(function(question) {
                 var nonEmptyOptions = [];
                 question.get('options').forEach(function(option) {
@@ -43,7 +58,9 @@ Ember.Route.extend({
             /*
              * Allow page to display the test
              */
+            controller.set('currentQuestionIndex', 0);
             controller.set('loading', null);
+            this.send('decrementLoadingItems');
         }.bind(this));
     },
     shuffle: function (o) {

@@ -7,21 +7,13 @@ var app = new EmberApp();
 /*
  * TWITTER - BOOTSTRAP
  */
-//app.import('vendor/bootstrap/dist/css/bootstrap.css.map', {
-//    destDir: '/assets'
-//});
-//app.import('vendor/bootstrap/dist/fonts/glyphicons-halflings-regular.woff', {
-//    destDir: '../fonts'
-//});
-//app.import('vendor/bootstrap/dist/fonts/glyphicons-halflings-regular.ttf', {
-//    destDir: '../fonts'
-//});
-//app.import('vendor/bootstrap/dist/fonts/glyphicons-halflings-regular.svg', {
-//    destDir: '../fonts'
-//});
 app.import({
     development: 'vendor/bootstrap/dist/js/bootstrap.js',
     production: 'vendor/bootstrap/dist/js/bootstrap.min.js'
+});
+app.import({
+    development: 'vendor/bootstrap/dist/css/bootstrap.css.map',
+    production: 'vendor/bootstrap/dist/css/bootstrap.css.map'
 });
 app.import({
     development: 'vendor/bootstrap/dist/css/bootstrap.css',
@@ -30,15 +22,6 @@ app.import({
 /*
  * FONT AWESOME
  */
-//app.import('vendor/font-awesome/fonts/fontawesome-webfont.woff', {
-//    destDir: '../fonts'
-//});
-//app.import('vendor/font-awesome/fonts/fontawesome-webfont.ttf', {
-//    destDir: '../fonts'
-//});
-//app.import('vendor/font-awesome/fonts/fontawesome-webfont.svg', {
-//    destDir: '../fonts'
-//});
 app.import({
     development: 'vendor/font-awesome/css/font-awesome.css',
     production: 'vendor/font-awesome/css/font-awesome.min.css'
@@ -66,5 +49,9 @@ app.import({
     development: 'vendor/parse-js-sdk/lib/parse.js',
     production: 'vendor/parse-js-sdk/lib/parse.min.js'
 });
+/*
+ * JQUERY AUTO COMPLETE
+ */
+app.import('vendor/jquery-autocomplete/jquery.autocomplete.js');
 
 module.exports = app.toTree();

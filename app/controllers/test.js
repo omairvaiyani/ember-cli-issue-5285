@@ -4,12 +4,17 @@ from
 'ember';
 
 import
+CurrentUser
+from
+'../mixins/current-user';
+
+import
 ParseHelper
 from
 '../utils/parse-helper';
 
 export default
-Ember.ObjectController.extend({
+Ember.ObjectController.extend(CurrentUser, {
     loading: 'Preparing test...',
 
     setTimeStarted: function () {
@@ -126,6 +131,7 @@ Ember.ObjectController.extend({
          */
         isMarking: false,
         markTest: function () {
+            this.send('incrementLoadingItems');
             this.send('closeModal');
             this.set('loading', 'Marking test...');
             var attempt = this.store.createRecord('attempt', {
@@ -201,6 +207,7 @@ Ember.ObjectController.extend({
                     });
                     this.get('currentUser').incrementProperty('numberOfAttempts');
                     this.transitionToRoute('result', attempt);
+                    this.send('decrementLoadingItems');
                 }.bind(this));
 
         }

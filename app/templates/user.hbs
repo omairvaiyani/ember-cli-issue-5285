@@ -5,12 +5,12 @@
             {{render 'profile-image' this}}
 
             <h2>{{#link-to 'user' this.slug}}{{name}}{{/link-to}}</h2>
-            {{#unless isCurrentUser}}
+            <h5>{{#unless isCurrentUser}}
                 {{#if isFollowing}}
                     <a {{action 'unfollowUser' this}}
                             style="position: absolute;
                             cursor:pointer;
-                        right: 16px;
+                        left: 184px;
                         bottom: 16px;
                         color: whitesmoke;
                         font-size: 18px;">Following</a>
@@ -18,37 +18,18 @@
                     <a {{action 'followUser' this}}
                             style="position: absolute;
                             cursor:pointer;
-                        right: 16px;
+                        left: 184px;
                         bottom: 16px;
                         color: whitesmoke;
                         font-size: 18px;">Follow</a>
                 {{/if}}
             {{/unless}}
-        </div>
-        <div class="row">
-            <div class="col-md-4 col-sm-4 col-xs-4 text-center">
-                <h4>
-                    {{#link-to 'user.tests' this.slug}}
-                        {{#if numberOfTests}}{{numberOfTests}}{{else}}0{{/if}}
-                        <small> Tests</small>
-                    {{/link-to}}
-                </h4>
-            </div>
-            <div class="col-md-4 col-sm-4 col-xs-4 text-center">
-                <h4>
-                    {{#link-to 'user.following' this.slug}}
-                        {{#if numberFollowing}}{{numberFollowing}}{{else}}0{{/if}}
-                        <small> Following</small>
-                    {{/link-to}}
-                </h4>
-            </div>
-            <div class="col-md-4 col-sm-4 col-xs-4 text-center">
-                <h4>
-                    {{#link-to 'user.followers' this.slug}}
-                        {{#if numberOfFollowers}}{{numberOfFollowers}}{{else}}0{{/if}}
-                        <small> Followers</small>
-                    {{/link-to}}
-                </h4>
+            </h5>
+            <div class="user-navigation">
+                {{#link-to 'user.index' tagName='button'}}Overview{{/link-to}}
+                {{#link-to 'user.tests' tagName='button'}}{{numberOfTests}}<small> Tests</small>{{/link-to}}
+                {{#link-to 'user.following' tagName='button'}}{{numberFollowing}}<small> Following</small>{{/link-to}}
+                {{#link-to 'user.followers' tagName='button'}}{{numberOfFollowers}}<small> Followers</small>{{/link-to}}
             </div>
         </div>
     </div>
@@ -62,6 +43,8 @@
                                     >{{course.name}}</a> at <a {{bind-attr href=institutionFacebookPageUrl}}
                                     >{{institution.fullName}}</a>
                             </p>
+                            {{else}}
+                            <p>{{firstName}} has not added any course information yet.</p>
                         {{/if}}
                         {{#if isCurrentUser}}
                             {{#if course}}
@@ -80,9 +63,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-2 col-md-push-7 col-sm-6 col-xs-12">
-        </div>
-        <div class="col-md-7 col-md-pull-2 action-column">
+        <div class="col-md-9 action-column">
             {{outlet}}
         </div>
     </div>

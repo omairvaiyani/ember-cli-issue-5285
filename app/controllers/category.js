@@ -10,6 +10,12 @@ from
 
 export default
 Ember.ObjectController.extend({
+    needs: 'application',
+
+    applicationController: function() {
+        return this.get('controllers.application');
+    }.property('controllers'),
+
     queryParams: ['page', 'order', 'categoryFilter', 'filterCategoryIds', 'search'],
 
     /*
@@ -130,6 +136,8 @@ Ember.ObjectController.extend({
         if (!this.get('model.id'))
             return;
 
+        this.send('incrementLoadingItems');
+        console.log("Getting child categories");
         /*
          * Get this category's child categories
          */
@@ -140,6 +148,8 @@ Ember.ObjectController.extend({
             where: JSON.stringify(where),
             order: 'name'
         }).then(function (childCategories) {
+                this.send('decrementLoadingItems');
+                console.log("Got child categories");
                 this.set('childCategories', childCategories);
                 /*
                  * Selected categories allow users to filter
@@ -173,18 +183,29 @@ Ember.ObjectController.extend({
             this.get('tests').clear();
             return;
         }
+        this.send('incrementLoadingItems');
+        console.log("Getting tests");
         /*
          * Get tests which belong to the parent category
          * AND any of the selected childCategories
          */
         var where;
         if (this.get('search.length')) {
+            var stopWords = ["the", "in", "and", "test", "mcqs", "of", "a", "an"],
+                tags = _.filter(this.get('search').toLowerCase().split(' '), function (w) {
+                    return w.match(/^\w+$/) && !_.contains(stopWords, w);
+                });
+            var where = {
+                "tags": {
+                    "$all": tags
+                }
+            };
             where = {
                 category: {
                     "$in": ParseHelper.generatePointers(this.get('selectedCategories'))
                 },
                 tags: {
-                    "$all": this.get('search').toLowerCase().split()
+                    "$all": tags
                 }
             };
         } else {
@@ -207,6 +228,8 @@ Ember.ObjectController.extend({
             .then(function (tests) {
                 this.get('tests').clear();
                 this.get('tests').addObjects(tests);
+                this.send('decrementLoadingItems');
+                console.log("Got tests");
             }.bind(this));
     }.observes('readyToGetTests', 'selectedCategories.length', 'order', 'search'),
 

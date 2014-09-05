@@ -15,18 +15,24 @@ from
 
 export default
 Ember.ObjectController.extend(CurrentUser, {
+    loading: {
+        autocompleteInstitutionNames: false
+    },
+
     isMainListRecentActivity: true,
     isMainListTests: false,
 
-    isCurrentUser: function() {
+    isCurrentUser: function () {
         return this.get('currentUser.id') === this.get('model.id');
     }.property('model.id'),
 
-    isFollowing: function() {
-        if(!this.get('isCurrentUser')) {
-
+    isFollowing: function () {
+        if (!this.get('isCurrentUser') && this.get('currentUser.following.length')) {
+            return this.get('currentUser.following').contains(this.get('model'));
+        } else {
+            return false;
         }
-    }.property('isCurrentUser'),
+    }.property('isCurrentUser', 'currentUser.following.length'),
 
     coverImageStyle: function () {
         var coverImageURL = this.get('coverImageURL');
@@ -102,18 +108,88 @@ Ember.ObjectController.extend(CurrentUser, {
     }.observes('model'),
 
     /*
+     * Object for new course creation
+     */
+    newCourse: {
+        institutionName: '',
+        concentrationName: '',
+        yearName: 0
+    },
+
+    autocompleteInstitutionNames: [],
+    getInstitutionNamesForAutocomplete: function () {
+        if (this.get('newCourse.institutionName.length') < 2) {
+            this.get('autocompleteInstitutionNames').clear();
+            this.set('loading.autocompleteInstitutionNames', false);
+            return;
+        }
+        this.set('loading.autocompleteInstitutionNames', true);
+        var stopWords = ParseHelper.stopWords,
+            tags = _.filter(this.get('newCourse.institutionName').toLowerCase().split(' '), function (w) {
+                return w.match(/^\w+$/) && !_.contains(stopWords, w);
+            });
+        var where = {
+            "tags": {
+                "$all": tags
+            }
+        };
+        this.store.findQuery('institution-list', {where: JSON.stringify(where)})
+            .then(function (institutionList) {
+                this.set('loading.autocompleteInstitutionNames', false);
+                this.get('autocompleteInstitutionNames').clear();
+                if (institutionList.get('content.length'))
+                    this.get('autocompleteInstitutionNames').addObjects(institutionList.get('content'));
+
+            }.bind(this));
+    },
+
+    throttleAutocompleteInstitutionNames: function () {
+        Ember.run.debounce(this, this.getInstitutionNamesForAutocomplete, 250);
+    }.observes("newCourse.institutionName.length"),
+
+    autocompleteCourseNames: [],
+    getCourseNamesForAutocomplete: function () {
+        if (this.get('newCourse.courseName.length') < 2) {
+            this.get('autocompleteCourseNames').clear();
+            this.set('loading.autocompleteCourseNames', false);
+            return;
+        }
+        this.set('loading.autocompleteCourseNames', true);
+        var stopWords = ParseHelper.stopWords,
+            tags = _.filter(this.get('newCourse.courseName').toLowerCase().split(' '), function (w) {
+                return w.match(/^\w+$/) && !_.contains(stopWords, w);
+            });
+        var where = {
+            "tags": {
+                "$all": tags
+            }
+        };
+        this.store.findQuery('course-list', {where: JSON.stringify(where)})
+            .then(function (courseList) {
+                this.set('loading.autocompleteCourseNames', false);
+                this.get('autocompleteCourseNames').clear();
+                if (courseList.get('content.length'))
+                    this.get('autocompleteCourseNames').addObjects(courseList.get('content'));
+
+            }.bind(this));
+    },
+
+    throttleAutocompleteCourseNames: function () {
+        Ember.run.debounce(this, this.getCourseNamesForAutocomplete, 250);
+    }.observes("newCourse.courseName.length"),
+
+    /*
      * Object for course-selection modal
      */
     selectedCourse: null,
 
-    courseYearsToChooseFrom: [0,1,2,3,4,5,6],
-    courseLengthsToChooseFrom: [1,2,3,4,5,6,7],
+    courseYearsToChooseFrom: [0, 1, 2, 3, 4, 5, 6],
+    courseLengthsToChooseFrom: [1, 2, 3, 4, 5, 6, 7],
 
     latestAttemptsReceived: false,
-    getLatestAttempts: function() {
-        if(this.get('latestAttempts.length'))
+    getLatestAttempts: function () {
+        if (this.get('latestAttempts.length'))
             this.set('latestAttemptsReceived', true);
-        console.log('latestAttempts length change: received?'+this.get('latestAttemptsReceived'))
     }.observes('latestAttempts.length'),
 
     actions: {
@@ -249,27 +325,27 @@ Ember.ObjectController.extend(CurrentUser, {
                          */
                         newCourse.save()
                             .then(function (newCourse) {
-                            this.set('course', newCourse);
+                                this.set('course', newCourse);
                                 var newYear = this.store.createRecord('year', {
                                     year: selectedCourse.currentYear,
                                     course: newCourse
-                            });
-                            return newYear.save();
-                        }.bind(this))
-                            .then(function(newYear) {
+                                });
+                                return newYear.save();
+                            }.bind(this))
+                            .then(function (newYear) {
                                 this.set('year', newYear);
                                 this.get('model').save();
                             }.bind(this));
                         return null;
                     }
-                }.bind(this)).then(function(results) {
-                    if(results && results.content.length) {
+                }.bind(this)).then(function (results) {
+                    if (results && results.content.length) {
                         this.set('year', results.content[0]);
                         return this.get('model').save();
                     } else {
                         return;
                     }
-                }.bind(this)).then(function() {
+                }.bind(this)).then(function () {
                     // Course selection and education history all sorted!
                     this.send('closeModal');
                 }.bind(this));

@@ -20,5 +20,8 @@ export default {
             pointers.push(this.generatePointer(object));
         }.bind(this));
         return pointers;
-    }
+    },
+
+    stopWords: ["the", "in", "and", "test", "mcqs", "of", "a", "an"]
+
 }

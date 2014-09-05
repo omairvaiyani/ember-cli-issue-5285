@@ -70,6 +70,7 @@ Ember.ObjectController.extend({
 
     categoryTests: [],
     getCategoryTests: function () {
+        console.log("Getting category tests in Results page");
         if (!this.get('test.category.id'))
             return;
 
@@ -81,7 +82,6 @@ Ember.ObjectController.extend({
             .then(function (tests) {
                 this.get('categoryTests').clear();
                 this.get('categoryTests').addObjects(tests);
-                console.dir(this.get('categoryTests'));
             }.bind(this));
         return categoryTests;
     }.observes('test.category.id'),

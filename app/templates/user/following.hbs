@@ -1,12 +1,12 @@
-{{#each friend in content}}
-    {{partial 'user/item/facebook-friend'}}
+{{#each user in following itemController='user.item.user'}}
+    {{partial 'user/item/user'}}
 {{/each}}
 
 {{#if isCurrentUser}}
     <div class="card margin-top-16">
         All Facebook friends on MyCQs!
     </div>
-    {{#each friend in facebookFriendsOnMyCQs}}
-        {{partial 'user/item/facebook-friend'}}
+    {{#each user in facebookFriendsOnMyCQs}}
+        {{partial 'user/item/user'}}
     {{/each}}
 {{/if}}

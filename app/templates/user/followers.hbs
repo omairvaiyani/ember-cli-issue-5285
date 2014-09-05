@@ -1,3 +1,3 @@
-{{#each friend in content}}
-    {{partial 'user/item/facebook-friend'}}
+{{#each user in followers itemController='user.item.user'}}
+    {{partial 'user/item/user'}}
 {{/each}}

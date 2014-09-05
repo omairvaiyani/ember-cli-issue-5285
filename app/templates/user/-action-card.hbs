@@ -12,7 +12,7 @@
                     {{#if userAction.test}}
                         {{#link-to 'test' userAction.test.slug}}{{userAction.test.title}}{{/link-to}}
                         <small> in </small>
-                        {{#link-to 'test' userAction.test.category.slug}}{{userAction.test.category.name}}{{/link-to}}
+                        {{#link-to 'category' userAction.test.category.slug}}{{userAction.test.category.name}}{{/link-to}}
                     {{/if}}
                 </p>
             </div>

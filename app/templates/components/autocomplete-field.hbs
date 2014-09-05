@@ -1,0 +1,13 @@
+{{#if isFocussed}}
+    <div class="autocomplete-container">
+        {{#each item in array itemController='component.item.autocomplete'}}
+            <div class="autocomplete-row" {{bind-attr class=':autocomplete-row item.isFocussed'}} {{action 'itemSelected' item}}>
+                <p>{{item.key}}</p>
+            </div>
+        {{/each}}
+        {{#if numberOfItemsOmitted}}
+            <p class="text-center">{{numberOfItemsOmitted}} other results. Please specify
+                further.</p>
+        {{/if}}
+    </div>
+{{/if}}

@@ -1,0 +1,55 @@
+<div class="row">
+    <div class="col-md-12">
+        <div class="card action-card margin-top-16">
+            {{#link-to 'user' user.slug
+            tagName='a'}}{{render 'profile-image' user}}{{/link-to}}
+
+            <div class="action-title">
+                <p>{{#link-to 'user' user.slug}}
+                    {{user.name}}{{/link-to}}
+                </p>
+
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class=col-md-4>
+                            <p class="lead">
+                                {{#link-to 'user.tests' user.slug}}
+                                    {{#if user.numberOfTests}}{{user.numberOfTests}}{{else}}0{{/if}}
+                                    <small> Tests</small>
+                                {{/link-to}}
+                            </p>
+                        </div>
+                        <div class=col-md-4>
+                            <p class="lead">
+                                {{#link-to 'user.following' user.slug}}
+                                    {{#if user.numberFollowing}}{{user.numberFollowing}}{{else}}0{{/if}}
+                                    <small> Following</small>
+                                {{/link-to}}
+                            </p>
+
+                        </div>
+                        <div class=col-md-4>
+                            <p class="lead">
+                                {{#link-to 'user.followers' user.slug}}
+                                    {{#if user.numberOfFollowers}}{{user.numberOfFollowers}}{{else}}0{{/if}}
+                                    <small> Followers</small>
+                                {{/link-to}}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="actions-top-right">
+                {{#unless user.isCurrentUser}}
+                    {{#if user.isFollowing}}
+                        <a {{action 'unfollowUser' user}}><span class="glyphicon glyphicon-ok-circle"></span> following</a>
+                    {{else}}
+                        <a {{action 'followUser' user}}><span class="glyphicon glyphicon-unchecked"></span> follow</a>
+                    {{/if}}
+                {{/unless}}
+            </div>
+        </div>
+    </div>
+</div>

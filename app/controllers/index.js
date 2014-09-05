@@ -17,6 +17,33 @@ export default
 Ember.Controller.extend(CurrentUser, {
     initialized: false,
 
+    stats: function () {
+        var stats = {
+            numberOfUsers: 0,
+            numberOfTests: 0,
+            numberOfQuestions: 0,
+            numberOfAttempts: 0
+        };
+        var query = new Parse.Query('_User');
+        query.count().then(function (count) {
+                this.set('stats.numberOfUsers', count);
+                query = new Parse.Query('Test');
+                return query.count();
+            }.bind(this)).then(function (count) {
+                this.set('stats.numberOfTests', count);
+                query = new Parse.Query('Question');
+                return query.count();
+            }.bind(this)).then(function (count) {
+                this.set('stats.numberOfQuestions', count);
+                query = new Parse.Query('Attempt');
+                return query.count();
+            }.bind(this)).then(function (count) {
+                this.set('stats.numberOfAttempts', count);
+                return;
+            }.bind(this));
+        return stats;
+    }.property(),
+
     homeIsActivities: true,
 
     homeIsTests: false,
@@ -74,9 +101,12 @@ Ember.Controller.extend(CurrentUser, {
 
     followingActions: [],
     getFollowingActions: function () {
-        if (!this.get('currentUser') || !this.get('currentUser.following.length'))
-            return;
         this.get('followingActions').clear();
+
+        if (!this.get('currentUser') || !this.get('currentUser.following.length')) {
+            return;
+        }
+
         var query = {
             user: {
                 '$in': ParseHelper.generatePointers(this.get('currentUser.following'))
@@ -111,7 +141,7 @@ Ember.Controller.extend(CurrentUser, {
             this.set('homeIsTests', false);
             this.set('homeIsAttempts', false);
 
-            switch(navigation) {
+            switch (navigation) {
                 case 'activities':
                     this.set('homeIsActivities', true);
                     break;

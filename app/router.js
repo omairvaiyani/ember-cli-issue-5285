@@ -25,7 +25,10 @@ Router.map(function () {
      * Test browsing and searching
      */
     this.resource('browse');
-    this.resource('category', {path: 'browse/:category_slug'});
+    this.resource('category', {path: 'browse/:category_slug'} );
+    /*this.resource('category', {path: 'browse/:category_slug'}, function() {
+        this.route('subCategory', {path: '/:subCategory_slug'});
+    });*/
     /*
      * Test creation and edition
      */

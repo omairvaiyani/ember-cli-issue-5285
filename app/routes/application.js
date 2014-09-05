@@ -8,43 +8,51 @@ FormValidation
 from
 '../utils/form-validation';
 
-/*import
-CurrentUser
-from
-'../mixins/current-user';*/
-
 export default
 Ember.Route.extend({
+    applicationController: null,
+
+    currentUser: function () {
+        if (this.get('applicationController'))
+            return this.get('applicationController.currentUser');
+    }.property('applicationController.currentUser.id'),
+
+    setupController: function (controller, model) {
+        controller.set('model', model);
+        this.set('applicationController', controller);
+        controller.notifyPropertyChange('currentUser');
+    },
+
     actions: {
-        signUp: function() {
+        signUp: function () {
             var name = this.controllerFor('application').get('newUser.name'),
                 email = this.controllerFor('application').get('newUser.email'),
                 password = this.controllerFor('application').get('newUser.password'),
                 confirmPassword = this.controllerFor('application').get('newUser.confirmPassword'),
                 errors = false;
 
-            if(!FormValidation.name(name.trim())) {
+            if (!FormValidation.name(name.trim())) {
                 this.controllerFor('application').set('signUpValidationErrors.name', true);
                 errors = true;
             }
-            if(!FormValidation.email(email.trim())) {
+            if (!FormValidation.email(email.trim())) {
                 this.controllerFor('application').set('signUpValidationErrors.email', true);
                 errors = true;
             }
-            if(!FormValidation.password(password)) {
+            if (!FormValidation.password(password)) {
                 this.controllerFor('application').set('signUpValidationErrors.password', true);
                 errors = true;
             }
-            if(!FormValidation.confirmPassword(password, confirmPassword)) {
+            if (!FormValidation.confirmPassword(password, confirmPassword)) {
                 this.controllerFor('application').set('signUpValidationErrors.confirmPassword', true);
                 errors = true;
             }
-            if(!errors) {
+            if (!errors) {
                 var data = {
-                    name: name.trim(),
-                    email: email.trim(),
-                    username: email.trim(),
-                    password: password
+                        name: name.trim(),
+                        email: email.trim(),
+                        username: email.trim(),
+                        password: password
                     },
                     ParseUser = this.store.modelFor('parse-user');
 
@@ -132,6 +140,9 @@ Ember.Route.extend({
          * - Once a fully loaded user record is received, progress to controller logic.
          */
         signUpAuthorisedFacebookUser: function (authResponse) {
+            this.get('applicationController').incrementProperty('loadingItems');
+            console.log("signUpAuthorisedFacebookUser called : "+this.get('applicationController').get('loadingItems'));
+            this.send('closeModal');
             FB.api('/me', {fields: 'name,education,gender,cover,email,friends'}, function (response) {
                 var fbFriendsArray = [],
                     fbFriendsData = response.friends.data;
@@ -157,43 +168,63 @@ Ember.Route.extend({
                             }
                         }
                     };
-                ParseUser.signup(this.store, data).then(
-                    function (user) {
-                        console.dir(user);
-                        /*
-                         * Sometimes user info is missing,
-                         * let's add some of it here:
-                         */
-                        if(!user.get('name'))
-                            user.set('name', response.name);
-                        if(!user.get('fbid'))
-                            user.set('fbid', response.id);
-                        if(!user.get('email'))
-                            user.set('email', response.email);
-                        if(!user.get('coverImageURL'))
-                            user.set('coverImageURL', response.cover.source);
+                /*
+                 * TODO
+                 * Need to initialize the Parse SDK on adapters/application.js
+                 * before running this code. Normally we make an ember-data
+                 * call by this point whereby the adapter is initialized,
+                 * however, in this scenario, this happens to be the first
+                 * api query and so parse is not initialized!
+                 */
+                Parse.Cloud.run('preFacebookConnect', {authResponse: authResponse},
+                    {
+                        success: function () {
+                            ParseUser.signup(this.store, data).then(
+                                function (user) {
+                                    /*
+                                     * Sometimes user info is missing,
+                                     * let's add some of it here:
+                                     */
+                                    if (!user.get('name'))
+                                        user.set('name', response.name);
+                                    if (!user.get('fbid'))
+                                        user.set('fbid', response.id);
+                                    if (!user.get('email'))
+                                        user.set('email', response.email);
+                                    if (!user.get('coverImageURL'))
+                                        user.set('coverImageURL', response.cover.source);
 
-                        /*
-                         * Update FB Friends list everytime
-                         */
-                        user.set('facebookFriends', fbFriendsArray);
-                        this.controllerFor('application').set('currentUser', user);
-                        this.send('closeModal');
-                        this.transitionTo('index');
-                    }.bind(this),
-                    function (error) {
-                        console.log("Error with ParseUser.signup() in: " + "signUpAuthorisedFacebookUser");
-                        console.dir(error);
-                    }
-                );
+                                    /*
+                                     * Update FB Friends list everytime
+                                     */
+                                    user.set('facebookFriends', fbFriendsArray);
+                                    if(this.get('applicationController').get('loadingItems'))
+                                        this.get('applicationController').decrementProperty('loadingItems');
+                                    console.log('signUpAuthorisedFacebookUser ended: '+this.get('applicationController').get('loadingItems'));
+                                    this.controllerFor('application').set('currentUser', user);
+                                    this.transitionTo('index');
+                                }.bind(this),
+                                function (error) {
+                                    console.log("Error with ParseUser.signup() in: " + "signUpAuthorisedFacebookUser");
+                                    console.dir(error);
+                                }
+                            );
+
+                        }.bind(this),
+                        error: function (error) {
+                            if(this.get('applicationController').get('loadingItems'))
+                                this.get('applicationController').decrementProperty('loadingItems');
+                            console.log('signUpAuthorisedFacebookUser error: '+this.get('applicationController').get('loadingItems'));
+                            console.log(JSON.stringify(error));
+                        }
+                    });
+
             }.bind(this));
         },
 
         logout: function () {
-            this.controllerFor('application').set('currentUser', null);
-            console.log("CurrentUser set to : "+this.controllerFor('application').get('currentUser'));
+            this.get('applicationController').set('currentUser', null);
             this.transitionTo('index');
-//            this.refresh();
         },
         openModal: function (modalName, controller) {
             var myModal = jQuery('#myModal');
@@ -219,7 +250,9 @@ Ember.Route.extend({
             var currentUser = this.get('currentUser');
             currentUser.incrementProperty('numberFollowing');
             user.incrementProperty('numberOfFollowers');
-            user.set('isFollowing', true);
+            currentUser.get('following').pushObject(user);
+            if (user.get('followers'))
+                user.get('followers').pushObject(currentUser);
 
             Parse.Cloud.run('followUser',
                 {
@@ -232,7 +265,8 @@ Ember.Route.extend({
                         console.log("There was an error: " + error);
                         currentUser.decrementProperty('numberFollowing');
                         user.decrementProperty('numberOfFollowers');
-                        user.set('isFollowing', false);
+                        if (user.get('followers'))
+                            user.get('followers').removeObject(currentUser);
                     }.bind(this)
                 });
         },
@@ -241,7 +275,9 @@ Ember.Route.extend({
             var currentUser = this.get('currentUser');
             currentUser.decrementProperty('numberFollowing');
             user.decrementProperty('numberOfFollowers');
-            user.set('isFollowing', false);
+            currentUser.get('following').removeObject(user);
+            if (user.get('followers'))
+                user.get('followers').removeObject(currentUser);
             Parse.Cloud.run('unfollowUser',
                 {
                     mainUser: currentUser.get('id'),
@@ -253,9 +289,20 @@ Ember.Route.extend({
                         console.log("There was an error: " + error);
                         currentUser.incrementProperty('numberFollowing');
                         user.incrementProperty('numberOfFollowers');
-                        user.set('isFollowing', true);
+                        if (user.get('followers'))
+                            user.get('followers').pushObject(currentUser);
                     }.bind(this)
                 });
+        },
+
+        incrementLoadingItems: function() {
+            if(this.get('applicationController'))
+                this.get('applicationController').incrementProperty('loadingItems');
+        },
+
+        decrementLoadingItems: function() {
+            if(this.get('applicationController.loadingItems'))
+                this.get('applicationController').decrementProperty('loadingItems');
         }
     }
 });
