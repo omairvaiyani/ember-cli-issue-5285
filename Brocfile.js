@@ -8,57 +8,58 @@ var app = new EmberApp();
  * TWITTER - BOOTSTRAP
  */
 app.import({
-    development: 'vendor/bootstrap/dist/js/bootstrap.js',
-    production: 'vendor/bootstrap/dist/js/bootstrap.min.js'
+    development: 'bower_components/bootstrap/dist/js/bootstrap.js',
+    production: 'bower_components/bootstrap/dist/js/bootstrap.min.js'
 });
 app.import({
-    development: 'vendor/bootstrap/dist/css/bootstrap.css.map',
-    production: 'vendor/bootstrap/dist/css/bootstrap.css.map'
+    development: 'bower_components/bootstrap/dist/css/bootstrap.css.map',
+    production: 'bower_components/bootstrap/dist/css/bootstrap.css.map'
 });
 app.import({
-    development: 'vendor/bootstrap/dist/css/bootstrap.css',
-    production: 'vendor/bootstrap/dist/css/bootstrap.min.css'
+    development: 'bower_components/bootstrap/dist/css/bootstrap.css',
+    production: 'bower_components/bootstrap/dist/css/bootstrap.min.css'
 });
 /*
  * FONT AWESOME
  */
 app.import({
-    development: 'vendor/font-awesome/css/font-awesome.css',
-    production: 'vendor/font-awesome/css/font-awesome.min.css'
+    development: 'bower_components/font-awesome/css/font-awesome.css',
+    production: 'bower_components/font-awesome/css/font-awesome.min.css'
 });
 /*
  * MOMENT.JS
  */
 app.import({
-    development: 'vendor/moment/min/moment-with-locales.js',
-    production: 'vendor/moment/min/moment-with-locales.min.js'
+    development: 'bower_components/moment/min/moment-with-locales.js',
+    production: 'bower_components/moment/min/moment-with-locales.min.js'
 });
 
 /*
  * UNDERSCORE.JS
  */
 app.import({
-    development: 'vendor/underscore/underscore.js',
-    production: 'vendor/underscore/underscore.js'
+    development: 'bower_components/underscore/underscore.js',
+    production: 'bower_components/underscore/underscore.js'
 });
 
 /*
  * PARSE JAVASCRIPT SDK
  */
 app.import({
-    development: 'vendor/parse-js-sdk/lib/parse.js',
-    production: 'vendor/parse-js-sdk/lib/parse.min.js'
+    development: 'bower_components/parse-js-sdk/lib/parse.js',
+    production: 'bower_components/parse-js-sdk/lib/parse.min.js'
 });
 /*
  * RETINA.JS
  */
 app.import({
-    development: 'vendor/retina.js/dist/retina.js',
-    production: 'vendor/retina.js/retina.min.js'
+    development: 'bower_components/retina.js/dist/retina.js',
+    production: 'bower_components/retina.js/dist/retina.min.js'
 });
 /*
  * CSS TOGGLE SWITCH
  */
-app.import('vendor/css-toggle-switch/dist/toggle-switch.css');
+app.import('bower_components/css-toggle-switch/dist/toggle-switch.css');
+
 
 module.exports = app.toTree();
