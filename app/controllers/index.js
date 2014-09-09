@@ -28,7 +28,6 @@ Ember.Controller.extend(CurrentUser, {
             $(document).ready(function () {
                 $('#parallax-image').parallax({speed: 0.30}, $('#parallax-overlay-glass'));
             });
-            $('#parallax-image').parallax({speed: 0.30}, $('#parallax-overlay-glass'));
         }
         var stats = {
             numberOfUsers: 0,

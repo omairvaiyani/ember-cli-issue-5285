@@ -10,6 +10,63 @@ from
 
 export default
 Ember.Controller.extend({
+    needs: ['user', 'test', 'category'],
+
+    /*
+     * Observes for route transitions:
+     * - Close modals if open
+     * - Update website title
+     */
+    currentPathDidChange: function () {
+        this.send('closeModal');
+
+        var path = this.get('currentPath'),
+            title;
+        switch (path) {
+            case "user.index":
+                var user = this.get('controllers.user');
+                title = user.get('name');
+                break;
+            case "user.tests":
+                var user = this.get('controllers.user');
+                title = user.get('name') + "'s tests";
+                break;
+            case "user.followers":
+                var user = this.get('controllers.user');
+                title = user.get('name') + "'s followers";
+                break;
+            case "user.following":
+                var user = this.get('controllers.user');
+                title = user.get('name') + "'s following";
+                break;
+            case "create":
+                title = "Create a test";
+                break;
+            case "edit":
+                title = "Test editor";
+                break;
+            case "browse":
+                title = "Browse tests";
+                break;
+            case "category":
+                var category = this.get('controllers.category');
+                title = category.get('name');
+                break;
+            case "test":
+                /*
+                 * Handled in TestRoute.
+                 */
+                return;
+            case "result":
+                title = "Results";
+                break;
+            default:
+                title = "DEFAULT";
+                break;
+        }
+        this.send('updateTitle', title);
+    }.observes('currentPath'),
+
     loadingItems: 0,
 
     currentUser: null,
@@ -69,7 +126,7 @@ Ember.Controller.extend({
                 return EmberParseAdapter.ParseUser.getFollowers(this.store, currentUser);
             }.bind(this)).then(function () {
                 return EmberParseAdapter.ParseUser.getMessages(this.store, currentUser);
-            }.bind(this)).then(function() {
+            }.bind(this)).then(function () {
                 this.send('decrementLoadingItems');
             }.bind(this));
 

@@ -6,7 +6,7 @@
 
 (function($) {
 
-    $.fn.parallax = function(options) {
+    $.fn.parallax = function(options, overlay) {
 
         var windowHeight = $(window).height();
 
@@ -37,6 +37,8 @@
 
                 // Apply the Y Background Position to Set the Parallax Effect
                 $this.css('background-position', 'center ' + yBgPosition + 'px');
+                if(overlay)
+                    $(overlay).css('background-position', 'center ' + yBgPosition + 'px');
 
             });
         });

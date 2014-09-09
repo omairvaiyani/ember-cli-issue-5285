@@ -16,10 +16,15 @@
         <div class="col-md-3">
             <div class="card">
                 <h5>Search:</h5>
+
                 <div class="search-box">
                     {{input type='text' value=searchTerm placeholder='Type here to search' action='searchTests'
                     classNames='form-control margin-bottom-16'}}
-                    <span class="glyphicon glyphicon-search" {{action 'searchTests'}}></span>
+                    {{#if loadingItems}}
+                        <div class="loading-spinner"></div>
+                    {{else}}
+                        <span class="glyphicon glyphicon-search" {{action 'searchTests'}}></span>
+                    {{/if}}
                 </div>
                 <h5>Filter {{tests.count}} results</h5>
 

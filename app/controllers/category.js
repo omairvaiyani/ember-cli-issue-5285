@@ -16,6 +16,12 @@ Ember.ObjectController.extend({
         return this.get('controllers.application');
     }.property('controllers'),
 
+    /*loadingItems: function () {
+        return this.get('controllers.application.loadingItems');
+    }.property('controllers.application.loadingItems'),*/
+
+    loadingItems: 0,
+
     queryParams: ['page', 'order', 'categoryFilter', 'filterCategoryIds', 'search'],
 
     /*
@@ -271,6 +277,16 @@ Ember.ObjectController.extend({
              * getTests().observer
              */
             this.transitionTo({queryParams: {search: this.get('searchTerm'), page: 1}});
+        },
+
+        incrementLoadingItems: function () {
+            this.incrementProperty('loadingItems');
+        },
+
+        decrementLoadingItems: function () {
+            if(this.get('loadingItems'))
+                this.decrementProperty('loadingItems');
+            //this.send('decrementLoadingItems');
         }
     }
 

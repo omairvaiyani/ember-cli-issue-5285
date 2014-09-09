@@ -16,7 +16,7 @@ Ember.Route.extend({
         };
         return this.store.findQuery('test', {where: JSON.stringify(where)})
             .then(function(results) {
-                if(results) {
+                if(results.objectAt(0)) {
                     return results.objectAt(0);
                 } else {
                     console.log("No test with this slug found");
@@ -24,6 +24,8 @@ Ember.Route.extend({
             }.bind(this));
     },
     setupController: function (controller, model) {
+        console.log("Sending title: "+model.get('title'));
+        this.send('updateTitle', model.get('title'));
         model.get('questions').then(function(questions) {
             /*
              * This ensures that the loadingItems

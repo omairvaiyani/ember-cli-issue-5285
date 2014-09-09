@@ -24,6 +24,17 @@ Ember.Route.extend({
     },
 
     actions: {
+        /*
+         * Receives from ApplicationController.currentPathDidChange.
+         * Sometimes from individual routes, e.g. TestRoute.
+         */
+        updateTitle: function (title) {
+            if (title === "DEFAULT")
+                window.document.title = "MyCQs - A social learning network";
+            else
+                window.document.title = title + " - MyCQs";
+        },
+
         signUp: function () {
             var name = this.controllerFor('application').get('newUser.name'),
                 email = this.controllerFor('application').get('newUser.email'),
@@ -241,9 +252,11 @@ Ember.Route.extend({
                 this.transitionTo('index');
         },
 
-        openModal: function (modalName, controller) {
+        openModal: function (modalName, controller, model) {
             var myModal = jQuery('#myModal');
 
+            if (model)
+                this.controllerFor(controller).set('model', model);
             this.render(modalName, {
                 into: 'application',
                 outlet: 'modal',

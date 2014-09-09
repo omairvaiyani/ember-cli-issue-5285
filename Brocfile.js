@@ -56,5 +56,9 @@ app.import({
     development: 'vendor/retina.js/dist/retina.js',
     production: 'vendor/retina.js/retina.min.js'
 });
+/*
+ * CSS TOGGLE SWITCH
+ */
+app.import('vendor/css-toggle-switch/dist/toggle-switch.css');
 
 module.exports = app.toTree();

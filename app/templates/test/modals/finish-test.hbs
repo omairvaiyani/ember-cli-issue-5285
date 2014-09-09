@@ -4,9 +4,12 @@
     <h4 class="modal-title">{{modal.title}}</h4>
 </div>
 <div class="modal-body">
-    {{modal.message}}
+    <p>{{modal.message}}</p>
+    <p>{{modal.suggestions}}</p>
 </div>
 <div class="modal-footer">
-    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-    <button type="button" class="btn btn-primary" {{action 'markTest'}}>Mark test</button>
+    <button type="button" class="btn btn-default" data-dismiss="modal">Go back</button>
+    {{#unless modal.error}}
+        <button type="button" class="btn btn-primary" {{action 'markTest'}}>Mark test</button>
+    {{/unless}}
 </div>

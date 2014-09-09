@@ -969,13 +969,13 @@ Parse.Cloud.beforeSave("Question", function (request, response) {
  * ------------------
  * beforeSave Attempt
  * ------------------
- * - Update test score stats
+ * IF user is set:
  * - Create an Action object for User 'attemptFinished'
  * - Replace this attempt in the User's latestAttempts pointers for this test
  */
 Parse.Cloud.beforeSave("Attempt", function (request, response) {
 
-    if (request.object.isNew()) {
+    if (request.object.isNew() && request.object.get('user')) {
         var Attempt = Parse.Object.extend("Attempt");
         var query = new Parse.Query(Attempt);
 
@@ -1057,12 +1057,13 @@ Parse.Cloud.afterSave("Attempt", function (request, response) {
                     test.set("difficulty", 3);
                 }
             }
+
             /*
              * If test taker is not the author:
              * Increment test author's communityNumberOfAttempts and
              * update communityAverageScore;
              */
-            if (test.get('author').id !== request.object.get('user').id) {
+            if (request.object.get('user') && test.get('author').id !== request.object.get('user').id) {
                 test.get('author').increment('communityNumberOfAttempts');
                 var communityAverageScore = test.get('author').get('communityAverageScore');
                 if (!communityAverageScore)

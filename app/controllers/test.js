@@ -25,7 +25,9 @@ Ember.ObjectController.extend(CurrentUser, {
 
     modal: {
         title: "",
-        message: ""
+        message: "",
+        suggestions: "",
+        error: false
     },
 
     currentQuestionIndex: 0,
@@ -109,15 +111,23 @@ Ember.ObjectController.extend(CurrentUser, {
 
         },
         confirmFinish: function () {
+            this.set('modal.error', false);
             if (!this.get('questionsAnswered.length')) {
-                this.set('modal.title', "Error?!");
-                this.set('modal.message', "We can't mark your test if you don't answer any questions!");
+                this.set('modal.title', "Error!");
+                this.set('modal.message', "We cannot mark your test if you do not answer any questions!");
+                this.set('modal.suggestions', "Please press 'Go back' to return to the test");
+                this.set('modal.error', true);
             } else if (this.get('questionsAnswered.length') < this.get('shuffledQuestions.length')) {
-                this.set('modal.title', "Are you sure you've finished?");
-                this.set('modal.message', "You have only answered " + this.get('questionsAnswered.length') + " questions!");
+                this.set('modal.title', "Are you sure you have finished?");
+                this.set('modal.message', "You have only answered " + this.get('questionsAnswered.length') +
+                    " of " + this.get('questions.length') + " questions!");
+                this.set('modal.suggestions', "You can skip those questions by pressing 'Mark test' or " +
+                    "press 'Go back' to return to the test.");
             } else {
                 this.set('modal.title', "Finish");
                 this.set('modal.message', "You have answered all " + this.get('shuffledQuestions.length') + " questions!");
+                this.set('modal.suggestions', "Get your results by pressing 'Mark test', or check your answers by pressing" +
+                    " 'Go back'.");
             }
 
             this.send('openModal', 'test/modals/finish-test', 'test');
@@ -136,10 +146,11 @@ Ember.ObjectController.extend(CurrentUser, {
             this.set('loading', 'Marking test...');
             var attempt = this.store.createRecord('attempt', {
                 test: this.get('model'),
-                user: this.get('currentUser'),
                 timeStarted: this.get('timeStarted'),
                 timeCompleted: new Date()
             });
+            if(this.get('currentUser'))
+                attempt.set('user', currentUser);
             this.set('attempt', attempt);
 
             /*
@@ -172,10 +183,10 @@ Ember.ObjectController.extend(CurrentUser, {
                     correctAnswer: correctAnswer,
                     question: question,
                     isCorrect: isCorrect,
-                    test: this.get('model'),
-                    user: this.get('currentUser')
+                    test: this.get('model')
                 });
-
+                if(this.get('currentUser'))
+                    response.set('user', this.get('currentUser'));
                 responsesArray.pushObject(response);
             }.bind(this));
 
@@ -201,16 +212,18 @@ Ember.ObjectController.extend(CurrentUser, {
                     return this.get('attempt').save();
                 }.bind(this))
                 .then(function (result) {
-                    this.get('currentUser').incrementProperty('numberOfAttempts');
                     this.transitionToRoute('result', this.get('attempt'));
                     this.send('decrementLoadingItems');
-                    this.store.createRecord('action', {
-                        user: this.get('currentUser'),
-                        type: 'attemptFinished',
-                        test: this.get('model'),
-                        attempt: this.get('attempt'),
-                        value: score
-                    });
+                    if(this.get('currentUser')) {
+                        this.get('currentUser').incrementProperty('numberOfAttempts');
+                        this.store.createRecord('action', {
+                            user: this.get('currentUser'),
+                            type: 'attemptFinished',
+                            test: this.get('model'),
+                            attempt: this.get('attempt'),
+                            value: score
+                        });
+                    }
                 }.bind(this));
         }
     }

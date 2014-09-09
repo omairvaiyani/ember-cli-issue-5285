@@ -27,11 +27,14 @@
                 </div>
             {{/each}}
             <div class="row margin-top-16">
-                <div class="col-md-6">
+                <div class="col-md-5">
                     <button class="flat-button" {{action 'previousQuestion'}}>Previous</button>
                     <button class="flat-button" {{action 'nextQuestion'}}>Next</button>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-2 text-center">
+                    <p class="margin-top-16">Q{{currentQuestionNumber}} of {{questions.length}}</p>
+                </div>
+                <div class="col-md-5">
                     <button class="flat-button pull-right"
                         {{action 'confirmFinish'}}>Finish
                     </button>
