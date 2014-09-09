@@ -17,7 +17,19 @@ export default
 Ember.Controller.extend(CurrentUser, {
     initialized: false,
 
+    /*
+     * GUEST MODE
+     */
+
     stats: function () {
+        if (this.get('currentUser'))
+            return;
+        else {
+            $(document).ready(function () {
+                $('#parallax-image').parallax({speed: 0.30}, $('#parallax-overlay-glass'));
+            });
+            $('#parallax-image').parallax({speed: 0.30}, $('#parallax-overlay-glass'));
+        }
         var stats = {
             numberOfUsers: 0,
             numberOfTests: 0,
@@ -42,7 +54,25 @@ Ember.Controller.extend(CurrentUser, {
                 return;
             }.bind(this));
         return stats;
-    }.property(),
+    }.property('currentUser'),
+
+    autocompleteTests: [],
+    getAutocompleteTests: function () {
+        var where = {
+            tags: {
+                "$all": ParseHelper.generateSearchTags(this.get('searchTermForTests'))
+            }
+        };
+        this.store.findQuery('test', {where: JSON.stringify(where)})
+            .then(function (tests) {
+                this.get('autocompleteTests').clear();
+                this.get('autocompleteTests').addObjects(tests);
+            }.bind(this));
+    }.observes('searchTermForTests.length'),
+
+    /*
+     * HOME MODE
+     */
 
     homeIsActivities: true,
 
@@ -136,6 +166,18 @@ Ember.Controller.extend(CurrentUser, {
     }.observes('initialized', 'currentUser.following.length'),
 
     actions: {
+        /*
+         * GUEST MODE
+         */
+        loadSearchedTest: function (test) {
+            this.transitionToRoute('test', test.get('slug'));
+        },
+        searchTests: function () {
+            this.transitionToRoute('category', "all", {queryParams: {search: this.get('searchTermForTests').toLowerCase()}});
+        },
+        /*
+         * HOME MODE
+         */
         changeHomeNavigation: function (navigation) {
             this.set('homeIsActivities', false);
             this.set('homeIsTests', false);

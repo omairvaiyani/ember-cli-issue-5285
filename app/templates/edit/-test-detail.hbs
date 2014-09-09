@@ -4,7 +4,7 @@
     </div>
 </div>
 <div class="row">
-    <div class="col-md-12">
+    <div class="col-md-12 margin-bottom-16">
         {{input type="text" placeholder="Enter a title for your test" classNames="form-control" value=title}}
     </div>
 </div>
@@ -31,9 +31,9 @@
     </div>
 </div>
 <div class="row">
-    <div class="col-md-12">
+    <div class="col-md-12 margin-bottom-16">
         {{#unless category}}
-            {{#if categorySelectionInput}}
+           <!-- {{#if categorySelectionInput}}
                 <div class="row">
                     <div class="col-md-12">
                         <div class="category-selection-field" {{action "openModal" "edit/modal/category-creator" "create"}}>
@@ -41,7 +41,7 @@
                         </div>
                     </div>
                 </div>
-            {{/if}}
+            {{/if}}-->
             {{#each categorySelectionList}}
                 <div class="row">
                     <div class="col-md-12">
@@ -60,11 +60,38 @@
 
 <div class="row">
     <div class="col-md-12">
-        <h5 >DESCRIPTION</h5>
+        <h5>DESCRIPTION</h5>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12 margin-bottom-16">
+        {{textarea placeholder="Enter a brief description of your test" classNames="form-control" value=description}}
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <h5>SHARING</h5>
     </div>
 </div>
 <div class="row">
     <div class="col-md-12" style="margin-bottom:48px;">
-        {{textarea placeholder="Enter a brief description of your test" classNames="form-control" value=description}}
+        <div class="onoffswitch">
+            {{input type="checkbox" name="onoffswitch" classNames="onoffswitch-checkbox" id="myonoffswitch" checked=privacyBoolean}}
+            <label class="onoffswitch-label" for="myonoffswitch">
+                <span class="onoffswitch-inner"></span>
+                <span class="onoffswitch-switch"></span>
+            </label>
+        </div>
     </div>
 </div>
+
+{{#if model.id}}
+    <!-- Delete test button -->
+    <div class="row">
+        <div class="col-md-12" style="margin-top:-36px;">
+            <button class="btn btn-danger">Delete test</button>
+        </div>
+    </div>
+
+{{/if}}

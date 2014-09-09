@@ -140,6 +140,7 @@ Ember.ObjectController.extend(CurrentUser, {
                 timeStarted: this.get('timeStarted'),
                 timeCompleted: new Date()
             });
+            this.set('attempt', attempt);
 
             /*
              * Create an array of 'responses':
@@ -179,37 +180,38 @@ Ember.ObjectController.extend(CurrentUser, {
             }.bind(this));
 
             score = Math.floor((score / this.get('shuffledQuestions.length')) * 100);
-            attempt.set('score', score);
+            this.set('attempt.score', score);
 
             var arrayOfPromises = [],
                 savedResponses;
-
             responsesArray.forEach(function (response) {
                 arrayOfPromises.push(response.save());
             });
 
             Em.RSVP.Promise.all(arrayOfPromises).then(function (result) {
-                savedResponses = result;
-                return attempt.get('responses');
-            }).then(function (responses) {
-                responses.addObjects(savedResponses);
-                return attempt.get('questions');
-            }).then(function (questions) {
+                    savedResponses = result;
+                    return this.get('attempt.responses');
+                }.bind(this))
+                .then(function (responses) {
+                    responses.addObjects(savedResponses);
+                    return this.get('attempt.questions');
+                }.bind(this))
+                .then(function (questions) {
                     questions.addObjects(this.get('shuffledQuestions'));
-                    return attempt.save();
-                }.bind(this)).then(function (attempt) {
+                    return this.get('attempt').save();
+                }.bind(this))
+                .then(function (result) {
+                    this.get('currentUser').incrementProperty('numberOfAttempts');
+                    this.transitionToRoute('result', this.get('attempt'));
+                    this.send('decrementLoadingItems');
                     this.store.createRecord('action', {
                         user: this.get('currentUser'),
                         type: 'attemptFinished',
                         test: this.get('model'),
-                        attempt: attempt,
+                        attempt: this.get('attempt'),
                         value: score
                     });
-                    this.get('currentUser').incrementProperty('numberOfAttempts');
-                    this.transitionToRoute('result', attempt);
-                    this.send('decrementLoadingItems');
                 }.bind(this));
-
         }
     }
 

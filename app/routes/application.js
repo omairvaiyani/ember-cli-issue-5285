@@ -82,11 +82,10 @@ Ember.Route.extend({
             controller.set('loginMessage.connecting', "Logging in...");
             ParseUser.login(this.store, data).then(
                 function (user) {
-                    console.log("successfuly logged in");
                     controller.set('currentUser', user);
                     controller.set('loginMessage.connecting', "");
                     this.send('closeModal');
-                    this.transitionTo('index');
+                    this.send('redirectAfterLogin');
                 }.bind(this),
                 function (error) {
                     console.dir(error);
@@ -141,9 +140,15 @@ Ember.Route.extend({
          */
         signUpAuthorisedFacebookUser: function (authResponse) {
             this.get('applicationController').incrementProperty('loadingItems');
-            console.log("signUpAuthorisedFacebookUser called : "+this.get('applicationController').get('loadingItems'));
+            console.log("signUpAuthorisedFacebookUser called : " + this.get('applicationController').get('loadingItems'));
             this.send('closeModal');
             FB.api('/me', {fields: 'name,education,gender,cover,email,friends'}, function (response) {
+                console.dir(response);
+                if (!response.cover)
+                    response.cover = {source: null};
+                if (!response.friends)
+                    response.friends = {data: []};
+
                 var fbFriendsArray = [],
                     fbFriendsData = response.friends.data;
                 for (var i = 0; i < fbFriendsData.length; i++) {
@@ -198,11 +203,10 @@ Ember.Route.extend({
                                      * Update FB Friends list everytime
                                      */
                                     user.set('facebookFriends', fbFriendsArray);
-                                    if(this.get('applicationController').get('loadingItems'))
+                                    if (this.get('applicationController').get('loadingItems'))
                                         this.get('applicationController').decrementProperty('loadingItems');
-                                    console.log('signUpAuthorisedFacebookUser ended: '+this.get('applicationController').get('loadingItems'));
                                     this.controllerFor('application').set('currentUser', user);
-                                    this.transitionTo('index');
+                                    this.send('redirectAfterLogin');
                                 }.bind(this),
                                 function (error) {
                                     console.log("Error with ParseUser.signup() in: " + "signUpAuthorisedFacebookUser");
@@ -212,9 +216,9 @@ Ember.Route.extend({
 
                         }.bind(this),
                         error: function (error) {
-                            if(this.get('applicationController').get('loadingItems'))
+                            if (this.get('applicationController').get('loadingItems'))
                                 this.get('applicationController').decrementProperty('loadingItems');
-                            console.log('signUpAuthorisedFacebookUser error: '+this.get('applicationController').get('loadingItems'));
+                            console.log('signUpAuthorisedFacebookUser error: ' + this.get('applicationController').get('loadingItems'));
                             console.log(JSON.stringify(error));
                         }
                     });
@@ -226,6 +230,17 @@ Ember.Route.extend({
             this.get('applicationController').set('currentUser', null);
             this.transitionTo('index');
         },
+
+        redirectAfterLogin: function () {
+            if (this.get('applicationController.redirectAfterLoginToRoute')) {
+                this.transitionTo(this.get('applicationController.redirectAfterLoginToRoute'));
+                this.controllerFor(this.get('applicationController.redirectAfterLoginToRoute')).send('returnedFromRedirect');
+                this.set('applicationController.redirectAfterLoginToRoute', null);
+            }
+            else
+                this.transitionTo('index');
+        },
+
         openModal: function (modalName, controller) {
             var myModal = jQuery('#myModal');
 
@@ -295,13 +310,13 @@ Ember.Route.extend({
                 });
         },
 
-        incrementLoadingItems: function() {
-            if(this.get('applicationController'))
+        incrementLoadingItems: function () {
+            if (this.get('applicationController'))
                 this.get('applicationController').incrementProperty('loadingItems');
         },
 
-        decrementLoadingItems: function() {
-            if(this.get('applicationController.loadingItems'))
+        decrementLoadingItems: function () {
+            if (this.get('applicationController.loadingItems'))
                 this.get('applicationController').decrementProperty('loadingItems');
         }
     }

@@ -3,10 +3,16 @@ Ember
 from
 'ember';
 
+
+import
+CurrentUser
+from
+'../mixins/current-user';
+
 export default
-Ember.ObjectController.extend({
+Ember.ObjectController.extend(CurrentUser, {
     needs: ['application', 'editQuestion'],
-    currentUser: Ember.computed.alias('controllers.application.currentUser'),
+
     isTestDirty: function () {
         if (this.get('isDirty') ||
             this.get('controllers.editQuestion.content.isDirty') ||
@@ -53,6 +59,22 @@ Ember.ObjectController.extend({
         else
             this.set('tagsStringified', tagsStringified);
     }.observes('content.objectId'),
+
+    /*
+     * The handlebar for checkbox input cannot decipher booleans
+     * from numbers, which privacy is defined by. We have a computed
+     * boolean within the Test model called privacyBoolean. This
+     * works one way only. Therefore, updating privacyBoolean
+     * requires manual update for the actual privacy property set
+     * on the model.
+     */
+    updatePrivacyFromPrivacyBoolean: function () {
+        if (this.get('privacyBoolean'))
+            this.set('model.privacy', true);
+        else
+            this.set('model.privacy', false);
+    }.observes('privacyBoolean'),
+
     actions: {
         saveTest: function () {
             var questions = this.get('questions.content.content');
@@ -130,14 +152,14 @@ Ember.ObjectController.extend({
 
         },
         beginAddingQuestions: function () {
-            var test = this.get('model');
             if (!this.get('currentUser')) {
-                console.log("Not logged in!");
+                this.send('askGuestToSignUp');
                 return;
+            } else {
+                this.set('model.author', this.get('currentUser'));
             }
-            test.set('author', this.get('currentUser'));
             this.send('incrementLoadingItems');
-            test.save().then(function (test) {
+            this.get('model').save().then(function (test) {
                 this.set('categorySelectionInput', '');
                 this.transitionToRoute('edit.newQuestion', test.get('slug'));
                 this.send('decrementLoadingItems');
@@ -154,6 +176,22 @@ Ember.ObjectController.extend({
              */
             this.get('questions').removeObjects(objects);
             this.get('model').save();
+        },
+
+        /*
+         * No support for anonymous users on JS SDK
+         * Therefore, force users to sign up/log in before
+         * continuing. Redirect application route to
+         * return the user back to this page and
+         * continue saving the test.
+         */
+        askGuestToSignUp: function () {
+            alert("You have to be logged in to create a test!");
+            this.send('openModal', 'application/modal/login-or-register', 'application');
+            this.get('controllers.application').set('redirectAfterLoginToRoute', 'create');
+        },
+        returnedFromRedirect: function () {
+            this.send('beginAddingQuestions');
         }
     }
 });

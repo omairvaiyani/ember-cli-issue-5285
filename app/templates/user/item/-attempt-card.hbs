@@ -9,13 +9,16 @@
 
             <div class="title-and-category">
                 <h4>
-                    {{#link-to 'test' attempt._data.test._data.slug tagName='a'}}
                         {{#if attempt._data.test._data.title.length}}
-                            {{attempt._data.test._data.title}}
+                            {{#link-to 'test' attempt._data.test._data.slug tagName='a'}}
+                                {{attempt._data.test._data.title}}
+                            {{/link-to}}
                         {{else}}
-                            {{attempt.test.title}}
+                            {{#link-to 'test' attempt.test.slug tagName='a'}}
+                                {{attempt.test.title}}
+                            {{/link-to}}
                         {{/if}}
-                    {{/link-to}}
+
                 </h4>
 
                 <p>

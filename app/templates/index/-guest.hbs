@@ -1,6 +1,6 @@
-<div class="mycqs-page-header index-page">
+<div class="mycqs-page-header index-page" id="parallax-image">
     <div class="container relative-container text-center">
-        <h1>MyCQs</h1>
+        <h1><img src="/img/mycqs-icon-256.png" class="inline-block margin-right-16"/> <div class="inline-block">MyCQs</div></h1>
 
         <p>Create, practice and share multiple-choice questions</p>
 
@@ -57,9 +57,55 @@
                         </div>
                     </div>
                 </div>
-
             </div>
         {{/if}}
+    </div>
+    <div class="overlay-glass" id="parallax-overlay-glass">
+        <!--[if lt IE 9]>
+        <div class="legacy-ie-fix"></div>
+        <![endif]-->
+    </div>
+    <div class="soft-white"></div>
+</div>
+<div class="parallax-follower">
+    <div class="container">
+        <div class="row">
+<!--            <div class="col-md-4 margin-top-16">
+                <h4>Get started</h4>
 
+                <div class="row">
+                    <div class="col-md-12 text-center">
+                        <button class="btn btn-success" {{action 'openModal' 'application/modal/login-or-register' 'application'}}>
+                            Sign up or Log in
+                        </button>
+                        <button class="btn btn-facebook" {{action 'facebookConnect'}}>
+                            <i class="fa fa-facebook margin-right-16"></i>Facebook Connect
+                        </button>
+                    </div>
+                </div>
+            </div>-->
+            <div class="col-md-6 margin-top-16">
+                <h4>Search for tests</h4>
+
+                <div class="row">
+                    <div class="col-md-12 text-center">
+                        <div class="search-box">
+                            {{autocomplete-field value=searchTermForTests placeholder='Type here to search' action='searchTests'
+                                data=autocompleteTests key='title' itemAction='loadSearchedTest' parentController=this}}
+                            <span class="glyphicon glyphicon-search" {{action 'searchTests'}}></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 margin-top-16">
+                <h4>Create a test</h4>
+
+                <div class="col-md-12 create-column text-center">
+                    {{#link-to 'create' tagName='a' classNames='btn btn-primary'}}
+                        Write an MCQ Test
+                    {{/link-to}}
+                </div>
+            </div>
+        </div>
     </div>
 </div>

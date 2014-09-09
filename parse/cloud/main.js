@@ -6,15 +6,17 @@ var _ = require("underscore");
 Parse.Cloud.job("indexObjectsForClass", function (request, status) {
     console.log(JSON.stringify(request.params));
     var className = request.params.className;
-    console.log("className: "+ className);
+    console.log("className: " + className);
     var query = new Parse.Query(className);
     query.doesNotExist('tags');
-    query.count().then(function(count) {console.log("Unindexed objects: "+count); });
-    query.each(function(object) {
-       object.set('tags', generateSearchTags(className, object));
-       object.save();
-    }).then(function() {
-       status.success();
+    query.count().then(function (count) {
+        console.log("Unindexed objects: " + count);
+    });
+    query.each(function (object) {
+        object.set('tags', generateSearchTags(className, object));
+        object.save();
+    }).then(function () {
+        status.success();
     });
 
 });
@@ -632,7 +634,7 @@ Parse.Cloud.define("preFacebookConnect", function (request, response) {
         query = new Parse.Query(Parse.User);
     query.equalTo('fbid', authResponse.userID);
     query.find().then(function (results) {
-            if (results) {
+            if (results[0]) {
                 var user = results[0];
                 if (user.get('authData')) {
                     response.success();
@@ -686,7 +688,7 @@ var generateSearchTags = function (className, object) {
         return w.toLowerCase();
     };
     var words = "";
-    switch(className) {
+    switch (className) {
         case 'Test':
             words += object.get('title') + object.get('description');
             break;
@@ -725,7 +727,16 @@ var slugify = function (className, string) {
         return slug;
     }
 }
-
+/**
+ * --------------
+ * capitaliseFirstLetter
+ * --------------
+ * @param string
+ * @returns {string}
+ */
+function capitaliseFirstLetter(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+}
 
 /*
  * SAVE LOGIC
@@ -834,8 +845,12 @@ Parse.Cloud.beforeSave('Category', function (request, response) {
  * - response.success()
  */
 Parse.Cloud.beforeSave("Test", function (request, response) {
-    request.object.set("tags", generateSearchTags('Test', request.object));
-
+    if(!request.object.get('title')) {
+        response.error("Title of the test is required!");
+        return;
+    }
+    request.object.set('tags', generateSearchTags('Test', request.object));
+    request.object.set('title', capitaliseFirstLetter(request.object.get('title')));
 
     if (request.object.isNew() || !request.object.get('slug') || !request.object.get('slug').length) {
         if (request.object.isNew()) {
@@ -925,6 +940,8 @@ Parse.Cloud.afterSave("Test", function (request, response) {
              */
             var Action = Parse.Object.extend('Action');
             var action = new Action();
+
+            action.set("ACL", request.object.get("ACL"));
             action.set('user', author);
             action.set('test', request.object);
             action.set('type', 'testCreated');

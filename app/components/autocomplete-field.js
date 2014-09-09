@@ -41,7 +41,7 @@ Ember.TextField.extend({
         return this.get('data').splice(0, this.get('limit')).map(function (item) {
             return {
                 key: item.get(this.get("key")),
-                emberObject: item
+                object: item
             };
         }.bind(this));
     }.property('data.length'),
@@ -65,6 +65,8 @@ Ember.TextField.extend({
 //        }.bind(this));
 
         $("body").click(function (event) {
+            if(!this.$())
+                return;
             if (($(event.target)[0] === this.$()[0]) ||
                 ($(event.target).offsetParent()[0].className === "autocomplete-container")
                 ) {
@@ -112,8 +114,15 @@ Ember.TextField.extend({
         enter: function () {
             if (this.get('selectedItem')) {
                 this.$().val(this.get('selectedItem.key'));
+                if(this.get('itemAction')) {
+                    this.get('parentController').send(this.get('itemAction'), this.get('selectedItem.object'));
+                }
                 this.set('selectedItemIndex', -1);
                 this.set('selectedItem', null);
+            } else {
+                if(this.get('action')) {
+                    this.get('parentController').send(this.get('action'));
+                }
             }
             this.set('isFocussed', false);
         },

@@ -17,7 +17,7 @@ export default
 Ember.Route.extend(CurrentUser, {
     setupController: function (controller, model) {
         controller.set('model', this.modelFor('user'));
-        var isCurrentUser = this.get('currentUser').get('id') === this.get('model.id');
+        var isCurrentUser = this.get('currentUser.id') === model.get('id');
         controller.set('isCurrentUser', isCurrentUser);
     }
 });

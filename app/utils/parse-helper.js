@@ -22,6 +22,12 @@ export default {
         return pointers;
     },
 
+    generateSearchTags: function (searchTerm) {
+        return _.filter(searchTerm.toLowerCase().split(' '), function (w) {
+            return w.match(/^\w+$/) && !_.contains(this.stopWords, w);
+        }.bind(this));
+    },
+
     stopWords: ["the", "in", "and", "test", "mcqs", "of", "a", "an"]
 
 }

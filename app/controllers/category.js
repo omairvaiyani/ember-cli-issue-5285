@@ -12,7 +12,7 @@ export default
 Ember.ObjectController.extend({
     needs: 'application',
 
-    applicationController: function() {
+    applicationController: function () {
         return this.get('controllers.application');
     }.property('controllers'),
 
@@ -89,7 +89,7 @@ Ember.ObjectController.extend({
      */
     categoryFilterSlugs: function () {
         var array;
-        if(!this.get('categoryFilter.length'))
+        if (!this.get('categoryFilter.length'))
             array = [];
         else
             array = this.get('categoryFilter').split("-");
@@ -100,8 +100,8 @@ Ember.ObjectController.extend({
         if (!this.get('readyForFilter')) {
             return;
         }
-        if(!this.get('categoryFilter.length')) {
-            if(this.get('selectedCategories.length') !== this.get('childCategories.length')) {
+        if (!this.get('categoryFilter.length')) {
+            if (this.get('selectedCategories.length') !== this.get('childCategories.length')) {
                 this.get('selectedCategories').clear();
                 this.get('selectedCategories').addObjects(this.get('childCategories.content'));
             }
@@ -133,11 +133,45 @@ Ember.ObjectController.extend({
      * to the parent model category.
      */
     getChildCategories: function () {
+        if (this.get('browseAll')) {
+            this.send('incrementLoadingItems');
+            var where = {
+                level: 1
+            };
+            this.store.findQuery('category', {
+                where: JSON.stringify(where),
+                order: 'name'
+            }).then(function (allTopLevelCategories) {
+                    this.send('decrementLoadingItems');
+                    this.set('childCategories', allTopLevelCategories);
+                    /*
+                     * Selected categories allow users to filter
+                     * the search results by the category(ies) they want
+                     */
+                    this.set('selectedCategories', []);
+                    this.get('selectedCategories').pushObjects(this.get('childCategories.content'));
+                    /*
+                     * If there are categories to filter in the queryParams,
+                     * wait or those to filter the selectedCategories before
+                     * retrieving tests
+                     */
+                    if (!this.get('categoryFilterSlugs.length')) {
+                        this.set('readyToGetTests', true);
+                    }
+                    /*
+                     * We wait for childCategories and selectedCategories to be set up
+                     * before filtering any out: if no queryParams are found
+                     * The 'filterTheseCategories' method adds all childCategories to
+                     * the selectedCategories array
+                     */
+                    this.set('readyForFilter', true);
+                }.bind(this));
+            return;
+        }
         if (!this.get('model.id'))
             return;
 
         this.send('incrementLoadingItems');
-        console.log("Getting child categories");
         /*
          * Get this category's child categories
          */
@@ -149,7 +183,6 @@ Ember.ObjectController.extend({
             order: 'name'
         }).then(function (childCategories) {
                 this.send('decrementLoadingItems');
-                console.log("Got child categories");
                 this.set('childCategories', childCategories);
                 /*
                  * Selected categories allow users to filter
@@ -162,7 +195,7 @@ Ember.ObjectController.extend({
                  * wait or those to filter the selectedCategories before
                  * retrieving tests
                  */
-                if(!this.get('categoryFilterSlugs.length')) {
+                if (!this.get('categoryFilterSlugs.length')) {
                     this.set('readyToGetTests', true);
                 }
                 /*
@@ -173,63 +206,47 @@ Ember.ObjectController.extend({
                  */
                 this.set('readyForFilter', true);
             }.bind(this));
-    }.observes('model'),
+    }.observes('model', 'browseAll'),
 
     readyToGetTests: false,
     getTests: function () {
-        if(!this.get('readyToGetTests'))
+        if (!this.get('readyToGetTests'))
             return;
         if (!this.get('selectedCategories.length')) {
             this.get('tests').clear();
             return;
         }
         this.send('incrementLoadingItems');
-        console.log("Getting tests");
         /*
          * Get tests which belong to the parent category
          * AND any of the selected childCategories
          */
-        var where;
+        var where = {};
         if (this.get('search.length')) {
-            var stopWords = ["the", "in", "and", "test", "mcqs", "of", "a", "an"],
+            var stopWords = ParseHelper.stopWords,
                 tags = _.filter(this.get('search').toLowerCase().split(' '), function (w) {
                     return w.match(/^\w+$/) && !_.contains(stopWords, w);
                 });
-            var where = {
-                "tags": {
-                    "$all": tags
-                }
-            };
-            where = {
-                category: {
-                    "$in": ParseHelper.generatePointers(this.get('selectedCategories'))
-                },
-                tags: {
-                    "$all": tags
-                }
-            };
-        } else {
-            where = {
-                category: {
-                    "$in": ParseHelper.generatePointers(this.get('selectedCategories'))
-                }
+            where.tags = {
+                "$all": tags
             };
         }
+        if (!this.get('browseAll'))
+            where.category = {
+                "$in": ParseHelper.generatePointers(this.get('selectedCategories'))
+            };
 
         var order = this.get('order');
         if (order === 'recent')
             order = '-createdAt';
         this.store.findQuery('test', {
             where: JSON.stringify(where),
-            //limit: this.get('limit'),
-            //skip: this.get('skip'),
             order: order
         })
             .then(function (tests) {
                 this.get('tests').clear();
                 this.get('tests').addObjects(tests);
                 this.send('decrementLoadingItems');
-                console.log("Got tests");
             }.bind(this));
     }.observes('readyToGetTests', 'selectedCategories.length', 'order', 'search'),
 

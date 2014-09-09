@@ -1,4 +1,9 @@
 import
+DS
+from
+'ember-data';
+
+import
 ParseHelper
 from
 '../utils/parse-helper';
@@ -73,5 +78,6 @@ export default
             }
 
         });
+
     }
 };

@@ -1,8 +1,14 @@
 <div class="mycqs-page-header">
     <div class="container">
-        <h1>{{name}}</h1>
+        {{#if browseAll}}
+            <h1>Browse</h1>
 
-        <p>Search from {{totalTests}} tests in {{name}}.</p>
+            <p>Search from thousands of tests in hundreds of categories..</p>
+        {{else}}
+            <h1>{{name}}</h1>
+
+            <p>Search from {{totalTests}} tests in {{name}}.</p>
+        {{/if}}
     </div>
 </div>
 <div class="container">
@@ -17,17 +23,25 @@
                 </div>
                 <h5>Filter {{tests.count}} results</h5>
 
-                <!--<p>{{input type="checkbox" checked=areAllCategoriesSelected}} Toggle all</p>-->
                 {{#each category in childCategories itemController='category.item.childCategory'}}
                     <div class="row">
                         <div class="col-md-12">
-                            <p>{{input type="checkbox" checked=category.isChecked}}
-                                {{#link-to 'category' this.slug
+                            {{#if browseAll}}
+                                <p>
+                                    {{#link-to 'category' category.slug}}
+                                        {{category.name}}
+                                    {{/link-to}}
+                                    <small>({{category.totalTests}})</small>
+                                </p>
+                            {{else}}
+                                <p>{{input type="checkbox" checked=category.isChecked}}
+                                    {{#link-to 'category' this.slug
                                     (query-params categoryFilter=category.slug page=1)}}
-                                    {{category.name}}
-                                {{/link-to}}
-                                <small>({{category.totalTests}})</small>
-                            </p>
+                                        {{category.name}}
+                                    {{/link-to}}
+                                    <small>({{category.totalTests}})</small>
+                                </p>
+                            {{/if}}
                         </div>
                     </div>
                 {{/each}}

@@ -71,7 +71,7 @@ Ember.ObjectController.extend({
     categoryTests: [],
     getCategoryTests: function () {
         console.log("Getting category tests in Results page");
-        if (!this.get('test.category.id'))
+        if (!this.get('test.category.id') || this.get('categoryTests.length'))
             return;
 
         var categoryTests = [],

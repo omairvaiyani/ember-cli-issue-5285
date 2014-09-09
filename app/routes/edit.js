@@ -12,10 +12,6 @@ export default
 Ember.Route.extend(CurrentUser, {
     controllerName: 'create',
 
-    beforeModel: function () {
-        if (!this.get('currentUser'))
-            this.transitionTo('index');
-    },
     model: function (params) {
         var model,
             where = {
@@ -24,16 +20,19 @@ Ember.Route.extend(CurrentUser, {
         return this.store.findQuery('test', {where: JSON.stringify(where)})
             .then(
                 function (results) {
-                    if(results) {
+                    if(results.objectAt(0)) {
                         model = results.objectAt(0);
                         if (model.get('_data.author.id') === this.get('currentUser.id'))
                             return model;
                         else {
+                            alert("You are not authorised to edit this test.");
                             this.transitionTo('index');
                             return {};
                         }
                     } else {
-                        console.log("Test with slug not found!");
+                        alert("Test not found!");
+                        this.transitionTo('index');
+                        return {};
                     }
                 }.bind(this));
     }

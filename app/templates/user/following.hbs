@@ -3,10 +3,10 @@
 {{/each}}
 
 {{#if isCurrentUser}}
-    <div class="card margin-top-16">
-        All Facebook friends on MyCQs!
+    <div class="card margin-top-16 text-center">
+        <p>Why not follow your Facebook friends on MyCQs</p>
     </div>
-    {{#each user in facebookFriendsOnMyCQs}}
+    {{#each user in facebookFriendsOnMyCQs itemController='user.item.user'}}
         {{partial 'user/item/user'}}
     {{/each}}
 {{/if}}

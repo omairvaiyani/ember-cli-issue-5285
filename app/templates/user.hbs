@@ -25,11 +25,15 @@
                 {{/if}}
             {{/unless}}
             </h5>
+
             <div class="user-navigation">
                 {{#link-to 'user.index' tagName='button'}}Overview{{/link-to}}
-                {{#link-to 'user.tests' tagName='button'}}{{numberOfTests}}<small> Tests</small>{{/link-to}}
-                {{#link-to 'user.following' tagName='button'}}{{numberFollowing}}<small> Following</small>{{/link-to}}
-                {{#link-to 'user.followers' tagName='button'}}{{numberOfFollowers}}<small> Followers</small>{{/link-to}}
+                {{#link-to 'user.tests' tagName='button'}}{{numberOfTests}}
+                    <small> Tests</small>{{/link-to}}
+                {{#link-to 'user.following' tagName='button'}}{{numberFollowing}}
+                    <small> Following</small>{{/link-to}}
+                {{#link-to 'user.followers' tagName='button'}}{{numberOfFollowers}}
+                    <small> Followers</small>{{/link-to}}
             </div>
         </div>
     </div>
@@ -43,8 +47,9 @@
                                     >{{course.name}}</a> at <a {{bind-attr href=institutionFacebookPageUrl}}
                                     >{{institution.fullName}}</a>
                             </p>
-                            {{else}}
-                            <p>{{firstName}} has not added any course information yet.</p>
+                        {{else}}
+                            <p>{{#if isCurrentUser}}You have not{{else}}{{firstName}} has not{{/if}} added any course
+                                information yet.</p>
                         {{/if}}
                         {{#if isCurrentUser}}
                             {{#if course}}

@@ -6,6 +6,9 @@ from
 export default
 Ember.Route.extend({
     model: function (params) {
+        if(params.category_slug.toLowerCase() === "all")
+            return {};
+
         var category;
 
         var where = {
@@ -40,5 +43,10 @@ Ember.Route.extend({
                 else
                     return topLevelCategory;
             }.bind(this));
+    },
+
+    setupController: function(controller, model) {
+        controller.set('model', model);
+        controller.set('browseAll', !model.id);
     }
 });

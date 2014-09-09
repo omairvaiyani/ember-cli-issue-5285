@@ -50,8 +50,11 @@ app.import({
     production: 'vendor/parse-js-sdk/lib/parse.min.js'
 });
 /*
- * JQUERY AUTO COMPLETE
+ * RETINA.JS
  */
-app.import('vendor/jquery-autocomplete/jquery.autocomplete.js');
+app.import({
+    development: 'vendor/retina.js/dist/retina.js',
+    production: 'vendor/retina.js/retina.min.js'
+});
 
 module.exports = app.toTree();

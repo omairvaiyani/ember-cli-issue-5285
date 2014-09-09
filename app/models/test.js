@@ -6,7 +6,10 @@ export default DS.Model.extend(ParseMixin, {
     category: DS.belongsTo('category', {defaultValue: null, async: true}),
     description: DS.attr('string'),
     questions: DS.hasMany('question', {async: true, array: true}),
-    privacy: DS.attr('number', {defaultValue: 0}),
+    privacy: DS.attr('number', {defaultValue: 1}),
+    privacyBoolean: function () {
+        return !!this.get('privacy');
+    }.property('privacy'),
     isActive: DS.attr('boolean'),
     isGenerated: DS.attr('boolean'),
     isPremium: DS.attr('boolean'),
