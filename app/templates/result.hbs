@@ -6,7 +6,7 @@
             <div class="col-md-12">
                 <h4>You scored <span style="font-size:x-large;">{{score}}% </span>
                     in {{#link-to 'test' test.slug tagName='a'}}{{test.title}}{{/link-to}}.
-                    <small class="pull-right">Test taken {{view "from-now" valueBinding="createdAt"}}</small>
+                    <small class="pull-right">Test taken {{from-now time=createdAt}}</small>
                 </h4>
             </div>
         </div>

@@ -3,12 +3,10 @@
         <div class="card test-info-card margin-top-16">
             {{#link-to 'user' author.slug tagName="a"}}{{render 'profile-image' author}}{{/link-to}}
 
-            <!--<small class="moments-ago pull-right"-->
-            <!-- {{view 'from-now' valueBinding="createdAt"}}</small> -->
-            <!--<br>-->
+
             <small class="test-actions">
                 {{#if isCurrentUsersTest}}
-                    {{#link-to 'edit' slug tagName='a'}}Edit{{/link-to}}
+                    {{#link-to 'edit' slug tagName='a'}}<p>Edit</p>{{/link-to}}
                 {{/if}}
             </small>
 

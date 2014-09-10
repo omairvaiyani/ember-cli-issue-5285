@@ -30,8 +30,8 @@ app.import({
  * MOMENT.JS
  */
 app.import({
-    development: 'bower_components/moment/min/moment-with-locales.js',
-    production: 'bower_components/moment/min/moment-with-locales.min.js'
+    development: 'bower_components/moment/moment.js',
+    production: 'bower_components/moment/min/moment.min.js'
 });
 
 /*

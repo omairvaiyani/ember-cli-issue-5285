@@ -142,7 +142,6 @@ Ember.Controller.extend({
                     include: ['test.category', 'user']
                 });
             }.bind(this)).then(function (attempts) {
-                console.dir(attempts);
                 currentUser.set('attempts', attempts);
                 this.send('decrementLoadingItems');
             }.bind(this));

@@ -38,7 +38,7 @@
                 // Apply the Y Background Position to Set the Parallax Effect
                 $this.css('background-position', 'center ' + yBgPosition + 'px');
                 if(overlay)
-                    $(overlay).css('background-position', 'center ' + yBgPosition + 'px');
+                    overlay.css('background-position', 'center ' + yBgPosition + 'px');
 
             });
         });

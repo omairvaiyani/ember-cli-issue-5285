@@ -1,3 +1,5 @@
-/**
- * Created by omairvaiyani on 09/09/2014.
- */
+import DS from 'ember-data';
+
+export default DS.Model.extend({
+    fullName: DS.attr('string')
+});

@@ -71,8 +71,6 @@ Ember.Route.extend({
                     function (userMinimal) {
                         userMinimal.set('name', name);
                         userMinimal.set('email', email);
-                        console.log("Successfull registered");
-                        console.dir(userMinimal);
                     }.bind(this),
                     function (error) {
                         console.log("Error with ParseUser.signup() in: " + "signUpWithEmail");

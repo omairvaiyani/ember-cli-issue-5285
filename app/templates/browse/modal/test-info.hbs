@@ -10,13 +10,15 @@
     <div class="author-info inline-block">
         <p>{{#link-to 'user' author.slug tagName="a"}}{{author.name}}{{/link-to}}</p>
         <p>{{author.numberOfFollowers}} followers</p>
-        {{#unless isCurrentUser}}
-            {{#if isFollowing}}
-                <p><a href="" {{action 'unfollowUser' author}}>Following</a></p>
-            {{else}}
-                <p><a href="" {{action 'followUser' author}}>Follow</a></p>
-            {{/if}}
-        {{/unless}}
+        {{#if currentUser}}
+            {{#unless isCurrentUser}}
+                {{#if isFollowing}}
+                    <p><a href="" {{action 'unfollowUser' author}}>Following</a></p>
+                {{else}}
+                    <p><a href="" {{action 'followUser' author}}>Follow</a></p>
+                {{/if}}
+            {{/unless}}
+        {{/if}}
     </div>
 
     <hr>

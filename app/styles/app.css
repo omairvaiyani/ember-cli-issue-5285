@@ -183,6 +183,7 @@ body {
     margin: 0px;
 !important
 }
+
 .profile-image {
     width: 50px;
     height: 50px;
@@ -192,6 +193,7 @@ body {
     vertical-align: middle;
     margin-right: 8px;
 }
+
 /*
  * Global spinner for cross-page items
  */
@@ -437,31 +439,26 @@ body {
     color: white;
     text-shadow: 0px 4px 6px black;
 }
+
 .index-page > .container {
     z-index: 1;
 }
+
 .index-page h1 > img {
     height: 80px;
     box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.4);
 }
+
 .index-page .soft-white {
     position: absolute;
-    top:0px;
+    top: 0px;
     bottom: 0px;
     left: 0px;
     right: 0px;
     background: rgba(255, 255, 255, 0.2);
 }
-.overlay-glass {
-    position: absolute;
-    left: 0px;
-    right: 0px;
-    bottom: 0px;
-    height: 170px;
-    padding: 10px 0px;
-    border-top: 2px solid rgba(255, 255, 255, 0.2);
-}
 
+/*
 .overlay-glass::before {
     position: absolute;
     left: 0px;
@@ -471,7 +468,7 @@ body {
     width: 100%;
     height: 100%;
     background-image: url("data:image/svg+xml,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20xmlns%3Axlink%3D%22http%3A%2F%2Fwww.w3.org%2F1999%2Fxlink%22%20version%3D%221.1%22%20width%3D%221920%22%20height%3D%221120%22%3E%3Cdefs%3E%3Cfilter%20id%3D%22blur%22%3E%3CfeGaussianBlur%20stdDeviation%3D%225%22%2F%3E%3C%2Ffilter%3E%3C%2Fdefs%3E%3Cimage%20xlink%3Ahref%3D%22http%3A%2F%2Fplacekitten.com%2F1920%2F1120%22%20width%3D%221920%22%20height%3D%221120%22%20filter%3D%22url%28%23blur%29%22%2F%3E%3C%2Fsvg%3E"),
-                        url("../img/libraryBackground.jpg");
+    url("../img/libraryBackground.jpg");
     background-position: center top;
     background-attachment: fixed;
     background-size: cover;
@@ -479,6 +476,50 @@ body {
     filter: url("data:image/svg+xml,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20version%3D%221.1%22%3E%3Cdefs%3E%3Cfilter%20id%3D%22blur%22%3E%3CfeGaussianBlur%20stdDeviation%3D%225%22%2F%3E%3C%2Ffilter%3E%3C%2Fdefs%3E%3C%2Fsvg%3E#blur");
     -webkit-filter: blur(4px);
     filter: blur(3px);
+}
+
+.overlay-glass .legacy-ie-fix {
+    position: absolute;
+    left: 0px;
+    right: 0px;
+    bottom: 0px;
+    height: 170px;
+    width: 100%;
+    background-color: #fff;
+    -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(opacity=20)";
+}
+
+.overlay-glass {
+    position: absolute;
+    left: 0px;
+    right: 0px;
+    bottom: 0px;
+    height: 170px;
+    padding: 10px 0px;
+    border-top: 2px solid rgba(255, 255, 255, 0.2);
+}
+*/
+.overlay-glass-pane {
+    position: absolute;
+    left: 0px;
+    right: 0px;
+    bottom: 170px;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.overlay-glass {
+    position: absolute;
+    left: 0px;
+    right: 0px;
+    bottom: 0px;
+    height: 170px;
+    background: url("data:image/svg+xml,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20xmlns%3Axlink%3D%22http%3A%2F%2Fwww.w3.org%2F1999%2Fxlink%22%20version%3D%221.1%22%20width%3D%221920%22%20height%3D%221120%22%3E%3Cdefs%3E%3Cfilter%20id%3D%22blur%22%3E%3CfeGaussianBlur%20stdDeviation%3D%225%22%2F%3E%3C%2Ffilter%3E%3C%2Fdefs%3E%3Cimage%20xlink%3Ahref%3D%22http%3A%2F%2Fplacekitten.com%2F1920%2F1120%22%20width%3D%221920%22%20height%3D%221120%22%20filter%3D%22url%28%23blur%29%22%2F%3E%3C%2Fsvg%3E"), url("../img/libraryBackground.jpg") fixed center top;
+    background-size: cover;
+    content: "";
+    filter: url("data:image/svg+xml,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20version%3D%221.1%22%3E%3Cdefs%3E%3Cfilter%20id%3D%22blur%22%3E%3CfeGaussianBlur%20stdDeviation%3D%225%22%2F%3E%3C%2Ffilter%3E%3C%2Fdefs%3E%3C%2Fsvg%3E#blur");
+    -webkit-filter: blur(4px);
+    filter: blur(3px);
+    padding: 10px 0px;
 }
 
 .overlay-glass .legacy-ie-fix {
@@ -816,7 +857,7 @@ body {
 .test-info-card .test-actions {
     position: absolute;
     right: 16px;
-    bottom: 16px;
+    bottom: 0px;
 }
 
 .search-box {
@@ -842,25 +883,29 @@ body {
 
 .search-box .loading-spinner {
     position: absolute;
-    height:auto;
-    width:20px;
+    height: auto;
+    width: 20px;
     top: 8px;
     right: 8px;
     bottom: 8px;
     border-radius: 4px;
 }
+
 /* TEMPLATE - MODAL - TEST INFO */
 .test-info-modal .profile-image {
     height: 60px;
     width: 60px;
     border-radius: 30px;
 }
-.test-info-modal .author-info{
+
+.test-info-modal .author-info {
     vertical-align: top;
 }
+
 .test-info-modal .author-info p {
     margin: 0px;
 }
+
 /* TEMPLATE - CREATE/EDIT */
 
 .category-selection-field {
@@ -880,16 +925,20 @@ body {
     cursor: pointer;
     text-decoration: underline;
 }
+
 .privacy-switch {
-    margin-left:0px;
+    margin-left: 0px;
 }
+
 .privacy-switch .is-active {
-    color:white;
+    color: white;
     background-color: inherit;
 }
+
 .privacy-switch span {
-    cursor:pointer;
+    cursor: pointer;
 }
+
 .edit-test-saved {
     position: absolute;
     bottom: 16px;

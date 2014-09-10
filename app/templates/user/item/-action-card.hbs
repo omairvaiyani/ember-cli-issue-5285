@@ -16,8 +16,9 @@
                     {{/if}}
                 </p>
             </div>
-            <small class="moments-ago pull-right"
-                    >{{view 'from-now' valueBinding="userAction.createdAt"}}</small>
+            <small class="moments-ago pull-right">
+                {{from-now time=userAction.createdAt}}
+            </small>
         </div>
     </div>
 </div>

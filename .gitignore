@@ -3,6 +3,7 @@
 # compiled output
 /dist
 /tmp
+/parse/public/*
 
 # dependencies
 /node_modules
