@@ -13,6 +13,11 @@ ParseHelper
 from
 '../utils/parse-helper';
 
+import
+parallaxHandler
+from
+'../utils/parallax-handler';
+
 export default
 Ember.Controller.extend(CurrentUser, {
     initialized: false,
@@ -20,15 +25,19 @@ Ember.Controller.extend(CurrentUser, {
     /*
      * GUEST MODE
      */
+    parallaxScrollHandler: function () {
+        console.log("init");
+        var handler
+        $(document).ready(function () {
+            console.log("handler defined");
+            var handler = parallaxHandler($('#parallax-image'), {speed: 0.30}, $('#parallax-overlay-glass'));
+        }.bind(this));
+    }.property('initialized'),
 
     stats: function () {
         if (this.get('currentUser'))
             return;
-        else {
-            $(document).ready(function () {
-                $('#parallax-image').parallax({speed: 0.30}, $('#parallax-overlay-glass'));
-            });
-        }
+
         var stats = {
             numberOfUsers: 0,
             numberOfTests: 0,
@@ -214,6 +223,21 @@ Ember.Controller.extend(CurrentUser, {
                 default:
                     this.set('testsAreOrderedByTitle', true);
                     break;
+            }
+        },
+
+        toggleParallaxScrollListener: function (onIndex) {
+            if (onIndex && !this.get('currentUser')) {
+                $(document).ready(function () {
+                    $(document).off("scroll", this.get('parallaxScrollHandler'));
+                    if(this.get('parallaxScrollHandler'))
+                        $(document).scroll(this.get('parallaxScrollHandler'));
+                }.bind(this));
+            } else {
+                $(document).ready(function () {
+                    if (this.get('parallaxScrollHandler'))
+                        $(document).off("scroll", this.get('parallaxScrollHandler'));
+                }.bind(this));
             }
         }
     }

@@ -10,7 +10,7 @@ from
 
 export default
 Ember.Controller.extend({
-    needs: ['user', 'test', 'category'],
+    needs: ['index', 'user', 'test', 'category'],
 
     /*
      * Observes for route transitions:
@@ -19,10 +19,13 @@ Ember.Controller.extend({
      */
     currentPathDidChange: function () {
         this.send('closeModal');
-
         var path = this.get('currentPath'),
             title;
+
         switch (path) {
+            case "index":
+                title = "DEFAULT";
+                break;
             case "user.index":
                 var user = this.get('controllers.user');
                 title = user.get('name');
@@ -65,6 +68,11 @@ Ember.Controller.extend({
                 break;
         }
         this.send('updateTitle', title);
+
+        if(path === "index")
+            this.get('controllers.index').send('toggleParallaxScrollListener', true);
+        else
+            this.get('controllers.index').send('toggleParallaxScrollListener', false);
     }.observes('currentPath'),
 
     loadingItems: 0,

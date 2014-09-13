@@ -170,36 +170,6 @@ Parse.Cloud.job("indexObjectsForClass", function (request, status) {
 /*
  * CALCULATIONS
  */
-Parse.Cloud.job("calculateTotalTestsInCategory", function (request, status) {
-    /*
-     * Reset totalTests counter in each category
-     */
-    var query = new Parse.Query('Category');
-    query.each(function (category) {
-        category.set('totalTests', 0);
-        return category.save();
-    }).then(function () {
-        /*
-         * Loop through each test, incrementing it's category.totalTests
-         * and category.parent.totalTests if available.
-         */
-        var testsInCategoryQuery = new Parse.Query('Test');
-        testsInCategoryQuery.include('category.parent');
-        return testsInCategoryQuery.each(function (test) {
-            if (test.get('category')) {
-                test.get('category').increment('totalTests');
-                if (test.get('category').get('parent')) {
-                    test.get('category').get('parent').increment('totalTests');
-                    test.get('category').get('parent').save();
-                }
-                return test.get('category').save();
-            }
-            return test;
-        });
-    }).then(function () {
-        status.success("Total tests in each category calculated successfully.");
-    });
-});
 Parse.Cloud.job("calculateTotalTestsInEachCategory", function (request, status) {
     Parse.Cloud.useMasterKey();
     /*
@@ -211,7 +181,8 @@ Parse.Cloud.job("calculateTotalTestsInEachCategory", function (request, status) 
      */
     var childCategories = [],
         testCounts = [],
-        parentCategories = [];
+        parentCategories = [],
+        saveCategoriesPromises = [];
 
     var lookup = function (array, object) {
         for (var i = 0; i < array.length; i++) {
@@ -240,32 +211,25 @@ Parse.Cloud.job("calculateTotalTestsInEachCategory", function (request, status) 
     }).then(function () {
         return Parse.Promise.when(testCounts);
     }).then(function () {
-        console.log("All resolved " + testCounts.length);
-        console.log("Child categories: " + childCategories.length);
-        console.log("Parent categories: " + parentCategories.length);
         for (var i = 0; i < childCategories.length; i++) {
             var childCategory = childCategories[i],
                 totalTests = testCounts[i]._result[0];
-            if (i < 3)
-                console.log("totalTests = " + totalTests);
 
             childCategory.set('totalTests', totalTests);
             if (childCategory.get('parent')) {
                 var parentCategory = lookup(parentCategories, childCategory.get('parent'));
                 parentCategory.increment('totalTests', totalTests);
             }
-            if (i < 5)
-                console.log("Saving child category with tests: " + childCategory.get('totalTests'));
-            childCategory.save();
+            saveCategoriesPromises.push(childCategory.save());
         }
 
-        for(var i = 0; i < childCategories.length; i++) {
-            console.log("saving parent category");
-            parentCategories[i].save();
+        for(var i = 0; i < parentCategories.length; i++) {
+            saveCategoriesPromises.push(parentCategories[i].save());
         }
-        console.log("Finished loop through each parent category");
+        return Parse.Promise.when(saveCategoriesPromises);
+    }).then(function() {
         status.success();
-    });
+    })
 });
 /*
  * GENERATE CONTENT
