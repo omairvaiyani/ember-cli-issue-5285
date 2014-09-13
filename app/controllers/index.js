@@ -26,12 +26,7 @@ Ember.Controller.extend(CurrentUser, {
      * GUEST MODE
      */
     parallaxScrollHandler: function () {
-        console.log("init");
-        var handler
-        $(document).ready(function () {
-            console.log("handler defined");
-            var handler = parallaxHandler($('#parallax-image'), {speed: 0.30}, $('#parallax-overlay-glass'));
-        }.bind(this));
+        return parallaxHandler('#parallax-image', {speed: 0.30}, '#parallax-overlay-glass');
     }.property('initialized'),
 
     stats: function () {
@@ -225,19 +220,18 @@ Ember.Controller.extend(CurrentUser, {
                     break;
             }
         },
-
+        /*
+         * Causing lag, not being used.
+         */
         toggleParallaxScrollListener: function (onIndex) {
+            console.log("toggling");
             if (onIndex && !this.get('currentUser')) {
-                $(document).ready(function () {
-                    $(document).off("scroll", this.get('parallaxScrollHandler'));
-                    if(this.get('parallaxScrollHandler'))
-                        $(document).scroll(this.get('parallaxScrollHandler'));
-                }.bind(this));
+                $(document).off("scroll", this.get('parallaxScrollHandler'));
+                if (this.get('parallaxScrollHandler'))
+                    $(document).scroll(this.get('parallaxScrollHandler'));
             } else {
-                $(document).ready(function () {
-                    if (this.get('parallaxScrollHandler'))
-                        $(document).off("scroll", this.get('parallaxScrollHandler'));
-                }.bind(this));
+                if (this.get('parallaxScrollHandler'))
+                    $(document).off("scroll", this.get('parallaxScrollHandler'));
             }
         }
     }

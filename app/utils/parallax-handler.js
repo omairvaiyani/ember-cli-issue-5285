@@ -1,6 +1,6 @@
 export default
 
-function (view, options, overlay) {
+function (viewRef, options, overlayRef) {
     var windowHeight = $(window).height();
 
     // Establish default settings
@@ -9,10 +9,14 @@ function (view, options, overlay) {
     }, options);
 
     var scrollHandler = function () {
-        var scrollTop = $(window).scrollTop();
-        var offset = view.offset().top;
-        var height = view.outerHeight();
+        var view = $(viewRef),
+            overlay,
+            scrollTop = $(window).scrollTop(),
+            offset = view.offset().top,
+            height = view.outerHeight();
 
+        if(overlayRef)
+           overlay = $(overlayRef);
         // Check if above or below viewport
         if (offset + height <= scrollTop || offset >= scrollTop + windowHeight) {
             return;

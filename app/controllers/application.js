@@ -69,10 +69,10 @@ Ember.Controller.extend({
         }
         this.send('updateTitle', title);
 
-        if(path === "index")
+        /*if(path === "index")
             this.get('controllers.index').send('toggleParallaxScrollListener', true);
         else
-            this.get('controllers.index').send('toggleParallaxScrollListener', false);
+            this.get('controllers.index').send('toggleParallaxScrollListener', false);*/
     }.observes('currentPath'),
 
     loadingItems: 0,
@@ -120,7 +120,7 @@ Ember.Controller.extend({
                 Parse.User.logOut();
             localStorage.clear();
         }
-
+        //this.get('controllers.index').send('toggleParallaxScrollListener');
     }.observes('currentUser'),
 
     /**
