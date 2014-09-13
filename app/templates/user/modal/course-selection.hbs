@@ -1,7 +1,7 @@
 <div class="modal-header">
     <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span
             class="sr-only">Close</span></button>
-    <h4 class="modal-title">Select the course that you're currently enrolled in!</h4>
+    <h4 class="modal-title">Education</h4>
 </div>
 <div class="modal-body">
 
@@ -21,7 +21,7 @@
                     <div class="row">
                         <div class="col-md-11">
                             {{autocomplete-field data=autocompleteInstitutionNames key='fullName'
-                                value=newCourse.institutionName}}
+                            value=newCourse.institutionName}}
                         </div>
                         <div class="col-md-1 text-center">
                             {{#if loading.autocompleteInstitutionNames}}
@@ -58,15 +58,25 @@
                             content=courseYearsToChooseFrom
                             optionValuePath="content"
                             optionLabelPath="content"
-                            selection=newCourse.yearName}}
+                            selection=newCourse.yearNumber}}
                         </div>
                         <div class="col-md-1">
                         </div>
                     </div>
+                    {{#if newCourse.canBeSaved}}
+                        <div class="row">
+                            <div class="col-md-12 margin-top-16">
+                                <button class="btn btn-primary" {{action 'saveCourseChanges' newCourse false}}>Save
+                                </button>
+                            </div>
+                        </div>
+                    {{/if}}
                     <hr>
                     <p class="lead">Or select one of these</p>
-                    {{#each education}}
-                        <div class="row hover-row" {{action 'courseSelected' this}}>
+                    {{#each facebookEducation}}
+                        <div class="row hover-row" {{action 'courseSelected' this}}
+                             href="#course-selection" role="button"
+                             data-slide="next">
                             <div class="col-md-11">
                                 <p class="margin-top-16">Institution: {{school.name}}</p>
 
@@ -84,14 +94,15 @@
                     {{/each}}
                 </div>
             </div>
+
             <div class="item">
                 <div class="container-fluid">
                     <a href="#course-selection" role="button"
-                       data-slide="prev" class="margin-bottom-16">
+                       data-slide="prev">
                         <span class="glyphicon glyphicon-chevron-left"></span> Go back
                     </a>
-
-                    <p class="lead margin-top-16">Are these details correct?</p>
+                    <div class="margin-bottom-16"></div>
+                    <p class="lead">Are these details correct?</p>
 
                     <p class="margin-top-16">Institution: {{selectedCourse.school.name}}</p>
 
@@ -114,11 +125,15 @@
                     </p>
 
                 </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary"
+                        {{action 'saveCourseChanges' selectedCourse true}}>Save changes
+                    </button>
+                </div>
             </div>
+
         </div>
     </div>
 </div>
-<div class="modal-footer">
-    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-    <button type="button" class="btn btn-primary" {{action 'saveCourseChanges'}}>Save changes</button>
-</div>
+

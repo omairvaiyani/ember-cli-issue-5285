@@ -125,6 +125,7 @@ Ember.ObjectController.extend({
                 categories.pushObject(category);
 
         }
+
         this.get('selectedCategories').addObjects(categories);
         this.set('readyToGetTests', true);
     }.observes('readyForFilter', 'categoryFilterSlugs.length'),
@@ -140,6 +141,14 @@ Ember.ObjectController.extend({
      */
     getChildCategories: function () {
         if (this.get('browseAll')) {
+            /*
+             * Avoid repetitive calls from property changes
+             * Reset on model change in route
+             */
+            if(this.get('alreadyGotChildCategoriesForBrowseAll'))
+                return;
+            this.set('alreadyGotChildCategoriesForBrowseAll', true);
+
             this.send('incrementLoadingItems');
             var where = {
                 level: 1
@@ -177,6 +186,10 @@ Ember.ObjectController.extend({
         if (!this.get('model.id'))
             return;
 
+        if(this.get('alreadyGotChildCategories'))
+            return;
+        this.set('alreadyGotChildCategories', true);
+
         this.send('incrementLoadingItems');
         /*
          * Get this category's child categories
@@ -195,7 +208,16 @@ Ember.ObjectController.extend({
                  * the search results by the category(ies) they want
                  */
                 this.set('selectedCategories', []);
-                this.get('selectedCategories').pushObjects(this.get('childCategories.content'));
+                var parentAndchildCategories = [];
+                /*
+                 * Add the parent category
+                 * This will include tests directly pointed
+                 * to the top level category, for e.g. Law
+                 * which has no children.
+                 */
+                parentAndchildCategories.addObjects(childCategories);
+                parentAndchildCategories.pushObject(this.get('model'));
+                this.get('selectedCategories').pushObjects(parentAndchildCategories);
                 /*
                  * If there are categories to filter in the queryParams,
                  * wait or those to filter the selectedCategories before
@@ -212,7 +234,7 @@ Ember.ObjectController.extend({
                  */
                 this.set('readyForFilter', true);
             }.bind(this));
-    }.observes('model', 'browseAll'),
+    }.observes('model.id', 'browseAll'),
 
     readyToGetTests: false,
     getTests: function () {

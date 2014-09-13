@@ -13,9 +13,9 @@
         {{#if currentUser}}
             {{#unless isCurrentUser}}
                 {{#if isFollowing}}
-                    <p><a href="" {{action 'unfollowUser' author}}>Following</a></p>
+                    <p><a href="" {{action 'unfollowUser' author.content}}>Following</a></p>
                 {{else}}
-                    <p><a href="" {{action 'followUser' author}}>Follow</a></p>
+                    <p><a href="" {{action 'followUser' author.content}}>Follow</a></p>
                 {{/if}}
             {{/unless}}
         {{/if}}

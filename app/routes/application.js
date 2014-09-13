@@ -149,10 +149,8 @@ Ember.Route.extend({
          */
         signUpAuthorisedFacebookUser: function (authResponse) {
             this.get('applicationController').incrementProperty('loadingItems');
-            console.log("signUpAuthorisedFacebookUser called : " + this.get('applicationController').get('loadingItems'));
             this.send('closeModal');
             FB.api('/me', {fields: 'name,education,gender,cover,email,friends'}, function (response) {
-                console.dir(response);
                 if (!response.cover)
                     response.cover = {source: null};
                 if (!response.friends)
@@ -282,10 +280,9 @@ Ember.Route.extend({
 
             Parse.Cloud.run('followUser',
                 {
-                    mainUser: currentUser.get('id'),
-                    userToFollow: user.get('id')
+                    userIdToFollow: user.get('id')
                 }, {
-                    success: function (success) {
+                    success: function (response) {
                     }.bind(this),
                     error: function (error) {
                         console.log("There was an error: " + error);
@@ -293,6 +290,7 @@ Ember.Route.extend({
                         user.decrementProperty('numberOfFollowers');
                         if (user.get('followers'))
                             user.get('followers').removeObject(currentUser);
+                        currentUser.get('following').removeObject(user);
                     }.bind(this)
                 });
         },
@@ -304,11 +302,8 @@ Ember.Route.extend({
             currentUser.get('following').removeObject(user);
             if (user.get('followers'))
                 user.get('followers').removeObject(currentUser);
-            Parse.Cloud.run('unfollowUser',
+            Parse.Cloud.run('unfollowUser', { userIdToUnfollow: user.get('id')},
                 {
-                    mainUser: currentUser.get('id'),
-                    userToUnfollow: user.get('id')
-                }, {
                     success: function (success) {
                     }.bind(this),
                     error: function (error) {
@@ -317,6 +312,7 @@ Ember.Route.extend({
                         user.incrementProperty('numberOfFollowers');
                         if (user.get('followers'))
                             user.get('followers').pushObject(currentUser);
+                        currentUser.get('following').pushObject(user);
                     }.bind(this)
                 });
         },

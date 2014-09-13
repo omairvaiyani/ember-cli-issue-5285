@@ -70,7 +70,7 @@ Ember.Controller.extend({
     loadingItems: 0,
 
     currentUser: null,
-
+/*
     facebookAuth: null,
 
     facebookUserObject: function () {
@@ -79,7 +79,7 @@ Ember.Controller.extend({
                 return response;
             });
         }
-    }.property('facebookAuth'),
+    }.property('facebookAuth'),*/
 
     loginUser: {
         email: '',
@@ -100,10 +100,18 @@ Ember.Controller.extend({
         var currentUser = this.get('currentUser');
 
         if (currentUser) {
+            Parse.User.become(currentUser.get('sessionToken')).then(function (user) {
+                console.dir(user);
+            }, function (error) {
+                console.dir(error);
+            });
             localStorage.sessionToken = currentUser.get('sessionToken');
         }
-        else
+        else {
+            if(Parse.User.current())
+                Parse.User.logOut();
             localStorage.clear();
+        }
 
     }.observes('currentUser'),
 

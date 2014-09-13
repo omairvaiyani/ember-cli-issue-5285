@@ -26,30 +26,33 @@
                         <span class="glyphicon glyphicon-search" {{action 'searchTests'}}></span>
                     {{/if}}
                 </div>
-                <h5>Filter {{tests.count}} results</h5>
 
-                {{#each category in childCategories itemController='category.item.childCategory'}}
-                    <div class="row">
-                        <div class="col-md-12">
-                            {{#if browseAll}}
-                                <p>
-                                    {{#link-to 'category' category.slug}}
-                                        {{category.name}}
-                                    {{/link-to}}
-                                    <small>({{category.totalTests}})</small>
-                                </p>
-                            {{else}}
-                                <p>{{input type="checkbox" checked=category.isChecked}}
-                                    {{#link-to 'category' this.slug
-                                    (query-params categoryFilter=category.slug page=1)}}
-                                        {{category.name}}
-                                    {{/link-to}}
-                                    <small>({{category.totalTests}})</small>
-                                </p>
-                            {{/if}}
+                {{#if childCategories.length}}
+                    <h5>Filter {{tests.count}} results</h5>
+
+                    {{#each category in childCategories itemController='category.item.childCategory'}}
+                        <div class="row">
+                            <div class="col-md-12">
+                                {{#if browseAll}}
+                                    <p>
+                                        {{#link-to 'category' category.slug}}
+                                            {{category.name}}
+                                        {{/link-to}}
+                                        <small>({{category.totalTests}})</small>
+                                    </p>
+                                {{else}}
+                                    <p>{{input type="checkbox" checked=category.isChecked}}
+                                        {{#link-to 'category' this.slug
+                                        (query-params categoryFilter=category.slug page=1)}}
+                                            {{category.name}}
+                                        {{/link-to}}
+                                        <small>({{category.totalTests}})</small>
+                                    </p>
+                                {{/if}}
+                            </div>
                         </div>
-                    </div>
-                {{/each}}
+                    {{/each}}
+                {{/if}}
             </div>
         </div>
         <div class="col-md-9">

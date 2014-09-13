@@ -491,7 +491,8 @@ EmberParseAdapter.ParseUser = DS.Model.extend({
     education: DS.attr(),
     course: DS.belongsTo('course', {async: true}),
     institution: DS.belongsTo('university', {async: true}),
-    year: DS.belongsTo('year', {async: true}),
+    yearNumber: DS.attr('number'),
+
     profileImageURL: function () {
         if (this.get('fbid')) {
             return "http://res.cloudinary.com/mycqs/image/facebook/c_thumb,e_improve,g_faces:center,w_150/"+this.get('fbid');

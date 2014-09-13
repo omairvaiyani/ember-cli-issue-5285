@@ -108,13 +108,37 @@ Ember.ObjectController.extend(CurrentUser, {
     }.observes('model'),
 
     /*
-     * Object for new course creation
+     * COURSE SELECTION
+     */
+
+    /*
+     * NEW COURSE
      */
     newCourse: {
         institutionName: '',
-        concentrationName: '',
-        yearName: 0
+        courseName: '',
+        yearNumber: 1,
+        canBeSaved: false
     },
+    prefillNewCourseWithEducationInfo: function() {
+        if(this.get('institution.fullName.length'))
+            this.set('newCourse.institutionName', this.get('institution.fullName'));
+        if(this.get('course.name.length'))
+            this.set('newCourse.courseName', this.get('course.name'));
+        if(this.get('yearNumber') !== "")
+            this.set('newCourse.yearNumber', this.get('yearNumber'));
+    }.observes('course.fullName.length', 'institution.fullName.length', 'yearNumber'),
+    canNewCourseBeSaved: function () {
+        if (this.get('institution.fullName') === this.get('newCourse.institutionName') &&
+            this.get('course.name') === this.get('newCourse.courseName') &&
+            this.get('yearNumber') === this.get('newCourse.yearNumber'))
+            this.set('newCourse.canBeSaved', false);
+        else
+            this.set('newCourse.canBeSaved', this.get('newCourse.institutionName.length') && this.get('newCourse.courseName.length'));
+    }.observes('newCourse.institutionName.length', 'newCourse.courseName.length', 'newCourse.yearNumber'),
+
+    courseYearsToChooseFrom: [0, 1, 2, 3, 4, 5, 6],
+    courseLengthsToChooseFrom: [1, 2, 3, 4, 5, 6, 7],
 
     autocompleteInstitutionNames: [],
     getInstitutionNamesForAutocomplete: function () {
@@ -179,12 +203,21 @@ Ember.ObjectController.extend(CurrentUser, {
     }.observes("newCourse.courseName.length"),
 
     /*
-     * Object for course-selection modal
+     * FACEBOOK EDUCATION LIST
      */
+    facebookEducation: function () {
+        return this.get('education').sort(function (a, b) {
+            return parseInt(b.year.name) - parseInt(a.year.name);
+        });
+
+    }.property('education.length'),
+
     selectedCourse: null,
 
-    courseYearsToChooseFrom: [0, 1, 2, 3, 4, 5, 6],
-    courseLengthsToChooseFrom: [1, 2, 3, 4, 5, 6, 7],
+    /*
+     * /COURSE SELECTION
+     */
+
 
     latestAttemptsReceived: false,
     getLatestAttempts: function () {
@@ -210,7 +243,7 @@ Ember.ObjectController.extend(CurrentUser, {
         courseSelected: function (course) {
             this.set('selectedCourse', course);
             /*
-             * Try to determin course length based on name
+             * Try to determine course length based on name
              * But we'll allow users to manually change it
              */
             if (course.concentration[0].name === "Medicine" ||
@@ -245,110 +278,41 @@ Ember.ObjectController.extend(CurrentUser, {
             this.set('selectedCourse.currentYear', currentYearInCourse);
         },
 
-        saveCourseChanges: function () {
-            var selectedCourse = this.get('selectedCourse');
+        saveCourseChanges: function (education, isFacebook) {
+            this.send('incrementLoadingItems');
+            this.send('closeModal');
             /*
-             * See if the selectedCourse.school exists
-             * as an institution on our database
+             * If the education object is from facebook,
+             * change the properties to match our structure
              */
-            var where = {
-                'facebookId': selectedCourse.school.id
-            };
-            this.store.findQuery('university', {where: JSON.stringify(where)})
-                .then(function (results) {
-                    /*
-                     * Results: Institutions matching the given facebookId
-                     */
-                    if (results.content.length) {
-                        /*
-                         * Institution found, setting it on the currentUser
-                         */
-                        this.set('institution', results.content[0]);
-                    } else {
-                        /*
-                         * Institution not found, create a new one
-                         */
-                        var newUniversity = this.store.createRecord('university', {
-                            facebookId: selectedCourse.school.id,
-                            fullName: selectedCourse.school.name
-                        });
-                        newUniversity.save().then(function (newUniversity) {
-                            /*
-                             * New Institution saved and set on the currentUser
-                             */
-                            this.set('institution', newUniversity);
-                        }.bind(this));
-                    }
-                    /*
-                     * Regardless of whether the institution was found or
-                     * a new one was set,
-                     * Look for the selectedCourse.concentration on
-                     * our database Course table:
-                     * - Has to match facebookId
-                     * - Has to be the right courseLength
-                     */
-                    var where = {
-                        'facebookId': selectedCourse.concentration[0].id,
-                        'courseLength': selectedCourse.courseLength
-                    };
-                    return this.store.findQuery('course', {where: JSON.stringify(where)});
-                }.bind(this))
-                .then(function (results) {
-                    /*
-                     * Results: Courses matching given facebookId and courseLength
-                     */
-                    if (results.content.length) {
-                        /*
-                         * Set the course for the currentUser and
-                         * return a promise, looking for a Year object matching
-                         * the currentYear and course
-                         */
-                        this.set('course', results.content[0]);
-                        var where = {
-                            year: selectedCourse.currentYear,
-                            course: ParseHelper.generatePointer(results.content[0])
-                        };
-                        return this.store.findQuery('year', {where: JSON.stringify(where)});
-                    } else {
-                        /*
-                         * Course not found, create a new course object
-                         */
-                        var newCourse = this.store.createRecord('course', {
-                            facebookId: selectedCourse.concentration[0].id,
-                            name: selectedCourse.concentration[0].name,
-                            courseLength: selectedCourse.courseLength,
-                            institutionFacebookId: selectedCourse.school.id
-                        });
-                        /*
-                         * Save the new course and subsequently create
-                         * a new year with the currentYear and newCourse values
-                         */
-                        newCourse.save()
-                            .then(function (newCourse) {
-                                this.set('course', newCourse);
-                                var newYear = this.store.createRecord('year', {
-                                    year: selectedCourse.currentYear,
-                                    course: newCourse
-                                });
-                                return newYear.save();
-                            }.bind(this))
-                            .then(function (newYear) {
-                                this.set('year', newYear);
-                                this.get('model').save();
+            if (isFacebook) {
+                education.institutionName = education.school.name;
+                education.institutionFacebookId = education.school.id;
+                education.courseName = education.concentration[0].name;
+                education.courseFacebookId = education.concentration[0].id;
+                education.yearNumber = education.currentYear;
+            }
+            Parse.Cloud.run('updateUserEducation', { userId: this.get('currentUser.id'), education: education },
+                {
+                    success: function (response) {
+                        this.get('currentUser').set('yearNumber', education.yearNumber);
+                        this.store.findById('university', response.university.id)
+                            .then(function (university) {
+                                this.get('currentUser').set('institution', university);
+                                return this.store.findById('course', response.course.id);
+                            }.bind(this)).then(function (course) {
+                                this.get('currentUser').set('course', course);
+                                this.send('decrementLoadingItems');
                             }.bind(this));
-                        return null;
+                    }.bind(this),
+
+                    error: function (error) {
+                        console.log("Error");
+                        console.dir(error);
+                        this.send('decrementLoadingItems');
                     }
-                }.bind(this)).then(function (results) {
-                    if (results && results.content.length) {
-                        this.set('year', results.content[0]);
-                        return this.get('model').save();
-                    } else {
-                        return;
-                    }
-                }.bind(this)).then(function () {
-                    // Course selection and education history all sorted!
-                    this.send('closeModal');
-                }.bind(this));
+                });
         }
+
     }
 });

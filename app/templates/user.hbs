@@ -42,10 +42,11 @@
             <div class="row">
                 <div class="col-md-12">
                     <div class="card margin-top-16">
-                        {{#if course}}
-                            <p>In year {{year.year}} of <a {{bind-attr href=courseFacebookPageUrl}}
+                        <!-- This will force fetch course and institution before displaying -->
+                        {{#if course.institution.fullName}}
+                            <p>In year {{yearNumber}} of <a {{bind-attr href=courseFacebookPageUrl}}
                                     >{{course.name}}</a> at <a {{bind-attr href=institutionFacebookPageUrl}}
-                                    >{{institution.fullName}}</a>
+                                    >{{course.institution.fullName}}</a>
                             </p>
                         {{else}}
                             <p>{{#if isCurrentUser}}You have not{{else}}{{firstName}} has not{{/if}} added any course

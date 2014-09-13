@@ -84,8 +84,7 @@
                             {{/if}}
                             {{#if testsAreOrderedByCategory}}
                                 {{#each testsOrderedByCategory}}
-                                    <div class="card margin-top-16"><p class="lead">{{name}} ({{tests.length}}
-                                        )</p>
+                                    <div class="card margin-top-16"><p class="lead">{{name}} ({{tests.length}})</p>
                                     </div>
                                     {{#each tests itemController='user/item/test'}}
                                         {{partial "user/item/test-card"}}

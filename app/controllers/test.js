@@ -150,7 +150,7 @@ Ember.ObjectController.extend(CurrentUser, {
                 timeCompleted: new Date()
             });
             if(this.get('currentUser'))
-                attempt.set('user', currentUser);
+                attempt.set('user', this.get('currentUser'));
             this.set('attempt', attempt);
 
             /*
@@ -190,7 +190,7 @@ Ember.ObjectController.extend(CurrentUser, {
                 responsesArray.pushObject(response);
             }.bind(this));
 
-            score = Math.floor((score / this.get('shuffledQuestions.length')) * 100);
+            score = (score / this.get('shuffledQuestions.length')) * 100;
             this.set('attempt.score', score);
 
             var arrayOfPromises = [],

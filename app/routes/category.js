@@ -36,7 +36,6 @@ Ember.Route.extend({
             }.bind(this))
             .then(function (topLevelCategory) {
                 if (topLevelCategory.get('slug') !== params.category_slug) {
-                    console.dir({queryParams: {categoryFilter: params.category_slug, page: 1}});
                     this.transitionTo('category', topLevelCategory.get('slug'),
                         {queryParams: {categoryFilter: params.category_slug, page: 1}});
                 }
@@ -46,6 +45,17 @@ Ember.Route.extend({
     },
 
     setupController: function(controller, model) {
+        /*
+         * These properties help avoid repetitive calls
+         * to get childCategories for the same model.
+         * Reset after model changes. Has to be called
+         * before setting a new model which is being
+         * observes by the 'getChildCategories' hook.
+         */
+        if(controller.get('model')) {
+            controller.set('alreadyGotChildCategoriesForBrowseAll', false);
+            controller.set('alreadyGotChildCategories', false);
+        }
         controller.set('model', model);
         controller.set('browseAll', !model.id);
     }
