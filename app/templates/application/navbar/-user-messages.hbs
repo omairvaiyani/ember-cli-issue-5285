@@ -1,0 +1,22 @@
+<li class="navbar-messages">
+    <a id="navbar-messages-dropdown" data-toggle="dropdown">
+        {{#if currentUser.totalUnreadMessages}}
+            <span class="badge pull-right">{{currentUser.totalUnreadMessages}}</span>
+        {{/if}}
+        <span class="glyphicon glyphicon-envelope"></span>
+    </a>
+    <ul class="dropdown-menu" role="menu" aria-labelledby="navbar-messages-dropdown">
+        {{#each item in currentUser.messages}}
+            <li role="presentation" {{bind-attr class=':user-message-item item.read::is-unread'}}
+                {{action 'markMessageAsRead' item}}>
+                {{partial 'application/navbar/user-messages/item/message'}}
+            </li>
+            <hr class="user-message-item-separator">
+        {{/each}}
+        {{#unless currentUser.messages.length}}
+            <li role="presentation">
+                <a disabled="disabled">You have no messages.</a>
+            </li>
+        {{/unless}}
+    </ul>
+</li>

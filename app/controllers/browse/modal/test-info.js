@@ -17,6 +17,18 @@ Ember.ObjectController.extend(CurrentUser, {
             return this.get('author.id') === this.get('currentUser.id');
     }.property('model.id'),
 
+    /*
+     * Text on the 'Send to Mobile' button
+     * It updates when a push is being sent
+     * and is finally complete. This way
+     * seems bizarre and unclean, but Ember
+     * was being annoying and not working
+     * properly.
+     */
+    setDefaultSendToMobileButtonText: function () {
+        this.set('sendToMobileButtonText', "Send to Mobile");
+    }.observes('model.id'),
+
     isFollowing: function () {
         if (!this.get('currentUser'))
             return false;

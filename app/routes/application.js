@@ -8,6 +8,11 @@ FormValidation
 from
 '../utils/form-validation';
 
+import
+ParseHelper
+from
+'../utils/parse-helper';
+
 export default
 Ember.Route.extend({
     applicationController: null,
@@ -35,6 +40,13 @@ Ember.Route.extend({
                 window.document.title = title + " - MyCQs";
         },
 
+        updateNotificationsCounter: function () {
+            if (this.get('currentUser.totalUnreadMessages'))
+                window.document.title = "(" + this.get('currentUser.totalUnreadMessages') + ") " + window.document.title;
+            else if (window.document.title.charAt(0) === "(")
+                window.document.title = window.document.title.substr(window.document.title.indexOf(" ") + 1);
+        },
+
         signUp: function () {
             var name = this.controllerFor('application').get('newUser.name'),
                 email = this.controllerFor('application').get('newUser.email'),
@@ -59,52 +71,86 @@ Ember.Route.extend({
                 errors = true;
             }
             if (!errors) {
-                var data = {
-                        name: name.trim(),
-                        email: email.trim(),
-                        username: email.trim(),
-                        password: password
-                    },
-                    ParseUser = this.store.modelFor('parse-user');
+                this.send('incrementLoadingItems');
+                Parse.Cloud.run('preSignUp', {"email": email.trim()}, {
+                    success: function (response) {
+                        var privateData = response.privateData,
+                            username = response.privateData.get('username');
+                        this.send('closeModal');
+                        var data = {
+                                name: name.trim(),
+                                username: username,
+                                privateData: ParseHelper.generatePointerFromNativeParse(privateData),
+                                password: password
+                            },
+                            ParseUser = this.store.modelFor('parse-user');
+                        ParseUser.signup(this.store, data).then(
+                            function (userMinimal) {
+                                userMinimal.set('name', name);
+                                this.set('applicationController.currentUser', userMinimal);
+                                this.transitionTo('user', userMinimal.get('slug'));
+                                this.send('decrementLoadingItems');
+                            }.bind(this),
+                            function (error) {
+                                console.log("Error with ParseUser.signup() in: " + "signUpWithEmail");
+                                console.dir(error);
+                                this.send('decrementLoadingItems');
+                            }.bind(this)
+                        );
 
-                ParseUser.signup(this.store, data).then(
-                    function (userMinimal) {
-                        userMinimal.set('name', name);
-                        userMinimal.set('email', email);
                     }.bind(this),
-                    function (error) {
-                        console.log("Error with ParseUser.signup() in: " + "signUpWithEmail");
+
+                    error: function (error) {
+                        console.log("Error!");
                         console.dir(error);
-                    }
-                );
+                        this.send('decrementLoadingItems');
+                    }.bind(this)
+                });
             }
         },
         login: function () {
+            this.send('incrementLoadingItems');
+
             var controller = this.controllerFor('application'),
                 email = controller.get('loginUser.email'),
                 password = controller.get('loginUser.password'),
                 ParseUser = this.store.modelFor('parse-user'),
-                data = {
-                    username: email,
-                    password: password
-                };
+                data;
+
             controller.set('loginMessage.connecting', "Logging in...");
-            ParseUser.login(this.store, data).then(
-                function (user) {
-                    controller.set('currentUser', user);
-                    controller.set('loginMessage.connecting', "");
-                    this.send('closeModal');
-                    this.send('redirectAfterLogin');
+
+            Parse.Cloud.run('preLogIn', {"email": email}, {
+                success: function (response) {
+                    data = {
+                        username: response.username,
+                        password: password
+                    };
+                    ParseUser.login(this.store, data).then(
+                        function (user) {
+                            controller.set('currentUser', user);
+                            controller.set('loginMessage.connecting', "");
+                            this.send('decrementLoadingItems');
+                            this.send('closeModal');
+                            this.send('redirectAfterLogin');
+                        }.bind(this),
+
+                        function (error) {
+                            this.send('decrementLoadingItems');
+                            console.dir(error);
+                            if (error.code === 101)
+                                controller.set('loginMessage.error', "Invalid email and password combination!");
+                            if (error.code === 200)
+                                controller.set('loginMessage.error', "Please type in your username or email!");
+                            controller.set('loginMessage.connecting', "");
+                        }
+                    );
                 }.bind(this),
-                function (error) {
-                    console.dir(error);
-                    if (error.code === 101)
-                        controller.set('loginMessage.error', "Invalid email and password combination!");
-                    if (error.code === 200)
-                        controller.set('loginMessage.error', "Please type in your username or email!");
-                    controller.set('loginMessage.connecting', "");
+                error: function (error) {
+                    console.log(error);
+                    this.send('decrementLoadingItems');
                 }
-            );
+            });
+
         },
         /**
          * Facebook Connect:
@@ -325,6 +371,52 @@ Ember.Route.extend({
         decrementLoadingItems: function () {
             if (this.get('applicationController.loadingItems'))
                 this.get('applicationController').decrementProperty('loadingItems');
+        },
+
+        sendPush: function (controller, type, sendObject) {
+            switch (type) {
+                case "toMobile":
+                    controller.set('sendToMobileButtonText', "Sending...");
+                    Parse.Cloud.run('sendPushToUser',
+                        {
+                            recipientId: this.get('currentUser.id'),
+                            message: "Hey check out this test!",
+                            testId: sendObject.get('id'),
+                            type: "sendToMobile"
+                        }, {
+                            success: function (response) {
+                                controller.set('sendToMobileButtonText', "Sent!");
+                                setInterval(function () {
+                                    controller.set('sendToMobileButtonText', "Send again");
+                                }, 3000);
+                            }.bind(this),
+                            error: function (error) {
+                                controller.set('sendToMobileButtonText', "Error, try again.");
+                                setInterval(function () {
+                                    controller.set('sendToMobileButtonText', "Send again");
+                                }, 3000);
+                                console.log("There was an error: " + error);
+                            }.bind(this)
+                        });
+                    break;
+            }
+        },
+
+        /**
+         * Action handler for creating a new notification.
+         * Could be called from elsewhere throughout the application.
+         * @param type {String} classification; used for which icon to show
+         * @param title {String} leading text
+         * @param message {String} supporting text
+         */
+        addNotification: function (type, title, message) {
+            var notification = Ember.Object.create({
+                type: type,
+                title: title,
+                message: message,
+                closed: false
+            });
+            this.get('applicationController.notifications').pushObject(notification);
         }
     }
 });

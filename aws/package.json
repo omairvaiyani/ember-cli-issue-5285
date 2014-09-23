@@ -1,0 +1,17 @@
+{
+  "name": "mycqs-web",
+  "start": "node app.js",
+  "version": "0.0.2",
+  "private": true,
+  "dependencies": {
+    "aws-sdk": "^2.0.17",
+    "express": "^4.9.0",
+    "mime": "^1.2.11",
+    "newrelic": "^1.11.1",
+    "node-logentries": "^0.1.4",
+    "node-schedule": "^0.1.13",
+    "node-static": "*",
+    "redis": "^0.12.1"
+  },
+  "devDependencies": {}
+}

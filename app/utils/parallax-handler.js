@@ -1,33 +1,130 @@
 export default
+/**
+ * @license Asparagus v1.0
+ * (c) 2013 Form5 http://form5.is
+ * License: MIT
+ */
+function (viewRef, overlayRef) {
+    var lastScrollY = 0,
+        ticking = false,
+        bgElm = document.getElementById(viewRef),
+        smElm = document.getElementById(overlayRef),
+        speedDivider = 2;
 
-function (viewRef, options, overlayRef) {
-    var windowHeight = $(window).height();
+    var is_chrome = navigator.userAgent.indexOf('Chrome') > -1;
+    var is_explorer = navigator.userAgent.indexOf('MSIE') > -1;
+    var is_firefox = navigator.userAgent.indexOf('Firefox') > -1;
+    var is_safari = navigator.userAgent.indexOf("Safari") > -1;
+    var is_Opera = navigator.userAgent.indexOf("Presto") > -1;
 
-    // Establish default settings
-    var settings = $.extend({
-        speed: 0.15
-    }, options);
+    // Update background position
+    var updatePosition = function () {
+        /*if(is_safari && !is_chrome)
+         return;*/
 
-    var scrollHandler = function () {
-        var view = $(viewRef),
-            overlay,
-            scrollTop = $(window).scrollTop(),
-            offset = view.offset().top,
-            height = view.outerHeight();
+        var translateValue = lastScrollY / speedDivider;
 
-        if(overlayRef)
-           overlay = $(overlayRef);
-        // Check if above or below viewport
-        if (offset + height <= scrollTop || offset >= scrollTop + windowHeight) {
-            return;
+        // We don't want parallax to happen if scrollpos is below 0
+        if (translateValue < 0)
+            translateValue = 0;
+
+        if (bgElm) {
+            translateY(bgElm, translateValue);
+        } else {
+            /*
+             * In case document did not load
+             */
+            bgElm = document.getElementById(viewRef);
+            translateY(bgElm, translateValue);
         }
+        if (smElm)
+            translateBackgroundY(smElm, translateValue);
+        else {
+            smElm = document.getElementById(overlayRef);
+            translateBackgroundY(smElm, translateValue);
+        }
+        // Stop ticking
+        ticking = false;
+    };
 
-        var yBgPosition = Math.round((offset - scrollTop) * settings.speed);
+    // Translates an element on the Y axis using translate3d to ensure
+    // that the rendering is done by the GPU
+    var translateY = function (elm, value) {
+        var translate = 'translate3d(0px,' + value + 'px, 0px)';
+        elm.style['-webkit-transform'] = translate;
+        elm.style['-moz-transform'] = translate;
+        elm.style['-ms-transform'] = translate;
+        elm.style['-o-transform'] = translate;
+        elm.style.transform = translate;
+    };
 
-        // Apply the Y Background Position to Set the Parallax Effect
-        view.css('background-position', 'center ' + yBgPosition + 'px');
-        if (overlay)
-            overlay.css('background-position', 'center ' + yBgPosition + 'px');
-    }
-    return scrollHandler;
+    var translateBackgroundY = function (elm, value) {
+        var translate = 'center calc(-430px + ' + value + 'px)';
+        elm.style['background-position'] = translate;
+    };
+
+    // This will limit the calculation of the background position to
+    // 60fps as well as blocking it from running multiple times at once
+    var requestTick = function () {
+        if (!ticking) {
+            window.requestAnimationFrame(updatePosition);
+            ticking = true;
+        }
+    };
+
+    // Update scroll value and request tick
+    var doScroll = function () {
+        lastScrollY = window.scrollY;
+        requestTick();
+    };
+
+    // Initialize on domready
+    (function () {
+        var loaded = 0;
+        var bootstrap = function () {
+            if (loaded) return;
+            loaded = 1;
+
+            rafPolyfill();
+            window.onscroll = doScroll;
+        };
+
+        if (document.readyState === 'complete') {
+            setTimeout(bootstrap);
+        } else {
+            document.addEventListener('DOMContentLoaded', bootstrap, false);
+            window.addEventListener('load', bootstrap, false);
+        }
+    })();
+
+    // RequestAnimationFrame polyfill for older browsers
+    var rafPolyfill = function () {
+        var lastTime, vendors, x;
+        lastTime = 0;
+        vendors = ["webkit", "moz"];
+        x = 0;
+        while (x < vendors.length && !window.requestAnimationFrame) {
+            window.requestAnimationFrame = window[vendors[x] + "RequestAnimationFrame"];
+            window.cancelAnimationFrame = window[vendors[x] + "CancelAnimationFrame"] || window[vendors[x] + "CancelRequestAnimationFrame"];
+            ++x;
+        }
+        if (!window.requestAnimationFrame) {
+            window.requestAnimationFrame = function (callback, element) {
+                var currTime, id, timeToCall;
+                currTime = new Date().getTime();
+                timeToCall = Math.max(0, 16 - (currTime - lastTime));
+                id = window.setTimeout(function () {
+                    callback(currTime + timeToCall);
+                }, timeToCall);
+                lastTime = currTime + timeToCall;
+                return id;
+            };
+        }
+        if (!window.cancelAnimationFrame) {
+            window.cancelAnimationFrame = function (id) {
+                clearTimeout(id);
+            };
+        }
+    };
+
 }

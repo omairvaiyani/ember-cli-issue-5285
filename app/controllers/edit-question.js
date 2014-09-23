@@ -34,7 +34,7 @@ Ember.ObjectController.extend({
                     base64String = base64.replace(/^data:image\/(png|jpeg);base64,/, "");
                 this.set('imageFile.base64', base64String);
                 this.set('imageFile.url', newURL);
-                this.set('imageFile.style', "background-image:url('"+newURL+"');");
+                this.set('imageFile.style', "background-image:url('" + newURL + "');");
                 this.get('featherEditor').close();
             }.bind(this),
             onError: function (errorObj) {
@@ -47,7 +47,7 @@ Ember.ObjectController.extend({
     imageFile: function () {
         if (this.get('model.image'))
             return {name: 'image', url: this.get('model.image.url'), base64: null,
-                style: "background-image:url('"+this.get('model.image.url')+"');"};
+                style: "background-image:url('" + this.get('model.image.url') + "');"};
         else
             return {name: 'image', url: '', base64: null, style: ''};
     }.property('model.image'),
@@ -162,6 +162,7 @@ Ember.ObjectController.extend({
         else
             this.set('tagsStringified', tagsStringified);
     }.observes('content.objectId'),
+
     actions: {
         optionAltered: function (index) {
             this.set('areOptionsDirty', true);
@@ -193,25 +194,25 @@ Ember.ObjectController.extend({
             this.set('validity.options.' + index + '.warnings', []);
             this.set('validity.question.hasErrors', false);
             this.set('validity.question.hasWarnings', false);
-            //   this.set('controllers.create.isDirty', true);
-//            switch (options.length) {
-//                case 2:
-//                    if (options[0].phrase && options[1].phrase)
-//                        this.set('canAddMoreOptions', true);
-//                    break;
-//                case 3:
-//                    if (options[0].phrase && options[1].phrase && options[2].phrase)
-//                        this.set('canAddMoreOptions', true);
-//                    else
-//                        this.set('canAddMoreOptions', false);
-//                    break;
-//                case 4:
-//                    if (options[0].phrase && options[1].phrase && options[2].phrase && options[3].phrase)
-//                        this.set('canAddMoreOptions', true);
-//                    else
-//                        this.set('canAddMoreOptions', false);
-//                    break;
-//            }
+            /*   this.set('controllers.create.isDirty', true);
+             switch (options.length) {
+             case 2:
+             if (options[0].phrase && options[1].phrase)
+             this.set('canAddMoreOptions', true);
+             break;
+             case 3:
+             if (options[0].phrase && options[1].phrase && options[2].phrase)
+             this.set('canAddMoreOptions', true);
+             else
+             this.set('canAddMoreOptions', false);
+             break;
+             case 4:
+             if (options[0].phrase && options[1].phrase && options[2].phrase && options[3].phrase)
+             this.set('canAddMoreOptions', true);
+             else
+             this.set('canAddMoreOptions', false);
+             break;
+             }*/
         },
         addOption: function () {
             var options = this.get('options');
@@ -226,23 +227,51 @@ Ember.ObjectController.extend({
                 return;
             this.send('incrementLoadingItems');
             this.set('saving', true);
-            this.set('tags', this.get('tagsStringified').split(', '));
 
-
-            if (this.get('imageFile.url.length')) {
-                var image = new EmberParseAdapter.File('question-image.jpg', this.get('imageFile.url'));
-                this.set('model.image', image);
+            window.scrollTo(0, 0);
+            this.send("refreshRoute");
+            /*
+             * If user added an image,
+             * save that first, add it to the question,
+             * then save the question
+             */
+            if (this.get('imageFile.base64.length')) {
+                /*
+                 * Check if our temporary imageFile object has been used
+                 * If so, use the Parse SDK to save the image first.
+                 * Then, use the returned url and name to create an
+                 * EmberParseAdapter.File object and set it on the
+                 * question.image property.
+                 */
+                var file = document.getElementById("fileInput").files[0];
+                var parseFile = new Parse.File('image.jpg', {base64: this.get('imageFile.base64')});
+                return parseFile.save().then(function (image) {
+                        var image = new EmberParseAdapter.File(image.name(), image.url());
+                        this.set('model.image', image);
+                        return this.get('model').save();
+                    }.bind(this)).
+                    then(function (question) {
+                        this.get('questions').pushObject(question);
+                        return this.get('test').save();
+                    }.bind(this)).then(function (test) {
+                        this.send('decrementLoadingItems');
+                        this.set('saving', false);
+                        this.send('addNotification', 'saved', 'Question saved!', 'This test now has '+this.get('questions.length')+' questions.');
+                    }.bind(this));
+            } else {
+                /*
+                 * No image, just save the question
+                 */
+                this.get('model').save()
+                    .then(function (question) {
+                        this.get('questions').pushObject(question);
+                        return this.get('test').save();
+                    }.bind(this)).then(function (test) {
+                        this.send('decrementLoadingItems');
+                        this.set('saving', false);
+                        this.send('addNotification', 'saved', 'Question saved!', 'This test now has '+this.get('questions.length')+' questions.');
+                    }.bind(this));
             }
-            this.get('model').save()
-                .then(function (question) {
-                    this.get('questions').pushObject(question);
-                    return this.get('test').save();
-                }.bind(this)).then(function (test) {
-                    window.scrollTo(0, 0);
-                    this.send("refreshRoute");
-                    this.send('decrementLoadingItems');
-                    this.set('saving', false);
-                }.bind(this));
         },
         updateQuestion: function (shouldCheckValidity) {
             if (this.get('updating') || shouldCheckValidity && !this.isQuestionValid())
@@ -250,18 +279,15 @@ Ember.ObjectController.extend({
 
             this.send('incrementLoadingItems');
             this.set('updating', true);
-            this.set('tags', this.get('tagsStringified').split(', '));
+
+            window.scrollTo(0, 0);
+            this.transitionToRoute('edit');
 
             /*
-             * Check if our temporary imageFile object has been used
-             * If so, use the Parse SDK to save the image first.
-             * Then, use the returned url and name to create an
-             * EmberParseAdapter.File object and set it on the
-             * question.image property.
+             * If user added, updated, edited or removed image,
+             * save that first then the question.
              */
             if (this.get('imageFile.base64.length')) {
-                // this.imageUrlToBase64(this.get('imageFile.url'), 'image/jpeg', function (base64Image) {
-                var file = document.getElementById("fileInput").files[0];
                 var parseFile = new Parse.File('image.jpg', {base64: this.get('imageFile.base64')});
                 return parseFile.save().then(function (image) {
                         var image = new EmberParseAdapter.File(image.name(), image.url());
@@ -271,34 +297,31 @@ Ember.ObjectController.extend({
                         alert(error);
                         // The file either could not be read, or could not be saved to Parse.
                     }.bind(this)).then(function () {
-                        window.scrollTo(0, 0);
                         this.set('updating', false);
-                        this.transitionToRoute('edit');
                         this.send('decrementLoadingItems');
+                        this.send('addNotification', 'saved', 'Question updated!', 'Your test is up to date.');
                     }.bind(this));
-                // });
             } else {
                 this.get('model').save().then(function () {
-                    window.scrollTo(0, 0);
                     this.set('updating', false);
-                    this.transitionToRoute('edit');
                     this.send('decrementLoadingItems');
+                    this.send('addNotification', 'saved', 'Question updated!', 'Your test is up to date.');
                 }.bind(this));
             }
         },
         addImage: function () {
             var oFReader = new FileReader();
-            oFReader.readAsDataURL(document.getElementById("fileInput").files[0]);
+            oFReader.readAsDataURL(document.getElementById("questionImageInput").files[0]);
 
             oFReader.onload = function (oFREvent) {
                 var base64 = oFREvent.target.result;
                 this.set('imageFile.url', base64);
                 this.set('imageFile.base64', base64);
-                this.set('imageFile.style', "background-image:url('"+base64+"');");
-                /*this.send('editImage');*/
+                this.set('imageFile.style', "background-image:url('" + base64 + "');");
+                this.send('editImage');
             }.bind(this);
         },
-        viewImage: function() {
+        viewImage: function () {
             this.set('modalImageUrl', this.get('imageFile.url'));
             this.send('openModal', 'application/modal/image', 'edit-question');
         },

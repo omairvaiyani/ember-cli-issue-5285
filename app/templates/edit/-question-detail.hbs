@@ -24,7 +24,7 @@
         </div>
         <div class="row">
             <div class="col-md-12 margin-bottom-16">
-                <input type="file" id="fileInput" name='question-image' {{action 'addImage' on='change'}}
+                <input type="file" id="questionImageInput" name='question-image' {{action 'addImage' on='change'}}
                        class="question-image-input"/>
                 <img {{bind-attr src=imageFile.url}} id="question-image-holder" class="hide"/>
                 {{#if imageFile.url.length}}
@@ -38,7 +38,7 @@
                         <p><a href='' {{action 'removeImage'}}>Remove</a></p>
                     </div>
                 {{else}}
-                    <label for="fileInput" class="question-image-add text-center">
+                    <label for="questionImageInput" class="question-image-add text-center">
                         <span class="glyphicon glyphicon-picture"></span>
                     </label>
                 {{/if}}

@@ -1,12 +1,43 @@
 <div class="mycqs-page-header index-page" id="parallax-image">
     <div class="container relative-container text-center">
-        <h1><img src="/img/mycqs-icon-256.png" class="inline-block margin-right-16"/> <div class="inline-block">MyCQs</div></h1>
+        <h1><img src="/img/mycqs-icon-256.png" class="inline-block margin-right-16"/>
+
+            <div class="inline-block">MyCQs</div>
+        </h1>
 
         <p>Create, practice and share multiple-choice questions</p>
+    </div>
 
-        {{#if stats}}
+    <div class="soft-white"></div>
+</div>
+<div class="guest-page-actions">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-6 col-sm-6 col-md-offset-3 col-sm-offset-3 text-center">
+                <div class="search-box">
+                    {{autocomplete-field value=searchTermForTests placeholder='Type here to search for a test' action='searchTests'
+                    data=autocompleteTests key='title' itemAction='loadSearchedTest' parentController=this}}
+                    <span class="glyphicon glyphicon-search  glyphicon-search-large" {{action 'searchTests'}}></span>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6 col-sm-6 col-md-offset-3 col-sm-offset-3 create-column text-center margin-bottom-16">
+                {{#link-to 'create' tagName='a' classNames='btn btn-primary'}}
+                    Create an MCQ test
+                {{/link-to}}
+            </div>
+        </div>
+    </div>
+</div>
+
+</div>
+<div class="overlay-glass-pane"></div>
+<div class="overlay-glass" id="parallax-overlay-glass">
+    {{#if stats}}
+        <div class="container relative-container text-center">
             <div class="row index-stats">
-                <div class="col-md-3">
+                <div class="col-md-3 col-sm-6">
                     <div class="row">
                         <div class="col-md-12">
                             <h2>{{stats.numberOfUsers}}</h2>
@@ -19,7 +50,7 @@
                     </div>
                 </div>
 
-                <div class="col-md-3">
+                <div class="col-md-3 col-sm-6">
                     <div class="row">
                         <div class="col-md-12">
                             <h2>{{stats.numberOfTests}}</h2>
@@ -32,7 +63,7 @@
                     </div>
                 </div>
 
-                <div class="col-md-3">
+                <div class="col-md-3 col-sm-6">
                     <div class="row">
                         <div class="col-md-12">
                             <h2>{{stats.numberOfQuestions}}</h2>
@@ -45,7 +76,7 @@
                     </div>
                 </div>
 
-                <div class="col-md-3">
+                <div class="col-md-3 col-sm-6">
                     <div class="row">
                         <div class="col-md-12">
                             <h2>{{stats.numberOfAttempts}}</h2>
@@ -58,54 +89,51 @@
                     </div>
                 </div>
             </div>
-        {{/if}}
-    </div>
-    <div class="overlay-glass-pane"></div>
-    <div class="overlay-glass" id="parallax-overlay-glass">
-        <!--[if lt IE 9]>
-        <div class="legacy-ie-fix"></div>
-        <![endif]-->
-    </div>
+        </div>
+    {{/if}}
     <div class="soft-white"></div>
 </div>
 <div class="parallax-follower">
     <div class="container">
-        <div class="row">
-<!--            <div class="col-md-4 margin-top-16">
-                <h4>Get started</h4>
-
-                <div class="row">
-                    <div class="col-md-12 text-center">
-                        <button class="btn btn-success" {{action 'openModal' 'application/modal/login-or-register' 'application'}}>
-                            Sign up or Log in
-                        </button>
-                        <button class="btn btn-facebook" {{action 'facebookConnect'}}>
-                            <i class="fa fa-facebook margin-right-16"></i>Facebook Connect
-                        </button>
-                    </div>
-                </div>
-            </div>-->
-            <div class="col-md-6 margin-top-16">
-                <h4>Search for tests</h4>
-
-                <div class="row">
-                    <div class="col-md-12 text-center">
-                        <div class="search-box">
-                            {{autocomplete-field value=searchTermForTests placeholder='Type here to search' action='searchTests'
-                                data=autocompleteTests key='title' itemAction='loadSearchedTest' parentController=this}}
-                            <span class="glyphicon glyphicon-search" {{action 'searchTests'}}></span>
-                        </div>
-                    </div>
-                </div>
+        <div class="row margin-top-16">
+            <div class="col-md-4 col-sm-4 text-center">
+                <h3>Create</h3>
+                <p>Write tests in the multiple-choice questions (MCQs) format</p>
             </div>
-            <div class="col-md-6 margin-top-16">
-                <h4>Create a test</h4>
+            <div class="col-md-4 col-sm-4 text-center">
+                <h3>Practice</h3>
+                <p>Take tests and monitor your progress over time</p>
+            </div>
+            <div class="col-md-4 col-sm-4 text-center">
+                <h3>Share</h3>
+                <p>Send tests to your colleagues or find tests created by others</p>
+            </div>
+        </div>
+        <hr>
+        <h3 class="text-center">Featured by</h3>
+        <div class="row margin-top-16 margin-bottom-16 achievements-row">
+            <div class="col-md-3 col-sm-6">
+                <a href="http://www.yorkshireeveningpost.co.uk/news/the-great-war/university-of-leeds-students-aiming-to-get-top-marks-for-smartphone-app-1-5058922"
+                   target="_blank">
+                    <img src="img/yorkshire-evening-post-logo.png"/>
+                </a>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <a href="http://www.tablecrowd.com/blog/2014/06/startup-spotlight-james-gupta-mycqs/" target="_blank">
+                    <img src="img/table-crowd-logo.png"/>
+                </a>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <a href="http://www.theguardian.com/technology/appsblog/2012/oct/26/best-ios-apps-me-books-collins-atlas"
+                   target="_blank">
+                    <img src="img/guardian-logo.png"/>
+                </a>
+            </div>
 
-                <div class="col-md-12 create-column text-center">
-                    {{#link-to 'create' tagName='a' classNames='btn btn-primary'}}
-                        Write an MCQ Test
-                    {{/link-to}}
-                </div>
+            <div class="col-md-3 col-sm-6">
+                <a href="http://www.jisc.ac.uk/student-innovation" target="_blank">
+                    <img src="img/jisc-logo.png"/>
+                </a>
             </div>
         </div>
     </div>

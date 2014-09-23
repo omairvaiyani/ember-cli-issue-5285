@@ -13,6 +13,7 @@ Router.map(function () {
      */
     this.route('application');
 
+
     /*
      * User profiles and profile editing
      */
@@ -41,7 +42,23 @@ Router.map(function () {
      * Test taking and results
      */
     this.resource('test', {path: "mcq/:test_slug"});
+    this.resource('testInfo', {path: "test/:test_slug"});
     this.resource('result', {path: "result/:attempt_id"});
+
+    /*
+     * Static pages
+     */
+    this.route('about');
+    this.route('support', {path: 'support'});
+
+
+    /*
+     * Transition to model not found or
+     * Catch all undefined routes 404:
+     * Both renders the four-oh-four template
+     */
+    this.route('notFound', {path: '/not-found'});
+    this.route('fourOhFour', {path: '*path'});
 });
 
 export default

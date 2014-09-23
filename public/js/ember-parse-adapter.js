@@ -98,9 +98,13 @@ EmberParseAdapter.Serializer = DS.RESTSerializer.extend({
                         hash[key].forEach(function (item, index, items) {
                             // When items are pointers we just need the id
                             // This occurs when request was made without the include query param.
-                            if (item.__type === "Pointer") {
+                            /*
+                             * Modified by Omair:
+                             * - check if item exists
+                             */
+                            if (item && item.__type === "Pointer") {
                                 items[index] = item.objectId;
-                            } else {
+                            } else if (item) {
                                 // When items are objects we need to clean them and add them to the store.
                                 // This occurs when request was made with the include query param.
                                 delete item.__type;
@@ -380,7 +384,7 @@ EmberParseAdapter.Adapter = DS.RESTAdapter.extend({
      * converts parseUser key to _User
      */
     parseClassName: function (key) {
-        if(key === 'parseUser')
+        if (key === 'parseUser')
             key = '_User';
         return Ember.String.capitalize(key);
     },
@@ -396,7 +400,7 @@ EmberParseAdapter.Adapter = DS.RESTAdapter.extend({
          * but record.constructor.typeKey fixes
          * this issue.
          */
-        if(!record.typeKey)
+        if (!record.typeKey)
             record.typeKey = record.constructor.typeKey;
         var query = {
             where: {
@@ -450,7 +454,7 @@ EmberParseAdapter.Adapter = DS.RESTAdapter.extend({
                 "$in": ids
             }
         });
-        return this.ajax(this.buildURL(type.typeKey), 'GET', { data: {"where":where} });
+        return this.ajax(this.buildURL(type.typeKey), 'GET', { data: {"where": where} });
     },
 
     sessionToken: Ember.computed('headers.X-Parse-Session-Token', function (key, value) {
@@ -483,7 +487,7 @@ EmberParseAdapter.ParseUser = DS.Model.extend({
      * not seem to be working for now
      */
     name: DS.attr('string'),
-    firstName: function() {
+    firstName: function () {
         return this.get('name').split(' ').slice(0, -1).join(' ');
     }.property('name'),
     fbid: DS.attr('string'),
@@ -492,26 +496,54 @@ EmberParseAdapter.ParseUser = DS.Model.extend({
     course: DS.belongsTo('course', {async: true}),
     institution: DS.belongsTo('university', {async: true}),
     yearNumber: DS.attr('number'),
-
+    profilePicture: DS.attr('parse-file'),
     profileImageURL: function () {
-        if (this.get('fbid')) {
-            return "http://res.cloudinary.com/mycqs/image/facebook/c_thumb,e_improve,g_faces:center,w_150/"+this.get('fbid');
+        if (this.get('profilePicture') && this.get('profilePicture.url')) {
+            return this.get('profilePicture.url');
+        } else if (this.get('fbid')) {
+            return "http://res.cloudinary.com/mycqs/image/facebook/c_thumb,e_improve,g_faces:center,w_150/" + this.get('fbid');
         } else {
             return "http://upload.wikimedia.org/wikipedia/commons/0/09/Man_Silhouette.png";
         }
-    }.property('fbid'),
-    coverImageURL: DS.attr('string'),
+    }.property('fbid', 'profilePicture'),
+
+    coverImage: DS.attr('parse-file'),
+    coverImageOffsetY: 50,
+    coverImageURL: function () {
+        if (this.get('coverImage') && this.get('coverImage.url')) {
+            return this.get('coverImage.url');
+        } else if (this.get('fbid')) {
+            this.getFbCoverImage();
+            return "";
+        } else {
+            return 'http://assets.mycqs.com/img/coffee-revise.jpg';
+        }
+    }.property('fbid', 'coverImage'),
+    getFbCoverImage: function () {
+        $.getJSON("http://graph.facebook.com/" + this.get('fbid') + "?fields=cover")
+            .then(function (data) {
+                if (data) {
+                    var cover = data.cover;
+                    if (cover) {
+                        if (cover.offset_y)
+                            this.set('coverImageOffsetY', cover.offset_y);
+                        this.set('coverImageURL', cover.source);
+                    }
+                }
+            }.bind(this));
+    },
+
     numberOfTests: DS.attr('number', {defaultValue: 0}),
     numberOfQuestions: DS.attr('number', {defaultValue: 0}),
     numberOfAttempts: DS.attr('number', {defaultValue: 0}),
     averageScore: DS.attr('number', {defaultValue: 0}),
     numberOfUniqueAttempts: DS.attr('number', {defaultValue: 0}),
     uniqueAverageScore: DS.attr('number', {defaultValue: 0}),
-    communityNumberOfAttempts:  DS.attr('number', {defaultValue: 0}),
+    communityNumberOfAttempts: DS.attr('number', {defaultValue: 0}),
     communityAverageScore: DS.attr('number', {defaultValue: 0}),
     facebookFriends: DS.attr(),
     /*following: DS.hasMany('parse-user', {async: true, relation: true, inverse: 'following'}),
-    followers: DS.hasMany('parse-user', {async: true, relation: true, inverse: 'followers'}),*/
+     followers: DS.hasMany('parse-user', {async: true, relation: true, inverse: 'followers'}),*/
     numberFollowing: DS.attr('number', {defaultValue: 0}),
     numberOfFollowers: DS.attr('number', {defaultValue: 0}),
     latestAttempts: DS.hasMany('attempt', {async: true, array: true}),

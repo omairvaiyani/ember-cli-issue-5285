@@ -1,0 +1,10 @@
+{{#link-to 'test' item.test.slug tagName='div'}}
+    {{render 'profile-image' item.from}}
+    <div class="message-text">
+        <p><strong>{{item.from.name}}</strong> sent you a test!</p>
+
+        <p><strong>{{item.test.title}}</strong></p>
+
+        <p class="time-ago pull-right">{{from-now time=item.createdAt classNames='pull-right'}}</p>
+    </div>
+{{/link-to}}

@@ -1,6 +1,6 @@
 export default {
-    MINIMUM_QUESTION_LENGTH_WARNING: 40,
-        MINIMUM_QUESTION_LENGTH_ERROR: 10,
+        MINIMUM_QUESTION_LENGTH_WARNING: 5,
+        MINIMUM_QUESTION_LENGTH_ERROR: 1,
 
         MAXIMUM_QUESTION_LENGTH_WARNING: 255,
         MAXIMUM_QUESTION_LENGTH_ERROR: 500,
@@ -18,7 +18,7 @@ export default {
             goodExample: goodExample,
             badExample: badExample,
             linkedWith: linkedWith};
-    },
+        },
 
 
     beginValidation: function (question) {
@@ -293,7 +293,7 @@ export default {
                 validationResponse.errors.push(
                     this.leaveComment(
                         "Avoid using 'All of the above' answers.",
-                        "Students can easily guess these!",
+                        "Answers are randomised and so this will not make sense. Also, students can guess these easily!",
                         [
                             {
                                 option: i,
@@ -311,7 +311,7 @@ export default {
                 validationResponse.errors.push(
                     this.leaveComment(
                         "Avoid using 'None of the above' answers.",
-                        "Students can easily guess these!",
+                        "Answers are randomised and so this will not make sense. Also, students can guess these easily!",
                         [
                             {
                                 option: i,
@@ -332,6 +332,7 @@ export default {
         // result in larger percentage disparity than longer answers.
         // For now, just giving a warning, but eventually need to improve
         // this function to be smarter and hand out errors.
+        /*
         var charCounts = new Array();
         var totalChars = 0;
 
@@ -380,7 +381,7 @@ export default {
                         }
                     }
             }
-
+        */
         /* Meaningfulness of stem (generic word usage) */
         // Warning for using too many generic words.
         var words = stem.replace(/[\.,-\/#!$%\^&\*;:{}=\-_`~()]/g, "")

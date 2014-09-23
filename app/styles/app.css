@@ -6,18 +6,18 @@
  */
 
 /* TYPEFACES */
-@font-face {
-    font-family: 'Muli';
-    src: url('/fonts/muli-regular-webfont.eot');
-    src: url('/fonts/muli-regular-webfont.eot?#iefix') format('embedded-opentype'), url('/fonts/muli-regular-webfont.woff') format('woff'), url('/fonts/muli-regular-webfont.ttf') format('truetype'), url('/font/muli-regular-webfont.svg#muli_regular') format('svg');
-    font-weight: normal;
-    font-style: normal;
-}
+/*@font-face {*/
+/*font-family: 'Muli';*/
+/*src: url('http://assets.mycqs.co.uk/fonts/muli-regular-webfont.eot');*/
+/*src: url('http://assets.mycqs.co.uk/fonts/muli-regular-webfont.eot?#iefix') format('embedded-opentype'), url('http://assets.mycqs.co.uk/fonts/muli-regular-webfont.woff') format('woff'), url('http://assets.mycqs.co.uk/fonts/muli-regular-webfont.ttf') format('truetype'), url('http://assets.mycqs.co.uk/fonts/muli-regular-webfont.svg#muli_regular') format('svg');*/
+/*font-weight: normal;*/
+/*font-style: normal;*/
+/*}*/
 
 @font-face {
     font-family: 'Muli-Light';
-    src: url('/fonts/muli-light-webfont.eot');
-    src: url('/fonts/muli-light-webfont.eot?#iefix') format('embedded-opentype'), url('/fonts/muli-light-webfont.woff') format('woff'), url('/fonts/muli-light-webfont.ttf') format('truetype'), url('/font/muli-light-webfont.svg#muli_light') format('svg');
+    src: url('http://assets.mycqs.co.uk/fonts/muli-light-webfont.eot');
+    src: url('http://assets.mycqs.co.uk/fonts/muli-light-webfont.eot?#iefix') format('embedded-opentype'), url('http://assets.mycqs.co.uk/fonts/muli-light-webfont.woff') format('woff'), url('http://assets.mycqs.co.uk/fonts/muli-light-webfont.ttf') format('truetype'), url('http://assets.mycqs.co.uk/fonts/muli-light-webfont.svg#muli_light') format('svg');
     font-weight: normal;
     font-style: normal;
 }
@@ -78,7 +78,10 @@ body {
 .btn-facebook:hover, .btn-facebook:focus {
     color: white;
 }
-
+.hidden-file-input {
+    position: absolute;
+    left: -9999em;
+}
 .onoffswitch {
     position: relative;
     width: 116px;
@@ -242,6 +245,148 @@ body {
         -webkit-transform: perspective(120px) rotateX(-180deg) rotateY(-179.9deg);
     }
 }
+.notification-container {
+    position: fixed;
+    right: 10px;
+    top: 10px;
+    z-index: 999; /*must be highest element on page*/
+}
+
+.notification {
+    opacity: 0;
+    position: absolute;
+    right: 10px;
+    width: 300px;
+    height: 65px;
+    padding: 5px 10px 5px 45px;
+    border: 2px solid transparent;
+    border-radius: 10px;
+    background-color: rgba(79, 102, 64, 0.85);;
+    color: rgb(255, 255, 255);
+    font-size: 12px;
+    text-shadow: 1px 1px 3px rgb(0, 0, 0);
+    box-shadow: 0px 0px 15px -5px rgb(0, 0, 0);
+    transition: opacity 0.3s ease-out, top 0.3s ease-out, right 0.3s ease-out;
+}
+
+.notification.is-opaque {
+    opacity: 1;
+}
+
+.notification:hover {
+    border-color: rgb(255, 255, 255);
+}
+
+.notification.closed {
+    display: none;
+}
+
+.notification .icon {
+    position: absolute;
+    top: 9px;
+    left: 9px;
+    font-size: 26px;
+}
+
+.notification .close-notification {
+    display: none;
+    position: absolute;
+    top: 4px;
+    right: 8px;
+    font-size: 22px;
+    cursor: pointer;
+    text-decoration: none;
+    color: rgb(255, 255, 255);
+}
+
+.notification:hover .close-notification {
+    display: block;
+}
+.tag.category-edit {
+    background: dodgerblue;
+    color: whitesmoke;
+}
+.tag.category-edit::before {
+    background: none;
+    border-radius: 0px;
+    box-shadow: none;
+    content: "x";
+    left: 10px;
+    position: absolute;
+    top: -1px;
+    color: whitesmoke;
+}
+.tag.category-edit::after {
+    border-left: 10px solid dodgerblue;
+}
+.tag.category-edit:hover {
+    background: #3cb8ff;
+    color: white;
+    text-decoration: none;
+}
+.tag.category-edit:hover::before {
+    cursor: pointer;
+}
+.tag.category-edit:hover::after {
+    border-left-color: #3cb8ff;
+}
+
+.tags {
+    list-style: none;
+    margin: 0;
+    overflow: hidden;
+    padding: 0;
+}
+
+.tags li {
+    float: left;
+}
+
+.tag {
+    background: #eee;
+    border-radius: 3px 0 0 3px;
+    color: #999;
+    display: inline-block;
+    height: 26px;
+    line-height: 26px;
+    padding: 0 20px 0 23px;
+    position: relative;
+    margin: 0 10px 10px 0;
+    text-decoration: none;
+    -webkit-transition: color 0.2s;
+}
+
+.tag::before {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: inset 0 1px rgba(0, 0, 0, 0.25);
+    content: '';
+    height: 6px;
+    left: 10px;
+    position: absolute;
+    width: 6px;
+    top: 10px;
+}
+
+.tag::after {
+    background: #fff;
+    border-bottom: 13px solid transparent;
+    border-left: 10px solid #eee;
+    border-top: 13px solid transparent;
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+}
+
+.tag:hover {
+    background-color: crimson;
+    color: white;
+}
+
+.tag:hover::after {
+    border-left-color: crimson;
+}
 
 /* NAVBAR */
 
@@ -336,6 +481,38 @@ body {
     background-color: red;
 }
 
+.user-message-item {
+    width: 250px;
+    padding: 4px 8px;
+}
+.user-message-item:hover {
+    background-color: #F5F5F5;
+}
+.user-message-item.is-unread {
+    background-color: #E8ECE9;
+    color: #091B0E;
+}
+
+.user-message-item .profile-image {
+    width: 30px;
+    height: 30px;
+}
+.user-message-item .message-text {
+    font-size: smaller;
+    display:inline-block;
+    vertical-align: top;
+    width: calc(250px - 60px);
+}
+.user-message-item .message-text > p {
+    margin: 0px 4px;
+}
+.user-message-item .message-text > p.time-ago {
+    color:darkgrey;
+}
+hr.user-message-item-separator {
+    margin: 0px;
+}
+
 .navbar-main .dropdown-menu > li {
     cursor: pointer !important;
 }
@@ -415,22 +592,95 @@ body {
 }
 
 /* TEMPLATE - INDEX/GUEST */
+/*
+ * Main parallax image
+ * - Total height 600px
+ * - Visible height 550px
+ */
+
 .mycqs-page-header.index-page {
-    height: 500px;
-    /*background-size: cover;*/
-    background-image: url('../img/libraryBackground.jpg');
-    background-attachment: fixed;
+    position: absolute;
+    height: 600px;
+    top: 0px;
+    left: 0px;
+    right: 0px;
+    z-index: -2;
+    background-image: url('/img/library-background.jpg');
+    background-size:cover;
     background-position: center top;
     padding-bottom: 30px;
-    padding-top: 40px;
+    padding-top: 100px;
     margin-bottom: 0px;
 }
 
 @media (-webkit-min-device-pixel-ratio: 2),
 (min-resolution: 192dpi) {
-    .mycqs-page-header.index-page {
-        //background-image: url('../img/libraryBackground@2x.jpg');
+    /*
+     * insert retina changes
+     */
+}
+
+/*
+ * Pushes relative elements
+ * to the bottom 170px of
+ * the main parallax image
+ */
+.guest-page-actions {
+    margin-top: 208px;
+    height: 150px;
+    overflow: hidden;
+}
+.guest-page-actions .btn {
+    height: 50px;
+    width: 100%;
+    font-size: 22px;
+    background-color: rgba(12, 1, 1, 0.35);
+    border: 2px solid #3CD0FF;
+}
+.guest-page-actions .btn:hover {
+    background-color: rgba(5, 56, 54, 0.35);
+    color: #95E5FF;
+}
+.guest-page-actions .search-box {
+    opacity: 0.8;
+}
+.guest-page-actions .search-box:hover,
+.guest-page-actions .search-box:active,
+.guest-page-actions .search-box:focus{
+    opacity: 1;
+}
+.guest-page-actions .search-box > input {
+    height: 50px;
+    width: 100%;
+    font-size: 22px;
+}
+/*
+ * Hiding autocomplete until I fix it's position
+ */
+.guest-page-actions .autocomplete-container {
+    display: none;
+}
+.guest-page-actions .search-box span {
+    top: 14px;
+}
+.guest-page-actions .glyphicon-search-large::before {
+    font-size: 22px;
+}
+
+.overlay-glass-pane {
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+@media (min-width: 1453px) {
+    .overlay-glass {
+        background-size: cover ;
     }
+}
+
+.overlay-glass {
+    height: 170px;
+    z-index: -1;
+    background-image: url('/img/library-background-blur.png');
+    background-position: center -430px;
 }
 
 .mycqs-page-header.index-page p, .mycqs-page-header.index-page h1,
@@ -455,45 +705,12 @@ body {
     bottom: 0px;
     left: 0px;
     right: 0px;
-    background: rgba(255, 255, 255, 0.2);
-}
-
-.overlay-glass-pane {
-    position: absolute;
-    left: 0px;
-    right: 0px;
-    bottom: 170px;
-    border-top: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.overlay-glass {
-    position: absolute;
-    left: 0px;
-    right: 0px;
-    bottom: 0px;
-    height: 170px;
-    background: url("data:image/svg+xml,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20xmlns%3Axlink%3D%22http%3A%2F%2Fwww.w3.org%2F1999%2Fxlink%22%20version%3D%221.1%22%20width%3D%221920%22%20height%3D%221120%22%3E%3Cdefs%3E%3Cfilter%20id%3D%22blur%22%3E%3CfeGaussianBlur%20stdDeviation%3D%225%22%2F%3E%3C%2Ffilter%3E%3C%2Fdefs%3E%3Cimage%20xlink%3Ahref%3D%22http%3A%2F%2Fplacekitten.com%2F1920%2F1120%22%20width%3D%221920%22%20height%3D%221120%22%20filter%3D%22url%28%23blur%29%22%2F%3E%3C%2Fsvg%3E"), url("../img/libraryBackground.jpg") fixed center top;
-    /*background-size: cover;*/
-    content: "";
-    filter: url("data:image/svg+xml,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20version%3D%221.1%22%3E%3Cdefs%3E%3Cfilter%20id%3D%22blur%22%3E%3CfeGaussianBlur%20stdDeviation%3D%225%22%2F%3E%3C%2Ffilter%3E%3C%2Fdefs%3E%3C%2Fsvg%3E#blur");
-    -webkit-filter: blur(4px);
-    filter: blur(3px);
-    padding: 10px 0px;
-}
-
-.overlay-glass .legacy-ie-fix {
-    position: absolute;
-    left: 0px;
-    right: 0px;
-    bottom: 0px;
-    height: 170px;
-    width: 100%;
-    background-color: #fff;
-    -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(opacity=20)";
+    background-color: rgba(255, 255, 255, 0.2);
 }
 
 .index-stats {
     position: absolute;
+    top: 20px;
     bottom: 0px;
     left: 0px;
     right: 0px;
@@ -501,13 +718,16 @@ body {
 }
 
 .parallax-follower {
-    height: 1000px;
+    height: auto;
     width: 100%;
-    z-index: 2;
+    z-index: 1;
+    background-color: whitesmoke;
     -webkit-box-shadow: 0px -14px 58px -8px rgba(0, 0, 0, 0.86);
     -moz-box-shadow: 0px -14px 58px -8px rgba(0, 0, 0, 0.86);
     box-shadow: 0px -14px 58px -8px rgba(0, 0, 0, 0.86);
     position: relative;
+    margin-bottom: -16px;
+    padding-bottom: 16px;
 }
 
 .parallax-follower .btn-success {
@@ -529,6 +749,14 @@ body {
     width: 100%;
 }
 
+.achievements-row img {
+    opacity: 0.3;
+    width: 100%;
+}
+.achievements-row img:hover {
+    -webkit-filter: none;
+    opacity: 1;
+}
 /* TEMPLATE - USER */
 .cover-image {
     background-size: cover;
@@ -537,8 +765,31 @@ body {
     margin: -26px -16px -16px -16px;
     position: relative;
 }
-
-.cover-image > .profile-image {
+.edit-cover-image-overlay {
+    height: 300px;
+    margin: 10px 0px -16px 0px;
+    position: relative;
+    background-color: rgba(50,50,50,0.6);
+    color: white;
+    font-size: 22px;
+    padding-top: 128px;
+    z-index: 1;
+}
+.cover-image .temporary-cover-image {
+    position: absolute;
+    left: 16px;
+    right: 16px;
+    top: 26px;
+}
+.edit-cover-image-overlay .centered-block {
+    position: relative;
+    margin:auto;
+    width:150px;
+}
+.edit-cover-image-overlay span, .edit-cover-image-overlay p {
+ cursor: pointer;
+}
+.cover-image > .profile-image, .cover-image > .edit-profile-image-overlay {
     position: absolute;
     bottom: 16px;
     border-radius: 50px;
@@ -550,20 +801,99 @@ body {
 }
 
 @media (min-width: 768px) {
-    .cover-image > .profile-image {
+    .cover-image > .profile-image, .cover-image > .edit-profile-image-overlay {
         border-radius: 75px;
         height: 150px;
         width: 150px;
     }
 }
+.cover-image .edit-profile-image-overlay {
+    color: white;
+    font-size: 16px;
+    text-align: center;
+    padding-top: 48px;
+    z-index:2;
+}
+.cover-image .edit-profile-image-overlay span {
+    font-size: 24px;
+    cursor: pointer;
+}
+.cover-image .edit-profile-image-overlay p {
+    cursor: pointer;
+}
+.cover-image .edit-profile-image-dropdown, .edit-cover-image-dropdown {
+    background-color: rgb(255, 255, 255);
+    position: absolute;
+    color: black;
+    left: 8px;
+    width: 135px;
+    font-size: 14px;
+    border-radius: 5px;
+    overflow: hidden;
+}
+.cover-image .edit-profile-image-dropdown ul, .edit-cover-image-dropdown ul {
+    list-style-type: none;
+    margin: 0px;
+    padding: 0px;
+    text-align: start;
+    overflow: hidden;
+}
+.cover-image .edit-profile-image-dropdown ul > li, .edit-cover-image-dropdown ul > li {
+    padding: 2px 10px;
+    cursor: pointer;
+}
+.cover-image .edit-profile-image-dropdown ul > li > label, .edit-cover-image-dropdown ul > li > label {
+    margin: 0px;
+    cursor: pointer;
+    font-weight: normal;
+}
 
-.cover-image > h2 {
+.cover-image .edit-profile-image-dropdown ul > li:hover,
+.edit-cover-image-dropdown ul > li:hover {
+    background-color: #e1e1e8;
+}
+.cover-image .user-name {
     position: absolute;
     bottom: 26px;
-    left: 132px;
+    left: 184px;
     right: 16px;
     color: white;
     font-size: x-large;
+}
+.cover-image input.user-name {
+    font-size: large;
+    color: black;
+    width: auto;
+    bottom: 36px;
+    z-index: 2;
+}
+.cover-image .user-follow, .cover-image .user-following, .cover-image .user-edit {
+    position: absolute;
+    cursor:pointer;
+    left: 184px;
+    bottom: 10px;
+    color: whitesmoke;
+    font-size: 14px;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 3px 6px;
+}
+.cover-image .user-edit {
+    background: none;
+    padding: 0px;
+    z-index: 2;
+}
+.cover-image .user-edit > a {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 3px 6px;
+}
+.cover-image .user-follow a:hover, .cover-image .user-following a:hover , .cover-image .user-edit a:hover {
+    text-decoration: none;
+}
+.user-following a::before {
+    content: "Following";
+}
+.user-following:hover a::before {
+    content: "Unfollow";
 }
 
 .cover-image a {
@@ -1097,12 +1427,18 @@ body {
     bottom: 0px;
     left: 0px;
     width: 100%;
-    height: 90px; /* Height of the footer */
+    height: 90px;
     text-align: center;
     font-size: 12px;
     padding-top: 16px;
 }
-
+.footer .card {
+    background-color: #4f6640;
+    color: whitesmoke;
+}
+.footer .card a {
+    color: whitesmoke;
+}
 /* HELPERS */
 @media (min-width: 992px) {
     .col-fix-right {

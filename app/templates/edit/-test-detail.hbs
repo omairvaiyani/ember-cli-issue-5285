@@ -13,51 +13,35 @@
         <h5>CATEGORY</h5>
     </div>
 </div>
-<div class="row">
-    <div class="col-md-12">
-        <div {{bind-attr class=":form-control category.name:text-input-div-with-tag:text-input-div"}}
-            {{action categorySelectionInputChanged on="keyUp"}}>
-            {{#if category}}
-                <span class="category-tag" {{action removeCategory false}}>
-                            {{#if category.parent}}{{category.parent.name}} - {{/if}}<strong>{{category.name}}</strong>
-                            <span class="glyphicon glyphicon-remove delete-tag" {{action removeCategory true}}></span>
-                        </span>
-            {{/if}}
-            {{#unless category}}
-                {{input type="text" value=categorySelectionInput classNames="form-control no-border-input"
-                placeholder="Type a category name, e.g. Cardiology, Microbiology"}}
-            {{/unless}}
+{{#unless category}}
+    <div class="row">
+        <div class="col-md-12">
+            {{view Ember.Select
+            classNames='form-control'
+            content=parentCategories
+            optionValuePath="content"
+            optionLabelPath="content.name"
+            selection=parentCategory
+            prompt="Please select a subject"}}
         </div>
     </div>
-</div>
-<div class="row">
-    <div class="col-md-12 margin-bottom-16">
-        {{#unless category}}
-             {{#if categorySelectionInput}}
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="category-selection-field" {{action "openModal" "edit/modal/category-creator" "create"}}>
-                            Create the category "{{categorySelectionInput}}"
-                        </div>
-                    </div>
-                </div>
-            {{/if}}
-            {{#each categorySelectionList}}
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="category-selection-field"  {{action categorySelected this}}>
-                            {{#if parent}}
-                                {{parent.name}} -
-                            {{/if}}
-                            <strong>{{name}}</strong>
-                        </div>
-                    </div>
-                </div>
-            {{/each}}
-        {{/unless}}
-    </div>
-</div>
-
+    {{#if childCategories.length}}
+        <div class="row">
+            <div class="col-md-12 margin-top-16">
+                {{view Ember.Select
+                classNames='form-control'
+                content=childCategories
+                optionValuePath="content"
+                optionLabelPath="content.name"
+                selection=childCategory
+                prompt="Please select a subject area"}}
+            </div>
+        </div>
+    {{/if}}
+{{else}}
+    {{#if category.parent}}<div {{action 'removeCategory' category.parent}} class="tag category-edit">{{category.parent.name}}</div>{{/if}}
+    <div {{action 'removeCategory' category}} class="tag category-edit">{{category.name}}</div>
+{{/unless}}
 <div class="row">
     <div class="col-md-12">
         <h5>DESCRIPTION</h5>
@@ -75,24 +59,32 @@
     </div>
 </div>
 <div class="row">
-    <div class="col-md-4" style="margin-bottom:48px;">
-        <label class="switch-light well privacy-switch" >
+    <div class="col-md-4">
+        <label class="switch-light well privacy-switch">
             {{input type="checkbox" checked=privacyBoolean}}
-              <span>
+            <span>
                 <span {{bind-attr class='privacyBoolean::is-active'}}>Private</span>
                 <span {{bind-attr class='privacyBoolean:is-active'}}>Public</span>
               </span>
-
             <a class="btn btn-primary"></a>
         </label>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        {{#if privacy}}
+            <p>This test is visible to everyone.</p>
+        {{else}}
+            <p>Only you can see this test.</p>
+        {{/if}}
     </div>
 </div>
 
 {{#if model.id}}
     <!-- Delete test button -->
     <div class="row">
-        <div class="col-md-12" style="margin-top:-36px;">
-            <button class="btn btn-danger">Delete test</button>
+        <div class="col-md-12" style="margin-top:48px;">
+            <button class="btn btn-danger" {{action 'openModal' 'edit/modal/confirmDelete' 'create'}}>Delete test</button>
         </div>
     </div>
 

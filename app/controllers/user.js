@@ -35,12 +35,14 @@ Ember.ObjectController.extend(CurrentUser, {
     }.property('isCurrentUser', 'currentUser.following.length'),
 
     coverImageStyle: function () {
-        var coverImageURL = this.get('coverImageURL');
-        if (!coverImageURL)
-            coverImageURL = "http://medical.mycqs.com/startup/common-files/img/NY_002.jpg"
+        var coverImageURL = this.get('coverImageURL'),
+            coverImageOffsetY = this.get('coverImageOffsetY');
+        if (!coverImageOffsetY)
+            coverImageOffsetY = 0;
+        return "background-image:url(" + coverImageURL + ");background-position:center " + coverImageOffsetY + "%;";
+    }.property('coverImageURL.length', 'coverImageOffsetY'),
 
-        return "background-image:url(" + coverImageURL + ");";
-    }.property('coverImageURL'),
+    isEditMode: false,
 
     courseFacebookPageUrl: function () {
         if (!this.get('course.facebookId'))
@@ -120,12 +122,12 @@ Ember.ObjectController.extend(CurrentUser, {
         yearNumber: 1,
         canBeSaved: false
     },
-    prefillNewCourseWithEducationInfo: function() {
-        if(this.get('institution.fullName.length'))
+    prefillNewCourseWithEducationInfo: function () {
+        if (this.get('institution.fullName.length'))
             this.set('newCourse.institutionName', this.get('institution.fullName'));
-        if(this.get('course.name.length'))
+        if (this.get('course.name.length'))
             this.set('newCourse.courseName', this.get('course.name'));
-        if(this.get('yearNumber') !== "")
+        if (this.get('yearNumber') !== "")
             this.set('newCourse.yearNumber', this.get('yearNumber'));
     }.observes('course.fullName.length', 'institution.fullName.length', 'yearNumber'),
     canNewCourseBeSaved: function () {
@@ -206,17 +208,14 @@ Ember.ObjectController.extend(CurrentUser, {
      * FACEBOOK EDUCATION LIST
      */
     facebookEducation: function () {
+        if (!this.get('education'))
+            return [];
         return this.get('education').sort(function (a, b) {
             return parseInt(b.year.name) - parseInt(a.year.name);
         });
-
     }.property('education.length'),
 
     selectedCourse: null,
-
-    /*
-     * /COURSE SELECTION
-     */
 
 
     latestAttemptsReceived: false,
@@ -225,7 +224,112 @@ Ember.ObjectController.extend(CurrentUser, {
             this.set('latestAttemptsReceived', true);
     }.observes('latestAttempts.length'),
 
+
+    /*
+     * Edit mode
+     */
+    temporaryChanges: {
+        name: null,
+        profilePicture: null,
+        profileImageURL: null,
+        coverPicture: null,
+        coverImageURL: null,
+        coverImageStyle: null,
+    },
+
+    isEditModeDirtied: function () {
+        var temporaryChanges = this.get('temporaryChanges');
+        if(!temporaryChanges.get('name'))
+            return false;
+        else if (temporaryChanges.get('name') != this.get('name'))
+            return true;
+        else if (temporaryChanges.get('profilePicture') || temporaryChanges.get('coverPicture'))
+            return true;
+        else
+            return false;
+    }.property('temporaryChanges.name.length', 'temporaryChanges.profilePicture', 'temporaryChanges.coverPicture'),
+
     actions: {
+
+        enableEditMode: function () {
+            this.set('temporaryChanges.name', this.get('name'));
+            this.set('isEditMode', true);
+        },
+
+        cancelEditMode: function () {
+            this.set('temporaryChanges.name', '');
+            this.set('temporaryChanges.profileImage', null);
+            this.set('temporaryChanges.profileImageURL', null);
+            this.set('temporaryChanges.coverPicture', null);
+            this.set('temporaryChanges.coverImageURL', null);
+            this.set('temporaryChanges.coverImageStyle', null);
+            this.set('isEditMode', false);
+        },
+
+        saveEditModeChanges: function () {
+            if (this.get('temporaryChanges.name.length'))
+                this.set('model.name', this.get('temporaryChanges.name'));
+            this.send('incrementLoadingItems');
+            if (this.get('temporaryChanges.profileImageURL.length')) {
+                var profilePicture = new EmberParseAdapter.File(this.get('temporaryChanges.profilePicture').name(),
+                    this.get('temporaryChanges.profilePicture').url());
+                this.set('profilePicture', profilePicture);
+            }
+            if (this.get('temporaryChanges.coverImageURL.length')) {
+                var coverPicture = new EmberParseAdapter.File(this.get('temporaryChanges.coverPicture').name(),
+                    this.get('temporaryChanges.coverPicture').url());
+                this.set('coverImage', coverPicture);
+            }
+            this.get('model').save().then(function () {
+                this.send('decrementLoadingItems');
+            }.bind(this));
+            this.send('cancelEditMode');
+        },
+
+        toggleEditProfileImageDropdown: function () {
+            this.toggleProperty('shouldShowEditProfileImageDropdown');
+        },
+
+        toggleEditCoverImageDropdown: function () {
+            this.toggleProperty('shouldShowEditCoverImageDropdown');
+        },
+
+        uploadProfileImagePhoto: function () {
+            this.send('incrementLoadingItems');
+            var file = document.getElementById("profileImageInput").files[0];
+            var parseFile = new Parse.File('profile-image.jpg', file);
+            return parseFile.save().then(function (image) {
+                this.send('decrementLoadingItems');
+                this.set('temporaryChanges.profilePicture', image);
+                this.set('temporaryChanges.profileImageURL', image.url());
+                this.set('shouldShowEditProfileImageDropdown', false);
+            }.bind(this));
+        },
+
+        uploadCoverImagePhoto: function () {
+            this.send('incrementLoadingItems');
+            var file = document.getElementById("coverImageInput").files[0];
+            var parseFile = new Parse.File('cover-image.jpg', file);
+            return parseFile.save().then(function (image) {
+                this.send('decrementLoadingItems');
+                this.set('temporaryChanges.coverPicture', image);
+                this.set('temporaryChanges.coverImageURL', image.url());
+                this.set('temporaryChanges.coverImageStyle', "background-image:url(" + this.get('temporaryChanges.coverImageURL') + ");");
+                this.set('shouldShowEditCoverImageDropdown', false);
+            }.bind(this));
+        },
+
+        removeProfileImage: function () {
+            this.set('profilePicture', null);
+            this.set('temporaryChanges.profilePicture', null);
+            this.set('temporaryChanges.profileImageURL', null);
+        },
+
+        removeCoverImage: function () {
+            this.set('coverImage', null);
+            this.set('temporaryChanges.coverImage', null);
+            this.set('temporaryChanges.coverImageURL', null);
+        },
 
         switchList: function (list) {
             switch (list) {

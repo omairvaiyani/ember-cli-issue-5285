@@ -2,7 +2,17 @@
 
 var EmberApp = require('ember-cli/lib/broccoli/ember-app');
 
-var app = new EmberApp();
+var app = new EmberApp({
+    minifyCSS: {
+        enabled: true,
+        options: {}
+    },
+
+    fingerprint: {
+        exclude: ['fonts/'],
+        prepend: 'http://assets.mycqs.co.uk/'
+    }
+});
 
 /*
  * TWITTER - BOOTSTRAP

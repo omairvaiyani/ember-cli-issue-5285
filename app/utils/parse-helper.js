@@ -22,6 +22,21 @@ export default {
         return pointers;
     },
 
+    generatePointerFromNativeParse: function(object) {
+        var className = object.className,
+            id = object.id;
+
+        if(!id)
+            id = object.get('id');
+        if(!id)
+            id = object.getObjectId();
+        return {
+            "__type": "Pointer",
+            "className": StringHelper.upperCaseFirst(className),
+            "objectId": id
+        }
+    },
+
     generateSearchTags: function (searchTerm) {
         return _.filter(searchTerm.toLowerCase().split(' '), function (w) {
             return w.match(/^\w+$/) && !_.contains(this.stopWords, w);

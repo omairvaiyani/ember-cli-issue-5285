@@ -25,54 +25,23 @@
                 {{#link-to 'index' tagName='li'}}{{#link-to 'index' tagName='a'}}Home{{/link-to}}{{/link-to}}
                 {{#link-to 'browse' tagName='li'}}{{#link-to 'browse' tagName='a'}}Browse{{/link-to}}{{/link-to}}
                 {{#link-to 'create' tagName='li'}}{{#link-to 'create' tagName='a'}}Create{{/link-to}}{{/link-to}}
+                {{#link-to 'about' tagName='li'}}{{#link-to 'about' tagName='a'}}About{{/link-to}}{{/link-to}}
+                {{#link-to 'support' tagName='li'}}{{#link-to 'support' tagName='a'}}Support{{/link-to}}{{/link-to}}
             </ul>
-            {{#if currentUser}}
-                <ul class="nav navbar-nav navbar-right">
-                    <li class="navbar-messages">
-                        <a id="navbar-messages-dropdown" data-toggle="dropdown">
-                            {{#if currentUser.messages.length}}
-                                <span class="badge pull-right">{{currentUser.messages.length}}</span>
-                            {{/if}}
-                            <span class="glyphicon glyphicon-envelope"></span>
-                        </a>
-                        <ul class="dropdown-menu" role="menu" aria-labelledby="navbar-messages-dropdown">
-                            {{#each message in currentUser.messages}}
-                                <li role="presentation">
-                                    <a role="menuitem">{{message.message}}</a>
-                                </li>
-                            {{/each}}
-                            {{#unless currentUser.messages.length}}
-                                <li role="presentation">
-                                    <a disabled="disabled">You have no messages.</a>
-                                </li>
-                            {{/unless}}
-                        </ul>
-                    </li>
-                    <li>
-                        {{#link-to 'user' currentUser.slug tagName='a' classNames='navbar-right-adjust'}}
-                            <img {{bind-attr src=currentUser.profileImageURL}} />
-
-                            <div>{{currentUser.firstName}}</div>
-                        {{/link-to}}
-                    </li>
-                    <li>
-                        <a id="accountDropdown"
-                           data-toggle="dropdown"><span class="caret"></span></a>
-                        <ul class="dropdown-menu" role="menu" aria-labelledby="accountDropdown">
-                            <li role="presentation"><a role="menuitem" tabindex="-1"
-                                {{action logout}}>Logout</a>
-                            </li>
-                        </ul>
-                    </li>
-                </ul>
-            {{else}}
-                <ul class="nav navbar-nav navbar-right">
-                    <li>
-                        <a href='' {{action 'openModal' 'application/modal/login-or-register' 'application'}}
-                                >Log in | Sign up</a>
-                    </li>
-                </ul>
-            {{/if}}
+            <ul class="nav navbar-nav navbar-right">
+                {{#if currentUser}}
+                    {{partial 'application/navbar/user-messages'}}
+                    <!-- account actions -->
+                    {{partial 'application/navbar/current-user'}}
+                {{else}}
+                    <ul class="nav navbar-nav navbar-right">
+                        <li>
+                            <a href='' {{action 'openModal' 'application/modal/login-or-register' 'application'}}
+                                    >Log in | Sign up</a>
+                        </li>
+                    </ul>
+                {{/if}}
+            </ul>
         </div>
         <!-- /.navbar-collapse -->
     </div>

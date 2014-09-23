@@ -4,9 +4,9 @@
         <hr>
         <div class="row margin-bottom-16">
             <div class="col-md-12">
-                <h4>You scored <span style="font-size:x-large;">{{score}}% </span>
+                <h4>You scored <span style="font-size:x-large;">{{math-round score 2}}% </span>
                     in {{#link-to 'test' test.slug tagName='a'}}{{test.title}}{{/link-to}}.
-                    <small class="pull-right">Test taken {{from-now time=createdAt}}</small>
+                    <small class="pull-right text-center">Test taken {{from-now time=createdAt}}</small>
                 </h4>
             </div>
         </div>

@@ -4,6 +4,8 @@
 /dist
 /tmp
 /parse/public/*
+/aws/node_modules/*
+/aws/Archive.zip
 
 # dependencies
 /node_modules

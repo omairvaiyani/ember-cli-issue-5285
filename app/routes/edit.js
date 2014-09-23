@@ -25,14 +25,12 @@ Ember.Route.extend(CurrentUser, {
                         if (model.get('_data.author.id') === this.get('currentUser.id'))
                             return model;
                         else {
-                            alert("You are not authorised to edit this test.");
-                            this.transitionTo('index');
-                            return {};
+                            this.transitionTo('notFound');
+                            return;
                         }
                     } else {
-                        alert("Test not found!");
-                        this.transitionTo('index');
-                        return {};
+                        this.transitionTo('notFound');
+                        return;
                     }
                 }.bind(this));
     }

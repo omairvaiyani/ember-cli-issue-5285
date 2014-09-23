@@ -6,7 +6,17 @@ from
 export default
 Ember.Route.extend({
     model: function (params) {
-        return this.store.findById('attempt', params.attempt_id);
+        var where = {
+            "objectId": params.attempt_id
+        };
+        return this.store.findQuery('attempt', {where: JSON.stringify(where)}).then(function(results) {
+            if(!results.objectAt(0)) {
+                this.transitionTo('notFound');
+                return;
+            } else {
+                return results.objectAt(0);
+            }
+        }.bind(this));
     },
 
     setupController: function (controller, model) {

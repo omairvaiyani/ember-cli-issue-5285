@@ -4,7 +4,7 @@ from
 'ember-data';
 
 export default
-DS.Model.extend({
+DS.Model.extend(ParseMixin, {
     from: DS.belongsTo('parse-user', {async: true}),
     to: DS.belongsTo('parse-user', {async: true}),
     message: DS.attr('string'),

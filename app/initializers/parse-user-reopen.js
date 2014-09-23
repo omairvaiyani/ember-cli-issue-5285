@@ -71,7 +71,7 @@ export default
                 var where = {
                     "to": ParseHelper.generatePointer(object)
                 };
-                return store.findQuery('message', {where: JSON.stringify(where), order: '-createdAt'})
+                return store.findQuery('message', {where: JSON.stringify(where), order: '-createdAt', limit: 10})
                     .then(function(messages) {
                        object.set('messages', messages);
                     });

@@ -2,28 +2,86 @@
     <div class="card">
         <div class="cover-image" {{bind-attr style=coverImageStyle}}>
             <div class="scrim"></div>
-            {{render 'profile-image' this}}
-
-            <h2>{{#link-to 'user' this.slug}}{{name}}{{/link-to}}</h2>
-            <h5>{{#unless isCurrentUser}}
-                {{#if isFollowing}}
-                    <a {{action 'unfollowUser' this}}
-                            style="position: absolute;
-                            cursor:pointer;
-                        left: 184px;
-                        bottom: 16px;
-                        color: whitesmoke;
-                        font-size: 18px;">Following</a>
-                {{else}}
-                    <a {{action 'followUser' this}}
-                            style="position: absolute;
-                            cursor:pointer;
-                        left: 184px;
-                        bottom: 16px;
-                        color: whitesmoke;
-                        font-size: 18px;">Follow</a>
+            {{#if isEditMode}}
+                {{#if temporaryChanges.coverImageURL}}
+                    <div class="cover-image temporary-cover-image" {{bind-attr style=temporaryChanges.coverImageStyle}}></div>
                 {{/if}}
-            {{/unless}}
+                <div class="edit-cover-image-overlay text-center">
+                    <div class="centered-block">
+                        <span class='glyphicon glyphicon-camera' {{action 'toggleEditCoverImageDropdown'}}></span>
+
+                        <p {{action 'toggleEditCoverImageDropdown'}}>Cover image</p>
+                        {{#if shouldShowEditCoverImageDropdown}}
+                            <div class='edit-cover-image-dropdown'>
+                                <ul>
+                                    <li><label for="coverImageInput">Upload photo</label></li>
+                                    <input type="file" id="coverImageInput"
+                                           name='coverImageInput' {{action 'uploadCoverImagePhoto' on='change'}}
+                                           class="hidden-file-input"/>
+                                    {{#if coverImage}}<li {{action 'removeCoverImage'}}>Remove</li>{{/if}}
+                                </ul>
+                            </div>
+                        {{/if}}
+                    </div>
+                </div>
+            {{/if}}
+            {{#if temporaryChanges.profileImageURL}}
+                {{render 'profile-image' temporaryChanges}}
+            {{else}}
+                {{render 'profile-image' this}}
+            {{/if}}
+            {{#if isEditMode}}
+                <div class='edit-profile-image-overlay'>
+                    <span class='glyphicon glyphicon-camera' {{action 'toggleEditProfileImageDropdown'}}></span>
+
+                    <p {{action 'toggleEditProfileImageDropdown'}}>Profile image</p>
+                    {{#if shouldShowEditProfileImageDropdown}}
+                        <div class='edit-profile-image-dropdown'>
+                            <ul>
+                                <li><label for="profileImageInput">Upload photo</label></li>
+                                <input type="file" id="profileImageInput"
+                                       name='profileImageInput' {{action 'uploadProfileImagePhoto' on='change'}}
+                                       class="hidden-file-input"/>
+                                {{#if profilePicture}}
+                                    <li {{action 'removeProfileImage'}}>Remove</li>
+                                {{else}}
+                                    {{#if temporaryChanges.profilePicture}}
+                                        <li {{action 'removeProfileImage'}}>Remove</li>
+                                    {{/if}}
+                                {{/if}}
+                            </ul>
+                        </div>
+                    {{/if}}
+                </div>
+            {{/if}}
+
+            {{#if isEditMode}}
+                {{input type='text' value=temporaryChanges.name class='user-name form-control'}}
+            {{else}}
+                <h2 class="user-name">{{#link-to 'user' this.slug}}{{name}}{{/link-to}}</h2>
+            {{/if}}
+
+            <h5>
+                {{#unless isCurrentUser}}
+                    {{#if isFollowing}}
+                        <div class="user-following">
+                            <a {{action 'unfollowUser' this}}></a>
+                        </div>
+                    {{else}}
+                        <div class="user-follow">
+                            <a {{action 'followUser' this}}>Follow</a>
+                        </div>
+                    {{/if}}
+                {{else}}
+                    <div class="user-edit">
+                        {{#unless isEditMode}}
+                            <a href='' {{action 'enableEditMode'}}>Edit profile</a>
+                        {{else}}
+                            <a href='' {{action 'cancelEditMode'}} class="margin-right-16">Cancel</a>
+                            <a href='' {{action 'saveEditModeChanges'}}>Save changes</a>
+                        {{/unless}}
+                    </div>
+                {{/unless}}
             </h5>
 
             <div class="user-navigation">
@@ -49,7 +107,8 @@
                                     >{{course.institution.fullName}}</a>
                             </p>
                         {{else}}
-                            <p>{{#if isCurrentUser}}You have not{{else}}{{firstName}} has not{{/if}} added any course
+                            <p>{{#if isCurrentUser}}You have not{{else}}{{firstName}} has not{{/if}} added any
+                                course
                                 information yet.</p>
                         {{/if}}
                         {{#if isCurrentUser}}
@@ -61,7 +120,8 @@
                                 </p>
                             {{else}}
                                 <p><a href='javascript:void(0)'
-                                    {{action 'openModal' 'user/modal/course-selection' 'user'}}>Add course details</a>
+                                    {{action 'openModal' 'user/modal/course-selection' 'user'}}>Add course
+                                    details</a>
                                 </p>
                             {{/if}}
                         {{/if}}

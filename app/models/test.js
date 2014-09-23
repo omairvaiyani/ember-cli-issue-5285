@@ -25,6 +25,7 @@ export default DS.Model.extend(ParseMixin, {
     module: DS.belongsTo('module'),
     tags: DS.attr(),
     slug: DS.attr('string'),
+    isObjectDeleted: DS.attr('boolean'),
     parseClassName: function() {
         return "Test";
     }

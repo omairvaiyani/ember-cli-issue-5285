@@ -72,26 +72,38 @@
                         </div>
                     {{/if}}
                     <hr>
-                    <p class="lead">Or select one of these</p>
-                    {{#each facebookEducation}}
-                        <div class="row hover-row" {{action 'courseSelected' this}}
-                             href="#course-selection" role="button"
-                             data-slide="next">
-                            <div class="col-md-11">
-                                <p class="margin-top-16">Institution: {{school.name}}</p>
+                    {{#if facebookEducation.length}}
+                        <p class="lead">Or select one of these</p>
+                        {{#each facebookEducation}}
+                            <div class="row hover-row" {{action 'courseSelected' this}}
+                                 href="#course-selection" role="button"
+                                 data-slide="next">
+                                <div class="col-md-11">
+                                    <p class="margin-top-16">Institution: {{school.name}}</p>
 
-                                <p>Course: {{concentration.0.name}}</p>
+                                    <p>Course: {{concentration.0.name}}</p>
 
-                                <p class="margin-bottom-16">Graduation year: {{year.name}}</p>
+                                    <p class="margin-bottom-16">Graduation year: {{year.name}}</p>
+                                </div>
+                                <div class="col-md-1">
+                                    <a href="#course-selection" role="button"
+                                       data-slide="next">
+                                        <span class="glyphicon glyphicon-chevron-right"></span>
+                                    </a>
+                                </div>
                             </div>
-                            <div class="col-md-1">
-                                <a href="#course-selection" role="button"
-                                   data-slide="next">
-                                    <span class="glyphicon glyphicon-chevron-right"></span>
-                                </a>
+                        {{/each}}
+                    {{else}}
+                        {{#unless fbid}}
+                            <div class="row">
+                                <div class="col-md-12 text-center">
+                                    <button class="btn btn-facebook" {{action 'facebookLink'}}>
+                                        <i class="fa fa-facebook margin-right-16"></i>Get education history
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                    {{/each}}
+                        {{/unless}}
+                    {{/if}}
                 </div>
             </div>
 
@@ -101,6 +113,7 @@
                        data-slide="prev">
                         <span class="glyphicon glyphicon-chevron-left"></span> Go back
                     </a>
+
                     <div class="margin-bottom-16"></div>
                     <p class="lead">Are these details correct?</p>
 

@@ -20,7 +20,7 @@ Ember.Route.extend({
                 include: 'parent'
             }
         ).then(function (results) {
-                if (results) {
+                if (results.objectAt(0)) {
                     category = results.objectAt(0);
                     if (category.get('level') === 1)
                         return category;
@@ -31,11 +31,13 @@ Ember.Route.extend({
                         return this.store.findById('category', category._data.parent.id);
                     }
                 } else {
-                    console.log("No category with this slug found");
+                    return;
                 }
             }.bind(this))
             .then(function (topLevelCategory) {
-                if (topLevelCategory.get('slug') !== params.category_slug) {
+                if(!topLevelCategory) {
+                    return null;
+                } if (topLevelCategory.get('slug') !== params.category_slug) {
                     this.transitionTo('category', topLevelCategory.get('slug'),
                         {queryParams: {categoryFilter: params.category_slug, page: 1}});
                 }
@@ -45,6 +47,10 @@ Ember.Route.extend({
     },
 
     setupController: function(controller, model) {
+        if(!model) {
+            this.transitionTo('notFound');
+            return;
+        }
         /*
          * These properties help avoid repetitive calls
          * to get childCategories for the same model.

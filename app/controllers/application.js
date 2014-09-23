@@ -67,27 +67,19 @@ Ember.Controller.extend({
                 title = "DEFAULT";
                 break;
         }
+        if (!title)
+            title = "DEFAULT";
         this.send('updateTitle', title);
 
-        /*if(path === "index")
+        if (path === "index")
             this.get('controllers.index').send('toggleParallaxScrollListener', true);
         else
-            this.get('controllers.index').send('toggleParallaxScrollListener', false);*/
+            this.get('controllers.index').send('toggleParallaxScrollListener', false);
     }.observes('currentPath'),
 
     loadingItems: 0,
 
     currentUser: null,
-/*
-    facebookAuth: null,
-
-    facebookUserObject: function () {
-        if (this.get('facebookAuth')) {
-            FB.api('/me', function (response) {
-                return response;
-            });
-        }
-    }.property('facebookAuth'),*/
 
     loginUser: {
         email: '',
@@ -109,14 +101,13 @@ Ember.Controller.extend({
 
         if (currentUser) {
             Parse.User.become(currentUser.get('sessionToken')).then(function (user) {
-                console.dir(user);
             }, function (error) {
                 console.dir(error);
             });
             localStorage.sessionToken = currentUser.get('sessionToken');
         }
         else {
-            if(Parse.User.current())
+            if (Parse.User.current())
                 Parse.User.logOut();
             localStorage.clear();
         }
@@ -164,6 +155,26 @@ Ember.Controller.extend({
 
     }.observes('currentUser'),
 
+    currentUserMessagesDidChange: function () {
+        if (!this.get('currentUser'))
+            return;
+        if (!this.get('currentUser.messages')) {
+            this.set('currentUser.totalUnreadMessages', 0);
+            this.send('updateNotificationsCounter');
+            return;
+        }
+        var totalUnreadMessages = 0;
+        if (this.get('currentUser.messages.length')) {
+            this.get('currentUser.messages').forEach(function (message) {
+                if (!message.get('read')) {
+                    totalUnreadMessages++;
+                }
+            });
+        }
+        this.set('currentUser.totalUnreadMessages', totalUnreadMessages);
+        this.send('updateNotificationsCounter');
+    }.observes('currentUser.messages.length'),
+
     newUser: {
         name: '',
         email: '',
@@ -186,6 +197,28 @@ Ember.Controller.extend({
     }.observes('newUser.name.length', 'newUser.email.length',
             'newUser.password.length', 'newUser.confirmPassword.length'),
 
+    /**
+     * @property {Array} The array of app-wide notifications
+     */
+    notifications: Em.A(),
+
+    /**
+     * @observer Not technically necessary, but cleans up
+     * the notifications array when all have been closed
+     */
+    notificationsWereClosed: function () {
+        var notifications = this.get('notifications');
+        // Don't do anything if there are no notifications.
+        if (!notifications.length) {
+            return;
+        }
+        // If all the notifications have been closed,
+        // wipe our list clean so cruft doesn't build up
+        if (this.get('notifications').everyBy('closed')) {
+            this.set('notifications', Em.A());
+        }
+    }.observes('notifications.@each.closed'),
+
     actions: {
         incrementLoadingItems: function () {
             this.incrementProperty('loadingItems');
@@ -194,6 +227,31 @@ Ember.Controller.extend({
         decrementLoadingItems: function () {
             if (this.get('loadingItems'))
                 this.decrementProperty('loadingItems');
+        },
+
+        markMessageAsRead: function (message) {
+            if(!message.get('read')) {
+                message.set('read', true);
+                if(this.get('currentUser.totalUnreadMessages'))
+                    this.decrementProperty('currentUser.totalUnreadMessages');
+
+                message.save();
+            }
+        },
+
+        markMessageAsUnread: function (message) {
+            if(message.get('read')) {
+                message.set('read', false);
+                if(this.get('currentUser.totalUnreadMessages'))
+                    this.incrementProperty('currentUser.totalUnreadMessages');
+                message.save();
+            }
+        },
+        updateNotificationsCounter: function () {
+            if (this.get('currentUser.totalUnreadMessages'))
+                window.document.title = "(" + this.get('currentUser.totalUnreadMessages') + ") " + window.document.title;
+            else if(window.document.title.charAt(0) === "(")
+                window.document.title = window.document.title.substr(window.document.title.indexOf(" ") + 1);
         }
     }
 });
