@@ -23,6 +23,14 @@ Ember.ObjectController.extend(EachItem, {
         }
     }.observes('isChecked'),
 
+    isCurrent: function () {
+        if(!this.get('parentController.controllers.editQuestion.model')) {
+            return false;
+        } else {
+            return this.get('parentController.controllers.editQuestion.model') === this.get('model');
+        }
+    }.property('model.id', 'parentController.controllers.editQuestion.model'),
+
     array: function() {
         return this.get('parentController.questions');
     }.property('parentController.questions.length')

@@ -1,9 +1,22 @@
-var _ = require("underscore");
-var mandrillKey = 'zAg8HDZtlJSoDu-ozHA3HQ';
+var _ = require("underscore"),
+    mandrillKey = 'zAg8HDZtlJSoDu-ozHA3HQ';
 
 Mandrill = require('mandrill')
 Mandrill.initialize(mandrillKey);
 
+var MyCQs = {
+    baseUrl: 'http://beta.mycqs.com/'
+};
+var FB = {
+    API: {
+        url: 'https://graph.facebook.com/v2.1/me/'
+    },
+    GraphObject: {
+        appId: "394753023893264",
+        namespace: "mycqs_app",
+        testUrl: MyCQs.baseUrl + "test/"
+    }
+};
 /*
  * SIGN UP LOGIC
  */
@@ -33,8 +46,7 @@ Parse.Cloud.define("preSignUp", function (request, response) {
     query.equalTo('email', email);
     query.find().then(function (result) {
         if (result[0]) {
-            response.error({"message": "Email already taken"});
-            return;
+            return null;
         } else {
             var privateData = new Parse.Object("UserPrivate");
             privateData.set('email', email);
@@ -45,7 +57,11 @@ Parse.Cloud.define("preSignUp", function (request, response) {
             return privateData.save();
         }
     }).then(function (privateData) {
-        response.success({"privateData": privateData});
+        if (!privateData) {
+            response.error({"message": "Email already taken"});
+        } else {
+            response.success({"privateData": privateData});
+        }
         return;
     });
 
@@ -1127,7 +1143,9 @@ var Security = {
         if (disableUserWriteAccess)
             ACLs.setReadAccess(user.id, true);
 
-        if (publicReadAccess !== false && publicReadAccess !== true)
+        if (!user)
+            publicReadAccess = false;
+        else if (publicReadAccess !== false && publicReadAccess !== true)
             publicReadAccess = true;
 
         if (publicWriteAccess !== false && publicWriteAccess !== true)
@@ -1232,14 +1250,34 @@ var slugify = function (className, string, object) {
 }
 
 /**
- * --------------
+ * ---------------------
  * capitaliseFirstLetter
- * --------------
+ * ---------------------
  * @param string
  * @returns {string}
  */
 function capitaliseFirstLetter(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
+/**
+ * ----------------------
+ * getUserProfileImageUrl
+ * ----------------------
+ * Returns uploaded profilePicture,
+ * or facebook profile picture url,
+ * or default silhouette.
+ *
+ * @param {_User} user
+ * @returns {String} url
+ */
+function getUserProfileImageUrl(user) {
+    if (user.get('profilePicture') && user.get('profilePicture').url())
+        return user.get('profilePicture').url();
+    else if (user.get('fbid') && user.get('fbid').length)
+        return "http://res.cloudinary.com/mycqs/image/facebook/c_thumb,e_improve,g_faces:center,w_150/" + user.get('fbid');
+    else
+        return "http://assets.mycqs.com/img/silhouette.png";
 }
 
 /*
@@ -1415,18 +1453,20 @@ Parse.Cloud.beforeSave('Category', function (request, response) {
  */
 Parse.Cloud.beforeSave("Test", function (request, response) {
     if (!request.object.get('title')) {
-        response.error("Title of the test is required!");
+        response.error({"message": "Title of the test is required!"});
         return;
     }
 
     /*
-     * Will eventually move this into the .isNew() block
-     * but for now, we have a lot of tests without ACLs
+     * Set ACLs based on privacy if object is not deleted,
+     * otherwise the ACL is set later.
      */
-    if (request.object.get('privacy') === 1)
-        request.object.setACL(Security.createACLs(request.object.get('author')));
-    else
-        request.object.setACL(Security.createACLs(request.object.get('author'), false));
+    if (!request.object.get('isObjectDeleted')) {
+        if (request.object.get('privacy') === 1)
+            request.object.setACL(Security.createACLs(request.object.get('author')));
+        else
+            request.object.setACL(Security.createACLs(request.object.get('author'), false));
+    }
 
     request.object.set('tags', generateSearchTags('Test', request.object));
     request.object.set('title', capitaliseFirstLetter(request.object.get('title')));
@@ -1443,39 +1483,64 @@ Parse.Cloud.beforeSave("Test", function (request, response) {
             request.object.set("uniqueAverageScore", 0);
             request.object.set("uniqueNumberOfAttempts", 0);
         }
-
-        var query = new Parse.Query(Parse.User);
-        query.get(request.object.get("author").id, function (user) {
-                if (request.object.isNew()) {
-                    user.set("numberOfPoints", user.get("numberOfPoints") + 10);
-                    user.save();
-                }
+        var query = new Parse.Query(Parse.User),
+            author,
+            slug;
+        query.get(request.object.get('author').id)
+            .then(function (result) {
+                author = result;
                 /*
                  * Create a unique slug
                  */
-                var slug = user.get('slug') + '-' + slugify('Test', request.object.get('title'));
+                slug = author.get('slug') + '-' + slugify('Test', request.object.get('title'));
                 /*
                  * Check if slug is unique before saving
                  */
                 var Test = Parse.Object.extend('Test'),
                     query = new Parse.Query(Test);
                 query.startsWith('slug', slug);
-                query.count().then(function (count) {
-                    if (!count)
-                        request.object.set('slug', slug);
-                    else
-                        request.object.set('slug', slug + '-' + (count + 1));
+                return query.count()
+            })
+            .then(function (count) {
+                if (!count)
+                    request.object.set('slug', slug);
+                else
+                    request.object.set('slug', slug + '-' + (count + 1));
 
-                    response.success();
+                /*
+                 * Create a graph object for this test
+                 */
+                var graphObjectData = {
+                    app_id: FB.GraphObject.appId,
+                    url: FB.GraphObject.testUrl + slug,
+                    title: request.object.get('title'),
+                    image: getUserProfileImageUrl(author),
+                    author: author.get('name'),
+                    questions: request.object.get('questions').length,
+                    category: request.object.get('category').get('name'),
+                    description: request.object.get('description')
+                };
+                return Parse.Cloud.httpRequest({
+                    method: 'POST',
+                    url: FB.API.url + 'objects/' + FB.GraphObject.namespace + ':test',
+                    params: {
+                        access_token: author.get('authData').facebook.access_token,
+                        object: JSON.stringify(graphObjectData)
+                    }
                 });
-
-
+            })
+            .then(
+            function (httpResponse) {
+                request.object.get('author').set('graphObjectId', httpResponse.data.id);
+                return author.save();
             },
-            function (error) {
-
+            function (httpResponse) {
+                response.error({"message": JSON.stringify(httpResponse.data)});
+            }
+        ).then(function () {
+                response.success();
             });
-    }
-    else {
+    } else {
         if (request.object.get('isObjectDeleted')) {
             request.object.setACL(Security.createACLs());
         }
@@ -1488,6 +1553,7 @@ Parse.Cloud.beforeSave("Test", function (request, response) {
  * ----------------
  * SET test to author.savedTests relations IF test.isNew()
  * * Questionable whether this is necessary *
+ * Open graph for create test
  */
 Parse.Cloud.afterSave("Test", function (request, response) {
     Parse.Cloud.useMasterKey();
@@ -1529,7 +1595,28 @@ Parse.Cloud.afterSave("Test", function (request, response) {
             action.set('type', 'testCreated');
             action.save();
         }
-    });
+    }).then(function () {
+        if (request.object.existed() || !author.get('shareOnCreateTest'))
+            return;
+        /*
+         * Share 'make' test action on graph api
+         */
+        return Parse.Cloud.httpRequest({
+            method: 'POST',
+            url: FB.API.url + FB.GraphObject.namespace + ':make',
+            params: {
+                access_token: author.get('authData').facebook.access_token,
+                test: request.object.get('graphObjectId')
+            }
+        });
+    }).then(
+        function (httpResponse) {
+            // console.log("Action created : " + httpResponse.data.id);
+        },
+        function (httpResponse) {
+            console.error(httpResponse);
+        }
+    );
 });
 
 Parse.Cloud.beforeSave("Question", function (request, response) {
@@ -1787,11 +1874,18 @@ Parse.Cloud.afterSave("Response", function (request) {
  * - ACLs
  */
 Parse.Cloud.beforeSave("Message", function (request, response) {
+    /*
+     * Consider a cloud function to mark messages
+     * as read/unread. Giving write access to
+     * sender/recepient may be a minor vulnerability.
+     */
+
     var from = request.object.get('from'),
         to = request.object.get('to'),
         ACLs = Security.createACLs(from, false);
 
     ACLs.setReadAccess(to, true);
+    ACLs.setWriteAccess(to, true);
     request.object.setACL(ACLs);
     response.success();
 });

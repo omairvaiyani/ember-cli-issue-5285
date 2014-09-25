@@ -9,6 +9,7 @@ Ember.View.extend({
 
     classNameBindings: [
         ':notification',
+        'notificationWarning',
         'content.closed',
         'isOpaque'
     ],
@@ -46,10 +47,14 @@ Ember.View.extend({
      * View lifecycle hook - called when the view enters the DOM
      */
     didInsertElement: function () {
-        // Be prepared to auto-hide the notification
-        this.set('timeoutId', setTimeout(function () {
-            this.send('close');
-        }.bind(this), this.get('hideAfterMs')));
+        // If this notification does not require explicit
+        // confirmation, autohide after a bit.
+        if (!this.get('content.confirm')) {
+            // Be prepared to auto-hide the notification
+            this.set('timeoutId', setTimeout(function () {
+                this.send('close');
+            }.bind(this), this.get('hideAfterMs')));
+        }
         // Fade in the view.
         Ember.run.later(this, function () {
             this.set('isOpaque', true);
@@ -101,9 +106,30 @@ Ember.View.extend({
         var type = this.get('content.type'),
             hash = {
                 'saved': 'glyphicon-floppy-saved',
-                'deleted': 'glyphicon-trash'
+                'deleted': 'glyphicon-trash',
+                'unsavedChanges': 'glyphicon-warning-sign',
+                'warning': 'glyphicon-warning-sign'
             };
         return hash[type] || '';
+    }.property('content.type'),
+
+    /**
+     * @property notificationWarning
+     * @returns {Bool}
+     * If true notification will
+     * look red.
+     */
+    notificationWarning: function () {
+        switch (this.get('content.type')) {
+            case 'unsavedChanges':
+            case 'deleted':
+            case 'warning':
+                return true;
+                break;
+            default:
+                return false;
+                break;
+        }
     }.property('content.type'),
 
     actions: {
@@ -115,7 +141,16 @@ Ember.View.extend({
             setTimeout(function () {
                 this.set('content.closed', true);
                 clearTimeout(this.get('timeoutId'));
+                if (this.get('content.confirm')) {
+                    this.get('content.confirm.controller').send(this.get('content.confirm.callbackAction'), false);
+                }
             }.bind(this), 300);
+        },
+
+        confirmCallback: function (isPositive) {
+            this.get('content.confirm.controller').send(this.get('content.confirm.callbackAction'), isPositive);
+            this.set('content.confirm', null);
+            this.send('close');
         }
     }
 });

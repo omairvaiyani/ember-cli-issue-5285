@@ -98,7 +98,6 @@ Ember.ObjectController.extend({
     isQuestionValid: function () {
         this.clearValidity();
         var response = validateQuestion.beginValidation(this.get('model'));
-        console.dir(response);
         if (response.result === "pass") {
             return true;
         } else {
@@ -136,6 +135,8 @@ Ember.ObjectController.extend({
                     }
                 }
             }
+            this.send('addNotification', 'warning', 'Woops!', 'Looks like you have some issues with your question!');
+            window.scrollTo(0, 0);
             return false;
         }
     },

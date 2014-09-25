@@ -6,7 +6,7 @@
             </div>
         </div>
         <div class="row">
-            <div class="col-md-12 margin-bottom-16">
+            <div class="col-md-12">
                 <div {{bind-attr class="validity.stem.errors.length:has-error validity.stem.warnings.length:has-warning"}}>
                     {{textarea placeholder="Type your question or statement here" classNames="form-control"
                     rows="3" value=stem}}
@@ -23,7 +23,7 @@
             </div>
         </div>
         <div class="row">
-            <div class="col-md-12 margin-bottom-16">
+            <div class="col-md-12">
                 <input type="file" id="questionImageInput" name='question-image' {{action 'addImage' on='change'}}
                        class="question-image-input"/>
                 <img {{bind-attr src=imageFile.url}} id="question-image-holder" class="hide"/>

@@ -237,16 +237,19 @@ Ember.ObjectController.extend(CurrentUser, {
         coverImageStyle: null,
     },
 
+    /*
+     * Used to prevent transitions during
+     * Edit mode if dirty.
+     */
     isEditModeDirtied: function () {
         var temporaryChanges = this.get('temporaryChanges');
-        if(!temporaryChanges.get('name'))
-            return false;
-        else if (temporaryChanges.get('name') != this.get('name'))
+        if (temporaryChanges.name !== this.get('name')) {
             return true;
-        else if (temporaryChanges.get('profilePicture') || temporaryChanges.get('coverPicture'))
+        } else if (temporaryChanges.profilePicture || temporaryChanges.coverPicture) {
             return true;
-        else
+        } else {
             return false;
+        }
     }.property('temporaryChanges.name.length', 'temporaryChanges.profilePicture', 'temporaryChanges.coverPicture'),
 
     actions: {

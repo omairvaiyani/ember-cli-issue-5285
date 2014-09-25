@@ -8,3 +8,13 @@
 <p>
     {{view.content.message}}
 </p>
+{{#if view.content.confirm}}
+    <div class="notification-confirm">
+        <a href='' class="confirm-negative" {{action 'confirmCallback' false target='view'}}>
+            {{view.content.confirm.negative}}
+        </a>
+        <a href='' class="confirm-positive" {{action 'confirmCallback' true target='view'}}>
+            {{view.content.confirm.positive}}
+        </a>
+    </div>
+{{/if}}

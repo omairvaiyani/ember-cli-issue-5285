@@ -1,6 +1,6 @@
 <li>
     {{#link-to 'user' currentUser.slug tagName='a' classNames='navbar-right-adjust'}}
-        <img {{bind-attr src=currentUser.profileImageURL}} />
+        <img class='profile-thumbnail' {{bind-attr src=currentUser.profileImageURL}} />
 
         <div>{{currentUser.firstName}}</div>
     {{/link-to}}

@@ -28,23 +28,35 @@ Ember.Route.extend({
         controller.notifyPropertyChange('currentUser');
     },
 
+    pageTitle: '',
+
+    pageTitleMessageCounter: function () {
+        if (!this.get('currentUser.totalUnreadMessages'))
+            return "";
+        else
+            return "(" + this.get('currentUser.totalUnreadMessages') + ") ";
+    }.property('currentUser.totalUnreadMessages.length'),
+
+    setFullPageTitle: function () {
+        window.document.title = this.get('pageTitleMessageCounter') + this.get('pageTitle');
+    }.observes('pageTitle.length', 'pageTitleMessageCounter.length'),
+
     actions: {
         /*
          * Receives from ApplicationController.currentPathDidChange.
-         * Sometimes from individual routes, e.g. TestRoute.
+         * Also called when currentUser.totalUnreadMessages changes.
+         * Sometimes from individual routes, e.g. TestRoute:
+         * - Actual title sent from TestRoute
+         * - Empty title sent from ApplicationController when
+         * -- message counter changes
+         * Close any open modal.
          */
-        updateTitle: function (title) {
-            if (title === "DEFAULT")
-                window.document.title = "MyCQs - A social learning network";
+        updatePageTitle: function (title) {
+            if (title.indexOf("MyCQs") === -1)
+                this.set('pageTitle', title + " - MyCQs");
             else
-                window.document.title = title + " - MyCQs";
-        },
-
-        updateNotificationsCounter: function () {
-            if (this.get('currentUser.totalUnreadMessages'))
-                window.document.title = "(" + this.get('currentUser.totalUnreadMessages') + ") " + window.document.title;
-            else if (window.document.title.charAt(0) === "(")
-                window.document.title = window.document.title.substr(window.document.title.indexOf(" ") + 1);
+                this.set('pageTitle', title);
+            this.send('closeModal');
         },
 
         signUp: function () {
@@ -408,12 +420,14 @@ Ember.Route.extend({
          * @param type {String} classification; used for which icon to show
          * @param title {String} leading text
          * @param message {String} supporting text
+         * @param confirm {Object} controller, callbackAction, positive, negative
          */
-        addNotification: function (type, title, message) {
+        addNotification: function (type, title, message, confirm) {
             var notification = Ember.Object.create({
                 type: type,
                 title: title,
                 message: message,
+                confirm: confirm,
                 closed: false
             });
             this.get('applicationController.notifications').pushObject(notification);

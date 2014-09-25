@@ -22,11 +22,10 @@
         <!-- Collect the nav links, forms, and other content for toggling -->
         <div class="collapse navbar-collapse" id="bs-navbar-collapsing">
             <ul class="nav navbar-nav">
-                {{#link-to 'index' tagName='li'}}{{#link-to 'index' tagName='a'}}Home{{/link-to}}{{/link-to}}
-                {{#link-to 'browse' tagName='li'}}{{#link-to 'browse' tagName='a'}}Browse{{/link-to}}{{/link-to}}
-                {{#link-to 'create' tagName='li'}}{{#link-to 'create' tagName='a'}}Create{{/link-to}}{{/link-to}}
-                {{#link-to 'about' tagName='li'}}{{#link-to 'about' tagName='a'}}About{{/link-to}}{{/link-to}}
-                {{#link-to 'support' tagName='li'}}{{#link-to 'support' tagName='a'}}Support{{/link-to}}{{/link-to}}
+                {{#link-to 'index' tagName='li' title='Home'}}{{#link-to 'index' tagName='a' class='nav-icons'}}{{svg-icon icon='home'}}{{/link-to}}{{/link-to}}
+                {{#link-to 'browse' tagName='li' title='Browse tests'}}{{#link-to 'browse' tagName='a' class='nav-icons'}}{{svg-icon icon='browse'}}{{/link-to}}{{/link-to}}
+                {{#link-to 'create' tagName='li' title='Create a test'}}{{#link-to 'create' tagName='a' class='nav-icons'}}{{svg-icon icon='create'}}{{/link-to}}{{/link-to}}
+                {{#link-to 'about' tagName='li' title='About us'}}{{#link-to 'about' tagName='a' class='nav-icons'}}{{svg-icon icon='about'}}{{/link-to}}{{/link-to}}
             </ul>
             <ul class="nav navbar-nav navbar-right">
                 {{#if currentUser}}

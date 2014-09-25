@@ -88,13 +88,13 @@ Ember.Controller.extend(CurrentUser, {
 
     testsAreOrderedByTitle: true,
     testsOrderedByTitle: function () {
-        return this.get('tests').sortBy('title');
-    }.property('tests.length'),
+        return this.get('currentUser.tests').sortBy('title');
+    }.property('currentUser.tests.length'),
 
     testsAreOrderedByDate: false,
     testsOrderedByDate: function () {
-        return this.get('tests').sortBy('createdAt');
-    }.property('tests.length'),
+        return this.get('currentUser.tests').sortBy('createdAt');
+    }.property('currentUser.tests.length'),
 
     testsAreOrderedByCategory: false,
     testsOrderedByCategory: function () {
@@ -122,13 +122,16 @@ Ember.Controller.extend(CurrentUser, {
         if (!this.get('currentUser'))
             return;
 
+        if(!this.get('currentUser.tests'))
+            this.set('currentUser.tests', Em.A());
+
         var where = {
             'author': ParseHelper.generatePointer(this.get('currentUser'))
         };
         this.store.findQuery('test', {where: JSON.stringify(where), order: 'title', include: 'category'})
             .then(function (tests) {
-                this.get('tests').clear();
-                this.get('tests').addObjects(tests);
+                this.get('currentUser.tests').clear();
+                this.get('currentUser.tests').addObjects(tests);
             }.bind(this));
     }.observes('initialized', 'currentUser.id'),
 
@@ -204,7 +207,7 @@ Ember.Controller.extend(CurrentUser, {
             this.set('orderTests', orderTests);
             this.set('testsAreOrderedByTitle', false);
             this.set('testsAreOrderedByDate', false);
-            this.set('testsAreOrderedByCategory', true);
+            this.set('testsAreOrderedByCategory', false);
             switch (this.get('orderTests')) {
                 case 'title':
                     this.set('testsAreOrderedByTitle', true);

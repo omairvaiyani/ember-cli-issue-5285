@@ -224,7 +224,7 @@ export default {
                     "")
             );
         }
-        if (options.length < 3) {
+        /*if (options.length < 3) {
             validationResponse.warnings.push(
                 this.leaveComment(
                     "You have too few options!",
@@ -239,7 +239,7 @@ export default {
                     "",
                     "")
             );
-        }
+        }*/
 
         /* Duplicate options */
         var duplicatesFound = [];

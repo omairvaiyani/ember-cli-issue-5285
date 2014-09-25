@@ -3,8 +3,8 @@
         <div class="col-md-12">
             <div class="card">
                 <div class="row">
-                    <div class="col-md-12">
-                        <h3>{{title}}</h3>
+                    <div class="col-md-12 margin-bottom-16">
+                        <h3>{{title}} <small>{{category.name}}</small></h3>
                     </div>
                 </div>
                 <div class="row">
@@ -35,10 +35,19 @@
                 <div class="row">
                     <div class="col-md-12">
                         <h5>QUESTIONS LIST</h5>
+                        {{#if questions.length}}
+                            {{#if showQuestionListCheckBoxes}}
+                                <a href='' {{action 'toggleQuestionListCheckboxes'}} >Done editing</a>
+                            {{else}}
+                                <a href='' {{action 'toggleQuestionListCheckboxes'}} >Edit list</a>
+                            {{/if}}
+                        {{/if}}
                         {{#each question in questions itemController='edit.item.question'}}
                             <div class="row">
-                                <div class="col-md-12">
-                                    {{input type="checkbox" checked=question.isChecked}}
+                                <div {{bind-attr class=':col-md-12 :question-list-item question.isCurrent:active-question'}}>
+                                    {{#if showQuestionListCheckBoxes}}
+                                        {{input type="checkbox" checked=question.isChecked class='question-list-checkbox'}}
+                                    {{/if}}
                                     {{#link-to 'editQuestion' question}}
                                         Q{{question.itemNumber}}: {{text-preview question.stem 30}}
                                     {{/link-to}}
@@ -46,9 +55,9 @@
                             </div>
                         {{/each}}
                         <div class="row">
-                            <div class="col-md-12">
+                            <div {{bind-attr class=':col-md-12 :question-list-item isCreatingNewQuestion:active-question'}}>
                                 {{#link-to 'edit.newQuestion' this}}
-                                    + Add a new question
+                                    + New question
                                 {{/link-to}}
                             </div>
                         </div>

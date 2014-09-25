@@ -503,7 +503,7 @@ EmberParseAdapter.ParseUser = DS.Model.extend({
         } else if (this.get('fbid')) {
             return "http://res.cloudinary.com/mycqs/image/facebook/c_thumb,e_improve,g_faces:center,w_150/" + this.get('fbid');
         } else {
-            return "http://upload.wikimedia.org/wikipedia/commons/0/09/Man_Silhouette.png";
+            return "http://assets.mycqs.com/img/silhouette.png";
         }
     }.property('fbid', 'profilePicture'),
 

@@ -78,10 +78,12 @@ body {
 .btn-facebook:hover, .btn-facebook:focus {
     color: white;
 }
+
 .hidden-file-input {
     position: absolute;
     left: -9999em;
 }
+
 .onoffswitch {
     position: relative;
     width: 116px;
@@ -197,6 +199,19 @@ body {
     margin-right: 8px;
 }
 
+.svg-icons {
+    opacity: 0.6;
+}
+
+.svg-icons rect, .svg-icons polygon, .svg-icons circle,
+.svg-icons line, .svg-icons g {
+    stroke: #4f6640;
+}
+
+.active .svg-icons {
+    opacity: 1;
+}
+
 /*
  * Global spinner for cross-page items
  */
@@ -245,6 +260,7 @@ body {
         -webkit-transform: perspective(120px) rotateX(-180deg) rotateY(-179.9deg);
     }
 }
+
 .notification-container {
     position: fixed;
     right: 10px;
@@ -261,12 +277,16 @@ body {
     padding: 5px 10px 5px 45px;
     border: 2px solid transparent;
     border-radius: 10px;
-    background-color: rgba(79, 102, 64, 0.85);;
+    background-color: rgba(79, 102, 64, 0.85);
     color: rgb(255, 255, 255);
     font-size: 12px;
     text-shadow: 1px 1px 3px rgb(0, 0, 0);
     box-shadow: 0px 0px 15px -5px rgb(0, 0, 0);
     transition: opacity 0.3s ease-out, top 0.3s ease-out, right 0.3s ease-out;
+}
+
+.notification-warning {
+    background-color: rgba(136, 13, 13, 0.85);
 }
 
 .notification.is-opaque {
@@ -302,10 +322,35 @@ body {
 .notification:hover .close-notification {
     display: block;
 }
+
+.notification-confirm {
+    float: right;
+}
+
+.notification-confirm a {
+    color: white;
+    font-size: 14px;
+}
+
+.notification-confirm a:hover {
+    text-decoration: none;
+    color: rgb(215, 238, 213);
+}
+
+.notification-warning .notification-confirm a:hover {
+    text-decoration: none;
+    color: rgba(255, 189, 189, 1);
+}
+
+.notification-confirm .confirm-negative {
+    margin-right: 8px;
+}
+
 .tag.category-edit {
     background: dodgerblue;
     color: whitesmoke;
 }
+
 .tag.category-edit::before {
     background: none;
     border-radius: 0px;
@@ -316,17 +361,21 @@ body {
     top: -1px;
     color: whitesmoke;
 }
+
 .tag.category-edit::after {
     border-left: 10px solid dodgerblue;
 }
+
 .tag.category-edit:hover {
     background: #3cb8ff;
     color: white;
     text-decoration: none;
 }
+
 .tag.category-edit:hover::before {
     cursor: pointer;
 }
+
 .tag.category-edit:hover::after {
     border-left-color: #3cb8ff;
 }
@@ -452,7 +501,17 @@ body {
     }
 }
 
-.navbar-nav > li > a > img {
+.navbar-nav > li > a.nav-icons {
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+.navbar-nav > li > a.nav-icons img {
+    height: 30px;
+    width: 30px;
+}
+
+.navbar-nav > li > a > img.profile-thumbnail {
     height: 30px;
     width: 30px;
     border-radius: 15px;
@@ -464,6 +523,15 @@ body {
 .navbar-nav > li > a > div {
     display: inline-block;
     vertical-align: middle;
+}
+
+.navbar-messages > ul {
+    height: 350px;
+    overflow: scroll;
+}
+
+.navbar-messages > ul > li{
+    position: relative;
 }
 
 .navbar-messages > a {
@@ -482,12 +550,26 @@ body {
 }
 
 .user-message-item {
-    width: 250px;
+    width: 258px;
     padding: 4px 8px;
 }
+
 .user-message-item:hover {
     background-color: #F5F5F5;
 }
+
+.user-message-item .read-indicator {
+    position: absolute;
+    right: 4px;
+    top: 3px;
+    opacity: 0.6;
+}
+
+.user-message-item .read-indicator:hover {
+    opacity: 1;
+    cursor: pointer;
+}
+
 .user-message-item.is-unread {
     background-color: #E8ECE9;
     color: #091B0E;
@@ -497,18 +579,22 @@ body {
     width: 30px;
     height: 30px;
 }
+
 .user-message-item .message-text {
     font-size: smaller;
-    display:inline-block;
+    display: inline-block;
     vertical-align: top;
     width: calc(250px - 60px);
 }
+
 .user-message-item .message-text > p {
     margin: 0px 4px;
 }
+
 .user-message-item .message-text > p.time-ago {
-    color:darkgrey;
+    color: darkgrey;
 }
+
 hr.user-message-item-separator {
     margin: 0px;
 }
@@ -606,7 +692,7 @@ hr.user-message-item-separator {
     right: 0px;
     z-index: -2;
     background-image: url('/img/library-background.jpg');
-    background-size:cover;
+    background-size: cover;
     background-position: center top;
     padding-bottom: 30px;
     padding-top: 100px;
@@ -630,6 +716,7 @@ hr.user-message-item-separator {
     height: 150px;
     overflow: hidden;
 }
+
 .guest-page-actions .btn {
     height: 50px;
     width: 100%;
@@ -637,32 +724,39 @@ hr.user-message-item-separator {
     background-color: rgba(12, 1, 1, 0.35);
     border: 2px solid #3CD0FF;
 }
+
 .guest-page-actions .btn:hover {
     background-color: rgba(5, 56, 54, 0.35);
     color: #95E5FF;
 }
+
 .guest-page-actions .search-box {
     opacity: 0.8;
 }
+
 .guest-page-actions .search-box:hover,
 .guest-page-actions .search-box:active,
-.guest-page-actions .search-box:focus{
+.guest-page-actions .search-box:focus {
     opacity: 1;
 }
+
 .guest-page-actions .search-box > input {
     height: 50px;
     width: 100%;
     font-size: 22px;
 }
+
 /*
  * Hiding autocomplete until I fix it's position
  */
 .guest-page-actions .autocomplete-container {
     display: none;
 }
+
 .guest-page-actions .search-box span {
     top: 14px;
 }
+
 .guest-page-actions .glyphicon-search-large::before {
     font-size: 22px;
 }
@@ -670,16 +764,17 @@ hr.user-message-item-separator {
 .overlay-glass-pane {
     border-top: 1px solid rgba(255, 255, 255, 0.2);
 }
+
 @media (min-width: 1453px) {
     .overlay-glass {
-        background-size: cover ;
+        background-size: cover;
     }
 }
 
 .overlay-glass {
     height: 170px;
     z-index: -1;
-    background-image: url('/img/library-background-blur.png');
+    background-image: url('/img/library-background-blur.jpg');
     background-position: center -430px;
 }
 
@@ -753,10 +848,12 @@ hr.user-message-item-separator {
     opacity: 0.3;
     width: 100%;
 }
+
 .achievements-row img:hover {
     -webkit-filter: none;
     opacity: 1;
 }
+
 /* TEMPLATE - USER */
 .cover-image {
     background-size: cover;
@@ -765,30 +862,35 @@ hr.user-message-item-separator {
     margin: -26px -16px -16px -16px;
     position: relative;
 }
+
 .edit-cover-image-overlay {
     height: 300px;
     margin: 10px 0px -16px 0px;
     position: relative;
-    background-color: rgba(50,50,50,0.6);
+    background-color: rgba(50, 50, 50, 0.6);
     color: white;
     font-size: 22px;
     padding-top: 128px;
     z-index: 1;
 }
+
 .cover-image .temporary-cover-image {
     position: absolute;
     left: 16px;
     right: 16px;
     top: 26px;
 }
+
 .edit-cover-image-overlay .centered-block {
     position: relative;
-    margin:auto;
-    width:150px;
+    margin: auto;
+    width: 150px;
 }
+
 .edit-cover-image-overlay span, .edit-cover-image-overlay p {
- cursor: pointer;
+    cursor: pointer;
 }
+
 .cover-image > .profile-image, .cover-image > .edit-profile-image-overlay {
     position: absolute;
     bottom: 16px;
@@ -807,20 +909,24 @@ hr.user-message-item-separator {
         width: 150px;
     }
 }
+
 .cover-image .edit-profile-image-overlay {
     color: white;
     font-size: 16px;
     text-align: center;
     padding-top: 48px;
-    z-index:2;
+    z-index: 2;
 }
+
 .cover-image .edit-profile-image-overlay span {
     font-size: 24px;
     cursor: pointer;
 }
+
 .cover-image .edit-profile-image-overlay p {
     cursor: pointer;
 }
+
 .cover-image .edit-profile-image-dropdown, .edit-cover-image-dropdown {
     background-color: rgb(255, 255, 255);
     position: absolute;
@@ -831,6 +937,7 @@ hr.user-message-item-separator {
     border-radius: 5px;
     overflow: hidden;
 }
+
 .cover-image .edit-profile-image-dropdown ul, .edit-cover-image-dropdown ul {
     list-style-type: none;
     margin: 0px;
@@ -838,10 +945,12 @@ hr.user-message-item-separator {
     text-align: start;
     overflow: hidden;
 }
+
 .cover-image .edit-profile-image-dropdown ul > li, .edit-cover-image-dropdown ul > li {
     padding: 2px 10px;
     cursor: pointer;
 }
+
 .cover-image .edit-profile-image-dropdown ul > li > label, .edit-cover-image-dropdown ul > li > label {
     margin: 0px;
     cursor: pointer;
@@ -852,6 +961,7 @@ hr.user-message-item-separator {
 .edit-cover-image-dropdown ul > li:hover {
     background-color: #e1e1e8;
 }
+
 .cover-image .user-name {
     position: absolute;
     bottom: 26px;
@@ -860,6 +970,7 @@ hr.user-message-item-separator {
     color: white;
     font-size: x-large;
 }
+
 .cover-image input.user-name {
     font-size: large;
     color: black;
@@ -867,9 +978,10 @@ hr.user-message-item-separator {
     bottom: 36px;
     z-index: 2;
 }
+
 .cover-image .user-follow, .cover-image .user-following, .cover-image .user-edit {
     position: absolute;
-    cursor:pointer;
+    cursor: pointer;
     left: 184px;
     bottom: 10px;
     color: whitesmoke;
@@ -877,21 +989,26 @@ hr.user-message-item-separator {
     background: rgba(255, 255, 255, 0.2);
     padding: 3px 6px;
 }
+
 .cover-image .user-edit {
     background: none;
     padding: 0px;
     z-index: 2;
 }
+
 .cover-image .user-edit > a {
     background: rgba(255, 255, 255, 0.2);
     padding: 3px 6px;
 }
-.cover-image .user-follow a:hover, .cover-image .user-following a:hover , .cover-image .user-edit a:hover {
+
+.cover-image .user-follow a:hover, .cover-image .user-following a:hover, .cover-image .user-edit a:hover {
     text-decoration: none;
 }
+
 .user-following a::before {
     content: "Following";
 }
+
 .user-following:hover a::before {
     content: "Unfollow";
 }
@@ -1233,6 +1350,16 @@ hr.user-message-item-separator {
     bottom: 16px;
     right: 16px;
 }
+.question-list-item {
+    margin: 4px 0px;
+    padding: 4px 16px;
+}
+.question-list-item.active-question {
+    background-color: aliceblue;
+}
+.question-list-item a:hover {
+    text-decoration: none;
+}
 
 .question-image-thumbnail {
     display: inline-block;
@@ -1432,13 +1559,16 @@ body {
     font-size: 12px;
     padding-top: 16px;
 }
+
 .footer .card {
     background-color: #4f6640;
     color: whitesmoke;
 }
+
 .footer .card a {
     color: whitesmoke;
 }
+
 /* HELPERS */
 @media (min-width: 992px) {
     .col-fix-right {

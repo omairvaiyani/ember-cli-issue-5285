@@ -67,6 +67,11 @@ Ember.ObjectController.extend(CurrentUser, {
             this.set('model.privacy', false);
     }.observes('privacyBoolean'),
 
+    isCreatingNewQuestion: function () {
+        console.log(this.get('controllers.application.currentPath'));
+        return this.get('controllers.application.currentPath') === "edit.newQuestion";
+    }.property('controllers.application.currentPath'),
+
     actions: {
         removeCategory: function (category) {
             this.set('category', null);
@@ -91,6 +96,8 @@ Ember.ObjectController.extend(CurrentUser, {
                 this.set('categorySelectionInput', '');
                 this.transitionToRoute('edit.newQuestion', test.get('slug'));
                 this.send('decrementLoadingItems');
+                if(this.get('currentUser.tests'))
+                    this.get('currentUser.tests').pushObject(this.get('model'));
             }.bind(this));
         },
 
@@ -127,11 +134,16 @@ Ember.ObjectController.extend(CurrentUser, {
             this.get('model').set('isObjectDeleted', true);
             this.get('model').save().then(function (model) {
                 this.send('addNotification', 'deleted', "Test deleted!", model.get('title') + " was deleted successfully.");
+                this.get('currentUser.tests').removeObject(this.get('model'));
                 model.deleteRecord();
             }.bind(this));
 
             this.send('closeModal');
             this.transitionToRoute('index');
+        },
+
+        toggleQuestionListCheckboxes: function () {
+            this.toggleProperty('showQuestionListCheckBoxes');
         },
 
         deleteObjectsInActionBar: function (objects) {
@@ -146,10 +158,12 @@ Ember.ObjectController.extend(CurrentUser, {
             var length = objects.length;
             this.get('questions').removeObjects(objects);
             this.get('model').save();
-            if(length === 1)
+            this.set('showQuestionListCheckBoxes', false);
+            this.transitionToRoute('edit');
+            if (length === 1)
                 this.send('addNotification', 'deleted', 'Question deleted!', 'Your test is up to date!');
             else
-            this.send('addNotification', 'deleted', length + ' questions deleted!', 'Your test is up to date!');
+                this.send('addNotification', 'deleted', length + ' questions deleted!', 'Your test is up to date!');
         },
 
         /*

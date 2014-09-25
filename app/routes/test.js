@@ -19,12 +19,16 @@ Ember.Route.extend({
                 if (results.objectAt(0)) {
                     return results.objectAt(0);
                 } else {
-                    console.log("No test with this slug found");
+                    return;
                 }
             }.bind(this));
     },
     setupController: function (controller, model) {
-        this.send('updateTitle', model.get('title'));
+        if(!model) {
+            this.transitionTo('not-found');
+            return;
+        }
+        this.send('updatePageTitle', model.get('title'));
         model.get('questions').then(function (questions) {
             /*
              * This ensures that the loadingItems
@@ -54,11 +58,13 @@ Ember.Route.extend({
                  * Reset question.isAnswer and options.@each.isSelected to false
                  */
                 question.set('isAnswered', false);
-                question.get('options').forEach(function (option) {
-                    option.isSelected = false;
-                    if (option.phrase)
-                        nonEmptyOptions.push(option);
-                });
+                if (question.get('options')) {
+                    question.get('options').forEach(function (option) {
+                        option.isSelected = false;
+                        if (option.phrase)
+                            nonEmptyOptions.push(option);
+                    });
+                }
                 question.set('shuffledOptions', this.shuffle(nonEmptyOptions));
             }.bind(this));
             /*

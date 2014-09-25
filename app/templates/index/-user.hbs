@@ -35,7 +35,7 @@
             </p>
         </div>
     </div>
-    <div class="col-md-9">
+    <div class="col-md-9 col-fix-right">
 
         <div class="row">
             <div class="col-md-12">
@@ -71,6 +71,11 @@
                 </div>
                 <div class="row">
                     <div class="col-md-12">
+                        {{#if homeIsActivities}}
+                            {{#each userAction in followingActions}}
+                                {{partial "user/item/action-card"}}
+                            {{/each}}
+                        {{/if}}
                         {{#if homeIsTests}}
                             {{#if testsAreOrderedByTitle}}
                                 {{#each testsOrderedByTitle itemController='user/item/test'}}
@@ -91,11 +96,6 @@
                                     {{/each}}
                                 {{/each}}
                             {{/if}}
-                        {{/if}}
-                        {{#if homeIsActivities}}
-                            {{#each userAction in followingActions}}
-                                {{partial "user/item/action-card"}}
-                            {{/each}}
                         {{/if}}
                         {{#if homeIsAttempts}}
                             {{#each attempt in currentUser.attempts}}

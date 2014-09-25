@@ -13,47 +13,50 @@ Ember.Controller.extend({
     needs: ['index', 'user', 'test', 'category'],
 
     /*
-     * Observes for route transitions:
-     * - Close modals if open
-     * - Update website title
+     * Observes for route transitions and currentUser.totalUnreadMessages.length
+     * - Use path to determine title
+     * - Send preliminary title to ApplicationRoute.updateTitle()
      */
     currentPathDidChange: function () {
-        this.send('closeModal');
         var path = this.get('currentPath'),
-            title;
+            title = "",
+            defaultTitle = "MyCQs - A social learning network";
+
+        if(!path)
+            return;
 
         switch (path) {
             case "index":
-                title = "DEFAULT";
+                title += defaultTitle;
                 break;
             case "user.index":
                 var user = this.get('controllers.user');
-                title = user.get('name');
+                title += user.get('name');
                 break;
             case "user.tests":
                 var user = this.get('controllers.user');
-                title = user.get('name') + "'s tests";
+                title += user.get('name') + "'s tests";
                 break;
             case "user.followers":
                 var user = this.get('controllers.user');
-                title = user.get('name') + "'s followers";
+                title += user.get('name') + "'s followers";
                 break;
             case "user.following":
                 var user = this.get('controllers.user');
-                title = user.get('name') + "'s following";
+                title += user.get('name') + "'s following";
                 break;
             case "create":
-                title = "Create a test";
+                title += "Create a test";
                 break;
             case "edit":
-                title = "Test editor";
+                title += "Test editor";
                 break;
             case "browse":
-                title = "Browse tests";
+                title += "Browse tests";
                 break;
             case "category":
                 var category = this.get('controllers.category');
-                title = category.get('name');
+                title += category.get('name');
                 break;
             case "test":
                 /*
@@ -61,21 +64,21 @@ Ember.Controller.extend({
                  */
                 return;
             case "result":
-                title = "Results";
+                title += "Results";
                 break;
             default:
-                title = "DEFAULT";
+                title += defaultTitle;
                 break;
         }
-        if (!title)
-            title = "DEFAULT";
-        this.send('updateTitle', title);
+        if (!title || !title.length)
+            title = defaultTitle;
+
+        this.send('updatePageTitle', title);
 
         if (path === "index")
             this.get('controllers.index').send('toggleParallaxScrollListener', true);
-        else
-            this.get('controllers.index').send('toggleParallaxScrollListener', false);
-    }.observes('currentPath'),
+
+    }.observes('currentPath'/*, 'currentUser.totalUnreadMessages.length'*/),
 
     loadingItems: 0,
 
@@ -172,8 +175,11 @@ Ember.Controller.extend({
             });
         }
         this.set('currentUser.totalUnreadMessages', totalUnreadMessages);
-        this.send('updateNotificationsCounter');
     }.observes('currentUser.messages.length'),
+
+  /*  totalUnreadMessagesDidChange: function () {
+        this.send('updateNotificationsCounter');
+    }.observes('currentUser.totalUnreadMessages.length'),*/
 
     newUser: {
         name: '',
@@ -234,7 +240,6 @@ Ember.Controller.extend({
                 message.set('read', true);
                 if(this.get('currentUser.totalUnreadMessages'))
                     this.decrementProperty('currentUser.totalUnreadMessages');
-
                 message.save();
             }
         },
@@ -242,11 +247,11 @@ Ember.Controller.extend({
         markMessageAsUnread: function (message) {
             if(message.get('read')) {
                 message.set('read', false);
-                if(this.get('currentUser.totalUnreadMessages'))
-                    this.incrementProperty('currentUser.totalUnreadMessages');
+                this.incrementProperty('currentUser.totalUnreadMessages');
                 message.save();
             }
         },
+
         updateNotificationsCounter: function () {
             if (this.get('currentUser.totalUnreadMessages'))
                 window.document.title = "(" + this.get('currentUser.totalUnreadMessages') + ") " + window.document.title;
