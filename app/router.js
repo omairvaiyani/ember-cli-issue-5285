@@ -42,6 +42,7 @@ Router.map(function () {
      * Test taking and results
      */
     this.resource('test', {path: "mcq/:test_slug"});
+    this.resource('testRedirect', {path: "mcq/:test_old_id/:test_tile"});
     this.resource('testInfo', {path: "test/:test_slug"});
     this.resource('result', {path: "result/:attempt_id"});
 
@@ -50,6 +51,13 @@ Router.map(function () {
      */
     this.route('about');
     this.route('support', {path: 'support'});
+    this.route('privacyPolicy', {path: 'privacy-policy'});
+    this.route('terms', {path: 'terms'});
+
+    /*
+     * Temporary sessions
+     */
+    this.resource('passwordReset', {path: 'password-reset/:password_reset_id'});
 
 
     /*
@@ -59,6 +67,15 @@ Router.map(function () {
      */
     this.route('notFound', {path: '/not-found'});
     this.route('fourOhFour', {path: '*path'});
+});
+
+Router.reopen({
+    notifyGoogleAnalytics: function() {
+        return ga('send', 'pageview', {
+            'page': this.get('url'),
+            'title': window.document.title
+        });
+    }.on('didTransition')
 });
 
 export default

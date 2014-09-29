@@ -224,6 +224,88 @@ Ember.ObjectController.extend(CurrentUser, {
             this.set('latestAttemptsReceived', true);
     }.observes('latestAttempts.length'),
 
+    /*
+     * Suggestions for following
+     */
+    suggestedFollowing: Ember.A(),
+
+    mergeSuggestedFollowings: function () {
+        if (this.get('courseSuggestedFollowing.length') || this.get('facebookFriendsOnMyCQs.length')) {
+            var array = Ember.A();
+            array.addObjects(this.get('courseSuggestedFollowing'));
+            if (array.length && this.get('facebookFriendsOnMyCQs.length')) {
+                /*
+                 * Check for duplicate users
+                 */
+                this.get('facebookFriendsOnMyCQs').forEach(function (user) {
+                    if (!array.contains(user))
+                        array.pushObject(user);
+                });
+            } else if (this.get('facebookFriendsOnMyCQs.length')) {
+                array.addObjects(this.get('facebookFriendsOnMyCQs'));
+            }
+            this.get('suggestedFollowing').clear();
+            this.get('suggestedFollowing').addObjects(_.shuffle(array).splice(0, 5));
+        }
+    }.observes('courseSuggestedFollowing.length', 'facebookFriendsOnMyCQs.length'),
+
+    /*
+     * Course suggested following
+     */
+    courseSuggestedFollowing: Ember.A(),
+
+    isGettingCourseSuggestedFollowing: false,
+
+    getCourseSuggestedFollowing: function () {
+        if (this.get('isGettingCourseSuggestedFollowing') || !this.get('isCurrentUser') || !this.get('course.name'))
+            return;
+        this.set('isGettingCourseSuggestedFollowing', true);
+        var where = {
+            course: ParseHelper.generatePointer(this.get('course.content'), 'Course')
+        };
+        this.store.find('parse-user', {where: JSON.stringify(where)})
+            .then(function (results) {
+                this.get('courseSuggestedFollowing').clear();
+                results.removeObject(this.get('model'));
+                this.get('courseSuggestedFollowing').addObjects(results);
+                this.set('isGettingCourseSuggestedFollowing', false);
+            }.bind(this));
+    }.observes('course.id'),
+
+    /*
+     * Facebook friends
+     */
+    facebookFriendsOnMyCQs: Ember.A(),
+
+    shouldShowFollowAllFacebookFriends: function () {
+        if (!this.get('facebookFriendsOnMyCQs') || !this.get('facebookFriendsOnMyCQs.length')) {
+            return false;
+        } else {
+            var areThereUsersToFollow = false;
+            this.get('facebookFriendsOnMyCQs').forEach(function (user) {
+                if (!this.get('currentUser.following').contains(user)) {
+                    areThereUsersToFollow = true;
+                    return areThereUsersToFollow;
+                }
+            }.bind(this));
+            return areThereUsersToFollow;
+        }
+    }.property('facebookFriendsOnMyCQs.length', 'currentUser.following.length'),
+
+    getFacebookFriends: function () {
+        if (!this.get('fbid'))
+            return;
+        var where = {
+            fbid: {
+                "$in": this.get('facebookFriends')
+            }
+        };
+        this.store.find('parse-user', {where: JSON.stringify(where)})
+            .then(function (results) {
+                this.get('facebookFriendsOnMyCQs').clear();
+                this.get('facebookFriendsOnMyCQs').addObjects(results);
+            }.bind(this));
+    }.observes('fbid'),
 
     /*
      * Edit mode
@@ -419,7 +501,91 @@ Ember.ObjectController.extend(CurrentUser, {
                         this.send('decrementLoadingItems');
                     }
                 });
+        },
+
+        followAllFacebookFriends: function () {
+            this.send('bulkFollow', this.get('facebookFriendsOnMyCQs'));
+        },
+
+        /*
+         * First time login actions
+         */
+
+        welcomePersonaliseNow: function (isPositive) {
+            if (isPositive) {
+                this.send('enableEditMode');
+                this.set('hasBegunEditingProfile', true);
+            }
+        },
+
+        welcomeFindFacebookFriends: function (isPositive) {
+            if (isPositive) {
+                this.send('openModal', 'user/modal/facebook-friends', 'user');
+            }
+
+        },
+
+        createFirstTest: function (isPositive) {
+            if(isPositive) {
+                this.transitionTo('create');
+            }
         }
 
-    }
+    },
+
+    /*
+     * First time login
+     */
+    firstTimeLoginMode: function () {
+        if (this.get('isCurrentUser') && !this.get('finishedWelcomeTutorial')) {
+            this.set('finishedWelcomeTutorial', true);
+            this.get('model').save();
+            this.send('addNotification', 'welcome', 'Welcome to MyCQs!', "This is your new profile page!");
+            var confirm = {
+                controller: this,
+                callbackAction: 'welcomePersonaliseNow',
+                positive: "Personalise now",
+                negative: "Later"
+            };
+            this.send('addNotification', 'profile', 'Would you like to personalise it now?', "", confirm);
+        }
+    }.observes('isCurrentUser'),
+
+    hasBegunEditingProfile: false,
+
+    hasFinishedEditingProfile: function () {
+        if (this.get('hasBegunEditingProfile') && !this.get('isEditMode')) {
+            this.send('addNotification', 'profile', 'Great!', "You can always edit your profile " +
+                "by clicking 'Edit profile'");
+
+            var confirmFacebookFriends = {
+                controller: this,
+                callbackAction: 'welcomeFindFacebookFriends',
+                positive: "Find people",
+                negative: "Later"
+            };
+
+            var confirmCreateTest = {
+                controller: this,
+                callbackAction: 'createFirstTest',
+                positive: "Create now",
+                negative: "Later"
+            };
+
+            if (this.get('facebookFriends.length')) {
+                this.send('addNotification', 'facebook', 'Follow your friends',
+                    'You have '+this.get('facebookFriends.length')+' friends on MyCQs!',
+                    confirmFacebookFriends);
+
+                setTimeout(function() {
+                    this.send('addNotification', 'create', '', "Would you like to create your first test?",
+                        confirmCreateTest);
+                }.bind(this), 15000);
+            } else {
+                this.send('addNotification', 'create', 'Great!', "Would you like to create your first test?",
+                    confirmCreateTest);
+            }
+        }
+    }.observes('isEditMode', 'hasBegunEditingProfile')
+
 });

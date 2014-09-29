@@ -19,13 +19,23 @@ Ember.Route.extend({
                 if (results.objectAt(0)) {
                     return results.objectAt(0);
                 } else {
-                    return;
+                    where = {
+                        "oldId": params.test_slug
+                    };
+                    return this.store.findQuery('test', {where: JSON.stringify(where)})
+                        .then(function (results) {
+                            if (results.objectAt(0)) {
+                                return results.objectAt(0);
+                            } else {
+                                return;
+                            }
+                        }.bind(this));
                 }
             }.bind(this));
     },
     setupController: function (controller, model) {
         if(!model) {
-            this.transitionTo('not-found');
+            this.transitionTo('notFound');
             return;
         }
         this.send('updatePageTitle', model.get('title'));

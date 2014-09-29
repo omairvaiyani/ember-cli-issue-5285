@@ -22,125 +22,127 @@
                             </div>
                         </div>
                         <div class="row margin-bottom-16">
-                            <div class="col-md-6 col-md-offset-3 text-center">
+                            <div class="col-md-8 col-md-offset-2 text-center">
                                 {{input type='text' value=loginUser.email placeholder='Email'
                                 action='login' classNames='form-control'}}
                             </div>
                         </div>
                         <div class="row margin-bottom-16">
-                            <div class="col-md-6 col-md-offset-3 text-center">
+                            <div class="col-md-8 col-md-offset-2 text-center">
                                 {{input type='password' value=loginUser.password placeholder='Password'
                                 action='login' classNames='form-control'}}
                             </div>
                         </div>
                         <div class="row margin-bottom-16">
-                            <div class="col-md-12 text-center">
-                                <button class="btn btn-primary" {{action 'login'}}>Login</button>
-                            </div>
-                        </div>
-                        <div style="padding-top:16px;">
+                        <div class="col-md-8 col-md-offset-2">
+                            <a href='' class='forgot-password pull-left' {{action 'forgotPassword'}}>Forgot password</a>
                             {{#if loginMessage.error}}
-                                <div class="row">
-                                    <div class="col-md-12 text-center">
-                                        <span class="alert alert-danger">{{loginMessage.error}}</span>
-                                    </div>
+                                <span class="alert alert-danger login-connecting-error pull-right">{{loginMessage.error}}</span>
+                            {{else}}
+                                {{#if loginMessage.connecting}}
+                                    <span class="alert alert-info login-connecting-error pull-right">{{loginMessage.connecting}}</span>
                                 </div>
-                            {{/if}}
-                            {{#if loginMessage.connecting}}
-                                <div class="row">
-                                    <div class="col-md-12 text-center">
-                                        <span class="alert alert-info">{{loginMessage.connecting}}</span>
-                                    </div>
-                                </div>
+                                {{else}}
+                                    <button class="btn btn-primary pull-right" {{action 'login'}}>Login</button>
+                                {{/if}}
                             {{/if}}
                         </div>
                     </div>
-                    <hr>
-                    <div class="row">
-                        <div class="col-md-12 text-center">
-                            <a href="#login-carousel" role="button"
-                               data-slide="next">
-                                Register with your email
-                            </a>
-                        </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-8 col-md-offset-2 text-center">
+                        <a href="#login-carousel" role="button"
+                           data-slide="next">
+                            Register with your email
+                        </a>
+                    </div>
+                </div>
+                <hr>
+                <div class="row">
+                    <div class="col-md-12 text-center">
+                        <p>View our <a href='/privacy-policy' target="_blank">Privacy Policy</a>
+                            and <a href='/terms' target="_blank">Terms & Conditions</a>.</p>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <div class="item">
-                <div class="container-fluid">
-                    <a href="#login-carousel" role="button" class="margin-bottom-16"
-                       data-slide="prev">
-                        Go back
-                    </a>
+        <div class="item">
+            <div class="container-fluid">
+                <a href="#login-carousel" role="button" class="margin-bottom-16"
+                   data-slide="prev">
+                    Go back
+                </a>
 
-                    <h4>Name</h4>
+                <h4>Name</h4>
 
-                    <div class="row">
-                        <div class="col-md-8 col-sm-8 col-xs-12 margin-bottom-16">
-                            {{input type='text' value=newUser.name action='signUp'
-                                placeholder='Please enter your full name' classNames='form-control'
-                            }}
-                        </div>
-                        {{#if signUpValidationErrors.name}}
-                            <div class="col-md-4 col-sm-4 col-xs-12 text-center sign-up-validation margin-bottom-16">
-                                <span class="alert alert-danger">Full name please!</span>
-                            </div>
-                        {{/if}}
+                <div class="row">
+                    <div class="col-md-8 col-sm-8 col-xs-12 margin-bottom-16">
+                        {{input type='text' value=newUser.name action='signUp'
+                        placeholder='Please enter your full name' classNames='form-control'
+                        }}
                     </div>
-
-                    <h4>Email</h4>
-
-                    <div class="row">
-                        <div class="col-md-8 col-sm-8 col-xs-12 margin-bottom-16">
-                            {{input type='email' value=newUser.email action='signUp'
-                            placeholder='University or college email recommended' classNames='form-control'}}
+                    {{#if signUpValidationErrors.name}}
+                        <div class="col-md-4 col-sm-4 col-xs-12 text-center sign-up-validation margin-bottom-16">
+                            <span class="alert alert-danger">Full name please!</span>
                         </div>
-                        {{#if signUpValidationErrors.email}}
-                            <div class="col-md-4 col-sm-4 col-xs-12 text-center sign-up-validation margin-bottom-16">
-                                <span class="alert alert-danger">Invalid email</span>
-                            </div>
-                        {{/if}}
+                    {{/if}}
+                </div>
+
+                <h4>Email</h4>
+
+                <div class="row">
+                    <div class="col-md-8 col-sm-8 col-xs-12 margin-bottom-16">
+                        {{input type='email' value=newUser.email action='signUp'
+                        placeholder='University or college email recommended' classNames='form-control'}}
                     </div>
-
-                    <h4>Password</h4>
-
-                    <div class="row">
-                        <div class="col-md-8 col-sm-8 col-xs-12 margin-bottom-16">
-                            {{input type='password' value=newUser.password action='signUp'
-                            placeholder='Enter a password' classNames='form-control'}}
+                    {{#if signUpValidationErrors.email}}
+                        <div class="col-md-4 col-sm-4 col-xs-12 text-center sign-up-validation margin-bottom-16">
+                            <span class="alert alert-danger">Invalid email</span>
                         </div>
-                        {{#if signUpValidationErrors.password}}
-                            <div class="col-md-4 col-sm-4 col-xs-12 text-center sign-up-validation margin-bottom-16">
-                                <span class="alert alert-danger">6-18 characters only</span>
-                            </div>
-                        {{/if}}
+                    {{/if}}
+                </div>
+
+                <h4>Password</h4>
+
+                <div class="row">
+                    <div class="col-md-8 col-sm-8 col-xs-12 margin-bottom-16">
+                        {{input type='password' value=newUser.password action='signUp'
+                        placeholder='Enter a password' classNames='form-control'}}
                     </div>
-
-                    <h4>Confirm password</h4>
-
-                    <div class="row">
-                        <div class="col-md-8 col-sm-8 col-xs-12 margin-bottom-16">
-                            {{input type='password' value=newUser.confirmPassword action='signUp'
-                            placeholder='Retype your password just to make sure' classNames='form-control'}}
+                    {{#if signUpValidationErrors.password}}
+                        <div class="col-md-4 col-sm-4 col-xs-12 text-center sign-up-validation margin-bottom-16">
+                            <span class="alert alert-danger">6-18 characters only</span>
                         </div>
-                        {{#if signUpValidationErrors.confirmPassword}}
-                            <div class="col-md-4 col-sm-4 col-xs-12 text-center sign-up-validation margin-bottom-16">
-                                <span class="alert alert-danger">Mismatch!</span>
-                            </div>
-                        {{/if}}
+                    {{/if}}
+                </div>
+
+                <h4>Confirm password</h4>
+
+                <div class="row">
+                    <div class="col-md-8 col-sm-8 col-xs-12 margin-bottom-16">
+                        {{input type='password' value=newUser.confirmPassword action='signUp'
+                        placeholder='Retype your password just to make sure' classNames='form-control'}}
                     </div>
-
-                    <div class="row">
-                        <div class="col-md-8 text-center margin-bottom-16">
-                            <button class="btn btn-primary"
-                                {{action 'signUp'}}
-                                    >Sign me up!</button>
+                    {{#if signUpValidationErrors.confirmPassword}}
+                        <div class="col-md-4 col-sm-4 col-xs-12 text-center sign-up-validation margin-bottom-16">
+                            <span class="alert alert-danger">Mismatch!</span>
                         </div>
+                    {{/if}}
+                </div>
+
+                <div class="row">
+                    <div class="col-md-8 text-center margin-bottom-16">
+                        <button class="btn btn-primary"
+                            {{action 'signUp'}}
+                                >Sign me up!
+                        </button>
                     </div>
                 </div>
-            </div> <!-- /item 2 -->
-
+            </div>
         </div>
+        <!-- /item 2 -->
+
     </div>
+</div>
 </div> <!-- /modal-body -->

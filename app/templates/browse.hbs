@@ -5,6 +5,7 @@
         <p>Select a subject and discover thousands of tests!</p>
     </div>
 </div>
+{{!--
 <div class="container">
     {{#each category in content}}
         <div class="row margin-bottom-16">
@@ -20,4 +21,21 @@
             </div>
         </div>
     {{/each}}
+</div>
+--}}
+<div class="container">
+    <div class="row">
+        <div class="col-md-12 freewall margin-bottom-16" id='top-category-container'>
+            {{#each category in content itemController='browse.item.category'}}
+                <div {{bind-attr style=category.style class=':item :card isGridReady::hidden'}}>
+                    <span class="title margin-right-16">
+                        {{#link-to 'category' category.slug tagName='a'}}
+                            {{category.name}}
+                        {{/link-to}}
+                    </span>
+                    <span class="subtitle">{{category.totalTests}} tests</span>
+                </div>
+            {{/each}}
+        </div>
+    </div>
 </div>

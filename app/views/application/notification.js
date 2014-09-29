@@ -71,7 +71,7 @@ Ember.View.extend({
      * @property {Number} View will be hidden after this
      * many milliseconds
      */
-    hideAfterMs: 4000,
+    hideAfterMs: 6500,
 
     /**
      * @property {String} The extra styling necessary for placement
@@ -105,10 +105,14 @@ Ember.View.extend({
     iconType: function () {
         var type = this.get('content.type'),
             hash = {
+                'welcome': 'glyphicon glyphicon-bullhorn',
+                'profile': 'glyphicon glyphicon-user',
                 'saved': 'glyphicon-floppy-saved',
                 'deleted': 'glyphicon-trash',
                 'unsavedChanges': 'glyphicon-warning-sign',
-                'warning': 'glyphicon-warning-sign'
+                'warning': 'glyphicon-warning-sign',
+                'facebook': 'fa fa-facebook',
+                'create': 'glyphicon-pencil'
             };
         return hash[type] || '';
     }.property('content.type'),

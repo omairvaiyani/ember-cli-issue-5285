@@ -47,6 +47,51 @@ body {
     font-size: large;
 }
 
+.is-active {
+    color: white;
+    background-color: #4f6640;
+}
+
+.btn-facebook {
+    width: 80%;
+    padding: 8px;
+    font-size: large;
+}
+
+.btn-facebook:hover, .btn-facebook:focus {
+    color: white;
+}
+@media (max-width: 300px) {
+    .freewall {
+        margin: 5px;
+    }
+}
+.checkbox input[type=checkbox] {
+    display:none;
+}
+.checkbox label:before {
+    content: "\2713";
+    border: 2px solid rgba(79, 102, 64, 0.78);
+    border-radius: 12px;
+    color: rgba(195, 196, 193, 0.36);
+    padding: 0px 4px;
+}
+.checkbox input[type=checkbox]:checked + label:before {
+    color: #4f6640;
+    border: 2px solid #4f6640;
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, .2);
+}
+
+.freewall {
+    margin: auto;
+}
+.freewall .item {
+    margin-left: 16px;
+}
+.hidden-file-input {
+    position: absolute;
+    left: -9999em;
+}
 @media (min-width: 768px) {
     .my-tab {
     }
@@ -62,26 +107,6 @@ body {
 
 .my-tab:hover {
     text-decoration: underline;
-}
-
-.is-active {
-    color: white;
-    background-color: #4f6640;
-}
-
-.btn-facebook {
-    width: 80%;
-    padding: 8px;
-    font-size: large;
-}
-
-.btn-facebook:hover, .btn-facebook:focus {
-    color: white;
-}
-
-.hidden-file-input {
-    position: absolute;
-    left: -9999em;
 }
 
 .onoffswitch {
@@ -324,7 +349,9 @@ body {
 }
 
 .notification-confirm {
-    float: right;
+    position: absolute;
+    right: 12px;
+    bottom: 5px;
 }
 
 .notification-confirm a {
@@ -675,6 +702,14 @@ hr.user-message-item-separator {
 
 .sign-up-validation > span {
     padding: 6px;
+}
+.login-connecting-error {
+    padding: 4px;
+    margin: 0px;
+    float: right;
+}
+.forgot-password {
+    line-height: 2.5;
 }
 
 /* TEMPLATE - INDEX/GUEST */
@@ -1094,7 +1129,11 @@ hr.user-message-item-separator {
     top: 16px;
     right: 16px;
 }
-
+.action-card .actions-bottom-right {
+    position: absolute;
+    bottom: 16px;
+    right: 16px;
+}
 .action-card a:hover {
     cursor: pointer;
     text-decoration: none;
@@ -1153,6 +1192,13 @@ hr.user-message-item-separator {
     position: absolute;
     top: 48px;
     cursor: pointer;
+}
+
+.facebook-friends-modal .card {
+    box-shadow: none;
+}
+.facebook-friends-modal .card:hover {
+    background-color: rgb(250, 250, 250);
 }
 
 /* TEMPLATE - INDEX (HOME) */
@@ -1559,16 +1605,37 @@ body {
     font-size: 12px;
     padding-top: 16px;
 }
-
 .footer .card {
     background-color: #4f6640;
-    color: whitesmoke;
 }
-
-.footer .card a {
-    color: whitesmoke;
+.footer .card p, .footer .card a, .footer .card i {
+    color: #97AA86;
 }
-
+.footer .card a:hover, .footer .card i:hover {
+    color: #A2C58B;
+    text-decoration: none;
+}
+.footer .card img.logo-icon {
+    margin-bottom: 8px;
+}
+.footer .sitemap a {
+    margin-right: 8px;
+}
+.footer .sitemap a:last-child {
+    margin-right: 0px;
+}
+.footer .social a {
+    opacity: 0.6;
+}
+.footer .social a:hover {
+    opacity: 1;
+}
+.footer .social a:first-child {
+    margin-bottom: 8px;
+}
+.footer .social a > i {
+    font-size: 20px;
+}
 /* HELPERS */
 @media (min-width: 992px) {
     .col-fix-right {
@@ -1610,7 +1677,9 @@ body {
     background: none;
     border: 0px;
 }
-
+.hidden {
+    visibility: hidden;
+}
 .category-tag {
     padding: 6px 12px !important;
     background: lightblue;

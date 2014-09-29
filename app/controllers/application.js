@@ -66,6 +66,12 @@ Ember.Controller.extend({
             case "result":
                 title += "Results";
                 break;
+            case "privacyPolicy":
+                title += "Privacy Policy";
+                break;
+            case "terms":
+                title += "Terms and Conditions";
+                break;
             default:
                 title += defaultTitle;
                 break;
@@ -74,9 +80,6 @@ Ember.Controller.extend({
             title = defaultTitle;
 
         this.send('updatePageTitle', title);
-
-        if (path === "index")
-            this.get('controllers.index').send('toggleParallaxScrollListener', true);
 
     }.observes('currentPath'/*, 'currentUser.totalUnreadMessages.length'*/),
 
@@ -96,13 +99,17 @@ Ember.Controller.extend({
 
     resetLoginMessage: function () {
         this.set('loginMessage.error', '');
-        this.set('loginMessage.connection', '');
+        this.set('loginMessage.connecting', '');
     }.observes('loginUser.email.length', 'loginUser.password.length'),
 
     manageCurrentUserSession: function () {
         var currentUser = this.get('currentUser');
 
         if (currentUser) {
+            var adapter = this.store.adapterFor(currentUser);
+            console.dir(currentUser);
+            console.log("Setting session as "+currentUser.get('sessionToken'));
+            adapter.headers['X-Parse-Session-Token'] = currentUser.get('sessionToken');
             Parse.User.become(currentUser.get('sessionToken')).then(function (user) {
             }, function (error) {
                 console.dir(error);
@@ -142,6 +149,8 @@ Ember.Controller.extend({
 
 
         this.incrementProperty('loadingItems');
+        if(!currentUser.get('latestAttempts'))
+            return;
         currentUser.get('latestAttempts').then(function () {
                 var where = {
                     "user": ParseHelper.generatePointer(currentUser)
@@ -149,7 +158,8 @@ Ember.Controller.extend({
                 return this.store.findQuery('attempt', {
                     where: JSON.stringify(where),
                     order: '-createdAt',
-                    include: ['test.category', 'user']
+                    include: ['test.category', 'user'],
+                    limit: 15
                 });
             }.bind(this)).then(function (attempts) {
                 currentUser.set('attempts', attempts);

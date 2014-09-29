@@ -10,7 +10,7 @@ var app = new EmberApp({
 
     fingerprint: {
         exclude: ['fonts/'],
-        prepend: 'http://assets.mycqs.co.uk/'
+        prepend: 'http://assets.mycqs.com/'
     }
 });
 
@@ -49,7 +49,7 @@ app.import({
  */
 app.import({
     development: 'bower_components/underscore/underscore.js',
-    production: 'bower_components/underscore/underscore.js'
+    production: 'bower_components/underscore/underscore.min.js'
 });
 
 /*
@@ -65,6 +65,13 @@ app.import({
 app.import({
     development: 'bower_components/retina.js/dist/retina.js',
     production: 'bower_components/retina.js/dist/retina.min.js'
+});
+/*
+ * FREEWALL
+ */
+app.import({
+    development: 'bower_components/freewall/freewall.js',
+    production: 'bower_components/freewall/freewall.min.js'
 });
 /*
  * CSS TOGGLE SWITCH

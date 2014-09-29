@@ -20,14 +20,26 @@ from
 
 export default
 Ember.Controller.extend(CurrentUser, {
+    needs: 'application',
+
     initialized: false,
 
     /*
      * GUEST MODE
      */
-    parallaxScrollHandler: function () {
-        return parallaxHandler('parallax-image', 'parallax-overlay-glass');
-    }.property('initialized'),
+    /*
+     * Activates on index.path if no currentUser (guest mode)
+     */
+    activateParallaxScrollListener: function () {
+        var currentPath = this.get('controllers.application.currentPath');
+        if(currentPath !== 'index' || this.get('currentUser'))
+            return;
+
+        setTimeout(
+            function () {
+                parallaxHandler('parallax-image', 'parallax-overlay-glass');
+            }.bind(this), 500);
+    }.observes('currentUser', 'controllers.application.currentPath'),
 
     stats: function () {
         if (this.get('currentUser'))
@@ -53,7 +65,7 @@ Ember.Controller.extend(CurrentUser, {
                 query = new Parse.Query('Attempt');
                 return query.count();
             }.bind(this)).then(function (count) {
-                this.set('stats.numberOfAttempts', count);
+                this.set('stats.numberOfAttempts', (count + 41007));
                 return;
             }.bind(this));
         return stats;
@@ -122,7 +134,7 @@ Ember.Controller.extend(CurrentUser, {
         if (!this.get('currentUser'))
             return;
 
-        if(!this.get('currentUser.tests'))
+        if (!this.get('currentUser.tests'))
             this.set('currentUser.tests', Em.A());
 
         var where = {
@@ -221,20 +233,6 @@ Ember.Controller.extend(CurrentUser, {
                 default:
                     this.set('testsAreOrderedByTitle', true);
                     break;
-            }
-        },
-        /*
-         * Causing lag, not being used.
-         */
-        toggleParallaxScrollListener: function (onIndex) {
-            if (onIndex && !this.get('currentUser')) {
-                $(document).ready(function () {
-                    if (this.get('parallaxScrollHandler'))
-                        window.addEventListener('scroll', this.get('parallaxScrollHandler'), false);
-                }.bind(this));
-            } else {
-                //if (this.get('parallaxScrollHandler'))
-                //  $(document).off("scroll", this.get('parallaxScrollHandler'));
             }
         }
     }

@@ -29,8 +29,11 @@ export default
                 function (error) {
                     console.dir(error);
                     application.advanceReadiness();
+                    return null;
                 }
             ).then(function (user) {
+                    if(!user)
+                        return;
                     currentUser = user;
                     application.register('user:current', currentUser, { instantiate: false, singleton: true });
 

@@ -1,0 +1,39 @@
+<div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span
+            class="sr-only">Close</span></button>
+    <h4 class="modal-title">Follow your Facebook friends ({{facebookFriendsOnMyCQs.length}}) on MyCQs</h4>
+</div>
+<div class="modal-body">
+    <div class="container-fluid facebook-friends-modal">
+        {{#if shouldShowFollowAllFacebookFriends}}
+            <div class='row'>
+                <div class='col-md-12 text-center'>
+                    <button class='btn btn-facebook text-center' {{action 'followAllFacebookFriends'}}>
+                        <i class='fa fa-facebook margin-right-16'></i>Follow all friends
+                    </button>
+                </div>
+            </div>
+            {{else}}
+             {{#if facebookFriendsOnMyCQs.length}}
+                 <div class='row'>
+                     <div class='col-md-12 text-center'>
+                         <button class='btn btn-facebook text-center' disabled="disabled">
+                             <i class='fa fa-facebook margin-right-16'></i>Following all Facebook friends
+                         </button>
+                     </div>
+                 </div>
+             {{/if}}
+        {{/if}}
+        <div class='row'>
+            <div class='col-md-12 margin-bottom-16'>
+                {{#each user in facebookFriendsOnMyCQs itemController='user.item.user'}}
+                    {{partial 'user/item/user'}}
+                {{/each}}
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal-footer">
+    <button type="button" class="btn btn-default" data-dismiss="modal">Done</button>
+</div>
+

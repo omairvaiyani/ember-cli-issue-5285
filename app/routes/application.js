@@ -41,7 +41,36 @@ Ember.Route.extend({
         window.document.title = this.get('pageTitleMessageCounter') + this.get('pageTitle');
     }.observes('pageTitle.length', 'pageTitleMessageCounter.length'),
 
+    serverStatusMeta: null,
+
+    allowPasswordResetRequest: true,
+
     actions: {
+        /*
+         * Update server status code for Prerender crawling
+         */
+        updateStatusCode: function (code) {
+            var meta = this.get('serverStatusMeta');
+            if (!meta) {
+                meta = document.createElement('meta');
+                meta.name = "prerender-status-code";
+                meta.content = code;
+                document.getElementsByTagName('head')[0].appendChild(meta);
+                this.set('serverStatusMeta', meta);
+            }
+            meta.content = code;
+        },
+
+        /*
+         * Set Prerender variable to true
+         * for AJAX HTML snapshort crawling
+         * (For now, this is called on
+         * ApplicationRoute.updatePageTitle
+         */
+        prerenderReady: function () {
+            window.prerenderReady = true;
+        },
+
         /*
          * Receives from ApplicationController.currentPathDidChange.
          * Also called when currentUser.totalUnreadMessages changes.
@@ -57,6 +86,7 @@ Ember.Route.extend({
             else
                 this.set('pageTitle', title);
             this.send('closeModal');
+            this.send('prerenderReady');
         },
 
         signUp: function () {
@@ -92,6 +122,7 @@ Ember.Route.extend({
                         var data = {
                                 name: name.trim(),
                                 username: username,
+                                signUpSource: 'Web',
                                 privateData: ParseHelper.generatePointerFromNativeParse(privateData),
                                 password: password
                             },
@@ -100,7 +131,7 @@ Ember.Route.extend({
                             function (userMinimal) {
                                 userMinimal.set('name', name);
                                 this.set('applicationController.currentUser', userMinimal);
-                                this.transitionTo('user', userMinimal.get('slug'));
+                                this.send('redirectAfterLogin');
                                 this.send('decrementLoadingItems');
                             }.bind(this),
                             function (error) {
@@ -140,7 +171,7 @@ Ember.Route.extend({
                     ParseUser.login(this.store, data).then(
                         function (user) {
                             controller.set('currentUser', user);
-                            controller.set('loginMessage.connecting', "");
+                            controller.set('loginMessage.connecting', null);
                             this.send('decrementLoadingItems');
                             this.send('closeModal');
                             this.send('redirectAfterLogin');
@@ -149,18 +180,29 @@ Ember.Route.extend({
                         function (error) {
                             this.send('decrementLoadingItems');
                             console.dir(error);
-                            if (error.code === 101)
-                                controller.set('loginMessage.error', "Invalid email and password combination!");
-                            if (error.code === 200)
-                                controller.set('loginMessage.error', "Please type in your username or email!");
-                            controller.set('loginMessage.connecting', "");
-                        }
+                            if (error.code === Parse.Error.OBJECT_NOT_FOUND)
+                                controller.set('loginMessage.error', "Incorrect credentials!");
+                            else if (error.code === Parse.Error.EMAIL_MISSING)
+                                controller.set('loginMessage.error', "Please type in your email!");
+                            else if (error.code === Parse.Error.PASSWORD_MISSING)
+                                controller.set('loginMessage.error', "Please type in your password!");
+                            else
+                                controller.set('loginMessage.error', "Error " + error.code);
+                            controller.set('loginMessage.connecting', null);
+                        }.bind(this)
                     );
                 }.bind(this),
                 error: function (error) {
-                    console.log(error);
+                    console.dir(error);
                     this.send('decrementLoadingItems');
-                }
+                    if (error.message == Parse.Error.EMAIL_NOT_FOUND)
+                        controller.set('loginMessage.error', "Email not found!");
+                    else if (error.message == Parse.Error.EMAIL_MISSING)
+                        controller.set('loginMessage.error', "Please type in your email!");
+                    else
+                        controller.set('loginMessage.error', "Error " + error.code);
+                    controller.set('loginMessage.connecting', null);
+                }.bind(this)
             });
 
         },
@@ -187,7 +229,7 @@ Ember.Route.extend({
                             // The person is not logged into Facebook, so we're not sure if
                             // they are logged into this app or not.
                         }
-                    }.bind(this), {scope: 'public_profile,email,user_education_history,user_friends'});
+                    }.bind(this), {scope: 'public_profile,email,user_education_history,user_friends,gender'});
                 }
             }.bind(this));
         },
@@ -209,6 +251,7 @@ Ember.Route.extend({
             this.get('applicationController').incrementProperty('loadingItems');
             this.send('closeModal');
             FB.api('/me', {fields: 'name,education,gender,cover,email,friends'}, function (response) {
+                console.dir(response);
                 if (!response.cover)
                     response.cover = {source: null};
                 if (!response.friends)
@@ -221,8 +264,7 @@ Ember.Route.extend({
                 }
                 var ParseUser = this.store.modelFor('parse-user'),
                     data = {
-                        username: response.email,
-                        email: response.email,
+                        username: response.id,
                         name: response.name,
                         fbid: response.id,
                         gender: response.gender,
@@ -238,45 +280,56 @@ Ember.Route.extend({
                             }
                         }
                     };
-                /*
-                 * TODO
-                 * Need to initialize the Parse SDK on adapters/application.js
-                 * before running this code. Normally we make an ember-data
-                 * call by this point whereby the adapter is initialized,
-                 * however, in this scenario, this happens to be the first
-                 * api query and so parse is not initialized!
-                 */
+
                 Parse.Cloud.run('preFacebookConnect', {authResponse: authResponse},
                     {
                         success: function () {
                             ParseUser.signup(this.store, data).then(
                                 function (user) {
+                                    this.send('decrementLoadingItems');
                                     /*
                                      * Sometimes user info is missing,
                                      * let's add some of it here:
                                      */
-                                    if (!user.get('name'))
-                                        user.set('name', response.name);
-                                    if (!user.get('fbid'))
-                                        user.set('fbid', response.id);
-                                    if (!user.get('email'))
-                                        user.set('email', response.email);
-                                    if (!user.get('coverImageURL'))
-                                        user.set('coverImageURL', response.cover.source);
-
-                                    /*
-                                     * Update FB Friends list everytime
-                                     */
-                                    user.set('facebookFriends', fbFriendsArray);
-                                    if (this.get('applicationController').get('loadingItems'))
-                                        this.get('applicationController').decrementProperty('loadingItems');
-                                    this.controllerFor('application').set('currentUser', user);
-                                    this.send('redirectAfterLogin');
+                                    if(!user.get('slug.length')) {
+                                        var sessionToken = user.get('sessionToken');
+                                        /*
+                                         * New user's dont have all
+                                         * info set. Must do second
+                                         * query to find fresh
+                                         * and avoid Ember caching.
+                                         * Also, must reset sessionToken!
+                                         */
+                                        this.send('incrementLoadingItems');
+                                        var where = {
+                                            objectId: user.get('id')
+                                        };
+                                        this.store.findQuery('parse-user', {where: JSON.stringify(where)})
+                                            .then(function(results) {
+                                                var user = results.objectAt(0);
+                                                /*
+                                                 * Update FB Friends list everytime
+                                                 */
+                                                user.set('sessionToken', sessionToken);
+                                                user.set('facebookFriends', fbFriendsArray);
+                                                this.controllerFor('application').set('currentUser', user);
+                                                this.send('redirectAfterLogin');
+                                                this.send('decrementLoadingItems');
+                                            }.bind(this));
+                                    } else {
+                                        /*
+                                         * Update FB Friends list everytime
+                                         */
+                                        user.set('facebookFriends', fbFriendsArray);
+                                        this.controllerFor('application').set('currentUser', user);
+                                        this.send('redirectAfterLogin');
+                                    }
                                 }.bind(this),
                                 function (error) {
+                                    this.send('decrementLoadingItems');
                                     console.log("Error with ParseUser.signup() in: " + "signUpAuthorisedFacebookUser");
                                     console.dir(error);
-                                }
+                                }.bind(this)
                             );
 
                         }.bind(this),
@@ -296,13 +349,57 @@ Ember.Route.extend({
             this.transitionTo('index');
         },
 
+        forgotPassword: function () {
+            var controller = this.controllerFor('application'),
+                email = controller.get('loginUser.email');
+
+            if (!email) {
+                controller.set('loginMessage.error', "Enter email first.");
+                return;
+            } else if (!this.get('allowPasswordResetRequest')) {
+                controller.set('loginMessage.error', "Reset link already sent!");
+                return;
+            }
+
+            controller.set('loginMessage.connecting', "Sending request...");
+
+            Parse.Cloud.run('resetPasswordRequest', {email: email}, {
+                success: function (response) {
+                    controller.set('loginMessage.connecting', "Reset email sent!");
+                    this.set('allowPasswordResetRequest', false);
+                    setTimeout(function () {
+                        controller.set('loginMessage.connecting', "Check your email inbox.");
+                    }.bind(this), 2000);
+                    setTimeout(function () {
+                        this.set('allowPasswordResetRequest', true);
+                    }.bind(this), 60000);
+                }.bind(this),
+                error: function (error) {
+                    if (error.message == Parse.Error.EMAIL_NOT_FOUND)
+                        controller.set('loginMessage.error', "Email not found!");
+                    else
+                        controller.set('loginMessage.error', "Error " + error.code);
+                }.bind(this)
+            });
+        },
+
         redirectAfterLogin: function () {
             if (this.get('applicationController.redirectAfterLoginToRoute')) {
                 this.transitionTo(this.get('applicationController.redirectAfterLoginToRoute'));
                 this.controllerFor(this.get('applicationController.redirectAfterLoginToRoute')).send('returnedFromRedirect');
                 this.set('applicationController.redirectAfterLoginToRoute', null);
             }
-            else
+            else if (!this.get('currentUser.finishedWelcomeTutorial')) {
+                /*
+                 * First time logging into this site
+                 */
+                if(this.get('currentUser.slug'))
+                    this.transitionTo('user', this.get('currentUser.slug'));
+                else {
+                    this.transitionTo('user', this.get('currentUser'));
+                }
+
+            } else
                 this.transitionTo('index');
         },
 
@@ -371,6 +468,35 @@ Ember.Route.extend({
                         if (user.get('followers'))
                             user.get('followers').pushObject(currentUser);
                         currentUser.get('following').pushObject(user);
+                    }.bind(this)
+                });
+        },
+
+        bulkFollow: function (users) {
+            var userIdsToFollow = [];
+            if (!this.get('currentUser.following'))
+                this.set('currentUser.following', Ember.A());
+
+            users.forEach(function (user) {
+                if (!this.get('currentUser.following').contains(user)) {
+                    userIdsToFollow.push(user.get('id'));
+                    this.get('currentUser.following').pushObject(user);
+                    this.incrementProperty('currentUser.numberFollowing');
+                    user.incrementProperty('numberOfFollowers');
+                    if (!user.get('followers'))
+                        user.set('followers', Ember.A());
+                    user.get('followers').pushObject(this.get('currentUser'));
+                }
+            }.bind(this));
+
+            Parse.Cloud.run('bulkFollowUsers',
+                {
+                    userIdsToFollow: userIdsToFollow
+                }, {
+                    success: function (response) {
+                    }.bind(this),
+                    error: function (error) {
+                        console.log("There was an error: " + error);
                     }.bind(this)
                 });
         },

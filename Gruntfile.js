@@ -96,7 +96,6 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-cdn');
     grunt.loadNpmTasks('grunt-shell');
     target = grunt.option('prod') || grunt.option('p') ? 'prod' : 'dev';
-    console.log("Target " + target);
     if (target === 'prod') {
         return grunt.registerTask('default', ["shell:" + target, 's3', "redis:" + target]);
     } else {

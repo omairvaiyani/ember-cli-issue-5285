@@ -2,31 +2,33 @@
     <div class="card">
         <div class="container-fluid">
             <div class="row">
-                <div class="col-md-12 text-center">
-                    {{#link-to 'index' tagName='a'}}Home{{/link-to}} |
-                    {{#link-to 'browse' tagName='a'}}Browse{{/link-to}} |
-                    {{#link-to 'create' tagName='a'}}Create a test{{/link-to}}<br>
-
-                    <div class="inline-block">Copyright 2014
-                        <a href="http://www.mylabs.io" target="_blank">myLabs Ltd</a> |
+                <div class="col-md-3 text-center">
+                    {{#link-to 'index' tagName='a' class='logo-text'}}
+                        <img src="img/footer-icon-white.png" height="30px" class="logo-icon"/>
+                    {{/link-to}}
+                </div>
+                <div class="col-md-6 sitemap text-center">
+                    {{#link-to 'index' tagName='a'}}Home{{/link-to}}
+                    {{#link-to 'browse' tagName='a'}}Browse{{/link-to}}
+                    {{#link-to 'create' tagName='a'}}Create{{/link-to}}
+                    {{#link-to 'about' tagName='a'}}About{{/link-to}}
+                    <a href='http://blog.mycqs.com' target="_blank">Blog</a>
+                    {{#link-to 'support' tagName='a'}}Support{{/link-to}}
+                </div>
+                <div class="col-md-3 text-center">
+                    <div class='social'>
+                        <a href='http://facebook.com/mycqs' target='_blank'><i class="fa fa-facebook"></i></a><br>
+                        <a href='http://twitter.com/mycqs' target='_blank'><i class="fa fa-twitter"></i></a>
                     </div>
-                    <div class="inline-block">
-                        <a href="https://twitter.com/share" class="twitter-share-button" data-via="MyCQs"
-                           data-size="medium" data-hashtags="edtech">Tweet</a>
-                        <script>!function (d, s, id) {
-                            var js, fjs = d.getElementsByTagName(s)[0], p = /^http:/.test(d.location) ? 'http' : 'https';
-                            if (!d.getElementById(id)) {
-                                js = d.createElement(s);
-                                js.id = id;
-                                js.src = p + '://platform.twitter.com/widgets.js';
-                                fjs.parentNode.insertBefore(js, fjs);
-                            }
-                        }(document, 'script', 'twitter-wjs');</script>
-                    </div>
-                    <p>
-                        <small>MyCQs Beta. Send us a tweet!
-                            <a href="https://twitter.com/MyCQs" target="_blank">@MyCQs</a></small>
-                    </p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3 text-center">
+                    <p>Copyright 2014 by <a href='http://mylabs.io' target="_blank">MyLabs Ltd</a></p>
+                </div>
+                <div class="col-md-6 sitemap text-center">
+                    {{#link-to 'privacyPolicy' tagName='a'}}Privacy Policy{{/link-to}}
+                    {{#link-to 'terms' tagName='a'}}Terms & Conditions{{/link-to}}
                 </div>
             </div>
         </div>

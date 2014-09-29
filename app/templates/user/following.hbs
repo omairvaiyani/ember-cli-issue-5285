@@ -2,11 +2,12 @@
     {{partial 'user/item/user'}}
 {{/each}}
 
-{{#if isCurrentUser}}
-    <div class="card margin-top-16 text-center">
-        <p>Why not follow your Facebook friends on MyCQs</p>
+{{#unless following.length}}
+    <div class='card margin-top-16 text-center'>
+        {{#if isCurrentUser}}
+            <h5>You are not following anyone.</h5>
+        {{else}}
+            <h5>{{name}} is not following anyone.</h5>
+        {{/if}}
     </div>
-    {{#each user in facebookFriendsOnMyCQs itemController='user.item.user'}}
-        {{partial 'user/item/user'}}
-    {{/each}}
-{{/if}}
+{{/unless}}

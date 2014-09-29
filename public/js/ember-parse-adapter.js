@@ -533,21 +533,24 @@ EmberParseAdapter.ParseUser = DS.Model.extend({
             }.bind(this));
     },
 
-    numberOfTests: DS.attr('number', {defaultValue: 0}),
-    numberOfQuestions: DS.attr('number', {defaultValue: 0}),
-    numberOfAttempts: DS.attr('number', {defaultValue: 0}),
+    numberOfTests: DS.attr('number'),
+    numberOfQuestions: DS.attr('number'),
+    numberOfAttempts: DS.attr('number'),
     averageScore: DS.attr('number', {defaultValue: 0}),
-    numberOfUniqueAttempts: DS.attr('number', {defaultValue: 0}),
+    uniqueNumberOfAttempts: DS.attr('number', {defaultValue: 0}),
     uniqueAverageScore: DS.attr('number', {defaultValue: 0}),
     communityNumberOfAttempts: DS.attr('number', {defaultValue: 0}),
     communityAverageScore: DS.attr('number', {defaultValue: 0}),
+    communityUniqueNumberOfAttempts: DS.attr('number', {defaultValue: 0}),
+    communityUniqueAverageScore: DS.attr('number', {defaultValue: 0}),
     facebookFriends: DS.attr(),
     /*following: DS.hasMany('parse-user', {async: true, relation: true, inverse: 'following'}),
      followers: DS.hasMany('parse-user', {async: true, relation: true, inverse: 'followers'}),*/
     numberFollowing: DS.attr('number', {defaultValue: 0}),
     numberOfFollowers: DS.attr('number', {defaultValue: 0}),
     latestAttempts: DS.hasMany('attempt', {async: true, array: true}),
-    slug: DS.attr('string')
+    slug: DS.attr('string'),
+    finishedWelcomeTutorial: DS.attr('boolean')
     //savedTests: DS.hasMany('test', {async: true, relation: true})
 });
 

@@ -25,6 +25,8 @@
         <meta name="msapplication-TileColor" content="#ffc40d">
         <meta name="msapplication-TileImage" content="/img/favicon/mstile-144x144.png">
         <meta name="msapplication-config" content="/img/favicon/browserconfig.xml">
+        <!-- Required for AJAX crawling -->
+        <meta name="fragment" content="!">
 
         {{BASE_TAG}}
 
@@ -54,9 +56,21 @@
             window.MycqsWebENV = {{ENV}};
             window.EmberENV = window.MycqsWebENV.EmberENV;
         </script>
+        <script>
+            window.prerenderReady = false;
+        </script>
+        <script>
+            (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+                (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+                    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+            })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+            ga('create', 'UA-34089671-1', 'auto');
+            ga('send', 'pageview');
+
+        </script>
         <script src="assets/vendor.js"></script>
         <script src="assets/mycqs-web.js"></script>
-        <script src="js/ember-parse-mixin.js"></script>
         <script src="js/ember-parse-adapter.js"></script>
 
         <!-- Load Aviary/Feather code -->
@@ -68,5 +82,6 @@
         </script>
         <!-- App injection -->
         <div id="body-wrap"></div>
+
     </body>
 </html>

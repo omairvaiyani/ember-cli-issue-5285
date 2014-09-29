@@ -42,7 +42,7 @@ export default
             getFollowing: function (store, object) {
                 var where = {
                     "$relatedTo": {
-                        "object": ParseHelper.generatePointer(object),
+                        "object": ParseHelper.generatePointer(object, "_User"),
                         "key": "following"
                     }
                 };
@@ -56,7 +56,7 @@ export default
             getFollowers: function (store, object) {
                 var where = {
                     "$relatedTo": {
-                        "object": ParseHelper.generatePointer(object),
+                        "object": ParseHelper.generatePointer(object, "_User"),
                         "key": "followers"
                     }
                 };

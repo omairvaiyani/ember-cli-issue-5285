@@ -1,0 +1,4 @@
+# mycqs.com
+
+User-agent: *
+Disallow:

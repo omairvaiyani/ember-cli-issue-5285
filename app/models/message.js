@@ -3,6 +3,11 @@ DS
 from
 'ember-data';
 
+import
+ParseMixin
+from
+'../mixins/ember-parse-mixin';
+
 export default
 DS.Model.extend(ParseMixin, {
     from: DS.belongsTo('parse-user', {async: true}),

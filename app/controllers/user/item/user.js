@@ -17,7 +17,7 @@ Ember.ObjectController.extend(CurrentUser, EachItem, {
     }.property('currentUser.id'),
 
     isFollowing: function() {
-        if(!this.get('isCurrentUser')) {
+        if(!this.get('isCurrentUser') && this.get('currentUser.following')) {
             return this.get('currentUser.following').contains(this.get('model'));
         }
     }.property('isCurrentUser', 'currentUser.following.length'),

@@ -18,7 +18,8 @@
                                     <input type="file" id="coverImageInput"
                                            name='coverImageInput' {{action 'uploadCoverImagePhoto' on='change'}}
                                            class="hidden-file-input"/>
-                                    {{#if coverImage}}<li {{action 'removeCoverImage'}}>Remove</li>{{/if}}
+                                    {{#if coverImage}}
+                                        <li {{action 'removeCoverImage'}}>Remove</li>{{/if}}
                                 </ul>
                             </div>
                         {{/if}}
@@ -111,26 +112,44 @@
                                 course
                                 information yet.</p>
                         {{/if}}
-                        {{#if isCurrentUser}}
-                            {{#if course}}
-                                <p>
-                                    <a href='javascript:void(0)'
-                                        {{action 'openModal' 'user/modal/course-selection' 'user'}}>Edit course
-                                        details</a>
-                                </p>
-                            {{else}}
-                                <p><a href='javascript:void(0)'
-                                    {{action 'openModal' 'user/modal/course-selection' 'user'}}>Add course
+                        {{#if isEditMode}}
+                            <p>
+                                <a href=''
+                                    {{action 'openModal' 'user/modal/course-selection' 'user'}}>Add or Edit course
                                     details</a>
-                                </p>
-                            {{/if}}
+                            </p>
                         {{/if}}
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-9 action-column">
-            {{outlet}}
-        </div>
+
+            <div {{bind-attr class=':action-column isCurrentUser:col-md-6:col-md-9'}}>
+                {{outlet}}
+            </div>
+        {{#if isCurrentUser}}
+            <div class="col-md-3 col-fix-right">
+
+                {{#if suggestedFollowing.length}}
+                    <div class="card margin-top-16 text-center">
+                        <h5>Users you may want to
+                            follow</h5>
+                        {{#if facebookFriendsOnMyCQs.length}}
+                            <a href=''  {{action 'openModal' 'user/modal/facebook-friends' 'user'}}>
+                                See all ({{facebookFriendsOnMyCQs.length}}) Facebook friends!
+                            </a>
+                        {{/if}}
+                    </div>
+                    {{#each user in suggestedFollowing itemController='user.item.user'}}
+                        {{partial 'user/item/user-mini'}}
+                    {{/each}}
+                {{else}}
+                    <div class="card margin-top-16 text-center">
+                        <h5>No user suggestions right now.</h5>
+                    </div>
+                {{/if}}
+            </div>
+        {{/if}}
     </div>
 </div>
+<div class='margin-bottom-16'></div>

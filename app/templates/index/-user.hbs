@@ -19,7 +19,7 @@
                 <small class="pull-right">{{currentUser.averageScore}}%</small>
             </p>
             <p>First time attempts:
-                <small class="pull-right">{{currentUser.numberOfUniqueAttempts}}</small>
+                <small class="pull-right">{{currentUser.uniqueNumberOfAttempts}}</small>
             </p>
             <p class="margin-bottom-16">First time average score:
                 <small class="pull-right">{{currentUser.uniqueAverageScore}}%</small>
@@ -32,6 +32,13 @@
             </p>
             <p>Average score:
                 <small class="pull-right">{{currentUser.communityAverageScore}}%</small>
+            </p>
+
+            <p>First test attempts:
+                <small class="pull-right">{{currentUser.communityUniqueNumberOfAttempts}}</small>
+            </p>
+            <p>First time average score:
+                <small class="pull-right">{{currentUser.communityUniqueAverageScore}}%</small>
             </p>
         </div>
     </div>
@@ -108,3 +115,4 @@
         </div>
     </div>
 </div>
+<div class="margin-bottom-16"></div>

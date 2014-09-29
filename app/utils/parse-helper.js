@@ -4,8 +4,9 @@ from
 '../utils/string-helper';
 
 export default {
-    generatePointer: function(object) {
-        var className = object.constructor.typeKey;
+    generatePointer: function(object, className) {
+        if(!className)
+            className = object.constructor.typeKey;
         if(className === "parseUser")
             className = "_User";
         return {

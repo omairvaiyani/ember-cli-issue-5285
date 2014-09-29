@@ -12,17 +12,12 @@ var express = require('express'),
     currentDeploy,
     indexFile;
 
+app.use(require('prerender-node').set('prerenderToken', 'BToHzVZjPpLEjKzghygK'));
 log.info("Server fired up.");
 
 redis.auth('9133e11ec07b2885c35237ab4aa85ecf', function (response) {
     log.info("Redis authenciated successfully");
 });
-
-/*rule.minute = 1;
-
- var j = schedule.scheduleJob(rule, function () {
- checkForAppUpdate();
- });*/
 
 var checkForAppUpdate = function () {
     redis.get('currentDeploy', function (err, value) {
@@ -34,10 +29,10 @@ var checkForAppUpdate = function () {
                 currentDeploy = value;
                 updateIndexFile();
             } else {
-                
+
             }
         } else {
-            log.log("Redis.checkForAppUpdate", {"error":err});
+            log.log("Redis.checkForAppUpdate", {"error": err});
         }
     });
 }
@@ -57,6 +52,13 @@ var updateIndexFile = function () {
     });
 }
 
+app.get('/robots.txt', function (req, res) {
+    res.sendFile(__dirname + '/robots.txt');
+});
+
+app.get('/crossdomain.xml', function (req, res) {
+    res.sendFile(__dirname + '/crossdomain.xml');
+});
 
 app.get('*', function (req, res) {
     if (!indexFile) {
@@ -66,9 +68,10 @@ app.get('*', function (req, res) {
         res.send(indexFile);
     }
 });
+
 app.use(express.static(__dirname + '/'));
 
 app.listen(port, function () {
-    log.info("Listening on port: "+port);
+    log.info("Listening on port: " + port);
 });
 

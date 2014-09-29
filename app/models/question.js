@@ -1,5 +1,10 @@
 import DS from 'ember-data';
 
+import
+ParseMixin
+from
+'../mixins/ember-parse-mixin';
+
 export default DS.Model.extend(ParseMixin, {
     stem: DS.attr('string', {defaultValue:""}),
     options: DS.attr(),
