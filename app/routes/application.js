@@ -13,14 +13,42 @@ ParseHelper
 from
 '../utils/parse-helper';
 
+import
+Constants
+from
+'../utils/constants';
+
 export default
 Ember.Route.extend({
     applicationController: null,
 
     currentUser: function () {
-        if (this.get('applicationController'))
+        if (this.get('applicationController')) {
             return this.get('applicationController.currentUser');
+        }
     }.property('applicationController.currentUser.id'),
+
+    /**
+     * Convenience observer as Controller loads before Route
+     * can handle actions.
+     * Sets user properties on analytics
+     */
+    initializeCurrentUserOnAnalytics: function () {
+        if(!this.get('applicationController.currentUser'))
+            return;
+        var currentUser = this.get('applicationController.currentUser');
+        amplitude.setUserId(currentUser.get('id'));
+        var userProperties = {};
+        userProperties.name = currentUser.get('name');
+        userProperties.slug = currentUser.get('slug');
+        userProperties.university = currentUser.get('university.name');
+        userProperties.course = currentUser.get('course.name');
+        userProperties.year = currentUser.get('yearNumber');
+        userProperties.fbid = currentUser.get('fbid');
+        userProperties.numberOfTests = currentUser.get('numberOfTests');
+        userProperties.numberOfAttempts = currentUser.get('numberOfAttempts');
+        amplitude.setUserProperties(userProperties);
+    }.observes('applicationController.currentUser.id'),
 
     setupController: function (controller, model) {
         controller.set('model', model);
@@ -251,7 +279,6 @@ Ember.Route.extend({
             this.get('applicationController').incrementProperty('loadingItems');
             this.send('closeModal');
             FB.api('/me', {fields: 'name,education,gender,cover,email,friends'}, function (response) {
-                console.dir(response);
                 if (!response.cover)
                     response.cover = {source: null};
                 if (!response.friends)
@@ -291,7 +318,7 @@ Ember.Route.extend({
                                      * Sometimes user info is missing,
                                      * let's add some of it here:
                                      */
-                                    if(!user.get('slug.length')) {
+                                    if (!user.get('slug.length')) {
                                         var sessionToken = user.get('sessionToken');
                                         /*
                                          * New user's dont have all
@@ -305,7 +332,7 @@ Ember.Route.extend({
                                             objectId: user.get('id')
                                         };
                                         this.store.findQuery('parse-user', {where: JSON.stringify(where)})
-                                            .then(function(results) {
+                                            .then(function (results) {
                                                 var user = results.objectAt(0);
                                                 /*
                                                  * Update FB Friends list everytime
@@ -393,7 +420,7 @@ Ember.Route.extend({
                 /*
                  * First time logging into this site
                  */
-                if(this.get('currentUser.slug'))
+                if (this.get('currentUser.slug'))
                     this.transitionTo('user', this.get('currentUser.slug'));
                 else {
                     this.transitionTo('user', this.get('currentUser'));
@@ -557,6 +584,39 @@ Ember.Route.extend({
                 closed: false
             });
             this.get('applicationController.notifications').pushObject(notification);
+        },
+
+        /**
+         * Analytics action for events
+         * @param event {String} e.g. Test created
+         * @param object {Object} (optional) e.g. Test
+         */
+        recordEvent: function (event, object) {
+            /*
+             * Amplitude
+             */
+            if (!object)
+                amplitude.logEvent(event);
+            else {
+                var eventData;
+                switch (event) {
+                    case Constants.TEST_CREATED:
+                        eventData = {
+                            title: object.get('title'),
+                            category: object.get('category.name')
+                        };
+                        break;
+                    case Constants.TEST_TAKEN:
+                        eventData = {
+                            title: object.get('title'),
+                            category: object.get('category.name'),
+                            score: object.get('score')
+                        };
+                        break;
+                }
+                amplitude.logEvent(event, eventData);
+            }
         }
+
     }
 });

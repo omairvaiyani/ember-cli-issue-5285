@@ -224,18 +224,29 @@ body {
     margin-right: 8px;
 }
 
-.svg-icons {
+/*.svg-icons {
     opacity: 0.6;
-}
+}*/
 
 .svg-icons rect, .svg-icons polygon, .svg-icons circle,
-.svg-icons line, .svg-icons g {
+.svg-icons line, .svg-icons g, .svg-icons path, .svg-icons ellipse,
+.svg-icons polyline {
     stroke: #4f6640;
 }
-
-.active .svg-icons {
-    opacity: 1;
+.svg-icons rect, .svg-icons polygon, .svg-icons circle,
+.svg-icons line, .svg-icons g, .svg-icons path, .svg-icons ellipse,
+.svg-icons polyline {
+    stroke: #4f6640;
 }
+.svg-icon-white rect, .svg-icon-white polygon, .svg-icon-white circle,
+.svg-icon-white line, .svg-icon-white g, .svg-icon-white path, .svg-icon-white ellipse,
+.svg-icon-white polyline {
+    stroke: white;
+}
+
+/*.active .svg-icons {
+    opacity: 1;
+}*/
 
 /*
  * Global spinner for cross-page items

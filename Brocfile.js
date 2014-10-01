@@ -74,6 +74,13 @@ app.import({
     production: 'bower_components/freewall/freewall.min.js'
 });
 /*
+ * NUMERAL.JS
+ */
+app.import({
+    development: 'bower_components/numeral/numeral.js',
+    production: 'bower_components/numeral/numeral/min/numeral.min.js'
+});
+/*
  * CSS TOGGLE SWITCH
  */
 app.import('bower_components/css-toggle-switch/dist/toggle-switch.css');

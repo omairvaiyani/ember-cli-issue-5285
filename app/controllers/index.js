@@ -46,26 +46,26 @@ Ember.Controller.extend(CurrentUser, {
             return;
 
         var stats = {
-            numberOfUsers: 0,
-            numberOfTests: 0,
-            numberOfQuestions: 0,
-            numberOfAttempts: 0
+            numberOfUsers: '...',
+            numberOfTests: '...',
+            numberOfQuestions: '...',
+            numberOfAttempts: '...'
         };
         var query = new Parse.Query('_User');
         query.count().then(function (count) {
-                this.set('stats.numberOfUsers', count);
+                this.set('stats.numberOfUsers', numeral(count).format('0.00a'));
                 query = new Parse.Query('Test');
                 return query.count();
             }.bind(this)).then(function (count) {
-                this.set('stats.numberOfTests', count);
+                this.set('stats.numberOfTests', numeral(count).format('0.00a'));
                 query = new Parse.Query('Question');
                 return query.count();
             }.bind(this)).then(function (count) {
-                this.set('stats.numberOfQuestions', count);
+                this.set('stats.numberOfQuestions', numeral(count).format('0.00a'));
                 query = new Parse.Query('Attempt');
                 return query.count();
             }.bind(this)).then(function (count) {
-                this.set('stats.numberOfAttempts', (count + 41007));
+                this.set('stats.numberOfAttempts', numeral(count + 41007).format('0.00a'));
                 return;
             }.bind(this));
         return stats;

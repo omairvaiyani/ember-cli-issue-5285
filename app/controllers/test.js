@@ -13,6 +13,11 @@ ParseHelper
 from
 '../utils/parse-helper';
 
+import
+Constants
+from
+'../utils/constants';
+
 export default
 Ember.ObjectController.extend(CurrentUser, {
     loading: 'Preparing test...',
@@ -214,6 +219,7 @@ Ember.ObjectController.extend(CurrentUser, {
                 .then(function (result) {
                     this.transitionToRoute('result', this.get('attempt'));
                     this.send('decrementLoadingItems');
+                    this.send('recordEvent', Constants.TEST_TAKEN, this.get('attempt'));
                     if(this.get('currentUser')) {
                         this.get('currentUser').incrementProperty('numberOfAttempts');
                         this.store.createRecord('action', {

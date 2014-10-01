@@ -5,7 +5,7 @@ Mandrill = require('mandrill')
 Mandrill.initialize(mandrillKey);
 
 var MyCQs = {
-    baseUrl: 'http://beta.mycqs.com/'
+    baseUrl: 'http://mycqs.com/'
 };
 var FB = {
     API: {
@@ -759,6 +759,29 @@ function generateTests(moduleId, difficulty, totalQuestions, user, callback) {
         }
     });
 };
+
+/**
+ * operationSortOutACLs
+ * Our ACLs were messed up during migration
+ * due to Request.User being null with
+ * PHP mismanaging currentUser sessionTokens.
+ *
+ * Therefore, many objects were set with {}
+ * ACLs, i.e., completely hidden without
+ * masterkey. Sort. It. Out.
+ *
+ */
+Parse.Cloud.job('operationSortOutACLs', function(request, response) {
+    Parse.Cloud.useMasterKey();
+
+    var query = new Parse.Query('Question');
+    query.find().then(function (results) {
+       response.success("We have "+results.length+" questions with ACLs!");
+    },
+    function (error) {
+        response.error(JSON.stringify(error));
+    });
+});
 
 /**
  * --------------------

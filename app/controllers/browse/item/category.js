@@ -10,7 +10,7 @@ from
 
 export default
 Ember.ObjectController.extend(EachItem, {
-    style: "width:180px;height:150px;",
+    style: "width:220px;height:200px;",
 
     setStyleBasedOnRelativeNumberOfTests: function () {
         var totalTests = this.get('parentController.totalTests');
@@ -20,24 +20,24 @@ Ember.ObjectController.extend(EachItem, {
         var totalTestsInCategory = this.get('model.totalTests'),
             relativeSize = Math.round((totalTestsInCategory / totalTests) * 100),
             width = 200,
-            height = 150;
+            height = 200;
 
-        if (relativeSize > 5) {
+        /*if (relativeSize > 5) {
             width = 225;
-            height = 175;
+            height = 200;
         } else if (relativeSize > 10) {
             width = 250;
-            height = 185;
+            height = 230;
         } else if (relativeSize > 15) {
             width = 275;
-            height = 195;
+            height = 245;
         } else if (relativeSize > 25) {
             width = 300;
-            height = 200;
+            height = 280;
         }  else if (relativeSize > 35) {
             width = 350;
-            height = 200;
-        }
+            height = 300;
+        }*/
 
         this.set('style', "width:" + width + "px;height:" + height + "px;");
         this.incrementProperty('parentController.categoryStylesReady');
