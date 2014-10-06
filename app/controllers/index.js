@@ -32,7 +32,7 @@ Ember.Controller.extend(CurrentUser, {
      */
     activateParallaxScrollListener: function () {
         var currentPath = this.get('controllers.application.currentPath');
-        if(currentPath !== 'index' || this.get('currentUser'))
+        if (currentPath !== 'index' || this.get('currentUser'))
             return;
 
         setTimeout(
@@ -41,35 +41,38 @@ Ember.Controller.extend(CurrentUser, {
             }.bind(this), 500);
     }.observes('currentUser', 'controllers.application.currentPath'),
 
-    stats: function () {
-        if (this.get('currentUser'))
+    stats: {
+        numberOfUsers: '...',
+        numberOfTests: '...',
+        numberOfQuestions: '...',
+        numberOfAttempts: '...'
+    },
+
+    getStats: function () {
+        var currentPath = this.get('controllers.application.currentPath');
+        if (currentPath !== 'index' || this.get('currentUser'))
             return;
 
-        var stats = {
-            numberOfUsers: '...',
-            numberOfTests: '...',
-            numberOfQuestions: '...',
-            numberOfAttempts: '...'
-        };
-        var query = new Parse.Query('_User');
-        query.count().then(function (count) {
-                this.set('stats.numberOfUsers', numeral(count).format('0.00a'));
-                query = new Parse.Query('Test');
-                return query.count();
-            }.bind(this)).then(function (count) {
-                this.set('stats.numberOfTests', numeral(count).format('0.00a'));
-                query = new Parse.Query('Question');
-                return query.count();
-            }.bind(this)).then(function (count) {
-                this.set('stats.numberOfQuestions', numeral(count).format('0.00a'));
-                query = new Parse.Query('Attempt');
-                return query.count();
-            }.bind(this)).then(function (count) {
-                this.set('stats.numberOfAttempts', numeral(count + 41007).format('0.00a'));
-                return;
+        this.store.find('count').then(function (results) {
+            results.forEach(function (count) {
+                switch (count.get('type')) {
+                    case "users":
+                        this.set('stats.numberOfUsers', numeral(count.get('total')).format('0.0a'));
+                        break;
+                    case "tests":
+                        this.set('stats.numberOfTests', numeral(count.get('total')).format('0.0a'));
+                        break;
+                    case "questions":
+                        this.set('stats.numberOfQuestions', numeral(count.get('total')).format('0.0a'));
+                        break;
+                    case "attempts":
+                        this.set('stats.numberOfAttempts', numeral(count.get('total') + 41000).format('0.0a'));
+                        break;
+                }
             }.bind(this));
-        return stats;
-    }.property('currentUser'),
+        }.bind(this));
+
+    }.observes('currentUser', 'controllers.application.currentPath'),
 
     autocompleteTests: [],
     getAutocompleteTests: function () {

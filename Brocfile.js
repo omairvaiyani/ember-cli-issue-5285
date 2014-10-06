@@ -78,7 +78,7 @@ app.import({
  */
 app.import({
     development: 'bower_components/numeral/numeral.js',
-    production: 'bower_components/numeral/numeral/min/numeral.min.js'
+    production: 'bower_components/numeral/min/numeral.min.js'
 });
 /*
  * CSS TOGGLE SWITCH

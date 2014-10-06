@@ -133,7 +133,7 @@ Parse.Cloud.define("preFacebookConnect", function (request, response) {
                     };
                     user.set('authData', authData);
                     return user.save()
-                        .then(function() {
+                        .then(function () {
                             response.success();
                             return;
                         });
@@ -509,21 +509,188 @@ Parse.Cloud.define("sendPushToUser", function (request, response) {
 
 /*
  * Search indexing
+ * Add objects to Swiftype
  */
 Parse.Cloud.job("indexObjectsForClass", function (request, status) {
+    Parse.Cloud.useMasterKey();
+
+
     var className = request.params.className;
     var query = new Parse.Query(className);
+    query.include('author');
+    query.include('category');
     query.each(function (object) {
-        object.set('tags', generateSearchTags(className, object));
-        object.save();
-    }).then(function () {
-        status.success();
-    });
+        if (!object.get('title') || !object.get('slug') || !object.get('category') || !object.get('author'))
+            return;
+
+        var description = "",
+            numberOfQuestions = 0;
+
+        if (object.get('description'))
+            description = object.get('description');
+        if (object.get('questions'))
+            numberOfQuestions = object.get('questions').length;
+
+        var document = {
+            external_id: object.id,
+            fields: [
+                {
+                    name: 'title',
+                    value: object.get('title'),
+                    type: 'string'
+                },
+                {
+                    name: 'slug',
+                    value: object.get('slug'),
+                    type: 'string'
+                },
+                {
+                    name: 'authorId',
+                    value: object.get('author').id,
+                    type: 'enum'
+                },
+                {
+                    name: 'authorName',
+                    value: object.get('author').get('name'),
+                    type: 'string'
+                },
+                {
+                    name: 'categoryId',
+                    value: object.get('category').id,
+                    type: 'enum'
+                },
+                {
+                    name: 'categoryName',
+                    value: object.get('category').get('name'),
+                    type: 'string'
+                },
+                {
+                    name: 'description',
+                    value: description,
+                    type: 'string'
+                },
+                {
+                    name: 'numberOfQuestions',
+                    value: numberOfQuestions,
+                    type: 'integer'
+                },
+                {
+                    name: 'createdAt',
+                    value: object.createdAt,
+                    type: 'date'
+                },
+                {
+                    name: 'updatedAt',
+                    value: object.updatedAt,
+                    type: 'date'
+                },
+                {
+                    name: 'authorImageUrl',
+                    value: getUserProfileImageUrl(object.get('author')),
+                    type: 'string'
+                }
+            ]
+        };
+        return Parse.Cloud.httpRequest({
+            method: 'POST',
+            url: 'http://api.swiftype.com/api/v1/engines/mycqs/document_types/tests/documents/create_or_update.json',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: {
+                auth_token: "xBAVD6EFQzt23WJFhp1v",
+                document: document
+            }
+        }).then(function (success) {
+                console.log("Successful call to swiftype, " + JSON.stringify(success.data));
+            },
+            function (error) {
+                console.log("Failure to call to swiftype, " + error.text);
+            });
+
+    }).then(
+        function () {
+            status.success();
+        }, function () {
+            status.error();
+        });
 
 });
 /*
  * CALCULATIONS
  */
+Parse.Cloud.job("updateCountClass", function (request, status) {
+    Parse.Cloud.useMasterKey();
+    /*
+     * _User
+     */
+    var query = new Parse.Query("Count"),
+        users,
+        tests,
+        questions,
+        attempts,
+        promises = [],
+        ACL = new Parse.ACL();
+
+    ACL.setPublicReadAccess(true);
+
+    query.find()
+        .then(function (results) {
+            for (var i = 0; i < results.length; i++) {
+                switch (results[i].get('type')) {
+                    case "users":
+                        users = results[i];
+                        break;
+                    case "tests":
+                        tests = results[i];
+                        break;
+                    case "questions":
+                        questions = results[i];
+                        break;
+                    case "attempts":
+                        attempts = results[i];
+                        break;
+                }
+            }
+            query = new Parse.Query(Parse.User);
+            return query.count();
+        })
+        .then(function (count) {
+            users.set('total', count);
+            users.setACL(ACL);
+            promises.push(users.save());
+
+            query = new Parse.Query("Test");
+            return query.count();
+        })
+        .then(function (count) {
+            tests.set('total', count);
+            tests.setACL(ACL);
+            promises.push(tests.save());
+
+            query = new Parse.Query("Question");
+            return query.count();
+        })
+        .then(function (count) {
+            questions.set('total', count);
+            questions.setACL(ACL);
+            promises.push(questions.save());
+
+            query = new Parse.Query("Attempt");
+            return query.count();
+        })
+        .then(function (count) {
+            attempts.set('total', count);
+            attempts.setACL(ACL);
+            promises.push(attempts.save());
+
+            return Parse.Promise.when(promises);
+        })
+        .then(function () {
+            status.success();
+        });
+});
+
 Parse.Cloud.job("calculateTotalTestsInCategory", function (request, status) {
     /*
      * Reset totalTests counter in each category
@@ -551,8 +718,11 @@ Parse.Cloud.job("calculateTotalTestsInCategory", function (request, status) {
             return test;
         });
     }).then(function () {
-        status.success("Total tests in each category calculated successfully.");
-    });
+            status.success("Total tests in each category calculated successfully.");
+        },
+        function (error) {
+            status.error(JSON.stringify(error));
+        });
 });
 Parse.Cloud.job("calculateTotalTestsInEachCategory", function (request, status) {
     Parse.Cloud.useMasterKey();
@@ -771,17 +941,63 @@ function generateTests(moduleId, difficulty, totalQuestions, user, callback) {
  * masterkey. Sort. It. Out.
  *
  */
-Parse.Cloud.job('operationSortOutACLs', function(request, response) {
+Parse.Cloud.job('operationSortOutACLs', function (request, response) {
     Parse.Cloud.useMasterKey();
+    var query = new Parse.Query('Test'),
+        numQuestionsWithBadACL = 0;
+    query.doesNotExist('ACLFixed');
+    query.include('author');
 
-    var query = new Parse.Query('Question');
-    query.find().then(function (results) {
-       response.success("We have "+results.length+" questions with ACLs!");
-    },
-    function (error) {
-        response.error(JSON.stringify(error));
+    var promises = [];
+
+    query.count().then(function (count) {
+        console.error("Still need to ACL fix " + count + " tests");
     });
-});
+
+    query.each(function (test) {
+            if (!test.get('questions') && test.get('author'))
+                return;
+            return test.fetch('questions')
+                .then(function () {
+                    for (var i = 0; i < test.get('questions').length; i++) {
+                        var question = test.get('questions')[i];
+                        if (!question)
+                            continue;
+                        var currentACL = question.getACL();
+                        if (!currentACL ||
+                            JSON.stringify(currentACL) === '{}' || JSON.stringify(currentACL) === '{"*":{"read":true}}') {
+                            console.log("BAD ACL match");
+                            var newACL = new Parse.ACL(test.get('author'));
+                            newACL.setPublicReadAccess(true);
+                            question.setACL(newACL);
+                            question.set("ACLFixed", true);
+                            promises.push(question.save());
+                            numQuestionsWithBadACL++;
+                        }
+                    }
+                    test.set('ACLFixed', true);
+                    promises.push(test.save());
+                },
+                function (error) {
+                    test.set('ACLFixed', false);
+                    promises.push(test.save());
+                    console.error(error);
+                });
+        },
+        function (error) {
+            console.error("Error getting test");
+        })
+        .then(function () {
+            console.log("Waiting for promises " + promises.length);
+            return Parse.Promise.when(promises);
+        })
+        .then(function () {
+            response.success(numQuestionsWithBadACL + " questions with bad ACL flagged!");
+        }, function (error) {
+            response.error(JSON.stringify(error));
+        });
+})
+;
 
 /**
  * --------------------
@@ -1043,6 +1259,34 @@ Parse.Cloud.define('bulkFollowUsers', function (request, response) {
         }
     );
 });
+
+/**
+ * ------------
+ * isMobileUser
+ * ------------
+ * Clients cannot query Parse.Installation
+ * Hence, this function will return true
+ * or false for clients.
+ */
+
+Parse.Cloud.define('isMobileUser', function (request, response) {
+    if (!request.user) {
+        response.error();
+        return;
+    }
+
+    Parse.Cloud.useMasterKey();
+    var query = new Parse.Query(Parse.Installation);
+    query.equalTo('user', request.user);
+    query.count()
+        .then(function (count) {
+            if (count)
+                response.success(true);
+            else
+                response.success(false);
+        });
+});
+
 
 Parse.Cloud.define("findTestsForModule", function (request, response) {
 
@@ -1432,6 +1676,7 @@ var Security = {
         return ACLs;
     }
 };
+
 /**
  * ---------------------
  * generateRandomString
@@ -1453,6 +1698,7 @@ function generateRandomString(length, type) {
     for (var i = length; i > 0; --i) result += mask[Math.round(Math.random() * (mask.length - 1))];
     return result;
 }
+
 /**
  * ------------------
  * generateSearchTags
@@ -1771,7 +2017,7 @@ Parse.Cloud.afterSave("_User", function (request) {
                     return;
             });
     }
-    if(user.get('name') && user.get('name').length) {
+    if (user.get('name') && user.get('name').length) {
         user.set('isProcessed', true);
         user.setACL(Security.createACLs(user, true));
         var Action = Parse.Object.extend('Action');
@@ -1844,7 +2090,7 @@ Parse.Cloud.beforeSave('Category', function (request, response) {
 Parse.Cloud.beforeSave("Test", function (request, response) {
     Parse.Cloud.useMasterKey();
     if (!request.object.get('title')) {
-        response.error({"message": "Title of the test is required!"});
+        response.error("Title of the test is required!");
         return;
     }
 
@@ -1897,14 +2143,14 @@ Parse.Cloud.beforeSave("Test", function (request, response) {
                 else
                     request.object.set('slug', slug + '-' + (count + 1));
 
-                if(!author.get('authData') || !author.get('authData').facebook)
+                if (!author.get('authData') || !author.get('authData').facebook)
                     return;
 
                 /*
                  * Create a graph object for this test
                  */
                 var numberOfQuestions = 0;
-                if(request.object.get('questions'))
+                if (request.object.get('questions'))
                     numberOfQuestions = request.object.get('questions').length;
                 var graphObjectData = {
                     app_id: FB.GraphObject.appId,
@@ -1927,7 +2173,7 @@ Parse.Cloud.beforeSave("Test", function (request, response) {
             })
             .then(
             function (httpResponse) {
-                if(httpResponse) {
+                if (httpResponse) {
                     request.object.set('graphObjectId', httpResponse.data.id);
                 }
                 response.success();
@@ -2023,7 +2269,9 @@ Parse.Cloud.afterSave("Test", function (request, response) {
  */
 Parse.Cloud.beforeSave("Question", function (request, response) {
     Parse.Cloud.useMasterKey();
-    request.object.setACL(Security.createACLs(request.user));
+    if (request.user)
+        request.object.setACL(Security.createACLs(request.user));
+
     if (request.object.isNew()) {
         request.object.set("numberOfTimesTaken", 0);
         request.object.set("numberAnsweredCorrectly", 0);
@@ -2105,7 +2353,8 @@ Parse.Cloud.afterSave("Attempt", function (request) {
      * - test THEN test.author
      */
     var promises = [];
-    promises.push(user.fetch());
+    if (user)
+        promises.push(user.fetch());
     promises.push(test.fetch());
     Parse.Promise.when(promises).then(function () {
         author = test.get('author');

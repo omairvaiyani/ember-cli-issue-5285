@@ -242,24 +242,13 @@ Ember.Route.extend({
          * - Once 'connected', we call the next method in the chain 'signUpAuthorisedFacebookUser'
          */
         facebookConnect: function () {
-            FB.getLoginStatus(function (response) {
-                if (response.status === 'connected') {
+            FB.login(function(response) {
+                if (response.authResponse) {
                     this.send('signUpAuthorisedFacebookUser', response.authResponse);
                 }
-                else {
-                    FB.login(function (response) {
-                        if (response.status === 'connected') {
-                            // Logged into your app and Facebook.
-                            this.send('signUpAuthorisedFacebookUser', response.authResponse);
-                        } else if (response.status === 'not_authorized') {
-                            // The person is logged into Facebook, but not your app.
-                        } else {
-                            // The person is not logged into Facebook, so we're not sure if
-                            // they are logged into this app or not.
-                        }
-                    }.bind(this), {scope: 'public_profile,email,user_education_history,user_friends,gender'});
-                }
-            }.bind(this));
+            }.bind(this), {scope: 'public_profile, user_friends, friends_about_me, user_about_me, ' +
+                'email, user_location, user_education_history, friends_education_history'});
+
         },
         /**
          * Sign up Authorised Facebook User:
@@ -307,7 +296,6 @@ Ember.Route.extend({
                             }
                         }
                     };
-
                 Parse.Cloud.run('preFacebookConnect', {authResponse: authResponse},
                     {
                         success: function () {

@@ -28,22 +28,24 @@
             </ul>
             --}}
             <ul class="nav navbar-nav">
-                {{#link-to 'index' tagName='li' title='Home'}}{{#link-to 'index' tagName='a'}}Home{{/link-to}}{{/link-to}}
-                {{#link-to 'browse' tagName='li' title='Browse tests'}}{{#link-to 'browse' tagName='a'}}Browse{{/link-to}}{{/link-to}}
-                {{#link-to 'create' tagName='li' title='Create a test'}}{{#link-to 'create' tagName='a'}}Create{{/link-to}}{{/link-to}}
+                {{#link-to 'index' tagName='li' title='Home'}}{{#link-to 'index' tagName='a'}}
+                    Home{{/link-to}}{{/link-to}}
+                {{#link-to 'browse' tagName='li' title='Browse tests'}}{{#link-to 'browse' tagName='a'}}
+                    Browse{{/link-to}}{{/link-to}}
+                {{#link-to 'create' tagName='li' title='Create a test'}}{{#link-to 'create' tagName='a'}}
+                    Create{{/link-to}}{{/link-to}}
             </ul>
+            {{partial 'application/navbar/search'}}
+
             <ul class="nav navbar-nav navbar-right">
                 {{#if currentUser}}
                     {{partial 'application/navbar/user-messages'}}
                     <!-- account actions -->
                     {{partial 'application/navbar/current-user'}}
                 {{else}}
-                    <ul class="nav navbar-nav navbar-right">
-                        <li>
-                            <a href='' {{action 'openModal' 'application/modal/login-or-register' 'application'}}
-                                    >Log in | Sign up</a>
-                        </li>
-                    </ul>
+                    <li>
+                        <a href='' {{action 'openModal' 'application/modal/login-or-register' 'application'}}>Log in | Sign up</a>
+                    </li>
                 {{/if}}
             </ul>
         </div>

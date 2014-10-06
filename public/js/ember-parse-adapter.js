@@ -488,7 +488,10 @@ EmberParseAdapter.ParseUser = DS.Model.extend({
      */
     name: DS.attr('string'),
     firstName: function () {
-        return this.get('name').split(' ').slice(0, -1).join(' ');
+        if(this.get('name').split(' ')[1])
+            return this.get('name').split(' ').slice(0, -1).join(' ');
+        else
+            return this.get('name');
     }.property('name'),
     fbid: DS.attr('string'),
     gender: DS.attr('string'),
@@ -544,14 +547,11 @@ EmberParseAdapter.ParseUser = DS.Model.extend({
     communityUniqueNumberOfAttempts: DS.attr('number', {defaultValue: 0}),
     communityUniqueAverageScore: DS.attr('number', {defaultValue: 0}),
     facebookFriends: DS.attr(),
-    /*following: DS.hasMany('parse-user', {async: true, relation: true, inverse: 'following'}),
-     followers: DS.hasMany('parse-user', {async: true, relation: true, inverse: 'followers'}),*/
     numberFollowing: DS.attr('number', {defaultValue: 0}),
     numberOfFollowers: DS.attr('number', {defaultValue: 0}),
     latestAttempts: DS.hasMany('attempt', {async: true, array: true}),
     slug: DS.attr('string'),
     finishedWelcomeTutorial: DS.attr('boolean')
-    //savedTests: DS.hasMany('test', {async: true, relation: true})
 });
 
 EmberParseAdapter.ParseUser.reopenClass({

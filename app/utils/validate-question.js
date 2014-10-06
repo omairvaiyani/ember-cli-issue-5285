@@ -57,7 +57,7 @@ export default {
         /* Detecting 'fill in the blank' */
         // discourage 'fill in the blank' type stems as these are not as good as a self contained question
         if (stem.indexOf("___") != -1) {
-            validationResponse.errors.push(
+            validationResponse.warnings.push(
                 this.leaveComment(
                     "Try to avoid fill in the blank style questions as these are not as effective",
                     "To improve your question, re-write it as a self contained sentence",
@@ -129,9 +129,9 @@ export default {
             );
         }
 
-        // ERROR IF TOO LONG
+        // BIG Warning IF TOO LONG
         else if (stem.length > this.MAXIMUM_QUESTION_LENGTH_ERROR) {
-            validationResponse.errors.push(
+            validationResponse.warnings.push(
                 this.leaveComment(
                     "Your question is too long!",
                     "Consider shortening it",
@@ -384,7 +384,7 @@ export default {
         */
         /* Meaningfulness of stem (generic word usage) */
         // Warning for using too many generic words.
-        var words = stem.replace(/[\.,-\/#!$%\^&\*;:{}=\-_`~()]/g, "")
+        /*var words = stem.replace(/[\.,-\/#!$%\^&\*;:{}=\-_`~()]/g, "")
             .replace(/\s{2,}/g, " ")
             .trim()
             .toLowerCase()
@@ -417,7 +417,7 @@ export default {
                     "",
                     "")
             );
-        }
+        }*/
 
         if (validationResponse.errors.length > 0) validationResponse.result = "fail";
         else if (validationResponse.warnings.length > 0) validationResponse.result = "warn";

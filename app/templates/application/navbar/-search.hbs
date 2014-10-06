@@ -1,0 +1,14 @@
+<div class="navbar-form navbar-left sb-search" role="search" id="sb-search">
+    <form>
+        {{autocomplete-field
+        classNames='sb-search-input'
+        parentController=this
+        key='title'
+        placeholder="Enter your search term..."
+        value=searchInput
+        data=searchData.records
+        totalCount=searchData.totalRecords
+        itemAction='searchItemClicked'}}
+        <div class="sb-icon-search inline-block">{{svg-icon icon='search' height=28 width=28}}</div>
+    </form>
+</div>

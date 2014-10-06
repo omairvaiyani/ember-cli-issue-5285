@@ -8,6 +8,11 @@ ParseHelper
 from
 '../utils/parse-helper';
 
+import
+ExpandingSearch
+from
+'../utils/expanding-search';
+
 export default
 Ember.Controller.extend({
     needs: ['index', 'user', 'test', 'category'],
@@ -22,7 +27,7 @@ Ember.Controller.extend({
             title = "",
             defaultTitle = "MyCQs - A social learning network";
 
-        if(!path)
+        if (!path)
             return;
 
         switch (path) {
@@ -81,7 +86,44 @@ Ember.Controller.extend({
 
         this.send('updatePageTitle', title);
 
-    }.observes('currentPath'/*, 'currentUser.totalUnreadMessages.length'*/),
+        if (!this.get('isExpandingSearchReady')) {
+            $(document).ready(function () {
+                new UISearch(document.getElementById('sb-search'));
+                this.set('isExpandingSearchReady', true);
+            }.bind(this));
+        }
+
+    }.observes('currentPath'),
+
+    /*
+     * Search in Navbar
+     */
+    searchData: {
+        records: Ember.A(),
+        totalRecords: 0
+    },
+
+    getSearchData: function () {
+        this.get('searchData.records').clear();
+        if (this.get('searchInput.length') < 3)
+            return;
+
+        var params = {
+            q: this.get('searchInput').toLowerCase(),
+            engine_key: "KpTvAqftjz7ZaGG7FPr7"
+        };
+
+
+        $.getJSON("http://api.swiftype.com/api/v1/public/engines/suggest.json", params)
+            .done(
+            function (data) {
+                this.get('searchData.records').addObjects(data.records.tests);
+                this.set('searchData.totalRecords', data.info.tests.total_result_count);
+            }.bind(this)
+        );
+    }.observes('searchInput.length'),
+
+    isExpandingSearchReady: false,
 
     loadingItems: 0,
 
@@ -107,9 +149,6 @@ Ember.Controller.extend({
 
         if (currentUser) {
             var adapter = this.store.adapterFor(currentUser);
-            console.dir(currentUser);
-            console.log("Setting session as "+currentUser.get('sessionToken'));
-            adapter.headers['X-Parse-Session-Token'] = currentUser.get('sessionToken');
             Parse.User.become(currentUser.get('sessionToken')).then(function (user) {
             }, function (error) {
                 console.dir(error);
@@ -121,7 +160,6 @@ Ember.Controller.extend({
                 Parse.User.logOut();
             localStorage.clear();
         }
-        //this.get('controllers.index').send('toggleParallaxScrollListener');
     }.observes('currentUser'),
 
     /**
@@ -149,7 +187,7 @@ Ember.Controller.extend({
 
 
         this.incrementProperty('loadingItems');
-        if(!currentUser.get('latestAttempts'))
+        if (!currentUser.get('latestAttempts'))
             return;
         currentUser.get('latestAttempts').then(function () {
                 var where = {
@@ -164,7 +202,14 @@ Ember.Controller.extend({
             }.bind(this)).then(function (attempts) {
                 currentUser.set('attempts', attempts);
                 this.send('decrementLoadingItems');
-            }.bind(this));
+                /*
+                 * Is mobile user?
+                 */
+                return Parse.Cloud.run('isMobileUser', {});
+            }.bind(this))
+            .then(function (response) {
+                currentUser.set('isMobileUser', response);
+            });
 
     }.observes('currentUser'),
 
@@ -187,9 +232,9 @@ Ember.Controller.extend({
         this.set('currentUser.totalUnreadMessages', totalUnreadMessages);
     }.observes('currentUser.messages.length'),
 
-  /*  totalUnreadMessagesDidChange: function () {
-        this.send('updateNotificationsCounter');
-    }.observes('currentUser.totalUnreadMessages.length'),*/
+    /*  totalUnreadMessagesDidChange: function () {
+     this.send('updateNotificationsCounter');
+     }.observes('currentUser.totalUnreadMessages.length'),*/
 
     newUser: {
         name: '',
@@ -246,16 +291,16 @@ Ember.Controller.extend({
         },
 
         markMessageAsRead: function (message) {
-            if(!message.get('read')) {
+            if (!message.get('read')) {
                 message.set('read', true);
-                if(this.get('currentUser.totalUnreadMessages'))
+                if (this.get('currentUser.totalUnreadMessages'))
                     this.decrementProperty('currentUser.totalUnreadMessages');
                 message.save();
             }
         },
 
         markMessageAsUnread: function (message) {
-            if(message.get('read')) {
+            if (message.get('read')) {
                 message.set('read', false);
                 this.incrementProperty('currentUser.totalUnreadMessages');
                 message.save();
@@ -265,8 +310,12 @@ Ember.Controller.extend({
         updateNotificationsCounter: function () {
             if (this.get('currentUser.totalUnreadMessages'))
                 window.document.title = "(" + this.get('currentUser.totalUnreadMessages') + ") " + window.document.title;
-            else if(window.document.title.charAt(0) === "(")
+            else if (window.document.title.charAt(0) === "(")
                 window.document.title = window.document.title.substr(window.document.title.indexOf(" ") + 1);
+        },
+
+        searchItemClicked: function (object) {
+            this.transitionToRoute('testInfo', object.slug);
         }
     }
 });

@@ -52,6 +52,7 @@ var updateIndexFile = function () {
     });
 }
 
+
 app.get('/robots.txt', function (req, res) {
     res.sendFile(__dirname + '/robots.txt');
 });
@@ -60,7 +61,17 @@ app.get('/crossdomain.xml', function (req, res) {
     res.sendFile(__dirname + '/crossdomain.xml');
 });
 
-app.get('*', function (req, res) {
+app.get('/scripts/*', function (req, res) {
+    res.writeHead(301,
+        {Location: 'http://69.195.73.81' + req.url}
+    );
+    res.end();
+});
+
+app.get("*", function (req, res) {
+    if (req.headers.host.match(/^www/) !== null) {
+        res.redirect('http://' + req.headers.host.replace(/^www\./, '') + req.url);
+    }
     if (!indexFile) {
         res.sendFile(__dirname + '/index.html');
     }

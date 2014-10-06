@@ -10,7 +10,7 @@ Ember.TextField.extend({
         this.on("keyUp", this, this.interpretKeyEvents);
     },
 
-    classNames: 'form-control margin-bottom-16',
+    classNameBindings: ['noMarginBottom::margin-bottom-16'],
 
     isFocussed: false,
 
@@ -33,14 +33,14 @@ Ember.TextField.extend({
         if (!this.get('limit'))
             this.set('limit', 5);
 
-        if (this.get('data.length') > this.get('limit'))
-            this.set('numberOfItemsOmitted', (this.get('data.length') - this.get('limit')));
+        if (this.get('totalCount') > this.get('limit'))
+            this.set('numberOfItemsOmitted', (this.get('totalCount') - this.get('limit')));
         else
             this.set('numberOfItemsOmitted', 0);
 
         return this.get('data').splice(0, this.get('limit')).map(function (item) {
             return {
-                key: item.get(this.get("key")),
+                key: item[this.get("key")],
                 object: item
             };
         }.bind(this));
@@ -58,11 +58,6 @@ Ember.TextField.extend({
         this.$().focus(function () {
             this.set('isFocussed', true);
         }.bind(this));
-
-//        this.$().focusout(function (e) {
-//            console.dir(e);
-//            this.set('isFocussed', false);
-//        }.bind(this));
 
         $("body").click(function (event) {
             if(!this.$())
@@ -113,7 +108,7 @@ Ember.TextField.extend({
          */
         enter: function () {
             if (this.get('selectedItem')) {
-                this.$().val(this.get('selectedItem.key'));
+                //this.$().val(this.get('selectedItem.key'));
                 if(this.get('itemAction')) {
                     this.get('parentController').send(this.get('itemAction'), this.get('selectedItem.object'));
                 }
@@ -136,6 +131,10 @@ Ember.TextField.extend({
         itemSelected: function (item) {
             this.set('selectedItem', item);
             this.send('enter');
+        },
+
+        seeAllResults: function () {
+            this.get('parentController').send('seeAllResults');
         }
     },
 

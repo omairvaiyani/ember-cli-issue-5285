@@ -17,6 +17,11 @@ export default Ember.View.extend({
      * is a ParseUser
      */
     style: function() {
-        return "background-image:url("+this.get('controller.model.profileImageURL')+");";
+        var url = this.get('controller.model');
+
+        if(this.get('controller.model.profileImageURL'))
+            url = this.get('controller.model.profileImageURL');
+
+        return "background-image:url("+url+");";
     }.property('controller.model.profileImageURL')
 });
