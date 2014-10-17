@@ -92,8 +92,8 @@ Ember.Route.extend({
         /*
          * Set Prerender variable to true
          * for AJAX HTML snapshort crawling
-         * (For now, this is called on
-         * ApplicationRoute.updatePageTitle
+         * If not called, page will take 20
+         * seconds to load fully.
          */
         prerenderReady: function () {
             window.prerenderReady = true;
@@ -114,7 +114,25 @@ Ember.Route.extend({
             else
                 this.set('pageTitle', title);
             this.send('closeModal');
-            this.send('prerenderReady');
+        },
+
+        /*
+         * Default description is set at first
+         * Certain pages, i.e. tests, browse will
+         * have custom descriptions.
+         */
+        updatePageDescription: function (description) {
+            $(function () { // dom ready
+                var metas = document.getElementsByTagName('meta'),
+                    metaDescription;
+
+                for (var i=0; i<metas.length; i++) {
+                    if (metas[i].getAttribute("name") === "description") {
+                        metaDescription = metas[i];
+                    }
+                }
+                metaDescription.content = description;
+            });
         },
 
         signUp: function () {
@@ -174,6 +192,8 @@ Ember.Route.extend({
                     error: function (error) {
                         console.log("Error!");
                         console.dir(error);
+                        if(error.message == Parse.Error.EMAIL_TAKEN)
+                            this.send('addNotification', 'warning', 'Email Taken', 'This email has already been taken!');
                         this.send('decrementLoadingItems');
                     }.bind(this)
                 });

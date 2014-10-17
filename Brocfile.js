@@ -62,10 +62,10 @@ app.import({
 /*
  * RETINA.JS
  */
-app.import({
+/*app.import({
     development: 'bower_components/retina.js/dist/retina.js',
     production: 'bower_components/retina.js/dist/retina.min.js'
-});
+});*/
 /*
  * FREEWALL
  */

@@ -301,7 +301,7 @@ body {
     position: fixed;
     right: 10px;
     top: 10px;
-    z-index: 999; /*must be highest element on page*/
+    z-index: 1051; /*must be highest element on page*/
 }
 
 .notification {
@@ -531,9 +531,8 @@ body {
     max-width: 250px;
     min-width: 30px;
     height: 30px;
-    margin-left:12px;
+    margin-left:14px;
     float: right;
-    /*overflow: hidden;*/
     -webkit-transition: width 0.3s;
     -moz-transition: width 0.3s;
     transition: width 0.3s;
@@ -996,7 +995,7 @@ hr.user-message-item-separator {
     -moz-box-shadow: 0px -14px 58px -8px rgba(0, 0, 0, 0.86);
     box-shadow: 0px -14px 58px -8px rgba(0, 0, 0, 0.86);
     position: relative;
-    margin-bottom: -16px;
+    margin-bottom: -18px;
     padding-bottom: 16px;
 }
 
@@ -1174,6 +1173,7 @@ hr.user-message-item-separator {
 .cover-image .user-edit > a {
     background: rgba(255, 255, 255, 0.2);
     padding: 3px 6px;
+    margin-right: 3px;
 }
 
 .cover-image .user-follow a:hover, .cover-image .user-following a:hover, .cover-image .user-edit a:hover {
@@ -1307,6 +1307,14 @@ hr.user-message-item-separator {
     border: 1px #32492c solid;
 }
 
+.autocomplete-container.relative-layout {
+    position: relative;
+    top: 0px;
+    left: 0px;
+    right: 0px;
+    margin-bottom: 16px;
+}
+
 .autocomplete-row {
     padding-left: 8px;
     padding-right: 8px;
@@ -1317,11 +1325,21 @@ hr.user-message-item-separator {
 .autocomplete-row .title {
     display: inline-block;
     vertical-align: top;
-    width: 166px;
+    width: calc(100% - 62px);
 }
 
 .autocomplete-row > p {
     margin: 0px;
+}
+
+.autocomplete-row .profile-image {
+    height: 26px;
+    width: 26px;
+    border-radius: 13px;
+}
+.autocomplete-container .group-title {
+    padding: 0px 6px;
+    pointer-events: none;
 }
 
 .autocomplete-row:hover, .autocomplete-row.is-focussed {
@@ -1463,8 +1481,8 @@ hr.user-message-item-separator {
 }
 
 .search-box input {
-    padding-right: 24px;
-!important
+    padding-right: 45px;
+    padding-left: 8px;
 }
 
 .search-box span {

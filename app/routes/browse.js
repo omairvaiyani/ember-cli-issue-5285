@@ -9,8 +9,11 @@ export default Ember.Route.extend({
         return this.store.findQuery('category', {where: JSON.stringify(where), order: "name"});
     },
 
+    /*
+     * Prerender is readied in BrowseController.createDynamicGrid
+     */
     setupController: function (controller, model) {
+        this.send('updatePageDescription', "Find thousands of MCQ tests in hundreds of subjects. Medicine, Science, Math, Law, Aviation and lots more!");
         controller.set('model', model);
-        this.send('decrementLoadingItems');
     }
 });

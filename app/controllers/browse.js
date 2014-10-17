@@ -35,6 +35,8 @@ Ember.ArrayController.extend({
             });
             wall.fitWidth();
             this.set('isGridReady', true);
+            this.send('decrementLoadingItems');
+            this.send('prerenderReady');
         }.bind(this), 1000);
     }.observes('categoryStylesReady', 'currentPath'),
 

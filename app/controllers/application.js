@@ -63,7 +63,7 @@ Ember.Controller.extend({
                 var category = this.get('controllers.category');
                 title += category.get('name');
                 break;
-            case "test":
+            case "test":case "testInfo":
                 /*
                  * Handled in TestRoute.
                  */
@@ -86,25 +86,18 @@ Ember.Controller.extend({
 
         this.send('updatePageTitle', title);
 
-        if (!this.get('isExpandingSearchReady')) {
-            $(document).ready(function () {
-                new UISearch(document.getElementById('sb-search'));
-                this.set('isExpandingSearchReady', true);
-            }.bind(this));
-        }
-
     }.observes('currentPath'),
 
     /*
      * Search in Navbar
      */
     searchData: {
-        records: Ember.A(),
+        groups: Ember.A(),
         totalRecords: 0
     },
 
     getSearchData: function () {
-        this.get('searchData.records').clear();
+        this.get('searchData.groups').clear();
         if (this.get('searchInput.length') < 3)
             return;
 
@@ -116,11 +109,29 @@ Ember.Controller.extend({
 
         $.getJSON("http://api.swiftype.com/api/v1/public/engines/suggest.json", params)
             .done(
-            function (data) {
-                this.get('searchData.records').addObjects(data.records.tests);
-                this.set('searchData.totalRecords', data.info.tests.total_result_count);
-            }.bind(this)
-        );
+                function (data) {
+                    var tests = {
+                            title: "Tests",
+                            records: data.records.tests,
+                            totalRecords: data.info.tests.total_result_count,
+                            key: "title",
+                            imageKey: "authorImageUrl",
+                            className: "test"
+                        },
+                        users = {
+                            title: "Users",
+                            records: data.records.users,
+                            totalRecords: data.info.users.total_result_count,
+                            key: "name",
+                            imageKey: "profileImageUrl",
+                            className: "parse-user"
+                        };
+                    this.get('searchData.groups').clear();
+                    this.get('searchData.groups').pushObject(tests);
+                    this.get('searchData.groups').pushObject(users);
+                    this.set('searchData.totalRecords', data.info.tests.total_result_count + data.info.users.total_result_count);
+                }.bind(this)
+            );
     }.observes('searchInput.length'),
 
     isExpandingSearchReady: false,
@@ -232,10 +243,6 @@ Ember.Controller.extend({
         this.set('currentUser.totalUnreadMessages', totalUnreadMessages);
     }.observes('currentUser.messages.length'),
 
-    /*  totalUnreadMessagesDidChange: function () {
-     this.send('updateNotificationsCounter');
-     }.observes('currentUser.totalUnreadMessages.length'),*/
-
     newUser: {
         name: '',
         email: '',
@@ -314,8 +321,11 @@ Ember.Controller.extend({
                 window.document.title = window.document.title.substr(window.document.title.indexOf(" ") + 1);
         },
 
-        searchItemClicked: function (object) {
-            this.transitionToRoute('testInfo', object.slug);
+        searchItemClicked: function (object, className) {
+            if(className === 'test')
+                this.transitionToRoute('testInfo', object.slug);
+            else if (className === 'parse-user')
+                this.transitionToRoute('user', object.slug);
         }
     }
 });

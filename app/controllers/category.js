@@ -286,6 +286,26 @@ Ember.ObjectController.extend({
 
     }.property('page', 'tests.length', 'order'),
 
+    /*
+     * Sets a semantic page description for SEO.
+     */
+    setPageDescription: function () {
+        if(this.get('testsOnPage.length') || !window.prerenderReady) {
+            var childCategoryText = "";
+            if(this.get('childCategories.length')) {
+                childCategoryText += ": "+this.get('childCategories').objectAt(0).get('name');
+                childCategoryText += ", "+this.get('childCategories').objectAt(1).get('name');
+                childCategoryText += ", "+this.get('childCategories').objectAt(2).get('name');
+                childCategoryText += " and more";
+            }
+            this.send('updatePageDescription', "Take MCQ tests in " + this.get('name') +
+                childCategoryText +
+                "! There are "+ this.get('totalTests') +
+                " tests to choose from, or create your own!");
+            this.send('prerenderReady');
+        }
+    }.observes('testsOnPage.length'),
+
     actions: {
         changeOrder: function (order) {
             this.transitionTo({queryParams: {order: order}});

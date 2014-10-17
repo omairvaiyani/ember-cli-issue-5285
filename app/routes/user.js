@@ -18,6 +18,26 @@ Ember.Route.extend({
                 }
             }.bind(this));
     },
+    setupController: function (controller, model, transition) {
+        controller.set('model', model);
+        var course = model.get('course');
+        var university = model.get('institution');
+        setTimeout(function () {
+            var description = model.get('name') + " ";
+            if (university || course) {
+                description += "studies ";
+                if (course)
+                    description += course.get('name') + " ";
+                if (university)
+                    description += "at "+ university.get('fullName') + " ";
+                description += "and ";
+            }
+            description += "has created " + model.get('numberOfTests') + " tests! ";
+            description += "Follow "+model.get('firstName')+" to take their MCQs or join MyCQs to create your own tests, for free!";
+            this.send('updatePageDescription', description);
+            this.send('prerenderReady');
+        }.bind(this), 2000);
+    },
 
     isTransitionAborted: false,
     previousTransition: null,

@@ -5,7 +5,7 @@ from
 
 export default
 Ember.Route.extend({
-    model: function (params) {
+    model: function (params, transition) {
         if(params.category_slug.toLowerCase() === "all")
             return {};
 
@@ -35,9 +35,10 @@ Ember.Route.extend({
                 }
             }.bind(this))
             .then(function (topLevelCategory) {
-                if(!topLevelCategory) {
+                if(!topLevelCategory)
                     return null;
-                } if (topLevelCategory.get('slug') !== params.category_slug) {
+
+                if (topLevelCategory.get('slug') !== params.category_slug) {
                     this.transitionTo('category', topLevelCategory.get('slug'),
                         {queryParams: {categoryFilter: params.category_slug, page: 1}});
                 }
@@ -45,7 +46,11 @@ Ember.Route.extend({
                     return topLevelCategory;
             }.bind(this));
     },
-
+    /*
+     * Description and Prerender redied in CategoryController.pageIsLoadedCompletely
+     * This is due to subcategories being params and not models
+     * for the route.
+     */
     setupController: function(controller, model) {
         if(!model) {
             this.transitionTo('notFound');

@@ -52,17 +52,23 @@ var updateIndexFile = function () {
     });
 }
 
+app.all('/sitemap.xml', function (req, res) {
+    res.writeHead(301,
+        {Location: 'http://assets.mycqs.com/sitemap.xml'}
+    );
+    res.end();
+});
 
-app.get('/robots.txt', function (req, res) {
+app.all('/robots.txt', function (req, res) {
     res.sendFile(__dirname + '/robots.txt');
 });
 
-app.get('/crossdomain.xml', function (req, res) {
+app.all('/crossdomain.xml', function (req, res) {
     res.sendFile(__dirname + '/crossdomain.xml');
 });
 
-app.get('/scripts/*', function (req, res) {
-    res.writeHead(301,
+app.all('/scripts/*', function (req, res) {
+    res.writeHead(307,
         {Location: 'http://69.195.73.81' + req.url}
     );
     res.end();

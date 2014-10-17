@@ -25,6 +25,7 @@ Ember.ObjectController.extend(CurrentUser, {
     setTimeStarted: function () {
         if (!this.get('preparingTest')) {
             this.set('timeStarted', new Date());
+            this.send('prerenderReady');
         }
     }.observes('preparingTest'),
 

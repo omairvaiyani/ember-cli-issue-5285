@@ -21,15 +21,45 @@ Ember.TextField.extend({
     numberOfItemsOmitted: 0,
 
     /*
+     * If a isGrouped,
+     * child objects (which should be
+     * arrays) are given the same
+     * treatment as the 'array'
+     * property below
+     */
+    groups: function () {
+        if (!this.get('isGrouped'))
+            return;
+        var groups = [];
+        for (var i = 0; i < this.get('data.length'); i++) {
+            var group = this.get('data')[i];
+            group.records = this.mapArray(group.records, group);
+            groups.push(group);
+        }
+        console.dir(groups);
+        return groups;
+    }.property('data.length'),
+
+    /*
      * Takes the provided data (has to be an array)
      * and maps it to a simple analogous key/value
      * array, limited to the given limit or default
      * to 5.
      */
     array: function () {
-        if (!this.get('data'))
+        if (!this.get('data') || this.get('isGrouped'))
             return [];
 
+        return this.mapArray(this.get('data'));
+    }.property('data.length'),
+
+    /*
+     * Takes provided array and maps the
+     * objects with the generic keys
+     * for universal usage.
+     * Also handles limits and numberOmitted.
+     */
+    mapArray: function (array, group) {
         if (!this.get('limit'))
             this.set('limit', 5);
 
@@ -38,13 +68,36 @@ Ember.TextField.extend({
         else
             this.set('numberOfItemsOmitted', 0);
 
-        return this.get('data').splice(0, this.get('limit')).map(function (item) {
+        /*
+         * key is provided by groups if isGrouped,
+         * else this.key is set on component creation
+         */
+        var key,
+            imageKey,
+            className;
+        if(group) {
+            key = group.key;
+            className = group.className;
+            imageKey = group.imageKey;
+        } else
+            key = this.get('key');
+
+
+        return array.splice(0, this.get('limit')).map(function (item) {
+            if (item['key'])
+                return item;
+
+            var itemKey = item[key];
+            if (!itemKey)
+                itemKey = item.get(key);
             return {
-                key: item[this.get("key")],
-                object: item
+                key: itemKey,
+                imageUrl: item[imageKey],
+                object: item,
+                className: className
             };
         }.bind(this));
-    }.property('data.length'),
+    },
 
     /*
      * Show or hide the autocomplete suggestions
@@ -60,7 +113,7 @@ Ember.TextField.extend({
         }.bind(this));
 
         $("body").click(function (event) {
-            if(!this.$())
+            if (!this.$())
                 return;
             if (($(event.target)[0] === this.$()[0]) ||
                 ($(event.target).offsetParent()[0].className === "autocomplete-container")
@@ -108,14 +161,15 @@ Ember.TextField.extend({
          */
         enter: function () {
             if (this.get('selectedItem')) {
-                //this.$().val(this.get('selectedItem.key'));
-                if(this.get('itemAction')) {
-                    this.get('parentController').send(this.get('itemAction'), this.get('selectedItem.object'));
+                if (this.get('activeSelection'))
+                    this.$().val(this.get('selectedItem.key'));
+                if (this.get('itemAction')) {
+                    this.get('parentController').send(this.get('itemAction'), this.get('selectedItem.object'), this.get('selectedItem.className'));
                 }
                 this.set('selectedItemIndex', -1);
                 this.set('selectedItem', null);
             } else {
-                if(this.get('action')) {
+                if (this.get('action')) {
                     this.get('parentController').send(this.get('action'));
                 }
             }

@@ -78,7 +78,7 @@
                         {{#unless isEditMode}}
                             <a href='' {{action 'enableEditMode'}}>Edit profile</a>
                         {{else}}
-                            <a href='' {{action 'cancelEditMode'}} class="margin-right-16">Cancel</a>
+                            <a href='' {{action 'cancelEditMode'}}>Cancel</a>
                             <a href='' {{action 'saveEditModeChanges'}}>Save changes</a>
                         {{/unless}}
                     </div>
@@ -102,10 +102,10 @@
                 <div class="col-md-12">
                     <div class="card margin-top-16">
                         <!-- This will force fetch course and institution before displaying -->
-                        {{#if course.institution.fullName}}
+                        {{#if course.name}}
                             <p>In year {{yearNumber}} of <a {{bind-attr href=courseFacebookPageUrl}}
                                     >{{course.name}}</a> at <a {{bind-attr href=institutionFacebookPageUrl}}
-                                    >{{course.institution.fullName}}</a>
+                                    >{{institution.fullName}}</a>
                             </p>
                         {{else}}
                             <p>{{#if isCurrentUser}}You have not{{else}}{{firstName}} has not{{/if}} added any

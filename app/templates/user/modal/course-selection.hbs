@@ -21,7 +21,8 @@
                     <div class="row">
                         <div class="col-md-11">
                             {{autocomplete-field data=autocompleteInstitutionNames key='fullName'
-                            value=newCourse.institutionName}}
+                            value=newCourse.institutionName class='form-control' relativeLayout=true
+                            activeSelection=true}}
                         </div>
                         <div class="col-md-1 text-center">
                             {{#if loading.autocompleteInstitutionNames}}
@@ -38,7 +39,8 @@
                     <div class="row">
                         <div class="col-md-11">
                             {{autocomplete-field data=autocompleteCourseNames key='name'
-                            value=newCourse.courseName}}
+                            value=newCourse.courseName class='form-control' relativeLayout=true
+                            activeSelection=true}}
                         </div>
                         <div class="col-md-1 text-center">
                             {{#if loading.autocompleteCourseNames}}

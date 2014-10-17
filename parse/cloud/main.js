@@ -58,7 +58,7 @@ Parse.Cloud.define("preSignUp", function (request, response) {
         }
     }).then(function (privateData) {
         if (!privateData) {
-            response.error(Parse.Error.EMAIL_NOT_FOUND);
+            response.error(Parse.Error.EMAIL_TAKEN);
         } else {
             response.success({"privateData": privateData});
         }
@@ -514,86 +514,33 @@ Parse.Cloud.define("sendPushToUser", function (request, response) {
 Parse.Cloud.job("indexObjectsForClass", function (request, status) {
     Parse.Cloud.useMasterKey();
 
+    var className = request.params.className,
+        query = new Parse.Query(className),
+        swiftApiUrl;
 
-    var className = request.params.className;
-    var query = new Parse.Query(className);
-    query.include('author');
-    query.include('category');
+    switch (className) {
+        case "_User":
+            query = new Parse.Query(Parse.User);
+            query.include('course');
+            query.include('institution');
+            swiftApiUrl = "http://api.swiftype.com/api/v1/engines/mycqs/document_types/users/documents/create_or_update.json";
+            break;
+        case "Test":
+            query.include('author');
+            query.include('category');
+            swiftApiUrl = "http://api.swiftype.com/api/v1/engines/mycqs/document_types/tests/documents/create_or_update.json";
+            break;
+    }
+
+    var document;
     query.each(function (object) {
-        if (!object.get('title') || !object.get('slug') || !object.get('category') || !object.get('author'))
+        document = getSwiftDocumentForObject(className, object);
+        if (!document)
             return;
 
-        var description = "",
-            numberOfQuestions = 0;
-
-        if (object.get('description'))
-            description = object.get('description');
-        if (object.get('questions'))
-            numberOfQuestions = object.get('questions').length;
-
-        var document = {
-            external_id: object.id,
-            fields: [
-                {
-                    name: 'title',
-                    value: object.get('title'),
-                    type: 'string'
-                },
-                {
-                    name: 'slug',
-                    value: object.get('slug'),
-                    type: 'string'
-                },
-                {
-                    name: 'authorId',
-                    value: object.get('author').id,
-                    type: 'enum'
-                },
-                {
-                    name: 'authorName',
-                    value: object.get('author').get('name'),
-                    type: 'string'
-                },
-                {
-                    name: 'categoryId',
-                    value: object.get('category').id,
-                    type: 'enum'
-                },
-                {
-                    name: 'categoryName',
-                    value: object.get('category').get('name'),
-                    type: 'string'
-                },
-                {
-                    name: 'description',
-                    value: description,
-                    type: 'string'
-                },
-                {
-                    name: 'numberOfQuestions',
-                    value: numberOfQuestions,
-                    type: 'integer'
-                },
-                {
-                    name: 'createdAt',
-                    value: object.createdAt,
-                    type: 'date'
-                },
-                {
-                    name: 'updatedAt',
-                    value: object.updatedAt,
-                    type: 'date'
-                },
-                {
-                    name: 'authorImageUrl',
-                    value: getUserProfileImageUrl(object.get('author')),
-                    type: 'string'
-                }
-            ]
-        };
         return Parse.Cloud.httpRequest({
             method: 'POST',
-            url: 'http://api.swiftype.com/api/v1/engines/mycqs/document_types/tests/documents/create_or_update.json',
+            url: swiftApiUrl,
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -605,6 +552,7 @@ Parse.Cloud.job("indexObjectsForClass", function (request, status) {
                 console.log("Successful call to swiftype, " + JSON.stringify(success.data));
             },
             function (error) {
+                console.log("Document error: " + JSON.stringify(document));
                 console.log("Failure to call to swiftype, " + error.text);
             });
 
@@ -943,31 +891,38 @@ function generateTests(moduleId, difficulty, totalQuestions, user, callback) {
  */
 Parse.Cloud.job('operationSortOutACLs', function (request, response) {
     Parse.Cloud.useMasterKey();
-    var query = new Parse.Query('Test'),
-        numQuestionsWithBadACL = 0;
-    query.doesNotExist('ACLFixed');
-    query.include('author');
+    var query = new Parse.Query(Parse.User),
+        promises = [],
+        numQuestionsWithBadACL = 0,
+        user;
 
-    var promises = [];
-
-    query.count().then(function (count) {
-        console.error("Still need to ACL fix " + count + " tests");
-    });
-
-    query.each(function (test) {
-            if (!test.get('questions') && test.get('author'))
-                return;
-            return test.fetch('questions')
-                .then(function () {
-                    for (var i = 0; i < test.get('questions').length; i++) {
-                        var question = test.get('questions')[i];
-                        if (!question)
-                            continue;
+    query.get(request.params.userId).then(function (result) {
+        user = result;
+        if (user)
+            console.log("User found: " + user.get('name'));
+        query = new Parse.Query("Test");
+        query.equalTo('author', user);
+        query.include('questions');
+        return query.find();
+    }).then(function (tests) {
+            console.log(user.get('name') + " has " + tests.length + " tests.");
+            for (var i = 0; i < tests.length; i++) {
+                var test = tests[i],
+                    questions = test.get('questions');
+                console.log("Test " + test.get('title') + " has " + questions.length + " questions.");
+                if (!questions)
+                    continue;
+                for (var j = 0; j < questions.length; j++) {
+                    var question = questions[j];
+                    if (!question) {
+                        console.log("question does not exist");
+                    } else {
+                        console.log("Checking ACL " + JSON.stringify(question.getACL()));
                         var currentACL = question.getACL();
                         if (!currentACL ||
                             JSON.stringify(currentACL) === '{}' || JSON.stringify(currentACL) === '{"*":{"read":true}}') {
                             console.log("BAD ACL match");
-                            var newACL = new Parse.ACL(test.get('author'));
+                            var newACL = new Parse.ACL(user);
                             newACL.setPublicReadAccess(true);
                             question.setACL(newACL);
                             question.set("ACLFixed", true);
@@ -975,14 +930,8 @@ Parse.Cloud.job('operationSortOutACLs', function (request, response) {
                             numQuestionsWithBadACL++;
                         }
                     }
-                    test.set('ACLFixed', true);
-                    promises.push(test.save());
-                },
-                function (error) {
-                    test.set('ACLFixed', false);
-                    promises.push(test.save());
-                    console.error(error);
-                });
+                }
+            }
         },
         function (error) {
             console.error("Error getting test");
@@ -996,9 +945,7 @@ Parse.Cloud.job('operationSortOutACLs', function (request, response) {
         }, function (error) {
             response.error(JSON.stringify(error));
         });
-})
-;
-
+});
 /**
  * --------------------
  * updateUserEducation
@@ -1819,6 +1766,156 @@ var maxTwoDP = function (number) {
     var float = +parseFloat(number).toFixed(2);
     return float;
 }
+/**
+ * -------------------------
+ * getSwiftDocumentForObject
+ * -------------------------
+ * Creates swiftype documents
+ * for object indexing
+ *
+ * @param {String} className
+ * @param {Object} object
+ * @return {Object} document
+ */
+var getSwiftDocumentForObject = function (className, object) {
+    var document = {
+        external_id: object.id
+    };
+
+    switch (className) {
+        case "_User":
+            if (!object.get('name') || !object.get('slug'))
+                return;
+
+            document.fields = [
+                {
+                    name: 'name',
+                    value: object.get('name'),
+                    type: 'string'
+                },
+                {
+                    name: 'slug',
+                    value: object.get('slug'),
+                    type: 'string'
+                },
+                {
+                    name: 'profileImageUrl',
+                    value: getUserProfileImageUrl(object),
+                    type: 'enum'
+                },
+                {
+                    name: 'numberOfFollowers',
+                    value: object.get('numberOfFollowers'),
+                    type: 'integer'
+                },
+                {
+                    name: 'numberFollowing',
+                    value: object.get('numberFollowing'),
+                    type: 'integer'
+                },
+                {
+                    name: 'numberOfTests',
+                    value: object.get('numberOfTests'),
+                    type: 'integer'
+                },
+                {
+                    name: 'createdAt',
+                    value: object.createdAt,
+                    type: 'date'
+                },
+                {
+                    name: 'updatedAt',
+                    value: object.updatedAt,
+                    type: 'date'
+                }
+            ];
+            if (object.get('institution') && object.get('institution').get('name')) {
+                document.fields.push({name: 'institutionId', value: object.get('institution').id, type: 'enum'});
+                document.fields.push({name: 'institutionName', value: object.get('institution').get('name'), type: 'string'});
+            }
+            if (object.get('course') && object.get('course').get('name') && object.get('yearNumber')) {
+                document.fields.push({name: 'courseId', value: object.get('course').id, type: 'enum'});
+                document.fields.push({name: 'courseName', value: object.get('course').get('name'), type: 'string'});
+                document.fields.push({name: 'yearNumber', value: object.get('yearNumber'), type: 'integer'});
+            }
+            break;
+        case "Test":
+            if (!object.get('title') || !object.get('slug') || !object.get('category') || !object.get('author'))
+                return;
+
+            var description = object.get('description'),
+                numberOfQuestions = 0;
+
+            if (!description)
+                description = "";
+            if (object.get('questions'))
+                numberOfQuestions = object.get('questions').length;
+
+            document.fields = [
+                {
+                    name: 'title',
+                    value: object.get('title'),
+                    type: 'string'
+                },
+                {
+                    name: 'slug',
+                    value: object.get('slug'),
+                    type: 'string'
+                },
+                {
+                    name: 'authorId',
+                    value: object.get('author').id,
+                    type: 'enum'
+                },
+                {
+                    name: 'authorName',
+                    value: object.get('author').get('name'),
+                    type: 'string'
+                },
+                {
+                    name: 'categoryId',
+                    value: object.get('category').id,
+                    type: 'enum'
+                },
+                {
+                    name: 'categoryName',
+                    value: object.get('category').get('name'),
+                    type: 'string'
+                },
+                {
+                    name: 'description',
+                    value: description,
+                    type: 'string'
+                },
+                {
+                    name: 'numberOfQuestions',
+                    value: numberOfQuestions,
+                    type: 'integer'
+                },
+                {
+                    name: 'createdAt',
+                    value: object.createdAt,
+                    type: 'date'
+                },
+                {
+                    name: 'updatedAt',
+                    value: object.updatedAt,
+                    type: 'date'
+                },
+                {
+                    name: 'authorImageUrl',
+                    value: getUserProfileImageUrl(object.get('author')),
+                    type: 'string'
+                }
+            ];
+            break;
+    }
+    return document;
+
+
+}
+
+
 /*
  * SAVE LOGIC
  */

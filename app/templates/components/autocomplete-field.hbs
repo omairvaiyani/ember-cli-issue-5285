@@ -1,15 +1,30 @@
 {{#if isFocussed}}
-    <div class="autocomplete-container">
+    <div {{bind-attr class=":autocomplete-container relativeLayout"}}>
+        {{#each group in groups}}
+            <h4 class="group-title">{{group.title}} ({{group.totalRecords}})</h4>
+            {{#each item in group.records itemController='component.item.autocomplete'}}
+                <div {{bind-attr class=':autocomplete-row item.isFocussed'}} {{action 'itemSelected' item}}>
+                    {{#if item.imageUrl}}
+                        {{render 'profile-image' item.imageUrl}}
+                    {{/if}}
+                    <div class="title"><p>{{item.key}}</p></div>
+                </div>
+            {{/each}}
+        {{/each}}
+
         {{#each item in array itemController='component.item.autocomplete'}}
-            <div class="autocomplete-row" {{bind-attr class=':autocomplete-row item.isFocussed'}} {{action 'itemSelected' item}}>
-                {{render 'profile-image' item.object.authorImageUrl}}
+            <div {{bind-attr class=':autocomplete-row item.isFocussed'}} {{action 'itemSelected' item}}>
+                {{#if item.object.authorImageUrl}}
+                    {{render 'profile-image' item.object.authorImageUrl}}
+                {{/if}}
                 <div class="title"><p>{{item.key}}</p></div>
             </div>
         {{/each}}
+
         {{#if numberOfItemsOmitted}}
-            <div class="autocomplete-row text-center" {{bind-attr class=':autocomplete-row item.isFocussed'}} {{action 'seeAllResults'}}>
+            {{!--<div {{bind-attr class=':autocomplete-row :text-center item.isFocussed'}} {{action 'seeAllResults'}}>
                 <p>See all results ({{numberOfItemsOmitted}}).</p>
-            </div>
+            </div>--}}
         {{/if}}
     </div>
 {{/if}}

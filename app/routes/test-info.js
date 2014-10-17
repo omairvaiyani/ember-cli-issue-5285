@@ -19,11 +19,18 @@ Ember.Route.extend({
                 }
             }.bind(this));
     },
-    setupController: function (controller, model) {
+    setupController: function (controller, model, transition) {
+        transition.send('decrementLoadingItems');
         if (!model) {
             this.transitionTo('notFound');
             return;
         }
         controller.set('model', model);
+        this.send('updatePageTitle', model.get('title'));
+        var description = model.get('description');
+        if(!description)
+            description = "This mcq test on has "+model.get('_data.questions.length')+ " questions! Take it now for free!";
+        this.send('updatePageDescription', description);
+        this.send('prerenderReady');
     }
 });

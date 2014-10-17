@@ -35,7 +35,8 @@
                 {{#link-to 'create' tagName='li' title='Create a test'}}{{#link-to 'create' tagName='a'}}
                     Create{{/link-to}}{{/link-to}}
             </ul>
-            {{partial 'application/navbar/search'}}
+
+            {{view 'expanding-search'}}
 
             <ul class="nav navbar-nav navbar-right">
                 {{#if currentUser}}
