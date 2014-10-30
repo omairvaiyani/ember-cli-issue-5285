@@ -16,7 +16,7 @@ app.use(require('prerender-node').set('prerenderToken', 'BToHzVZjPpLEjKzghygK'))
 log.info("Server fired up.");
 
 redis.auth('9133e11ec07b2885c35237ab4aa85ecf', function (response) {
-    log.info("Redis authenciated successfully");
+    log.info("Redis authenticated successfully");
 });
 
 var checkForAppUpdate = function () {
@@ -25,7 +25,7 @@ var checkForAppUpdate = function () {
             log.info("Redis.checkForAppUpdate error: " + err);
         else if (value) {
             if (currentDeploy !== value) {
-                log.info("New index file detected!");
+                log.info("New index file detected! Key: "+value);
                 currentDeploy = value;
                 updateIndexFile();
             } else {
@@ -36,10 +36,15 @@ var checkForAppUpdate = function () {
         }
     });
 }
-
+/*
+ * Runs straight away on deploy:
+ * Then, every 60 seconds.
+ */
+checkForAppUpdate();
 setInterval(checkForAppUpdate, 60000);
 
 var updateIndexFile = function () {
+    log.info("Updating index file to key: "+currentDeploy);
     redis.get(currentDeploy, function (err, data) {
         if (err)
             log.info("Redis.updateIndexFile error: " + err);

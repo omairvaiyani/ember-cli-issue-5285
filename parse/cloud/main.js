@@ -1,7 +1,10 @@
-var _ = require("underscore"),
-    mandrillKey = 'zAg8HDZtlJSoDu-ozHA3HQ';
+// Concat source to main.js with 'cat source/*.js > cloud/main.js'
 
-Mandrill = require('mandrill')
+var _ = require("underscore"),
+    moment = require('cloud/moment-timezone-with-data.js'),
+    mandrillKey = 'zAg8HDZtlJSoDu-ozHA3HQ',
+    Mandrill = require('mandrill');
+
 Mandrill.initialize(mandrillKey);
 
 var MyCQs = {
@@ -16,361 +19,10 @@ var FB = {
         namespace: "mycqs_app",
         testUrl: MyCQs.baseUrl + "test/"
     }
+};var PromiseHelper = {
+    ABORT_CHAIN: 100
 };
-/*
- * SIGN UP LOGIC
- */
-/**
- * ---------------
- * preSignUp
- * ---------------
- * Generates a random username for a particular email
- * and returns the UserPrivate object that will contain
- * the email.
- *
- * Request params:
- * @param {String} email
- * @returns {Object} {privateData: {email, username} }
- */
-Parse.Cloud.define("preSignUp", function (request, response) {
-    Parse.Cloud.useMasterKey();
-    var email = request.params.email,
-        randomUsername = generateRandomString(25, "aA#");
 
-    if (!email && !email.length) {
-        response.error(Parse.Error.EMAIL_MISSING);
-        return;
-    }
-
-    var query = new Parse.Query("UserPrivate");
-    query.equalTo('email', email);
-    query.find().then(function (result) {
-        if (result[0]) {
-            return null;
-        } else {
-            var privateData = new Parse.Object("UserPrivate");
-            privateData.set('email', email);
-            privateData.set('username', randomUsername);
-            /*
-             * ACL is set on this object on _User.beforeSave.isNew()
-             */
-            return privateData.save();
-        }
-    }).then(function (privateData) {
-        if (!privateData) {
-            response.error(Parse.Error.EMAIL_TAKEN);
-        } else {
-            response.success({"privateData": privateData});
-        }
-        return;
-    });
-
-});
-/**
- * ---------------
- * preLogIn
- * ---------------
- * Returns the username attached
- * to the hidden email provided
- *
- * Request params:
- * @param {String} email
- * @returns {String} username
- */
-Parse.Cloud.define("preLogIn", function (request, response) {
-    Parse.Cloud.useMasterKey();
-    var email = request.params.email;
-
-    if (!email && !email.length) {
-        response.error(Parse.Error.EMAIL_MISSING);
-        return;
-    }
-    var query = new Parse.Query("UserPrivate");
-    query.equalTo('email', email);
-    query.find().then(function (result) {
-        if (!result[0]) {
-            response.error(Parse.Error.EMAIL_NOT_FOUND);
-        } else {
-            response.success({"username": result[0].get('username')});
-        }
-        return;
-    });
-});
-/**
- * ---------------
- * preFacebookConnect
- * ---------------
- * Checks if a user with the
- * authResponse.userID (fbid)
- * has been migrated over manually.
- * If so, authorise the user,
- * thus allowing the client app
- * to continue the facebook connect
- * function as per usual.
- *
- * Request params:
- * @param {Object} authResponse
- * @returns {response.success} or {response.error}
- */
-Parse.Cloud.define("preFacebookConnect", function (request, response) {
-    Parse.Cloud.useMasterKey();
-    var authResponse = request.params.authResponse,
-        query = new Parse.Query(Parse.User);
-    query.equalTo('fbid', authResponse.userID);
-    query.find().then(function (results) {
-            if (results[0]) {
-                var user = results[0];
-                if (user.get('authData')) {
-                    response.success();
-                    return;
-                } else {
-                    var authData = {
-                        facebook: {
-                            access_token: authResponse.accessToken,
-                            id: authResponse.userID,
-                            expiration_date: (new Date(2032, 2, 2)).toISOString()
-                        }
-                    };
-                    user.set('authData', authData);
-                    return user.save()
-                        .then(function () {
-                            response.success();
-                            return;
-                        });
-                }
-            }
-        },
-        function (error) {
-            response.error(error);
-        }
-    );
-});
-/**
- * ---------------
- * setEmailAddress
- * ---------------
- * Checks if email already belongs
- * to another user. If not, then
- * it checks if the requesting user
- * has privateData set (creates it
- * if not) and sets the given email.
- *
- * Request params:
- * @param {String} email
- * @returns {response.success} or {response.error}
- */
-Parse.Cloud.define("setEmailAddress", function (request, response) {
-    Parse.Cloud.useMasterKey();
-    var email = request.params.email,
-        user = request.user,
-        query = new Parse.Query("UserPrivate");
-
-
-    if (!user || !email) {
-        response.error({"message": "User not authenticated or email not given."});
-        return;
-    }
-    var privateData = user.get('privateData');
-
-    query.equalTo('email', email);
-    query.count()
-        .then(
-        function (count) {
-            if (count) {
-                response.error({"message": "Email already taken."});
-                return;
-            } else {
-                if (!privateData) {
-                    privateData = new Parse.Object("UserPrivate");
-                    privateData.set('username', user.get('username'));
-                }
-                privateData.set('email', email);
-                privateData.setACL(Security.createACLs(user, false, false, false));
-                return privateData.save();
-            }
-        },
-        function (error) {
-            response.error(error);
-            return;
-        }
-    )
-        .then(function (privateData) {
-            user.set('privateData', privateData);
-            return user.save();
-        })
-        .then(function () {
-            response.success({"privateData": privateData});
-            return;
-        });
-});
-/**
- * --------------------
- * resetPasswordRequest
- * --------------------
- * A custom password reset
- * function given that we
- * are not storing 'emails'
- * on the _User class.
- *
- * Sends a request email with
- * a unique link (the objectId
- * for the PasswordReset object).
- *
- * Request params:
- * @param {String} email
- * @returns {response.success} or {response.error}
- */
-Parse.Cloud.define("resetPasswordRequest", function (request, response) {
-    Parse.Cloud.useMasterKey();
-    var email = request.params.email,
-        query = new Parse.Query("UserPrivate"),
-        user;
-
-
-    if (!email) {
-        response.error(Parse.Error.EMAIL_MISSING);
-        return;
-    }
-
-    query.equalTo('email', email);
-    query.find()
-        .then(
-        function (result) {
-            if (result[0]) {
-                var username = result[0].get('username');
-                query = new Parse.Query(Parse.User);
-                query.equalTo('username', username);
-                return query.find()
-                    .then(function (result) {
-                        if (!result[0]) {
-                            return;
-                        } else {
-                            user = result[0];
-                            var passwordResetObject = new Parse.Object('PasswordReset');
-                            passwordResetObject.set('user', user);
-                            passwordResetObject.set('isValid', true);
-                            passwordResetObject.setACL(Security.createACLs());
-                            return passwordResetObject.save();
-                        }
-                    }).then(function (passwordResetObject) {
-                        if (passwordResetObject) {
-                            var data = [
-                                {name: "PASSRESETLINK", content: MyCQs.baseUrl + "password-reset/" + passwordResetObject.id}
-                            ];
-                            return sendEmail('forgotten-password', user, email, data);
-                        } else
-                            return;
-                    });
-            } else
-                return;
-        })
-        .then(
-        function (emailSent) {
-            if (!emailSent) {
-                console.error("Email not sent");
-                return response.error(Parse.Error.EMAIL_NOT_FOUND);
-            } else {
-                return response.success();
-            }
-        },
-        function (error) {
-            if (error)
-                response.error(error);
-            else
-                response.error();
-            return;
-        }
-    );
-});
-/**
- * -----------------------------
- * validatePasswordResetRequest
- * ---------------------------
- * Checks if password request
- * is valid.
- *
- * Request params:
- * @param {String} objectId
- * @returns {_User} or {response.error}
- */
-Parse.Cloud.define("validatePasswordResetRequest", function (request, response) {
-    Parse.Cloud.useMasterKey();
-    var objectId = request.params.objectId,
-        query = new Parse.Query("PasswordReset");
-
-    if (!objectId) {
-        response.error(Parse.Error.MISSING_OBJECT_ID);
-        return;
-    }
-
-    query.equalTo('objectId', objectId);
-    return query.find()
-        .then(
-        function (result) {
-            if (result[0]) {
-                var passwordReset = result[0];
-                if (passwordReset.get('isValid')) {
-                    return response.success(passwordReset.get('user'));
-                } else {
-                    return response.error(Parse.Error.INVALID_LINKED_SESSION);
-                }
-            } else
-                return response.error(Parse.Error.OBJECT_NOT_FOUND);
-        });
-});
-/**
- * -----------------------------
- * setNewPassword
- * ---------------------------
- * Sets a new password for a user
- * IF they provide a valid password
- * reset request
- * Request params:
- * @param {String} userObjectId
- * @param {String} password
- * @param {String} passwordResetId
- * @returns {response.success} or {response.error}
- */
-Parse.Cloud.define("setNewPassword", function (request, response) {
-    Parse.Cloud.useMasterKey();
-    var userObjectId = request.params.userObjectId,
-        password = request.params.password,
-        passwordResetId = request.params.passwordResetId,
-        query = new Parse.Query("PasswordReset");
-
-    if (!userObjectId || !password || !passwordResetId) {
-        response.error(Parse.Error.MISSING_OBJECT_ID);
-        return;
-    }
-
-    query.equalTo('objectId', passwordResetId);
-    return query.find()
-        .then(
-        function (result) {
-            if (result[0]) {
-                var passwordReset = result[0];
-                if (passwordReset.get('isValid')) {
-                    passwordReset.set('isValid', false);
-                    passwordReset.save()
-                        .then(function () {
-                            query = new Parse.Query(Parse.User);
-                            query.equalTo('objectId', userObjectId);
-                            return query.find();
-                        })
-                        .then(function (user) {
-                            user[0].set('password', password);
-                            return user[0].save();
-                        }).
-                        then(function () {
-                            response.success();
-                        });
-                } else {
-                    return response.error(Parse.Error.INVALID_LINKED_SESSION);
-                }
-            } else
-                return response.error(Parse.Error.OBJECT_NOT_FOUND);
-        });
-});
 /**
  * ---------
  * sendEmail
@@ -409,9 +61,6 @@ function sendEmail(templateName, user, email, data) {
         case 'forgotten-password':
             subject = "Reset your MyCQs password";
             break;
-        default:
-            subject = "Hey " + firstName + ", welcome to MyCQs!";
-            break;
     }
 
     promise = Mandrill.sendTemplate({
@@ -433,306 +82,18 @@ function sendEmail(templateName, user, email, data) {
     }, {
         success: function (httpResponse) {
             console.log("Sent email: " + JSON.stringify(httpResponse));
-            promise.resolve(httpResponse);
-            return promse;
         },
         error: function (httpResponse) {
             console.error("Error sending email: " + JSON.stringify(httpResponse));
-            promise.reject(httpResponse);
-            return promise;
         }
     });
 
     return promise;
 }
 
-/***
- Sends a push message to the user (currently only used for Send to Mobile function, but potential to be rolled out to others
 
 
- @params
 
- message: A message to send with the push, i.e. 'You sent a test to your mobile' etc
- recipientUserId: objectId of the user to receive the message (in Send to Mobile this will be the current user)
- testId: objetId of the test to send the user
- type: string representing the type of message being sent, currently supported: 'sendToMobile' (will be properly implemented in code as we add new methods)
- **/
-
-
-Parse.Cloud.define("sendPushToUser", function (request, response) {
-    var senderUser = request.user;
-    var recipientUserId = request.params.recipientId;
-    var message = request.params.message;
-    var type = request.params.type;
-    var testId = request.params.testId;
-    var sentToSelf = 0;
-    // Validate that the sender is allowed to send to the recipient.
-    // For example each user has an array of objectIds of friends
-//    if (senderUser.get("friendIds").indexOf(recipientUserId) === -1 && senderUser.id != recipientUserId) {
-//        response.error("The recipient is not the sender's friend, cannot send push.");
-//    }
-
-    if (senderUser.id === recipientUserId) {
-        sentToSelf = 1;
-    }
-    // Validate the message text.
-    // For example make sure it is under 140 characters
-    if (message.length > 140) {
-        // Truncate and add a ...
-        message = message.substring(0, 137) + "...";
-    }
-
-    // Send the push.
-    // Find devices associated with the recipient user
-    var recipientUser = new Parse.User();
-    recipientUser.id = recipientUserId;
-    var pushQuery = new Parse.Query(Parse.Installation);
-    pushQuery.equalTo("user", recipientUser);
-
-    // Send the push notification to results of the query
-    Parse.Push.send({
-        where: pushQuery,
-        data: {
-            "title": "MyCQs",
-            "alert": message,
-            "testId": testId,
-            "sound": "default.caf",
-            "badge": "Increment",
-            "sentToSelf": sentToSelf
-        }
-    }).then(function () {
-        response.success("Push was sent successfully.")
-    }, function (error) {
-        response.error("Push failed to send with error: " + error.message);
-    });
-});
-
-/*
- * Search indexing
- * Add objects to Swiftype
- */
-Parse.Cloud.job("indexObjectsForClass", function (request, status) {
-    Parse.Cloud.useMasterKey();
-
-    var className = request.params.className,
-        query = new Parse.Query(className),
-        swiftApiUrl;
-
-    switch (className) {
-        case "_User":
-            query = new Parse.Query(Parse.User);
-            query.include('course');
-            query.include('institution');
-            swiftApiUrl = "http://api.swiftype.com/api/v1/engines/mycqs/document_types/users/documents/create_or_update.json";
-            break;
-        case "Test":
-            query.include('author');
-            query.include('category');
-            swiftApiUrl = "http://api.swiftype.com/api/v1/engines/mycqs/document_types/tests/documents/create_or_update.json";
-            break;
-    }
-
-    var document;
-    query.each(function (object) {
-        document = getSwiftDocumentForObject(className, object);
-        if (!document)
-            return;
-
-        return Parse.Cloud.httpRequest({
-            method: 'POST',
-            url: swiftApiUrl,
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: {
-                auth_token: "xBAVD6EFQzt23WJFhp1v",
-                document: document
-            }
-        }).then(function (success) {
-                console.log("Successful call to swiftype, " + JSON.stringify(success.data));
-            },
-            function (error) {
-                console.log("Document error: " + JSON.stringify(document));
-                console.log("Failure to call to swiftype, " + error.text);
-            });
-
-    }).then(
-        function () {
-            status.success();
-        }, function () {
-            status.error();
-        });
-
-});
-/*
- * CALCULATIONS
- */
-Parse.Cloud.job("updateCountClass", function (request, status) {
-    Parse.Cloud.useMasterKey();
-    /*
-     * _User
-     */
-    var query = new Parse.Query("Count"),
-        users,
-        tests,
-        questions,
-        attempts,
-        promises = [],
-        ACL = new Parse.ACL();
-
-    ACL.setPublicReadAccess(true);
-
-    query.find()
-        .then(function (results) {
-            for (var i = 0; i < results.length; i++) {
-                switch (results[i].get('type')) {
-                    case "users":
-                        users = results[i];
-                        break;
-                    case "tests":
-                        tests = results[i];
-                        break;
-                    case "questions":
-                        questions = results[i];
-                        break;
-                    case "attempts":
-                        attempts = results[i];
-                        break;
-                }
-            }
-            query = new Parse.Query(Parse.User);
-            return query.count();
-        })
-        .then(function (count) {
-            users.set('total', count);
-            users.setACL(ACL);
-            promises.push(users.save());
-
-            query = new Parse.Query("Test");
-            return query.count();
-        })
-        .then(function (count) {
-            tests.set('total', count);
-            tests.setACL(ACL);
-            promises.push(tests.save());
-
-            query = new Parse.Query("Question");
-            return query.count();
-        })
-        .then(function (count) {
-            questions.set('total', count);
-            questions.setACL(ACL);
-            promises.push(questions.save());
-
-            query = new Parse.Query("Attempt");
-            return query.count();
-        })
-        .then(function (count) {
-            attempts.set('total', count);
-            attempts.setACL(ACL);
-            promises.push(attempts.save());
-
-            return Parse.Promise.when(promises);
-        })
-        .then(function () {
-            status.success();
-        });
-});
-
-Parse.Cloud.job("calculateTotalTestsInCategory", function (request, status) {
-    /*
-     * Reset totalTests counter in each category
-     */
-    var query = new Parse.Query('Category');
-    query.each(function (category) {
-        category.set('totalTests', 0);
-        return category.save();
-    }).then(function () {
-        /*
-         * Loop through each test, incrementing it's category.totalTests
-         * and category.parent.totalTests if available.
-         */
-        var testsInCategoryQuery = new Parse.Query('Test');
-        testsInCategoryQuery.include('category.parent');
-        return testsInCategoryQuery.each(function (test) {
-            if (test.get('category')) {
-                test.get('category').increment('totalTests');
-                if (test.get('category').get('parent')) {
-                    test.get('category').get('parent').increment('totalTests');
-                    test.get('category').get('parent').save();
-                }
-                return test.get('category').save();
-            }
-            return test;
-        });
-    }).then(function () {
-            status.success("Total tests in each category calculated successfully.");
-        },
-        function (error) {
-            status.error(JSON.stringify(error));
-        });
-});
-Parse.Cloud.job("calculateTotalTestsInEachCategory", function (request, status) {
-    Parse.Cloud.useMasterKey();
-    /*
-     * Get all bottom level
-     * categories:
-     * - No children
-     * - Has tests directly associated
-     * with it)
-     */
-    var childCategories = [],
-        testCounts = [],
-        parentCategories = [],
-        saveCategoriesPromises = [];
-
-    var lookup = function (array, object) {
-        for (var i = 0; i < array.length; i++) {
-            if (array[i].id === object.id)
-                return array[i];
-        }
-        return false;
-    };
-
-    var query = new Parse.Query('Category');
-    query.equalTo('hasChildren', false);
-    query.include('parent');
-    query.each(function (category) {
-        /*
-         * Count the number of tests
-         * belonging to this category
-         */
-        var testQuery = new Parse.Query('Test');
-        testQuery.equalTo('category', category);
-        childCategories.push(category);
-        testCounts.push(testQuery.count());
-        if (category.get('parent') && !lookup(parentCategories, category.get('parent'))) {
-            category.get('parent').set('totalTests', 0);
-            parentCategories.push(category.get('parent'));
-        }
-    }).then(function () {
-        return Parse.Promise.when(testCounts);
-    }).then(function () {
-        for (var i = 0; i < childCategories.length; i++) {
-            var childCategory = childCategories[i],
-                totalTests = testCounts[i]._result[0];
-
-            childCategory.set('totalTests', totalTests);
-            if (childCategory.get('parent')) {
-                var parentCategory = lookup(parentCategories, childCategory.get('parent'));
-                parentCategory.increment('totalTests', totalTests);
-            }
-            saveCategoriesPromises.push(childCategory.save());
-        }
-
-        for (var i = 0; i < parentCategories.length; i++) {
-            saveCategoriesPromises.push(parentCategories[i].save());
-        }
-        return Parse.Promise.when(saveCategoriesPromises);
-    }).then(function () {
-        status.success();
-    })
-});
 /*
  * GENERATE CONTENT
  */
@@ -858,7 +219,7 @@ function generateTests(moduleId, difficulty, totalQuestions, user, callback) {
 
                     test.save(null, {
                         success: function (newTest) {
-//                                  
+//
                             callback(newTest);
 
 
@@ -878,8 +239,895 @@ function generateTests(moduleId, difficulty, totalQuestions, user, callback) {
     });
 };
 
+/*
+ * Useful functions
+ */
 /**
- * operationSortOutACLs
+ * ------------------
+ * Security
+ * ------------------
+ * Our security object for any functions relating to:
+ * - ACLs
+ * - Roles
+ */
+var Security = {
+    /**
+     * ------------------
+     * createACLs
+     * ------------------
+     * Object level ACLs for any Class.
+     * Shorthands:
+     * - createACLs() - hide from everyone including author
+     * - createACLs(user) - author has read/write, public has read access only
+     * - createACLs(user, false) - author has read/write, public cannot access
+     * - createACLs(user, false, false, true) - author can read, but not write. No public access.
+     * @namespace Security
+     * @param {_User} user
+     * @param {bool} publicReadAccess {def true}
+     * @param {bool} publicWriteAccess {def false}
+     * @param {bool} disableUserWriteAccess
+     * @returns {ACL} ACLs
+     */
+    createACLs: function (user, publicReadAccess, publicWriteAccess, disableUserWriteAccess) {
+        var ACLs;
+        if (user && !disableUserWriteAccess)
+            ACLs = new Parse.ACL(user);
+        else
+            ACLs = new Parse.ACL();
+
+        if (disableUserWriteAccess)
+            ACLs.setReadAccess(user.id, true);
+
+        if (!user)
+            publicReadAccess = false;
+        else if (publicReadAccess !== false && publicReadAccess !== true)
+            publicReadAccess = true;
+
+        if (publicWriteAccess !== false && publicWriteAccess !== true)
+            publicWriteAccess = false;
+
+        ACLs.setPublicReadAccess(publicReadAccess);
+        ACLs.setPublicWriteAccess(publicWriteAccess);
+
+        return ACLs;
+    },
+
+    publicReadOnly: function () {
+        var ACLs = new Parse.ACL();
+        ACLs.setPublicReadAccess(true);
+        return ACLs;
+    }
+};
+
+/**
+ * ---------------------
+ * generateRandomString
+ * ---------------------
+ * Generates a random string of given
+ * length with characters from the
+ * included types. E.g. (12, 'aA#') // u23l123aOil9
+ * @param {int} length
+ * @param {String} type
+ * @returns {String} result
+ */
+function generateRandomString(length, type) {
+    var mask = '';
+    if (type.indexOf('a') > -1) mask += 'abcdefghijklmnopqrstuvwxyz';
+    if (type.indexOf('A') > -1) mask += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    if (type.indexOf('#') > -1) mask += '0123456789';
+    if (type.indexOf('!') > -1) mask += '~`!@#$%^&*()_+-={}[]:";\'<>?,./|\\';
+    var result = '';
+    for (var i = length; i > 0; --i) result += mask[Math.round(Math.random() * (mask.length - 1))];
+    return result;
+}
+
+/**
+ * ------------------
+ * generateSearchTags
+ * ------------------
+ * Used for indexing objects by splitting titles, names, etc into
+ * a string array without 'stop words' such as
+ * 'the, of, and'. Array is saved in 'tags' and
+ * should be queried like so:
+ * where: { "tags": { "$all" : ["user's", "search", "terms"] } }
+ *
+ * @param className
+ * @param object
+ * @returns [tags]
+ */
+var generateSearchTags = function (className, object) {
+    var toLowerCase = function (w) {
+        return w.toLowerCase();
+    };
+    var words = "";
+    switch (className) {
+        case 'Test':
+            words += object.get('title') + object.get('description');
+            break;
+        case 'InstitutionList':
+            words += object.get('fullName');
+            break;
+        case 'CourseList':
+            words += object.get('name');
+            break;
+    }
+    words = words.split(/\b/);
+    words = _.map(words, toLowerCase);
+    var stopWords = ["the", "in", "and", "test", "mcqs", "of", "a", "an"]
+    words = _.filter(words, function (w) {
+        return w.match(/^\w+$/) && !_.contains(stopWords, w);
+    });
+    words = _.uniq(words);
+    return words;
+};
+/**
+ * --------
+ * slugify
+ * -------
+ *
+ * @param className
+ * @param string
+ * @param object (optional)
+ * @returns {*}
+ */
+var slugify = function (className, string, object) {
+    var slug;
+    switch (className) {
+        case "_User":
+            var firstInitial = string.charAt(0),
+                lastName = string.split(" ")[string.split(" ").length - 1];
+            slug = (firstInitial + lastName).toLowerCase();
+            break;
+        case "Category":
+            if (string.toLowerCase() === "other") {
+                slug = object.get('parent').get('slug') + "-" +
+                string.toLowerCase().replace(/ /g, '-').replace(/[-]+/g, '-').replace(/[^\w-]+/g, '');
+            } else
+                slug = string.toLowerCase().replace(/ /g, '-').replace(/[-]+/g, '-').replace(/[^\w-]+/g, '');
+            break;
+        default:
+            slug = string.toLowerCase().replace(/ /g, '-').replace(/[-]+/g, '-').replace(/[^\w-]+/g, '');
+            break;
+    }
+    return slug;
+}
+
+/**
+ * ---------------------
+ * capitaliseFirstLetter
+ * ---------------------
+ * @param string
+ * @returns {string}
+ */
+function capitaliseFirstLetter(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
+/**
+ * ----------------------
+ * getUserProfileImageUrl
+ * ----------------------
+ * Returns uploaded profilePicture,
+ * or facebook profile picture url,
+ * or default silhouette.
+ *
+ * @param {_User} user
+ * @returns {String} url
+ */
+function getUserProfileImageUrl(user) {
+    if (user.get('profilePicture') && user.get('profilePicture').url())
+        return user.get('profilePicture').url();
+    else if (user.get('fbid') && user.get('fbid').length)
+        return "http://res.cloudinary.com/mycqs/image/facebook/c_thumb,e_improve,g_faces:center,w_150/" + user.get('fbid');
+    else
+        return "http://assets.mycqs.com/img/silhouette.png";
+}
+
+/**
+ * --------
+ * maxTwoDP
+ * --------
+ * Converts any int or float into
+ * a float with maximum of two
+ * decimal places:
+ * 2.57755 // 2.58
+ * 56.1    // 56.1
+ * 80      // 80
+ *
+ * @param {Number} number
+ * @return {float} float
+ */
+var maxTwoDP = function (number) {
+    var float = +parseFloat(number).toFixed(2);
+    return float;
+}
+/**
+ * -------------------------
+ * getSwiftDocumentForObject
+ * -------------------------
+ * Creates swiftype documents
+ * for object indexing
+ *
+ * @param {String} className
+ * @param {Object} object
+ * @return {Object} document
+ */
+var getSwiftDocumentForObject = function (className, object) {
+    var document = {
+        external_id: object.id
+    };
+
+    switch (className) {
+        case "_User":
+            if (!object.get('name') || !object.get('slug'))
+                return;
+
+            document.fields = [
+                {
+                    name: 'name',
+                    value: object.get('name'),
+                    type: 'string'
+                },
+                {
+                    name: 'slug',
+                    value: object.get('slug'),
+                    type: 'string'
+                },
+                {
+                    name: 'profileImageUrl',
+                    value: getUserProfileImageUrl(object),
+                    type: 'enum'
+                },
+                {
+                    name: 'numberOfFollowers',
+                    value: object.get('numberOfFollowers'),
+                    type: 'integer'
+                },
+                {
+                    name: 'numberFollowing',
+                    value: object.get('numberFollowing'),
+                    type: 'integer'
+                },
+                {
+                    name: 'numberOfTests',
+                    value: object.get('numberOfTests'),
+                    type: 'integer'
+                },
+                {
+                    name: 'createdAt',
+                    value: object.createdAt,
+                    type: 'date'
+                },
+                {
+                    name: 'updatedAt',
+                    value: object.updatedAt,
+                    type: 'date'
+                }
+            ];
+            if (object.get('institution') && object.get('institution').get('name')) {
+                document.fields.push({name: 'institutionId', value: object.get('institution').id, type: 'enum'});
+                document.fields.push({
+                    name: 'institutionName',
+                    value: object.get('institution').get('name'),
+                    type: 'string'
+                });
+            }
+            if (object.get('course') && object.get('course').get('name') && object.get('yearNumber')) {
+                document.fields.push({name: 'courseId', value: object.get('course').id, type: 'enum'});
+                document.fields.push({name: 'courseName', value: object.get('course').get('name'), type: 'string'});
+                document.fields.push({name: 'yearNumber', value: object.get('yearNumber'), type: 'integer'});
+            }
+            break;
+        case "Test":
+            if (!object.get('title') || !object.get('slug') || !object.get('category') || !object.get('author'))
+                return;
+
+            var description = object.get('description'),
+                numberOfQuestions = 0;
+
+            if (!description)
+                description = "";
+            if (object.get('questions'))
+                numberOfQuestions = object.get('questions').length;
+
+            document.fields = [
+                {
+                    name: 'title',
+                    value: object.get('title'),
+                    type: 'string'
+                },
+                {
+                    name: 'slug',
+                    value: object.get('slug'),
+                    type: 'string'
+                },
+                {
+                    name: 'authorId',
+                    value: object.get('author').id,
+                    type: 'enum'
+                },
+                {
+                    name: 'authorName',
+                    value: object.get('author').get('name'),
+                    type: 'string'
+                },
+                {
+                    name: 'categoryId',
+                    value: object.get('category').id,
+                    type: 'enum'
+                },
+                {
+                    name: 'categoryName',
+                    value: object.get('category').get('name'),
+                    type: 'string'
+                },
+                {
+                    name: 'description',
+                    value: description,
+                    type: 'string'
+                },
+                {
+                    name: 'numberOfQuestions',
+                    value: numberOfQuestions,
+                    type: 'integer'
+                },
+                {
+                    name: 'createdAt',
+                    value: object.createdAt,
+                    type: 'date'
+                },
+                {
+                    name: 'updatedAt',
+                    value: object.updatedAt,
+                    type: 'date'
+                },
+                {
+                    name: 'authorImageUrl',
+                    value: getUserProfileImageUrl(object.get('author')),
+                    type: 'string'
+                }
+            ];
+            break;
+    }
+    return document;
+
+
+}/**
+ * @BackgroundJob Test Quality Score
+ *
+ * For each test, use our algorithm
+ * for determining good quality tests
+ * - Max score 100
+ * -- Low quality cut off, 20
+ * - Judge by number of questions (MAX 25)
+ * -- 10-25 optimal
+ * - % of explanations (MAX 25)
+ * -- 100% is best
+ * - Number of attempts (MAX 15)
+ * -- Variable
+ * - Percentage of unique attempts (MAX 20)
+ * -- Lower the better (more repeats), below 50% for now
+ * - Unique average scores (MAX 15)
+ * -- Optimal is 55-85%
+ */
+Parse.Cloud.job('testQualityScore', function (request, status) {
+    Parse.Cloud.useMasterKey();
+    var query = new Parse.Query('Test'),
+        promises = [];
+    query.include('questions');
+    query.each(function (test) {
+        var score = 0;
+
+        var numberOfQuestions = test.get('questions').length;
+        // Number of questions 0-4 = 0
+        // Number of questions 5-9 = +5
+        if (numberOfQuestions > 4 && numberOfQuestions < 10)
+            score += 5;
+        // Number of questions 10-25 = +25
+        else if (numberOfQuestions > 9 && numberOfQuestions < 26)
+            score += 25;
+        // Number of questions 25+ = +15
+        else if (numberOfQuestions > 25)
+            score += 15;
+
+        var numberOfExplanations = 0,
+            percentageOfExplanations = 0;
+
+        for (var i = 0; i < test.get('questions').length; i++) {
+            var question = test.get('questions')[i];
+            if (!question)
+                continue;
+            if (question.get('explanation') && question.get('explanation').length)
+                numberOfExplanations++;
+        }
+        // Percentage of explanations 0% or 0 questions = 0
+        if (numberOfExplanations && test.get('questions').length) {
+            percentageOfExplanations = Math.floor((numberOfExplanations / test.get('questions').length) * 100);
+            // Percentage of explanations > 0 and < 25 questions = +5
+            if (percentageOfExplanations > 0 && percentageOfExplanations < 25)
+                score += 5;
+            // Percentage of explanations > 24 and < 50 questions = +10
+            else if (percentageOfExplanations > 24 && percentageOfExplanations < 50)
+                score += 10;
+            // Percentage of explanations > 49 and < 75 = +15
+            else if (percentageOfExplanations > 49 && percentageOfExplanations < 75)
+                score += 15;
+            // Percentage of explanations > 74 and < 100 questions = +20
+            else if (percentageOfExplanations > 74 && percentageOfExplanations < 100)
+                score += 20;
+            // Percentage of explanations 100% = +25
+            else if (percentageOfExplanations === 100)
+                score += 25;
+        }
+
+        var numberOfAttempts = test.get('numberOfAttempts');
+        // Number of attempts 0 = 0
+        // Number of attempts > 0 and < 5 = +5
+        if (numberOfAttempts > 0 && numberOfAttempts < 5)
+            score += 5;
+        // Number of attempts > 5 and < 15 = +10
+        else if (numberOfAttempts > 4 && numberOfAttempts < 15)
+            score += 10;
+        // Number of attempts > 14 = +15
+        else if (numberOfAttempts > 14)
+            score += 15;
+
+        var uniqueNumberOfAttempts = test.get('uniqueNumberOfAttempts'),
+            percentageOfUniqueAttempts;
+
+
+        if (uniqueNumberOfAttempts && numberOfAttempts) {
+            percentageOfUniqueAttempts = Math.floor((uniqueNumberOfAttempts / numberOfAttempts) * 100);
+            // Percentage of unique attempts 0 = +25
+            if (percentageOfUniqueAttempts < 10)
+                score += 25;
+            // Percentage of unique attempts > 9 and < 25 = 20
+            else if (percentageOfUniqueAttempts > 9 && percentageOfUniqueAttempts < 25)
+                score += 20;
+            // Percentage of unique attempts > 24 and < 50 = 15
+            else if (percentageOfUniqueAttempts > 24 && percentageOfUniqueAttempts < 50)
+                score += 15;
+            // Percentage of unique attempts > 49 and < 75 = 10
+            else if (percentageOfUniqueAttempts > 49 && percentageOfUniqueAttempts < 75)
+                score += 10;
+            // Percentage of unique attempts > 74 = 0
+        }
+
+        var uniqueAverageScore = test.get('uniqueAverageScore');
+
+        // Unique average score 0 = 0
+        // Unique average score > 0 and < 40 = 5
+        if (uniqueAverageScore > 0 && uniqueAverageScore < 40)
+            score += 5;
+        // Unique average score > 39 and < 55 = 10
+        else if (uniqueAverageScore > 39 && uniqueAverageScore < 55)
+            score += 10;
+        // Unique average score > 54 and < 85 = 20
+        else if (uniqueAverageScore > 54 && uniqueAverageScore < 85)
+            score += 15;
+        // Unique average score > 84 = 15
+        else if (uniqueAverageScore > 84)
+            score += 10;
+
+        test.set('quality', score);
+        promises.push(test.save());
+    }, function (error) {
+        console.error("Error looping through test in Test Quality Score job " + JSON.stringify(error));
+    }).then(function () {
+        return Parse.Promise.when(promises);
+    }).then(function () {
+        status.success();
+    }, function (error) {
+        status.error(JSON.stringify(error));
+    })
+});
+
+/**
+ * @BackgroundJob - Index Objects for Class
+ * Search indexing
+ * Add objects to Swiftype
+ * @param className
+ */
+Parse.Cloud.job("indexObjectsForClass", function (request, status) {
+    Parse.Cloud.useMasterKey();
+
+    var className = request.params.className,
+        query = new Parse.Query(className),
+        swiftApiUrl;
+
+    switch (className) {
+        case "_User":
+            query = new Parse.Query(Parse.User);
+            query.include('course');
+            query.include('institution');
+            swiftApiUrl = "http://api.swiftype.com/api/v1/engines/mycqs/document_types/users/documents/create_or_update.json";
+            break;
+        case "Test":
+            query.include('author');
+            query.include('category');
+            swiftApiUrl = "http://api.swiftype.com/api/v1/engines/mycqs/document_types/tests/documents/create_or_update.json";
+            break;
+    }
+
+    var document;
+    query.each(function (object) {
+        document = getSwiftDocumentForObject(className, object);
+        if (!document)
+            return;
+
+        return Parse.Cloud.httpRequest({
+            method: 'POST',
+            url: swiftApiUrl,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: {
+                auth_token: "xBAVD6EFQzt23WJFhp1v",
+                document: document
+            }
+        }).then(function (success) {
+                console.log("Successful call to swiftype, " + JSON.stringify(success.data));
+            },
+            function (error) {
+                console.log("Document error: " + JSON.stringify(document));
+                console.log("Failure to call to swiftype, " + error.text);
+            });
+
+    }).then(
+        function () {
+            status.success();
+        }, function () {
+            status.error();
+        });
+
+});
+
+/**
+ * @BackgroundJob - Update the Count Class
+ * Saves us counting through hundreds of thousands of
+ * rows per client visit.
+ */
+Parse.Cloud.job("updateCountClass", function (request, status) {
+    Parse.Cloud.useMasterKey();
+    /*
+     * _User
+     */
+    var query = new Parse.Query("Count"),
+        users,
+        tests,
+        questions,
+        attempts,
+        promises = [],
+        ACL = new Parse.ACL();
+
+    ACL.setPublicReadAccess(true);
+
+    query.find()
+        .then(function (results) {
+            for (var i = 0; i < results.length; i++) {
+                switch (results[i].get('type')) {
+                    case "users":
+                        users = results[i];
+                        break;
+                    case "tests":
+                        tests = results[i];
+                        break;
+                    case "questions":
+                        questions = results[i];
+                        break;
+                    case "attempts":
+                        attempts = results[i];
+                        break;
+                }
+            }
+            query = new Parse.Query(Parse.User);
+            return query.count();
+        })
+        .then(function (count) {
+            users.set('total', count);
+            users.setACL(ACL);
+            promises.push(users.save());
+
+            query = new Parse.Query("Test");
+            return query.count();
+        })
+        .then(function (count) {
+            tests.set('total', count);
+            tests.setACL(ACL);
+            promises.push(tests.save());
+
+            query = new Parse.Query("Question");
+            return query.count();
+        })
+        .then(function (count) {
+            questions.set('total', count);
+            questions.setACL(ACL);
+            promises.push(questions.save());
+
+            query = new Parse.Query("Attempt");
+            return query.count();
+        })
+        .then(function (count) {
+            attempts.set('total', count);
+            attempts.setACL(ACL);
+            promises.push(attempts.save());
+
+            return Parse.Promise.when(promises);
+        })
+        .then(function () {
+            status.success();
+        });
+});
+
+/**
+ * @BackgroundJob - Calculate total tests in Each Category
+ * Loops through child categories
+ * Updates total test count on them
+ * and their parent categories.
+ */
+Parse.Cloud.job("calculateTotalTestsInEachCategory", function (request, status) {
+    Parse.Cloud.useMasterKey();
+    /*
+     * Get all bottom level
+     * categories:
+     * - No children
+     * - Has tests directly associated
+     * with it)
+     */
+    var childCategories = [],
+        testCounts = [],
+        parentCategories = [],
+        saveCategoriesPromises = [];
+
+    var lookup = function (array, object) {
+        for (var i = 0; i < array.length; i++) {
+            if (array[i].id === object.id)
+                return array[i];
+        }
+        return false;
+    };
+
+    var query = new Parse.Query('Category');
+    query.equalTo('hasChildren', false);
+    query.include('parent');
+    query.each(function (category) {
+        /*
+         * Count the number of tests
+         * belonging to this category
+         */
+        var testQuery = new Parse.Query('Test');
+        testQuery.equalTo('category', category);
+        childCategories.push(category);
+        testCounts.push(testQuery.count());
+        if (category.get('parent') && !lookup(parentCategories, category.get('parent'))) {
+            category.get('parent').set('totalTests', 0);
+            parentCategories.push(category.get('parent'));
+        }
+    }).then(function () {
+        return Parse.Promise.when(testCounts);
+    }).then(function () {
+        for (var i = 0; i < childCategories.length; i++) {
+            var childCategory = childCategories[i],
+                totalTests = testCounts[i]._result[0];
+
+            childCategory.set('totalTests', totalTests);
+            if (childCategory.get('parent')) {
+                var parentCategory = lookup(parentCategories, childCategory.get('parent'));
+                parentCategory.increment('totalTests', totalTests);
+            }
+            saveCategoriesPromises.push(childCategory.save());
+        }
+
+        for (var i = 0; i < parentCategories.length; i++) {
+            saveCategoriesPromises.push(parentCategories[i].save());
+        }
+        return Parse.Promise.when(saveCategoriesPromises);
+    }).then(function () {
+        status.success();
+    })
+});
+
+/**
+ * @BackgroundJob SpacedRepetitionRunLoop
+ *
+ * Spaced Repetition System (SRS)
+ *
+ * This job achieves a number of SRS tasks for
+ * the subscribed users:
+ * - Checks if they have any Unique Responses (URs)
+ * - If so, checks if they have a Generated SR Test (GSR Test)
+ * - If no, create one; if yes, clears its questions
+ * - Per UR, check if the time since question was answered equals time to repeat*
+ * - If true, add question to the GSR Test
+ * - Once GSR Test is ready, shuffle and strip down to 15 questions
+ * - Schedule push.
+ *
+ * repeat*: SRS repeat timings update as the user consecutively answers
+ * the question correctly: moving from Box 1 to Box 2: as per Intensity level.
+ *
+ * SRS Intensity and Box are configuration dependent.
+ */
+Parse.Cloud.job('spacedRepetitionRunLoop', function (request, status) {
+    Parse.Cloud.useMasterKey();
+    var query,
+        srIntensityLevels,
+        promises = [];
+
+    Parse.Config.get()
+        .then(function (config) {
+            srIntensityLevels = config.get("spacedRepetitionIntensityLevels");
+            query = new Parse.Query(Parse.User);
+            query.equalTo('spacedRepetitionActivated', true);
+
+            return query.each(
+                function (user) {
+                    var srIntensityNumber = user.get('spacedRepetitionIntensity'),
+                        srIntensityLevel = srIntensityLevels[srIntensityNumber - 1],
+                        installation,
+                        timeZone = user.get('timeZone'),
+                        gsrTest;
+
+                    /*
+                     * TimeZone is set:
+                     * - Parse.Installation for app users
+                     * - _User for web users
+                     */
+                    query = new Parse.Query(Parse.Installation);
+                    query.equalTo('user', user);
+                    return query.find()
+                        .then(function (installations) {
+                            if (installations[0]) {
+                                installation = installations[0];
+                                timeZone = installation.get('timeZone');
+                            }
+                            var currentTime = new Date(),
+                                localTime = moment(currentTime).tz(timeZone).format('ha');
+
+                            console.log("Current time is : " + currentTime);
+                            console.log("For timezone: " + timeZone + ", its " + localTime);
+                            /*
+                             * See if the user's intensity level allows for a
+                             * test to be sent now: based on their timezone.
+                             */
+                            if (srIntensityLevel.times.indexOf(localTime) === -1) {
+                                console.log("Not time for a push yet");
+                                return PromiseHelper.ABORT_CHAIN;
+                            } else {
+                                console.log("User wants a push");
+                            }
+                            query = new Parse.Query('Test');
+                            query.equalTo('author', user);
+                            query.equalTo('isSpacedRepetition', true);
+                            return query.find()
+                        })
+                        .then(function (results) {
+                            if (results === PromiseHelper.ABORT_CHAIN)
+                                return PromiseHelper.ABORT_CHAIN;
+
+                            if (results[0]) {
+                                gsrTest = results[0];
+                                gsrTest.set('questions', []);
+                                return gsrTest.save();
+                            } else {
+                                var Test = Parse.Object.extend('Test');
+                                gsrTest = new Test();
+                                gsrTest.set('isGenerated', true);
+                                gsrTest.set('isSpacedRepetition', true);
+                                gsrTest.set('author', user);
+                                gsrTest.set('title', "Spaced Repetition Test");
+                                gsrTest.set('privacy', 0);
+                                gsrTest.set('questions', []);
+                                var Category = Parse.Object.extend('Category'),
+                                    srCategory = new Category();
+                                srCategory.id = "jWx56PKQzU"; // Spaced Repetition is a Category
+                                gsrTest.set('category', srCategory);
+                                var ACL = new Parse.ACL();
+                                ACL.setReadAccess(user.id, true);
+                                gsrTest.setACL(ACL);
+                                return gsrTest.save();
+                            }
+                        }, function (error) {
+                            console.error("Error finding if SRS user has a GSR Test");
+                        })
+                        .then(function (gsrTest) {
+                            if (gsrTest === PromiseHelper.ABORT_CHAIN)
+                                return PromiseHelper.ABORT_CHAIN;
+
+                            query = new Parse.Query('UniqueResponse');
+                            query.equalTo('user', user);
+                            return query.find();
+                        }, function (error) {
+                            console.error("Error saving new GSR Test for user " + user.id + " error: " + JSON.stringify(error));
+                        })
+                        .then(function (uniqueResponses) {
+                            if (uniqueResponses === PromiseHelper.ABORT_CHAIN)
+                                return PromiseHelper.ABORT_CHAIN;
+
+                            for (var i = 0; i < uniqueResponses.length; i++) {
+                                var uniqueResponse = uniqueResponses[i],
+                                    timeSinceTaken = Math.abs(new Date() - uniqueResponse.updatedAt) / 36e5,
+                                    srBox = uniqueResponse.get('spacedRepetitionBox'),
+                                    timeToRepeat = srIntensityLevel.boxes[srBox - 1],
+                                    isTimeToRepeat = timeSinceTaken >= timeToRepeat;
+
+                                if (isTimeToRepeat) {
+                                    gsrTest.get('questions').push(uniqueResponse.get('question'));
+                                }
+                            }
+                            if (gsrTest.get('questions').length > 15) {
+                                var questions = _.shuffle(gsrTest.get('questions')).splice(0, 15);
+                                gsrTest.set('questions', questions);
+                            }
+                            return gsrTest.save();
+                        },
+                        function (error) {
+                            console.error("Error getting uniqueResponse for user " + user.id + " error: "
+                            + JSON.stringify(error));
+                        })
+                        .then(function (gsrTest) {
+                            if (gsrTest === PromiseHelper.ABORT_CHAIN)
+                                return PromiseHelper.ABORT_CHAIN;
+
+                            if (!gsrTest.get('questions').length) // Empty test
+                                return;
+
+                            if (user.get('spacedRepetitionNotificationsByPush')) {
+                                promises.push(Parse.Cloud.run('sendPushToUser',
+                                    {
+                                        message: "Your spaced repetition test is ready to take!",
+                                        recipientUserId: user.id,
+                                        testId: gsrTest.id
+                                    }));
+
+                            } else if (user.get('spacedRepetitionNotificationsByEmail')) {
+                                var query = new Parse.Query('UserPrivate');
+                                query.equalTo('username', user.getUsername());
+                                return query.find();
+                            }
+                        }, function (error) {
+                            console.error("Error saving GSR Test after adding questions to it, error "
+                            + JSON.stringify(error));
+                        })
+                        .then(function (result) {
+                            if (gsrTest === PromiseHelper.ABORT_CHAIN)
+                                return PromiseHelper.ABORT_CHAIN;
+
+                            if (!result || !result[0]) // Doesn't want email, or email not found.
+                                return;
+
+                            var email = result[0].get('email');
+                            return promises.push(sendEmail('spaced-repetition-system-test-ready',
+                                user, email,
+                                [{
+                                    name: "NUMQUESTIONS",
+                                    content: gsrTest.get('questions.length')
+                                }, {
+                                    name: "TESTLINK",
+                                    content: "http://mycqs.com/mcq/" + gsrTest.get('slug')
+                                }]));
+                        });
+                },
+                function (error) {
+                    if (error)
+                        console.error("Error looping through SRS subscribed user " + JSON.stringify(error));
+                })
+                .then(function () {
+                    // Wait for pushes and emails to be sent
+                    return Parse.Promise.when(promises);
+                })
+                .then(function () {
+                    status.success("Successful");
+                },
+                function (error) {
+                    status.error(JSON.stringify(error));
+                    console.error("Error getting Config for SRS, error: " + JSON.stringify(error));
+                });
+        });
+});
+
+//@Deprecated
+/**
+ * @BackgroundJob operationSortOutACLs
  * Our ACLs were messed up during migration
  * due to Request.User being null with
  * PHP mismanaging currentUser sessionTokens.
@@ -889,63 +1137,475 @@ function generateTests(moduleId, difficulty, totalQuestions, user, callback) {
  * masterkey. Sort. It. Out.
  *
  */
-Parse.Cloud.job('operationSortOutACLs', function (request, response) {
-    Parse.Cloud.useMasterKey();
-    var query = new Parse.Query(Parse.User),
-        promises = [],
-        numQuestionsWithBadACL = 0,
-        user;
+/*
+ Parse.Cloud.job('operationSortOutACLs', function (request, response) {
+ Parse.Cloud.useMasterKey();
+ var query = new Parse.Query(Parse.User),
+ promises = [],
+ numQuestionsWithBadACL = 0,
+ user;
 
-    query.get(request.params.userId).then(function (result) {
-        user = result;
-        if (user)
-            console.log("User found: " + user.get('name'));
-        query = new Parse.Query("Test");
-        query.equalTo('author', user);
-        query.include('questions');
-        return query.find();
-    }).then(function (tests) {
-            console.log(user.get('name') + " has " + tests.length + " tests.");
-            for (var i = 0; i < tests.length; i++) {
-                var test = tests[i],
-                    questions = test.get('questions');
-                console.log("Test " + test.get('title') + " has " + questions.length + " questions.");
-                if (!questions)
-                    continue;
-                for (var j = 0; j < questions.length; j++) {
-                    var question = questions[j];
-                    if (!question) {
-                        console.log("question does not exist");
-                    } else {
-                        console.log("Checking ACL " + JSON.stringify(question.getACL()));
-                        var currentACL = question.getACL();
-                        if (!currentACL ||
-                            JSON.stringify(currentACL) === '{}' || JSON.stringify(currentACL) === '{"*":{"read":true}}') {
-                            console.log("BAD ACL match");
-                            var newACL = new Parse.ACL(user);
-                            newACL.setPublicReadAccess(true);
-                            question.setACL(newACL);
-                            question.set("ACLFixed", true);
-                            promises.push(question.save());
-                            numQuestionsWithBadACL++;
+ query.get(request.params.userId).then(function (result) {
+ user = result;
+ if (user)
+ console.log("User found: " + user.get('name'));
+ query = new Parse.Query("Test");
+ query.equalTo('author', user);
+ query.include('questions');
+ return query.find();
+ }).then(function (tests) {
+ console.log(user.get('name') + " has " + tests.length + " tests.");
+ for (var i = 0; i < tests.length; i++) {
+ var test = tests[i],
+ questions = test.get('questions');
+ console.log("Test " + test.get('title') + " has " + questions.length + " questions.");
+ if (!questions)
+ continue;
+ for (var j = 0; j < questions.length; j++) {
+ var question = questions[j];
+ if (!question) {
+ console.log("question does not exist");
+ } else {
+ console.log("Checking ACL " + JSON.stringify(question.getACL()));
+ var currentACL = question.getACL();
+ if (!currentACL ||
+ JSON.stringify(currentACL) === '{}' || JSON.stringify(currentACL) === '{"*":{"read":true}}') {
+ console.log("BAD ACL match");
+ var newACL = new Parse.ACL(user);
+ newACL.setPublicReadAccess(true);
+ question.setACL(newACL);
+ question.set("ACLFixed", true);
+ promises.push(question.save());
+ numQuestionsWithBadACL++;
+ }
+ }
+ }
+ }
+ },
+ function (error) {
+ console.error("Error getting test");
+ })
+ .then(function () {
+ console.log("Waiting for promises " + promises.length);
+ return Parse.Promise.when(promises);
+ })
+ .then(function () {
+ response.success(numQuestionsWithBadACL + " questions with bad ACL flagged!");
+ }, function (error) {
+ response.error(JSON.stringify(error));
+ });
+ }); */
+/*
+ * SIGN UP LOGIC
+ */
+/**
+ * ---------------
+ * preSignUp
+ * ---------------
+ * Generates a random username for a particular email
+ * and returns the UserPrivate object that will contain
+ * the email.
+ *
+ * Request params:
+ * @param {String} email
+ * @returns {Object} {privateData: {email, username} }
+ */
+Parse.Cloud.define("preSignUp", function (request, response) {
+    Parse.Cloud.useMasterKey();
+    var email = request.params.email,
+        randomUsername = generateRandomString(25, "aA#");
+
+    if (!email && !email.length) {
+        response.error(Parse.Error.EMAIL_MISSING);
+        return;
+    }
+
+    var query = new Parse.Query("UserPrivate");
+    query.equalTo('email', email);
+    query.find().then(function (result) {
+        if (result[0]) {
+            return null;
+        } else {
+            var privateData = new Parse.Object("UserPrivate");
+            privateData.set('email', email);
+            privateData.set('username', randomUsername);
+            /*
+             * ACL is set on this object on _User.beforeSave.isNew()
+             */
+            return privateData.save();
+        }
+    }).then(function (privateData) {
+        if (!privateData) {
+            response.error(Parse.Error.EMAIL_TAKEN);
+        } else {
+            response.success({"privateData": privateData});
+        }
+        return;
+    });
+
+});
+/**
+ * ---------------
+ * preLogIn
+ * ---------------
+ * Returns the username attached
+ * to the hidden email provided
+ *
+ * Request params:
+ * @param {String} email
+ * @returns {String} username
+ */
+Parse.Cloud.define("preLogIn", function (request, response) {
+    Parse.Cloud.useMasterKey();
+    var email = request.params.email;
+
+    if (!email && !email.length) {
+        response.error(Parse.Error.EMAIL_MISSING);
+        return;
+    }
+    var query = new Parse.Query("UserPrivate");
+    query.equalTo('email', email);
+    query.find().then(function (result) {
+        if (!result[0]) {
+            response.error(Parse.Error.EMAIL_NOT_FOUND);
+        } else {
+            response.success({"username": result[0].get('username')});
+        }
+        return;
+    });
+});
+/**
+ * ---------------
+ * preFacebookConnect
+ * ---------------
+ * Checks if a user with the
+ * authResponse.userID (fbid)
+ * has been migrated over manually.
+ * If so, authorise the user,
+ * thus allowing the client app
+ * to continue the facebook connect
+ * function as per usual.
+ *
+ * Request params:
+ * @param {Object} authResponse
+ * @returns {response.success} or {response.error}
+ */
+Parse.Cloud.define("preFacebookConnect", function (request, response) {
+    Parse.Cloud.useMasterKey();
+    var authResponse = request.params.authResponse,
+        query = new Parse.Query(Parse.User);
+    query.equalTo('fbid', authResponse.userID);
+    query.find().then(function (results) {
+            if (results[0]) {
+                var user = results[0];
+                if (user.get('authData')) {
+                    response.success();
+                    return;
+                } else {
+                    var authData = {
+                        facebook: {
+                            access_token: authResponse.accessToken,
+                            id: authResponse.userID,
+                            expiration_date: (new Date(2032, 2, 2)).toISOString()
                         }
-                    }
+                    };
+                    user.set('authData', authData);
+                    return user.save()
+                        .then(function () {
+                            response.success();
+                            return;
+                        });
                 }
+            } else
+                response.success();
+        },
+        function (error) {
+            response.error(error);
+        }
+    );
+});
+/**
+ * ---------------
+ * setEmailAddress
+ * ---------------
+ * Checks if email already belongs
+ * to another user. If not, then
+ * it checks if the requesting user
+ * has privateData set (creates it
+ * if not) and sets the given email.
+ *
+ * Request params:
+ * @param {String} email
+ * @returns {response.success} or {response.error}
+ */
+Parse.Cloud.define("setEmailAddress", function (request, response) {
+    Parse.Cloud.useMasterKey();
+    var email = request.params.email,
+        user = request.user,
+        query = new Parse.Query("UserPrivate");
+
+
+    if (!user || !email) {
+        response.error({"message": "User not authenticated or email not given."});
+        return;
+    }
+    var privateData = user.get('privateData');
+
+    query.equalTo('email', email);
+    query.count()
+        .then(
+        function (count) {
+            if (count) {
+                response.error({"message": "Email already taken."});
+                return;
+            } else {
+                if (!privateData) {
+                    privateData = new Parse.Object("UserPrivate");
+                    privateData.set('username', user.get('username'));
+                }
+                privateData.set('email', email);
+                privateData.setACL(Security.createACLs(user, false, false, false));
+                return privateData.save();
             }
         },
         function (error) {
-            console.error("Error getting test");
+            response.error(error);
+            return;
+        }
+    )
+        .then(function (privateData) {
+            user.set('privateData', privateData);
+            return user.save();
         })
         .then(function () {
-            console.log("Waiting for promises " + promises.length);
-            return Parse.Promise.when(promises);
-        })
-        .then(function () {
-            response.success(numQuestionsWithBadACL + " questions with bad ACL flagged!");
-        }, function (error) {
-            response.error(JSON.stringify(error));
+            response.success({"privateData": privateData});
+            return;
         });
 });
+/**
+ * --------------------
+ * resetPasswordRequest
+ * --------------------
+ * A custom password reset
+ * function given that we
+ * are not storing 'emails'
+ * on the _User class.
+ *
+ * Sends a request email with
+ * a unique link (the objectId
+ * for the PasswordReset object).
+ *
+ * Request params:
+ * @param {String} email
+ * @returns {response.success} or {response.error}
+ */
+Parse.Cloud.define("resetPasswordRequest", function (request, response) {
+    Parse.Cloud.useMasterKey();
+    var email = request.params.email,
+        query = new Parse.Query("UserPrivate"),
+        user;
+
+
+    if (!email) {
+        return response.error(Parse.Error.EMAIL_MISSING);
+    }
+
+    query.equalTo('email', email);
+    query.find()
+        .then(function (result) {
+            if (result[0]) {
+                var username = result[0].get('username');
+                query = new Parse.Query(Parse.User);
+                query.equalTo('username', username);
+                return query.find();
+            } else
+                return;
+        })
+        .then(function (result) {
+            if (!result[0]) {
+                return;
+            } else {
+                user = result[0];
+                var passwordResetObject = new Parse.Object('PasswordReset');
+                passwordResetObject.set('user', user);
+                passwordResetObject.set('isValid', true);
+                passwordResetObject.setACL(Security.createACLs());
+                return passwordResetObject.save();
+            }
+        })
+        .then(function (passwordResetObject) {
+            if (passwordResetObject) {
+                var data = [
+                    {
+                        name: "PASSRESETLINK",
+                        content: MyCQs.baseUrl + "password-reset/" + passwordResetObject.id
+                    }
+                ];
+                return sendEmail('forgotten-password', user, email, data);
+            } else
+                return;
+        })
+        .then(function (emailSent) {
+            if (!emailSent) {
+                console.error("Email not sent");
+                response.error(Parse.Error.EMAIL_NOT_FOUND);
+            } else {
+                response.success();
+            }
+        },
+        function (error) {
+            if (error)
+                response.error(error);
+            else
+                response.error();
+        });
+});
+/**
+ * -----------------------------
+ * validatePasswordResetRequest
+ * ---------------------------
+ * Checks if password request
+ * is valid.
+ *
+ * Request params:
+ * @param {String} objectId
+ * @returns {_User} or {response.error}
+ */
+Parse.Cloud.define("validatePasswordResetRequest", function (request, response) {
+    Parse.Cloud.useMasterKey();
+    var objectId = request.params.objectId,
+        query = new Parse.Query("PasswordReset");
+
+    if (!objectId) {
+        response.error(Parse.Error.MISSING_OBJECT_ID);
+        return;
+    }
+
+    query.equalTo('objectId', objectId);
+    return query.find()
+        .then(
+        function (result) {
+            if (result[0]) {
+                var passwordReset = result[0];
+                if (passwordReset.get('isValid')) {
+                    return response.success(passwordReset.get('user'));
+                } else {
+                    return response.error(Parse.Error.INVALID_LINKED_SESSION);
+                }
+            } else
+                return response.error(Parse.Error.OBJECT_NOT_FOUND);
+        });
+});
+/**
+ * -----------------------------
+ * setNewPassword
+ * ---------------------------
+ * Sets a new password for a user
+ * IF they provide a valid password
+ * reset request
+ * Request params:
+ * @param {String} userObjectId
+ * @param {String} password
+ * @param {String} passwordResetId
+ * @returns {response.success} or {response.error}
+ */
+Parse.Cloud.define("setNewPassword", function (request, response) {
+    Parse.Cloud.useMasterKey();
+    var userObjectId = request.params.userObjectId,
+        password = request.params.password,
+        passwordResetId = request.params.passwordResetId,
+        query = new Parse.Query("PasswordReset");
+
+    if (!userObjectId || !password || !passwordResetId) {
+        response.error(Parse.Error.MISSING_OBJECT_ID);
+        return;
+    }
+
+    query.equalTo('objectId', passwordResetId);
+    return query.find()
+        .then(
+        function (result) {
+            if (result[0]) {
+                var passwordReset = result[0];
+                if (passwordReset.get('isValid')) {
+                    passwordReset.set('isValid', false);
+                    passwordReset.save()
+                        .then(function () {
+                            query = new Parse.Query(Parse.User);
+                            query.equalTo('objectId', userObjectId);
+                            return query.find();
+                        })
+                        .then(function (user) {
+                            user[0].set('password', password);
+                            return user[0].save();
+                        }).
+                        then(function () {
+                            response.success();
+                        });
+                } else {
+                    return response.error(Parse.Error.INVALID_LINKED_SESSION);
+                }
+            } else
+                return response.error(Parse.Error.OBJECT_NOT_FOUND);
+        });
+});
+
+/***
+ Sends a push message to the user (currently only used for Send to Mobile function, but potential to be rolled out to others
+ @param message: A message to send with the push, i.e. 'You sent a test to your mobile' etc
+ @param recipientUserId: objectId of the user to receive the message (in Send to Mobile this will be the current user)
+ @param testId: objectId of the test to send the user
+ @param type: string representing the type of message being sent, currently supported: 'sendToMobile' (will be properly implemented in code as we add new methods)
+ **/
+
+Parse.Cloud.define("sendPushToUser", function (request, response) {
+    var senderUser = request.user,
+        recipientUserId = request.params.recipientUserId,
+        message = request.params.message,
+        type = request.params.type,
+        testId = request.params.testId,
+        sentToSelf = 0;
+
+    if (senderUser && senderUser.id === recipientUserId) {
+        sentToSelf = 1;
+    }
+    // Validate the message text.
+    // For example make sure it is under 140 characters
+    if (message.length > 140) {
+        // Truncate and add a ...
+        message = message.substring(0, 137) + "...";
+    }
+
+    // Send the push.
+    // Find devices associated with the recipient user
+    var query = new Parse.Query(Parse.User);
+    query.get(recipientUserId)
+        .then(function (recipientUser) {
+            var pushQuery = new Parse.Query(Parse.Installation);
+            pushQuery.equalTo("user", recipientUser);
+
+            // Send the push notification to results of the query
+            return Parse.Push.send({
+                where: pushQuery,
+                data: {
+                    "title": "MyCQs",
+                    "alert": message,
+                    "testId": testId,
+                    "sound": "default.caf",
+                    "badge": "Increment",
+                    "sentToSelf": sentToSelf
+                }
+            });
+        }, function (error) {
+            console.error("Error on sending push. User not found: " + JSON.stringify(error));
+        })
+        .then(function () {
+            response.success("Push was sent successfully.")
+        }, function (error) {
+            response.error("Push failed to send with error: " + JSON.stringify(error));
+        });
+});
+
 /**
  * --------------------
  * updateUserEducation
@@ -1561,362 +2221,7 @@ Parse.Cloud.define("findTestsForUser", function (request, response) {
         }
     });
 
-});
-
-
-/*
- * Useful functions
- */
-/**
- * ------------------
- * Security
- * ------------------
- * Our security object for any functions relating to:
- * - ACLs
- * - Roles
- */
-var Security = {
-    /**
-     * ------------------
-     * createACLs
-     * ------------------
-     * Object level ACLs for any Class.
-     * Shorthands:
-     * - createACLs() - hide from everyone including author
-     * - createACLs(user) - author has read/write, public has read access only
-     * - createACLs(user, false) - author has read/write, public cannot access
-     * - createACLs(user, false, false, true) - author can read, but not write. No public access.
-     * @namespace Security
-     * @param {_User} user
-     * @param {bool} publicReadAccess {def true}
-     * @param {bool} publicWriteAccess {def false}
-     * @param {bool} disableUserWriteAccess
-     * @returns {ACL} ACLs
-     */
-    createACLs: function (user, publicReadAccess, publicWriteAccess, disableUserWriteAccess) {
-        var ACLs;
-        if (user && !disableUserWriteAccess)
-            ACLs = new Parse.ACL(user);
-        else
-            ACLs = new Parse.ACL();
-
-        if (disableUserWriteAccess)
-            ACLs.setReadAccess(user.id, true);
-
-        if (!user)
-            publicReadAccess = false;
-        else if (publicReadAccess !== false && publicReadAccess !== true)
-            publicReadAccess = true;
-
-        if (publicWriteAccess !== false && publicWriteAccess !== true)
-            publicWriteAccess = false;
-
-        ACLs.setPublicReadAccess(publicReadAccess);
-        ACLs.setPublicWriteAccess(publicWriteAccess);
-
-        return ACLs;
-    },
-
-    publicReadOnly: function () {
-        var ACLs = new Parse.ACL();
-        ACLs.setPublicReadAccess(true);
-        return ACLs;
-    }
-};
-
-/**
- * ---------------------
- * generateRandomString
- * ---------------------
- * Generates a random string of given
- * length with characters from the
- * included types. E.g. (12, 'aA#') // u23l123aOil9
- * @param {int} length
- * @param {String} type
- * @returns {String} result
- */
-function generateRandomString(length, type) {
-    var mask = '';
-    if (type.indexOf('a') > -1) mask += 'abcdefghijklmnopqrstuvwxyz';
-    if (type.indexOf('A') > -1) mask += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    if (type.indexOf('#') > -1) mask += '0123456789';
-    if (type.indexOf('!') > -1) mask += '~`!@#$%^&*()_+-={}[]:";\'<>?,./|\\';
-    var result = '';
-    for (var i = length; i > 0; --i) result += mask[Math.round(Math.random() * (mask.length - 1))];
-    return result;
-}
-
-/**
- * ------------------
- * generateSearchTags
- * ------------------
- * Used for indexing objects by splitting titles, names, etc into
- * a string array without 'stop words' such as
- * 'the, of, and'. Array is saved in 'tags' and
- * should be queried like so:
- * where: { "tags": { "$all" : ["user's", "search", "terms"] } }
- *
- * @param className
- * @param object
- * @returns [tags]
- */
-var generateSearchTags = function (className, object) {
-    var toLowerCase = function (w) {
-        return w.toLowerCase();
-    };
-    var words = "";
-    switch (className) {
-        case 'Test':
-            words += object.get('title') + object.get('description');
-            break;
-        case 'InstitutionList':
-            words += object.get('fullName');
-            break;
-        case 'CourseList':
-            words += object.get('name');
-            break;
-    }
-    words = words.split(/\b/);
-    words = _.map(words, toLowerCase);
-    var stopWords = ["the", "in", "and", "test", "mcqs", "of", "a", "an"]
-    words = _.filter(words, function (w) {
-        return w.match(/^\w+$/) && !_.contains(stopWords, w);
-    });
-    words = _.uniq(words);
-    return words;
-};
-/**
- * --------
- * slugify
- * -------
- *
- * @param className
- * @param string
- * @param object (optional)
- * @returns {*}
- */
-var slugify = function (className, string, object) {
-    var slug;
-    switch (className) {
-        case "_User":
-            var firstInitial = string.charAt(0),
-                lastName = string.split(" ")[string.split(" ").length - 1];
-            slug = (firstInitial + lastName).toLowerCase();
-            break;
-        case "Category":
-            if (string.toLowerCase() === "other") {
-                slug = object.get('parent').get('slug') + "-" +
-                    string.toLowerCase().replace(/ /g, '-').replace(/[-]+/g, '-').replace(/[^\w-]+/g, '');
-            } else
-                slug = string.toLowerCase().replace(/ /g, '-').replace(/[-]+/g, '-').replace(/[^\w-]+/g, '');
-            break;
-        default:
-            slug = string.toLowerCase().replace(/ /g, '-').replace(/[-]+/g, '-').replace(/[^\w-]+/g, '');
-            break;
-    }
-    return slug;
-}
-
-/**
- * ---------------------
- * capitaliseFirstLetter
- * ---------------------
- * @param string
- * @returns {string}
- */
-function capitaliseFirstLetter(string) {
-    return string.charAt(0).toUpperCase() + string.slice(1);
-}
-
-/**
- * ----------------------
- * getUserProfileImageUrl
- * ----------------------
- * Returns uploaded profilePicture,
- * or facebook profile picture url,
- * or default silhouette.
- *
- * @param {_User} user
- * @returns {String} url
- */
-function getUserProfileImageUrl(user) {
-    if (user.get('profilePicture') && user.get('profilePicture').url())
-        return user.get('profilePicture').url();
-    else if (user.get('fbid') && user.get('fbid').length)
-        return "http://res.cloudinary.com/mycqs/image/facebook/c_thumb,e_improve,g_faces:center,w_150/" + user.get('fbid');
-    else
-        return "http://assets.mycqs.com/img/silhouette.png";
-}
-
-/**
- * --------
- * maxTwoDP
- * --------
- * Converts any int or float into
- * a float with maximum of two
- * decimal places:
- * 2.57755 // 2.58
- * 56.1    // 56.1
- * 80      // 80
- *
- * @param {Number} number
- * @return {float} float
- */
-var maxTwoDP = function (number) {
-    var float = +parseFloat(number).toFixed(2);
-    return float;
-}
-/**
- * -------------------------
- * getSwiftDocumentForObject
- * -------------------------
- * Creates swiftype documents
- * for object indexing
- *
- * @param {String} className
- * @param {Object} object
- * @return {Object} document
- */
-var getSwiftDocumentForObject = function (className, object) {
-    var document = {
-        external_id: object.id
-    };
-
-    switch (className) {
-        case "_User":
-            if (!object.get('name') || !object.get('slug'))
-                return;
-
-            document.fields = [
-                {
-                    name: 'name',
-                    value: object.get('name'),
-                    type: 'string'
-                },
-                {
-                    name: 'slug',
-                    value: object.get('slug'),
-                    type: 'string'
-                },
-                {
-                    name: 'profileImageUrl',
-                    value: getUserProfileImageUrl(object),
-                    type: 'enum'
-                },
-                {
-                    name: 'numberOfFollowers',
-                    value: object.get('numberOfFollowers'),
-                    type: 'integer'
-                },
-                {
-                    name: 'numberFollowing',
-                    value: object.get('numberFollowing'),
-                    type: 'integer'
-                },
-                {
-                    name: 'numberOfTests',
-                    value: object.get('numberOfTests'),
-                    type: 'integer'
-                },
-                {
-                    name: 'createdAt',
-                    value: object.createdAt,
-                    type: 'date'
-                },
-                {
-                    name: 'updatedAt',
-                    value: object.updatedAt,
-                    type: 'date'
-                }
-            ];
-            if (object.get('institution') && object.get('institution').get('name')) {
-                document.fields.push({name: 'institutionId', value: object.get('institution').id, type: 'enum'});
-                document.fields.push({name: 'institutionName', value: object.get('institution').get('name'), type: 'string'});
-            }
-            if (object.get('course') && object.get('course').get('name') && object.get('yearNumber')) {
-                document.fields.push({name: 'courseId', value: object.get('course').id, type: 'enum'});
-                document.fields.push({name: 'courseName', value: object.get('course').get('name'), type: 'string'});
-                document.fields.push({name: 'yearNumber', value: object.get('yearNumber'), type: 'integer'});
-            }
-            break;
-        case "Test":
-            if (!object.get('title') || !object.get('slug') || !object.get('category') || !object.get('author'))
-                return;
-
-            var description = object.get('description'),
-                numberOfQuestions = 0;
-
-            if (!description)
-                description = "";
-            if (object.get('questions'))
-                numberOfQuestions = object.get('questions').length;
-
-            document.fields = [
-                {
-                    name: 'title',
-                    value: object.get('title'),
-                    type: 'string'
-                },
-                {
-                    name: 'slug',
-                    value: object.get('slug'),
-                    type: 'string'
-                },
-                {
-                    name: 'authorId',
-                    value: object.get('author').id,
-                    type: 'enum'
-                },
-                {
-                    name: 'authorName',
-                    value: object.get('author').get('name'),
-                    type: 'string'
-                },
-                {
-                    name: 'categoryId',
-                    value: object.get('category').id,
-                    type: 'enum'
-                },
-                {
-                    name: 'categoryName',
-                    value: object.get('category').get('name'),
-                    type: 'string'
-                },
-                {
-                    name: 'description',
-                    value: description,
-                    type: 'string'
-                },
-                {
-                    name: 'numberOfQuestions',
-                    value: numberOfQuestions,
-                    type: 'integer'
-                },
-                {
-                    name: 'createdAt',
-                    value: object.createdAt,
-                    type: 'date'
-                },
-                {
-                    name: 'updatedAt',
-                    value: object.updatedAt,
-                    type: 'date'
-                },
-                {
-                    name: 'authorImageUrl',
-                    value: getUserProfileImageUrl(object.get('author')),
-                    type: 'string'
-                }
-            ];
-            break;
-    }
-    return document;
-
-
-}
-
-
-/*
+});/*
  * SAVE LOGIC
  */
 /*
@@ -2079,6 +2384,10 @@ Parse.Cloud.beforeSave(Parse.User, function (request, response) {
 Parse.Cloud.afterSave("_User", function (request) {
     Parse.Cloud.useMasterKey();
     var user = request.object;
+    if (user.get('isProcessed'))
+        console.log("saving processed user");
+    else
+        console.log("saving unprocessed user");
     if (user.get('isProcessed')) {
         /*
          * Check if following or followers
@@ -2119,26 +2428,54 @@ Parse.Cloud.afterSave("_User", function (request) {
         user.setACL(Security.createACLs(user, true));
         var Action = Parse.Object.extend('Action');
         var action = new Action();
+        var promises = [];
         action.set('user', user);
         action.set('type', 'joinedMyCQs');
         action.setACL(Security.createACLs(user, true, false, false));
-        return action.save()
-            .then(function () {
-                var privateData = user.get('privateData');
-                if (!privateData)
-                    return;
-                var email = privateData.get('email');
-                if (email && email.length) {
-                    // sendEmail('welcome-email', user, privateData.get('email'));
-                    // user.set('welcomeEmailSent', true)
-                }
-                privateData.setACL(Security.createACLs(user, false, false, true));
-                return privateData.save();
-            }).then(function () {
-                return user.save();
-            });
+        promises.push(action.save());
+        console.log("Saving joined action");
+        var privateData = user.get('privateData');
+        if (privateData) {
+            console.log("Setting private data acls");
+            var email = privateData.get('email');
+            if (email && email.length) {
+                // sendEmail('welcome-email', user, privateData.get('email'));
+                // user.set('welcomeEmailSent', true)
+            }
+            privateData.setACL(Security.createACLs(user, false, false, true));
+            promises.push(privateData.save());
+        }
+        Parse.Promise.when(promises).then(function () {
+            console.log("Private data acls saved");
+            return user.save();
+        }).then(function () {
+            return;
+        });
     }
 
+});
+/**
+ * ----------------------
+ * beforeSave UserPrivate
+ * ----------------------
+ * Temporary fix for iOS
+ * which is duplication the object.
+ */
+Parse.Cloud.beforeSave('UserPrivate', function (request, response) {
+    Parse.Cloud.useMasterKey();
+    var query = new Parse.Query('UserPrivate');
+    query.equalTo('username', request.object.get('username'));
+    query.find().then(function (results) {
+        if (results[0] && request.object.isNew()) {
+            // iOS version, delete non-ACL object
+            return results[0].destroy();
+        } else {
+            // Web version, do nothing
+            return;
+        }
+    }).then(function () {
+        response.success();
+    });
 });
 /**
  * -------------------
@@ -2194,12 +2531,17 @@ Parse.Cloud.beforeSave("Test", function (request, response) {
     /*
      * Set ACLs based on privacy if object is not deleted,
      * otherwise the ACL is set later.
+     * ACLs for Generated Tests, such as those for SRS, are
+     * set in background jobs on creation. Users do not have
+     * write access to them.
      */
-    if (!request.object.get('isObjectDeleted')) {
-        if (request.object.get('privacy') === 1)
-            request.object.setACL(Security.createACLs(request.object.get('author')));
-        else
-            request.object.setACL(Security.createACLs(request.object.get('author'), false));
+    if (!request.object.get('isSpacedRepetition') || !request.object.get('isGenerated')) {
+        if (!request.object.get('isObjectDeleted')) {
+            if (request.object.get('privacy') === 1)
+                request.object.setACL(Security.createACLs(request.object.get('author')));
+            else
+                request.object.setACL(Security.createACLs(request.object.get('author'), false));
+        }
     }
     request.object.set('tags', generateSearchTags('Test', request.object));
     request.object.set('title', capitaliseFirstLetter(request.object.get('title')));
@@ -2232,7 +2574,7 @@ Parse.Cloud.beforeSave("Test", function (request, response) {
                 var Test = Parse.Object.extend('Test'),
                     query = new Parse.Query(Test);
                 query.startsWith('slug', slug);
-                return query.count()
+                return query.count();
             })
             .then(function (count) {
                 if (!count)
@@ -2240,7 +2582,7 @@ Parse.Cloud.beforeSave("Test", function (request, response) {
                 else
                     request.object.set('slug', slug + '-' + (count + 1));
 
-                if (!author.get('authData') || !author.get('authData').facebook)
+                if (request.object.get('isGenerated') || !author.get('authData') || !author.get('authData').facebook)
                     return;
 
                 /*
@@ -2294,8 +2636,9 @@ Parse.Cloud.beforeSave("Test", function (request, response) {
  * * Questionable whether this is necessary *
  * Open graph for create test
  */
-Parse.Cloud.afterSave("Test", function (request, response) {
+Parse.Cloud.afterSave("Test", function (request) {
     Parse.Cloud.useMasterKey();
+
     var authorObjectId = request.object.get('author').id,
         author;
 
@@ -2307,12 +2650,16 @@ Parse.Cloud.afterSave("Test", function (request, response) {
             var relation = author.relation('savedTests');
             relation.add(request.object);
         }
+        if (request.object.get('isSpacedRepetition') || request.object.get('isGenerated'))
+            return;
         var Test = Parse.Object.extend('Test');
         query = new Parse.Query(Test);
         query.equalTo('author', author);
         query.include('questions');
         return query.find();
     }).then(function (tests) {
+        if (!tests || !tests.length)
+            return
         var numberOfQuestions = 0;
         for (var i = 0; i < tests.length; i++) {
             var test = tests[i];
@@ -2335,7 +2682,8 @@ Parse.Cloud.afterSave("Test", function (request, response) {
             action.save();
         }
     }).then(function () {
-        if (request.object.existed() || !author.get('shareOnCreateTest'))
+        if (request.object.existed() || !author.get('shareOnCreateTest') || request.object.get('isSpacedRepetition') ||
+            request.object.get('isGenerated'))
             return;
         /*
          * Share 'make' test action on graph api
@@ -2390,26 +2738,29 @@ Parse.Cloud.beforeSave("Question", function (request, response) {
  * - Replace this attempt in the User's latestAttempts pointers for this test
  */
 Parse.Cloud.beforeSave("Attempt", function (request, response) {
-    if (!request.object.get('isProcessed')) {
+    Parse.Cloud.useMasterKey();
+    var attempt = request.object;
+    if (!attempt.get('isProcessed')) {
         /*
          * Converts score to a float and
          * round to max 2.dp
          */
-        request.object.set('score', maxTwoDP(request.object.get('score')));
+        attempt.set('score', maxTwoDP(attempt.get('score')));
 
-        if (request.object.get('user')) {
+        if (attempt.get('user')) {
             var query = new Parse.Query('Attempt');
-            query.equalTo('test', request.object.get('test'));
-            query.equalTo('user', request.object.get('user'));
+            query.equalTo('test', attempt.get('test'));
+            query.equalTo('user', attempt.get('user'));
 
             query.count().
                 then(function (count) {
-                    request.object.set('number', (count + 1));
-                    request.object.setACL(Security.createACLs(request.object.get('user'), false, false));
+                    attempt.set('number', (count + 1));
+                    attempt.setACL(Security.createACLs(request.object.get('user'), false, false));
                     response.success();
                 });
         } else {
-            request.object.setACL(Security.publicReadOnly());
+            // Guest User
+            attempt.setACL(Security.publicReadOnly());
             response.success();
         }
     } else
@@ -2592,12 +2943,15 @@ Parse.Cloud.afterSave("Attempt", function (request) {
  * - Set Public read ACL
  */
 Parse.Cloud.beforeSave("Response", function (request, response) {
-    var user = request.object.get('user');
+    Parse.Cloud.useMasterKey();
+    var responseObject = request.object,
+        user = responseObject.get('user');
 
     if (user) {
-        request.object.setACL(Security.createACLs(user, false));
+        responseObject.setACL(Security.createACLs(user, false));
+
     } else {
-        request.object.setACL(Security.createACLs(null, true));
+        responseObject.setACL(Security.createACLs(null, true));
     }
     response.success();
 });
@@ -2610,29 +2964,85 @@ Parse.Cloud.beforeSave("Response", function (request, response) {
  * Update the response question
  * numberOfTimesTaken, numberAnswerCorrectly
  * and options.@each.numberOfTimeChosen
+ * IF user is set
+ * - Update UniqueResponse for SRS
  */
 Parse.Cloud.afterSave("Response", function (request) {
     Parse.Cloud.useMasterKey();
-    var question = request.object.get('question');
+    var responseObject = request.object,
+        user = responseObject.get('user'),
+        question = responseObject.get('question'),
+        promises = [],
+        query;
 
-    question.fetch().then(function () {
-        question.increment("numberOfTimesTaken");
+    question.fetch()
+        .then(function () {
+            question.increment("numberOfTimesTaken");
 
-        if (request.object.get("chosenAnswer") === request.object.get("correctAnswer")) {
-            question.increment("numberAnsweredCorrectly");
-        }
-
-        var options = question.get("options");
-
-        for (var i = 0; i < options.length; i++) {
-            if (options[i].phrase === request.object.get("chosenAnswer")) {
-                options[i].numberOfTimesChosen = options[i].numberOfTimesChosen + 1;
+            if (responseObject.get("chosenAnswer") === responseObject.get("correctAnswer")) {
+                question.increment("numberAnsweredCorrectly");
             }
-        }
 
-        question.set("options", options);
-        return question.save();
-    });
+            var options = question.get("options");
+
+            for (var i = 0; i < options.length; i++) {
+                if (options[i].phrase === request.object.get("chosenAnswer")) {
+                    options[i].numberOfTimesChosen = options[i].numberOfTimesChosen + 1;
+                }
+            }
+
+            question.set("options", options);
+            promises.push(question.save());
+            if(user) {
+                query = new Parse.Query('UniqueResponse');
+                query.equalTo('user', user);
+                query.equalTo('question', responseObject.get('question'));
+                return query.find();
+            } else
+                return;
+        })
+        .then(function (results) {
+            if(!results)
+                return;
+            var uniqueResponse = results[0];
+            if (!uniqueResponse) {
+                var UniqueResponse = Parse.Object.extend('UniqueResponse');
+                uniqueResponse = new UniqueResponse();
+                uniqueResponse.set('user', user);
+                uniqueResponse.set('question', question);
+                uniqueResponse.set('numberOfResponses', 1);
+                if (responseObject.get('chosenAnswer') === responseObject.get('correctAnswer'))
+                    uniqueResponse.set('spacedRepetitionBox', 2);
+                else
+                    uniqueResponse.set('spacedRepetitionBox', 1);
+                var ACL = new Parse.ACL();
+                ACL.setReadAccess(user, true);
+                uniqueResponse.setACL(ACL);
+            } else {
+                uniqueResponse.increment('numberOfResponses');
+                // If correct, increment box
+                // Else, reset box to 1
+                if (responseObject.get('chosenAnswer') === responseObject.get('correctAnswer'))
+                    uniqueResponse.increment('spacedRepetitionBox');
+                else
+                    uniqueResponse.set('spacedRepetitionBox', 1);
+
+                // Highest box should be 4.
+                if(uniqueResponse.get('spacedRepetitionBox') > 4)
+                    uniqueResponse.set('spacedRepetitionBox', 4);
+            }
+            uniqueResponse.set('latestResponse', responseObject);
+            promises.push(uniqueResponse.save());
+            return;
+        }, function (error) {
+            console.error("Error finding URs for question " + JSON.stringify(error));
+        })
+        .then(function () {
+            return Parse.Promise.when(promises);
+        },
+        function (error) {
+            console.error("Error saving uniqueResponse object from Response.beforeSave. " + JSON.stringify(error));
+        });
 });
 /**
  * -----------------

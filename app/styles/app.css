@@ -1709,6 +1709,10 @@ hr.user-message-item-separator {
 .phrase {
 }
 
+.take-test .question-image-thumbnail {
+    box-shadow: none;
+}
+
 /* TEMPLATE - RESULT */
 .response-indicator {
     width: 16px;

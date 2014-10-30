@@ -10,7 +10,7 @@ var app = new EmberApp({
 
     fingerprint: {
         exclude: ['fonts/'],
-        prepend: 'http://assets.mycqs.com/'
+        prepend: 'https://assets.mycqs.com/'
     }
 });
 
@@ -49,7 +49,7 @@ app.import({
  */
 app.import({
     development: 'bower_components/underscore/underscore.js',
-    production: 'bower_components/underscore/underscore.min.js'
+    production: 'bower_components/underscore/underscore-min.js'
 });
 
 /*
@@ -71,7 +71,7 @@ app.import({
  */
 app.import({
     development: 'bower_components/freewall/freewall.js',
-    production: 'bower_components/freewall/freewall.min.js'
+    production: 'bower_components/freewall/freewall.js'
 });
 /*
  * NUMERAL.JS

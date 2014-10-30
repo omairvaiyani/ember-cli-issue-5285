@@ -232,6 +232,11 @@ Ember.ObjectController.extend(CurrentUser, {
                         });
                     }
                 }.bind(this));
+        },
+
+        enlargeQuestionImage: function () {
+            this.set('modalImageUrl', this.get('currentQuestion.image.url'));
+            this.send('openModal', 'application/modal/image', 'test');
         }
     }
 

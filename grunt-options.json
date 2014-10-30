@@ -12,6 +12,6 @@
     },
 
     "CDN": {
-        "cloudfront": "http://assets.mycqs.co.uk"
+        "cloudfront": "https://assets.mycqs.com"
     }
 }

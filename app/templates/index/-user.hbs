@@ -1,46 +1,60 @@
 <div class="row">
     <div class="col-md-3">
-        <div class="card home-overview">
-            {{#link-to 'user' currentUser.slug}}{{render 'profile-image' currentUser}}{{/link-to}}
-            {{#link-to 'user' currentUser.slug}}<h4 class="name">{{currentUser.name}}</h4>{{/link-to}}
-            <hr>
-            <h4>Overview</h4>
+        <section class="row">
+            <article class="col-md-12">
+                <div class="card home-overview">
+                    {{#link-to 'user' currentUser.slug}}{{render 'profile-image' currentUser}}{{/link-to}}
+                    {{#link-to 'user' currentUser.slug}}<h4 class="name">{{currentUser.name}}</h4>{{/link-to}}
+                    <hr>
+                    <h4>Overview</h4>
 
-            <p>Tests created:
-                <small class="pull-right">{{currentUser.numberOfTests}}</small>
-            </p>
-            <p>Questions created:
-                <small class="pull-right">{{currentUser.numberOfQuestions}}</small>
-            </p>
-            <p>Test attempts:
-                <small class="pull-right">{{currentUser.numberOfAttempts}}</small>
-            </p>
-            <p>Average score:
-                <small class="pull-right">{{currentUser.averageScore}}%</small>
-            </p>
-            <p>First time attempts:
-                <small class="pull-right">{{currentUser.uniqueNumberOfAttempts}}</small>
-            </p>
-            <p class="margin-bottom-16">First time average:
-                <small class="pull-right">{{currentUser.uniqueAverageScore}}%</small>
-            </p>
+                    <p>Tests created:
+                        <small class="pull-right">{{currentUser.numberOfTests}}</small>
+                    </p>
+                    <p>Questions created:
+                        <small class="pull-right">{{currentUser.numberOfQuestions}}</small>
+                    </p>
+                    <p>Test attempts:
+                        <small class="pull-right">{{currentUser.numberOfAttempts}}</small>
+                    </p>
+                    <p>Average score:
+                        <small class="pull-right">{{currentUser.averageScore}}%</small>
+                    </p>
+                    <p>First time attempts:
+                        <small class="pull-right">{{currentUser.uniqueNumberOfAttempts}}</small>
+                    </p>
+                    <p class="margin-bottom-16">First time average:
+                        <small class="pull-right">{{currentUser.uniqueAverageScore}}%</small>
+                    </p>
 
-            <p><strong>Community stats on your tests</strong></p>
+                    <p><strong>Community stats on your tests</strong></p>
 
-            <p>Test attempts:
-                <small class="pull-right">{{currentUser.communityNumberOfAttempts}}</small>
-            </p>
-            <p>Average score:
-                <small class="pull-right">{{currentUser.communityAverageScore}}%</small>
-            </p>
+                    <p>Test attempts:
+                        <small class="pull-right">{{currentUser.communityNumberOfAttempts}}</small>
+                    </p>
+                    <p>Average score:
+                        <small class="pull-right">{{currentUser.communityAverageScore}}%</small>
+                    </p>
 
-            <p>First time attempts:
-                <small class="pull-right">{{currentUser.communityUniqueNumberOfAttempts}}</small>
-            </p>
-            <p>First time average:
-                <small class="pull-right">{{currentUser.communityUniqueAverageScore}}%</small>
-            </p>
-        </div>
+                    <p>First time attempts:
+                        <small class="pull-right">{{currentUser.communityUniqueNumberOfAttempts}}</small>
+                    </p>
+                    <p>First time average:
+                        <small class="pull-right">{{currentUser.communityUniqueAverageScore}}%</small>
+                    </p>
+                </div>
+            </article>
+        </section>
+        <section class="row">
+            <article class="col-md-12">
+                <div class="card margin-top-16">
+                    {{!--
+                    <button {{action 'openModal' 'application/modal/srs-sales' 'application.stripe'}}>
+                        Spaced Repetition System
+                    </button>--}}
+                </div>
+            </article>
+        </section>
     </div>
     <div class="col-md-9 col-fix-right">
 

@@ -30,7 +30,7 @@ Ember.ObjectController.extend({
 
     page: 1,
 
-    order: 'title',
+    order: 'relevance',
 
     categoryFilter: '',
 
@@ -267,6 +267,8 @@ Ember.ObjectController.extend({
         var order = this.get('order');
         if (order === 'recent')
             order = '-createdAt';
+        if (order === 'relevance')
+            order = '-quality';
         this.store.findQuery('test', {
             where: JSON.stringify(where),
             order: order

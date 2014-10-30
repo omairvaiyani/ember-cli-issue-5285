@@ -42,20 +42,7 @@
         </div>
         <div class="col-md-3 margin-top-16 col-fix-right">
             {{#if test.author}}
-                <div class="card author-info">
-                    <h4>Author info</h4>
-                    {{#link-to 'user' test.author.slug}}{{render 'profile-image' test.author}}{{/link-to}}
-                    {{#link-to 'user' test.author.slug}}<p class="name">{{test.author.name}}</p>{{/link-to}}
-                    <hr>
-                    <p>Tests
-                        <small class="pull-right">{{#link-to 'user.tests' test.author.slug}}
-                            {{test.author.numberOfTests}}{{/link-to}}</small>
-                    </p>
-                    <p>Followers
-                        <small class="pull-right">{{#link-to 'user.followers' test.author.slug}}
-                            {{test.author.numberOfFollowers}}{{/link-to}}</small>
-                    </p>
-                </div>
+                {{render 'user/author-info' test}}
             {{/if}}
             {{#if categoryTests.length}}
                 <div class="card margin-top-16">

@@ -1,50 +1,75 @@
 <div class="container">
-    {{#unless loading}}
-        <div class="card">
-            <h3>{{title}}
-                <small>{{category.name}}</small>
-            </h3>
-            <div class="row margin-bottom-16">
-                <div class="col-md-12 progress-blocks">
-                    {{#each question in shuffledQuestions itemController='test.item.progressBlock'}}
-                        <div {{bind-attr style=question.progressBlockWidth
-                        class=":progress-block question.isCurrentItem:is-current-item"}}></div>
-                    {{/each}}
-                </div>
-            </div>
-            <div class="row margin-bottom-16">
-                <div class="col-md-12">
-                    <span class="question-stem"><strong>Q{{currentQuestionNumber}}</strong> {{currentQuestion.stem}}</span>
-                </div>
-            </div>
+    <section class="row">
+        <article class="col-md-9 margin-bottom-16">
+            {{#unless loading}}
+                <div class="card take-test">
+                    <h3>{{#link-to 'testInfo' slug}}{{title}}{{/link-to}}
+                        <small>{{#link-to 'category' category.slug}}{{category.name}}{{/link-to}}</small>
+                        {{#if currentQuestion.image}}
+                            <img class="question-image-thumbnail pull-right"
+                                 {{action 'enlargeQuestionImage'}}
+                                {{bind-attr src=currentQuestion.image.url}}/>
+                        {{/if}}
+                    </h3>
+                    <div class="row margin-bottom-16">
+                        <div class="col-md-12 progress-blocks">
+                            {{#each question in shuffledQuestions itemController='test.item.progressBlock'}}
+                                <div {{bind-attr style=question.progressBlockWidth
+                                class=":progress-block question.isCurrentItem:is-current-item"}}></div>
+                            {{/each}}
+                        </div>
+                    </div>
+                    <div class="row margin-bottom-16">
+                        <div class="col-md-12">
+                            <span class="question-stem"><strong>Q{{currentQuestionNumber}}</strong> {{currentQuestion.stem}}</span>
+                        </div>
+                    </div>
 
-            {{#each option in currentQuestion.shuffledOptions}}
-                <div class="row" {{action 'optionSelected' _view.contentIndex}}>
-                    <div {{bind-attr class=":col-md-12 :option option.isSelected"}}>
-                        <span class="option-label margin-right-16">{{alphabetise-index _view.contentIndex}}</span>
-                        <span class="phrase">{{option.phrase}}</span>
+                    {{#each option in currentQuestion.shuffledOptions}}
+                        <div class="row" {{action 'optionSelected' _view.contentIndex}}>
+                            <div {{bind-attr class=":col-md-12 :option option.isSelected"}}>
+                                <span class="option-label margin-right-16">{{alphabetise-index _view.contentIndex}}</span>
+                                <span class="phrase">{{option.phrase}}</span>
+                            </div>
+                        </div>
+                    {{/each}}
+                    <div class="row margin-top-16">
+                        <div class="col-md-5">
+                            <button class="flat-button" {{action 'previousQuestion'}}>Previous</button>
+                            <button class="flat-button" {{action 'nextQuestion'}}>Next</button>
+                        </div>
+                        <div class="col-md-2 text-center">
+                            <p class="margin-top-16">Q{{currentQuestionNumber}} of {{questions.length}}</p>
+                        </div>
+                        <div class="col-md-5">
+                            <button class="flat-button pull-right"
+                                {{action 'confirmFinish'}}>Finish
+                            </button>
+                        </div>
                     </div>
                 </div>
-            {{/each}}
-            <div class="row margin-top-16">
-                <div class="col-md-5">
-                    <button class="flat-button" {{action 'previousQuestion'}}>Previous</button>
-                    <button class="flat-button" {{action 'nextQuestion'}}>Next</button>
+            {{else}}
+                <div class="card text-center">
+                    <h3>{{loading}}</h3>
                 </div>
-                <div class="col-md-2 text-center">
-                    <p class="margin-top-16">Q{{currentQuestionNumber}} of {{questions.length}}</p>
-                </div>
-                <div class="col-md-5">
-                    <button class="flat-button pull-right"
-                        {{action 'confirmFinish'}}>Finish
-                    </button>
-                </div>
-            </div>
-        </div>
-    {{else}}
-        <div class="card text-center">
-            <h3>{{loading}}</h3>
-        </div>
-    {{/unless}}
-
+            {{/unless}}
+        </article>
+        <article class="col-md-3 col-fix-right">
+            <section class="row">
+                <article class="col-md-12 col-sm-6 col-xs-12 margin-bottom-16">
+                    {{partial 'user/author-info'}}
+                </article>
+                <article class="col-md-12 col-sm-6 col-xs-12">
+                    <div class="card">
+                        <p class="text-center"><strong>Take this test from your iPhone or iPad.</strong></p>
+                        <a href="https://itunes.apple.com/gb/app/mycqs-multiple-choice-questions/id921380709?mt=8"
+                           target="_blank">
+                            <img src="img/appstore.png"
+                                 style="width:100%;"/>
+                        </a>
+                    </div>
+                </article>
+            </section>
+        </article>
+    </section>
 </div>

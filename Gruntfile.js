@@ -43,7 +43,7 @@ module.exports = function (grunt) {
         redis: {
             options: {
                 prefix: timestamp + ':',
-                currentDeployKey: timestamp,
+                currentDeployKey: timestamp + ":index.html",
                 manifestKey: 'currentDeploy',
                 host: '<%= gOptions.REDISTOGO.host %>',
                 port: '<%= gOptions.REDISTOGO.port %>',
@@ -90,6 +90,18 @@ module.exports = function (grunt) {
             }
         }
     });
+    /*
+     * NOTE!
+     *
+     * After npm install,
+     * go into node_modules/grunt-redis/tasks/redis.js
+     * Add the following lines around line 57.
+     *
+     * promises.push(Q.ninvoke(client, "set", "currentDeploy", key).then(function(){
+     * grunt.log.debug("Key updated " + key);
+     * }));
+     */
+
     grunt.loadNpmTasks('grunt-s3');
     grunt.loadNpmTasks('grunt-hashres');
     grunt.loadNpmTasks('grunt-redis');
