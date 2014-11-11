@@ -22,7 +22,8 @@ Parse.Cloud.job('testQualityScore', function (request, status) {
         promises = [];
     query.include('questions');
     query.each(function (test) {
-        var score = 0;
+        var previousScore = test.get('quality'),
+            score = 0;
 
         var numberOfQuestions = test.get('questions').length;
         // Number of questions 0-4 = 0
@@ -115,16 +116,29 @@ Parse.Cloud.job('testQualityScore', function (request, status) {
         else if (uniqueAverageScore > 84)
             score += 10;
 
-        test.set('quality', score);
-        promises.push(test.save());
+        if (score !== previousScore) {
+            test.set('quality', score);
+            /*
+             * Though adding promises to a promise array
+             * would speed up the process, instead of
+             * synchronously waiting for each test to save
+             * before progress.. our request limit is easily
+             * reached. Therefore, we're using this bottlenecking
+             * method.
+             * Empty p
+             */
+            promises.push({});
+            return test.save();
+            // promises.push(test.save());
+        }
     }, function (error) {
         console.error("Error looping through test in Test Quality Score job " + JSON.stringify(error));
+        // }).then(function () {
+        //   return Parse.Promise.when(promises);
     }).then(function () {
-        return Parse.Promise.when(promises);
-    }).then(function () {
-        status.success();
+        status.success("Successfully updated " + promises.length + " test scores!");
     }, function (error) {
-        status.error(JSON.stringify(error));
+        status.error("Only updated " + promises.length + " tests before error. " + JSON.stringify(error));
     })
 });
 
@@ -343,6 +357,10 @@ Parse.Cloud.job("calculateTotalTestsInEachCategory", function (request, status) 
  * - Checks if they have any Unique Responses (URs)
  * - If so, checks if they have a Generated SR Test (GSR Test)
  * - If no, create one; if yes, clears its questions
+ * - Check when the next due time is for their set intensity
+ * - Update nextDue date if needed
+ *
+ * - If current time is equal to due time, carry on
  * - Per UR, check if the time since question was answered equals time to repeat*
  * - If true, add question to the GSR Test
  * - Once GSR Test is ready, shuffle and strip down to 15 questions
@@ -371,7 +389,9 @@ Parse.Cloud.job('spacedRepetitionRunLoop', function (request, status) {
                         srIntensityLevel = srIntensityLevels[srIntensityNumber - 1],
                         installation,
                         timeZone = user.get('timeZone'),
-                        gsrTest;
+                        gsrTest,
+                        isGSRTestNew = false,
+                        gsrAttempt = new Parse.Object('Attempt');
 
                     /*
                      * TimeZone is set:
@@ -387,20 +407,46 @@ Parse.Cloud.job('spacedRepetitionRunLoop', function (request, status) {
                                 timeZone = installation.get('timeZone');
                             }
                             var currentTime = new Date(),
-                                localTime = moment(currentTime).tz(timeZone).format('ha');
+                                localTime = new moment(currentTime).tz(timeZone),
+                                localTimeHours = localTime.format('HH'),
+                                nextDue;
 
-                            console.log("Current time is : " + currentTime);
-                            console.log("For timezone: " + timeZone + ", its " + localTime);
+                            for (var i = 0; i < srIntensityLevel.times.length; i++) {
+                                var dueTime = new moment().tz(timeZone)
+                                    .set("hours", srIntensityLevel.times[0].slice(0, 2))
+                                    .set("minutes", 0)
+                                    .set("seconds", 0);
+
+                                if (dueTime.isAfter(localTime)) {
+                                    nextDue = dueTime;
+                                    break;
+                                } else {
+                                    continue;
+                                }
+                            }
+                            if (!nextDue) {
+                                nextDue = new moment().tz(timeZone)
+                                    .set("hours", srIntensityLevel.times[0].slice(0, 2))
+                                    .set("minutes", 0)
+                                    .set("seconds", 0)
+                                    .add(1, 'days');
+                            }
+                            if (user.get('spacedRepetitionNextDue') !== nextDue) {
+                                console.log("Setting due date to " + nextDue._d);
+                                user.set('spacedRepetitionNextDue', nextDue._d);
+                                promises.push(user.save());
+                            }
                             /*
                              * See if the user's intensity level allows for a
                              * test to be sent now: based on their timezone.
                              */
-                            if (srIntensityLevel.times.indexOf(localTime) === -1) {
-                                console.log("Not time for a push yet");
+                            if (srIntensityLevel.times.indexOf(localTimeHours + "00") === -1) {
+                                console.log(user.get("name") + " is not expecting a push/email yet.");
                                 return PromiseHelper.ABORT_CHAIN;
                             } else {
-                                console.log("User wants a push");
+                                console.log("Preparing a SRS test for " + user.get("name"));
                             }
+
                             query = new Parse.Query('Test');
                             query.equalTo('author', user);
                             query.equalTo('isSpacedRepetition', true);
@@ -412,9 +458,10 @@ Parse.Cloud.job('spacedRepetitionRunLoop', function (request, status) {
 
                             if (results[0]) {
                                 gsrTest = results[0];
-                                gsrTest.set('questions', []);
-                                return gsrTest.save();
+                                //gsrTest.set('questions', []); removed this, as questions will be a superset of all SRS questions
+                                return gsrTest;
                             } else {
+                                isGSRTestNew = true;
                                 var Test = Parse.Object.extend('Test');
                                 gsrTest = new Test();
                                 gsrTest.set('isGenerated', true);
@@ -441,6 +488,20 @@ Parse.Cloud.job('spacedRepetitionRunLoop', function (request, status) {
 
                             query = new Parse.Query('UniqueResponse');
                             query.equalTo('user', user);
+                            if (isGSRTestNew) {
+                                /* We'll need to find all their recent
+                                 * URs to prefill the GSRTest.questions
+                                 */
+                                query.descending('updatedAt');
+                                query.limit(250);
+                            } else {
+                                /*
+                                 * We already have a superset of GSRTest.questions
+                                 * This query is therefore to check the current
+                                 * box number for these questions.
+                                 */
+                                query.containedIn('question', gsrTest.get('questions'));
+                            }
                             return query.find();
                         }, function (error) {
                             console.error("Error saving new GSR Test for user " + user.id + " error: " + JSON.stringify(error));
@@ -449,67 +510,116 @@ Parse.Cloud.job('spacedRepetitionRunLoop', function (request, status) {
                             if (uniqueResponses === PromiseHelper.ABORT_CHAIN)
                                 return PromiseHelper.ABORT_CHAIN;
 
+                            if(!uniqueResponses || !uniqueResponses.length) {
+                                console.error("No URs or GSRTest.questions* for "+user.get('name'));
+                                return PromiseHelper.ABORT_CHAIN;
+                            }
+
+                            /*
+                             * We are pushing an Attempt object
+                             * to the client. The attempt will
+                             * have the due questions.
+                             */
+                            gsrAttempt.set('test', gsrTest);
+                            gsrAttempt.set('questions', []);
+                            gsrAttempt.set('user', user);
+                            gsrAttempt.set('responses', []); // Only for convenience, not used here.
+
                             for (var i = 0; i < uniqueResponses.length; i++) {
-                                var uniqueResponse = uniqueResponses[i],
-                                    timeSinceTaken = Math.abs(new Date() - uniqueResponse.updatedAt) / 36e5,
+                                var uniqueResponse = uniqueResponses[i];
+                                // Prefill a new GSRTest.questions with all URs
+                                if (isGSRTestNew)
+                                    gsrTest.get('questions').push(uniqueResponse.get('question'));
+
+                                var timeSinceTaken = Math.abs(new Date() - uniqueResponse.updatedAt) / 36e5,
                                     srBox = uniqueResponse.get('spacedRepetitionBox'),
                                     timeToRepeat = srIntensityLevel.boxes[srBox - 1],
                                     isTimeToRepeat = timeSinceTaken >= timeToRepeat;
 
                                 if (isTimeToRepeat) {
-                                    gsrTest.get('questions').push(uniqueResponse.get('question'));
+                                    gsrAttempt.get('questions').push(uniqueResponse.get('question'));
                                 }
                             }
-                            if (gsrTest.get('questions').length > 15) {
-                                var questions = _.shuffle(gsrTest.get('questions')).splice(0, 15);
-                                gsrTest.set('questions', questions);
+                            var maxQuestions = user.get('spacedRepetitionMaxQuestions') ?
+                                user.get('spacedRepetitionMaxQuestions') : 15;
+
+                            if (gsrAttempt.get('questions').length > maxQuestions) {
+                                var limitedQuestions = _.shuffle(gsrAttempt.get('questions')).splice(0, maxQuestions);
+                                gsrAttempt.set('questions', limitedQuestions);
                             }
-                            return gsrTest.save();
+                            /*
+                             * If GSRTest is new, we will have added
+                             * new questions (URs) to it in the forLoop
+                             * above, therefore we need to save it.
+                             * However, it is not essential for the next
+                             * chain, hence it is done asynchronously.
+                             */
+                            if (isGSRTestNew)
+                                promises.push(gsrTest.save());
+
+                            return gsrAttempt.save();
                         },
                         function (error) {
                             console.error("Error getting uniqueResponse for user " + user.id + " error: "
                             + JSON.stringify(error));
                         })
-                        .then(function (gsrTest) {
-                            if (gsrTest === PromiseHelper.ABORT_CHAIN)
+                        .then(function (gsrAttempt) {
+                            if (gsrAttempt === PromiseHelper.ABORT_CHAIN)
                                 return PromiseHelper.ABORT_CHAIN;
 
-                            if (!gsrTest.get('questions').length) // Empty test
-                                return;
 
-                            if (user.get('spacedRepetitionNotificationsByPush')) {
+                            if (!gsrAttempt.get('questions').length) { // Empty attempt
+                                console.log("There are not enough questions for this SRS attempt for " + user.get("name"));
+                                return;
+                            }
+                            if (user.get('spacedRepetitionNotificationByPush')) {
+                                console.log("Sending GSR Attempt by push to " + user.get('name'));
+                                var message = "";
+                                if (gsrAttempt.get('questions').length === 1)
+                                    message += "You just have 1 question to do for now!";
+                                else
+                                    message += "Here are " + gsrAttempt.get('questions').length + " questions for you to do!";
                                 promises.push(Parse.Cloud.run('sendPushToUser',
                                     {
-                                        message: "Your spaced repetition test is ready to take!",
+                                        message: message,
                                         recipientUserId: user.id,
-                                        testId: gsrTest.id
+                                        actionName: 'take-attempt',
+                                        actionParams: [{name: "attempt", "content": gsrAttempt.id},
+                                            {"name": "type", "content": "spaced-repetition"}]
                                     }));
 
-                            } else if (user.get('spacedRepetitionNotificationsByEmail')) {
+                            }
+                            // TODO Remove this once we're happy to send out emails again!
+                            return;
+
+                            if (user.get('spacedRepetitionNotificationByEmail')) {
                                 var query = new Parse.Query('UserPrivate');
                                 query.equalTo('username', user.getUsername());
                                 return query.find();
+                            } else {
+                                return;
                             }
                         }, function (error) {
                             console.error("Error saving GSR Test after adding questions to it, error "
                             + JSON.stringify(error));
                         })
                         .then(function (result) {
-                            if (gsrTest === PromiseHelper.ABORT_CHAIN)
+                            if (result === PromiseHelper.ABORT_CHAIN)
                                 return PromiseHelper.ABORT_CHAIN;
 
                             if (!result || !result[0]) // Doesn't want email, or email not found.
                                 return;
 
                             var email = result[0].get('email');
+                            console.log(user.get('name') + " will be emailed with their GSR attempt at " + email);
                             return promises.push(sendEmail('spaced-repetition-system-test-ready',
                                 user, email,
                                 [{
                                     name: "NUMQUESTIONS",
-                                    content: gsrTest.get('questions.length')
+                                    content: gsrAttempt.get('questions').length
                                 }, {
                                     name: "TESTLINK",
-                                    content: "http://mycqs.com/mcq/" + gsrTest.get('slug')
+                                    content: "http://mycqs.com/mcq/srs/" + gsrAttempt.id
                                 }]));
                         });
                 },

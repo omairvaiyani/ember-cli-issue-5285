@@ -1,102 +1,102 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
-        <loc>http://mycqs.com</loc>
-        <priority>.1</priority>
-        <changefreq>daily</changefreq>
-    </url>
-    <url>
-        <loc>http://mycqs.com/browse</loc>
-        <priority>.6</priority>
-        <changefreq>daily</changefreq>
-    </url>
-    <url>
-        <loc>http://mycqs.com/create</loc>
-        <priority>.5</priority>
-        <changefreq>weekly</changefreq>
-    </url>
-    <url>
-        <loc>http://mycqs.com/about</loc>
-        <priority>.5</priority>
-        <changefreq>weekly</changefreq>
-    </url>
-    <url>
-        <loc>http://mycqs.com/support</loc>
-        <priority>.5</priority>
-        <changefreq>weekly</changefreq>
-    </url>
-    <url>
-        <loc>http://mycqs.com/blog</loc>
-        <priority>.7</priority>
-        <changefreq>daily</changefreq>
-    </url>
-    <url>
-        <loc>http://mycqs.com/browse/medicine</loc>
+        <loc>https://mycqs.com</loc>
         <priority>1</priority>
         <changefreq>daily</changefreq>
     </url>
     <url>
-        <loc>http://mycqs.com/browse/aviation</loc>
-        <priority>.8</priority>
-        <changefreq>daily</changefreq>
-    </url>
-    <url>
-        <loc>http://mycqs.com/browse/business</loc>
-        <priority>.8</priority>
-        <changefreq>daily</changefreq>
-    </url>
-    <url>
-        <loc>http://mycqs.com/browse/computer-science</loc>
-        <priority>.8</priority>
-        <changefreq>daily</changefreq>
-    </url>
-    <url>
-        <loc>http://mycqs.com/browse/dentisry</loc>
-        <priority>.8</priority>
-        <changefreq>daily</changefreq>
-    </url>
-    <url>
-        <loc>http://mycqs.com/browse/engineering</loc>
-        <priority>.8</priority>
-        <changefreq>daily</changefreq>
-    </url>
-    <url>
-        <loc>http://mycqs.com/browse/humanities</loc>
-        <priority>.8</priority>
-        <changefreq>daily</changefreq>
-    </url>
-    <url>
-        <loc>http://mycqs.com/browse/languages</loc>
-        <priority>.8</priority>
-        <changefreq>daily</changefreq>
-    </url>
-    <url>
-        <loc>http://mycqs.com/browse/law</loc>
-        <priority>.8</priority>
-        <changefreq>daily</changefreq>
-    </url>
-    <url>
-        <loc>http://mycqs.com/browse/maths</loc>
-        <priority>.8</priority>
-        <changefreq>daily</changefreq>
-    </url>
-    <url>
-        <loc>http://mycqs.com/browse/nursing</loc>
-        <priority>.8</priority>
-        <changefreq>daily</changefreq>
-    </url>
-    <url>
-        <loc>http://mycqs.com/browse/other</loc>
+        <loc>https://mycqs.com/browse</loc>
         <priority>1</priority>
         <changefreq>daily</changefreq>
     </url>
     <url>
-        <loc>http://mycqs.com/browse/science</loc>
+        <loc>https://mycqs.com/create</loc>
+        <priority>1</priority>
+        <changefreq>weekly</changefreq>
+    </url>
+    <url>
+        <loc>https://mycqs.com/about</loc>
+        <priority>1</priority>
+        <changefreq>weekly</changefreq>
+    </url>
+    <url>
+        <loc>https://mycqs.com/support</loc>
+        <priority>1</priority>
+        <changefreq>weekly</changefreq>
+    </url>
+    <url>
+        <loc>http://blog.mycqs.com</loc>
         <priority>1</priority>
         <changefreq>daily</changefreq>
     </url>
     <url>
-        <loc>http://mycqs.com/browse/social-sciences</loc>
+        <loc>https://mycqs.com/browse/medicine</loc>
+        <priority>1</priority>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://mycqs.com/browse/aviation</loc>
+        <priority>.8</priority>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://mycqs.com/browse/business</loc>
+        <priority>.8</priority>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://mycqs.com/browse/computer-science</loc>
+        <priority>.8</priority>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://mycqs.com/browse/dentisry</loc>
+        <priority>.8</priority>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://mycqs.com/browse/engineering</loc>
+        <priority>.8</priority>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://mycqs.com/browse/humanities</loc>
+        <priority>.8</priority>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://mycqs.com/browse/languages</loc>
+        <priority>.8</priority>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://mycqs.com/browse/law</loc>
+        <priority>.8</priority>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://mycqs.com/browse/maths</loc>
+        <priority>.8</priority>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://mycqs.com/browse/nursing</loc>
+        <priority>.8</priority>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://mycqs.com/browse/other</loc>
+        <priority>1</priority>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://mycqs.com/browse/science</loc>
+        <priority>1</priority>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://mycqs.com/browse/social-sciences</loc>
         <priority>.8</priority>
         <changefreq>daily</changefreq>
     </url>

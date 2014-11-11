@@ -3,12 +3,17 @@
         <article class="col-md-9 margin-bottom-16">
             {{#unless loading}}
                 <div class="card take-test">
-                    <h3>{{#link-to 'testInfo' slug}}{{title}}{{/link-to}}
-                        <small>{{#link-to 'category' category.slug}}{{category.name}}{{/link-to}}</small>
+                    <h3>
+                        {{#unless isSRSTest}}
+                            {{#link-to 'testInfo' slug}}{{title}}{{/link-to}}
+                            <small>{{#link-to 'category' category.slug}}{{category.name}}{{/link-to}}</small>
+                        {{else}}
+                            {{partial 'test/srs-header'}}
+                        {{/unless}}
                         {{#if currentQuestion.image}}
                             <img class="question-image-thumbnail pull-right"
-                                 {{action 'enlargeQuestionImage'}}
-                                {{bind-attr src=currentQuestion.image.url}}/>
+                                {{action 'enlargeQuestionImage'}}
+                                {{bind-attr src=currentQuestion.image.secureUrl}}/>
                         {{/if}}
                     </h3>
                     <div class="row margin-bottom-16">
@@ -54,22 +59,24 @@
                 </div>
             {{/unless}}
         </article>
-        <article class="col-md-3 col-fix-right">
-            <section class="row">
-                <article class="col-md-12 col-sm-6 col-xs-12 margin-bottom-16">
-                    {{partial 'user/author-info'}}
-                </article>
-                <article class="col-md-12 col-sm-6 col-xs-12">
-                    <div class="card">
-                        <p class="text-center"><strong>Take this test from your iPhone or iPad.</strong></p>
-                        <a href="https://itunes.apple.com/gb/app/mycqs-multiple-choice-questions/id921380709?mt=8"
-                           target="_blank">
-                            <img src="img/appstore.png"
-                                 style="width:100%;"/>
-                        </a>
-                    </div>
-                </article>
-            </section>
-        </article>
+        {{#unless isSRSTest}}
+            <article class="col-md-3 col-fix-right">
+                <section class="row">
+                    <article class="col-md-12 col-sm-6 col-xs-12 margin-bottom-16">
+                        {{partial 'user/author-info'}}
+                    </article>
+                    <article class="col-md-12 col-sm-6 col-xs-12">
+                        <div class="card">
+                            <p class="text-center"><strong>Take this test from your iPhone or iPad.</strong></p>
+                            <a href="https://itunes.apple.com/gb/app/mycqs-multiple-choice-questions/id921380709?mt=8"
+                               target="_blank">
+                                <img src="img/appstore.png"
+                                     style="width:100%;"/>
+                            </a>
+                        </div>
+                    </article>
+                </section>
+            </article>
+        {{/unless}}
     </section>
 </div>

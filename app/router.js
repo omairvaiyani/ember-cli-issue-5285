@@ -13,7 +13,6 @@ Router.map(function () {
      */
     this.route('application');
 
-
     /*
      * User profiles and profile editing
      */
@@ -51,6 +50,10 @@ Router.map(function () {
     this.route('support', {path: 'support'});
     this.route('privacyPolicy', {path: 'privacy-policy'});
     this.route('terms', {path: 'terms'});
+    this.resource('features', {path: 'features'}, function () {
+        this.route('srs');
+    });
+    this.route('presskit', {path: 'press'});
 
     /*
      * Temporary sessions

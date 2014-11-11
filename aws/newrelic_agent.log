@@ -10,3 +10,6 @@
 {"name":"newrelic","hostname":"campus-10-41-53-13.wireless.leeds.ac.uk","pid":21825,"level":30,"msg":"Starting New Relic for Node.js connection process.","time":"2014-10-06T14:28:01.350Z","v":0}
 {"name":"newrelic","hostname":"campus-10-41-53-13.wireless.leeds.ac.uk","pid":21825,"component":"new_relic_response","level":30,"msg":"Reporting to: https://rpm.newrelic.com/accounts/747547/applications/4267215","time":"2014-10-06T14:28:02.922Z","v":0}
 {"name":"newrelic","hostname":"campus-10-41-53-13.wireless.leeds.ac.uk","pid":21825,"component":"collector_api","level":30,"msg":"Connected to collector-126.newrelic.com:443 with agent run ID 1003209233.","time":"2014-10-06T14:28:02.922Z","v":0}
+{"name":"newrelic","hostname":"Omairs-MacBook-Pro.local","pid":4591,"level":30,"msg":"Starting New Relic for Node.js connection process.","time":"2014-11-07T14:48:53.928Z","v":0}
+{"name":"newrelic","hostname":"Omairs-MacBook-Pro.local","pid":4591,"component":"new_relic_response","level":30,"msg":"Reporting to: https://rpm.newrelic.com/accounts/747547/applications/4267215","time":"2014-11-07T14:48:55.857Z","v":0}
+{"name":"newrelic","hostname":"Omairs-MacBook-Pro.local","pid":4591,"component":"collector_api","level":30,"msg":"Connected to collector-105.newrelic.com:443 with agent run ID 1056433650.","time":"2014-11-07T14:48:55.858Z","v":0}

@@ -1,35 +1,37 @@
 import Ember from 'ember';
 
 export default Ember.Controller.extend({
-    needs: ['application'],
+    plans: [],
 
-    isStripeInitialized: false,
-
-    initializeStripe: function () {
-        if (this.get('isStripeInitialized'))
-            returnl
-        Stripe.setPublishableKey('pk_test_chNbzOLgCjUMKlpjFJPfpmO4'); // Testing key
-        //Stripe.setPublishableKey('pk_live_ktE3v0jGmY5oXvPXDcf0qnGcX'); // Live key
-        this.set('isStripeInitialized', true);
-    }.observes('controllers.application.currentPath'),
+    retrievePlans: function () {
+        Parse.Cloud.run('listStripePlans', {})
+            .then(function(response) {
+                //console.dir(response);
+                this.set('plans', JSON.parse(response));
+            }.bind(this));
+    }.on('init'),
 
     tokenHandler: function (response) {
-        console.dir(response);
-        console.log("Token received " +response.id);
+        Parse.Cloud.run('createSRSCustomer', {email: response.email, card: response.id})
+            .then(function() {
+            }, function (error) {
+                console.dir(error);
+            });
     },
 
     actions: {
-        openCheckoutHandler: function () {
+        openCheckoutHandler: function (plan) {
             StripeCheckout.open({
-                key:         'pk_test_chNbzOLgCjUMKlpjFJPfpmO4',
-                address:     false,
-                amount:      2,
-                currency:    'gbp',
-                name:        'Spaced Repetition System',
-                description: '1 month subscription',
-                panelLabel:  'Purchase',
-                token:       this.get('tokenHandler')
-            })
+                key: 'pk_test_chNbzOLgCjUMKlpjFJPfpmO4',
+                image: 'http://assets.mycqs.com/img/mycqs-icon-header-0d5831348b3307fd99c84fb25770b5d0.png',
+                address: false,
+                currency: 'gbp',
+                amount: plan.amount,
+                name: 'MyCQs',
+                description: 'Spaced Repetition 1 month',
+                panelLabel: 'Purchase',
+                token: this.get('tokenHandler')
+            });
         }
     }
 });

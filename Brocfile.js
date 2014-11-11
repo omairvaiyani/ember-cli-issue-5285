@@ -10,7 +10,8 @@ var app = new EmberApp({
 
     fingerprint: {
         exclude: ['fonts/'],
-        prepend: 'https://assets.mycqs.com/'
+        //prepend: 'https://assets.mycqs.com/' // SSL not set!
+        prepend: 'https://d3uzzgmigql815.cloudfront.net/' // SSL certified.
     }
 });
 
@@ -59,13 +60,7 @@ app.import({
     development: 'bower_components/parse-js-sdk/lib/parse.js',
     production: 'bower_components/parse-js-sdk/lib/parse.min.js'
 });
-/*
- * RETINA.JS
- */
-/*app.import({
-    development: 'bower_components/retina.js/dist/retina.js',
-    production: 'bower_components/retina.js/dist/retina.min.js'
-});*/
+
 /*
  * FREEWALL
  */

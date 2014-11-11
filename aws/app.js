@@ -11,7 +11,7 @@ var express = require('express'),
     }),
     currentDeploy,
     indexFile;
-
+app.enable('trust proxy'); // Needed to verify request protocols for SSL
 app.use(require('prerender-node').set('prerenderToken', 'BToHzVZjPpLEjKzghygK'));
 log.info("Server fired up.");
 
@@ -25,7 +25,7 @@ var checkForAppUpdate = function () {
             log.info("Redis.checkForAppUpdate error: " + err);
         else if (value) {
             if (currentDeploy !== value) {
-                log.info("New index file detected! Key: "+value);
+                log.info("New index file detected! Key: " + value);
                 currentDeploy = value;
                 updateIndexFile();
             } else {
@@ -44,7 +44,7 @@ checkForAppUpdate();
 setInterval(checkForAppUpdate, 60000);
 
 var updateIndexFile = function () {
-    log.info("Updating index file to key: "+currentDeploy);
+    log.info("Updating index file to key: " + currentDeploy);
     redis.get(currentDeploy, function (err, data) {
         if (err)
             log.info("Redis.updateIndexFile error: " + err);
@@ -59,7 +59,7 @@ var updateIndexFile = function () {
 
 app.all('/sitemap.xml', function (req, res) {
     res.writeHead(301,
-        {Location: 'http://assets.mycqs.com/sitemap.xml'}
+        {Location: 'https://d3uzzgmigql815.cloudfront.net/sitemap.xml'}
     );
     res.end();
 });
@@ -80,8 +80,8 @@ app.all('/scripts/*', function (req, res) {
 });
 
 app.get("*", function (req, res) {
-    if (req.headers.host.match(/^www/) !== null) {
-        res.redirect('http://' + req.headers.host.replace(/^www\./, '') + req.url);
+    if (req.headers.host.match(/^www/) !== null || !req.secure) {
+        res.redirect('https://' + req.headers.host.replace(/^www\./, '') + req.url);
     }
     if (!indexFile) {
         res.sendFile(__dirname + '/index.html');

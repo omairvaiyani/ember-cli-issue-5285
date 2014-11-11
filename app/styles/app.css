@@ -8,16 +8,16 @@
 /* TYPEFACES */
 /*@font-face {*/
 /*font-family: 'Muli';*/
-/*src: url('http://assets.mycqs.co.uk/fonts/muli-regular-webfont.eot');*/
-/*src: url('http://assets.mycqs.co.uk/fonts/muli-regular-webfont.eot?#iefix') format('embedded-opentype'), url('http://assets.mycqs.co.uk/fonts/muli-regular-webfont.woff') format('woff'), url('http://assets.mycqs.co.uk/fonts/muli-regular-webfont.ttf') format('truetype'), url('http://assets.mycqs.co.uk/fonts/muli-regular-webfont.svg#muli_regular') format('svg');*/
+/*src: url('https://d3uzzgmigql815.cloudfront.net/fonts/muli-regular-webfont.eot');*/
+/*src: url('https://d3uzzgmigql815.cloudfront.net/fonts/muli-regular-webfont.eot?#iefix') format('embedded-opentype'), url('https://d3uzzgmigql815.cloudfront.net/fonts/muli-regular-webfont.woff') format('woff'), url('https://d3uzzgmigql815.cloudfront.net/fonts/muli-regular-webfont.ttf') format('truetype'), url('https://d3uzzgmigql815.cloudfront.net/fonts/muli-regular-webfont.svg#muli_regular') format('svg');*/
 /*font-weight: normal;*/
 /*font-style: normal;*/
 /*}*/
 
 @font-face {
     font-family: 'Muli-Light';
-    src: url('http://assets.mycqs.co.uk/fonts/muli-light-webfont.eot');
-    src: url('http://assets.mycqs.co.uk/fonts/muli-light-webfont.eot?#iefix') format('embedded-opentype'), url('http://assets.mycqs.co.uk/fonts/muli-light-webfont.woff') format('woff'), url('http://assets.mycqs.co.uk/fonts/muli-light-webfont.ttf') format('truetype'), url('http://assets.mycqs.co.uk/fonts/muli-light-webfont.svg#muli_light') format('svg');
+    src: url('https://d3uzzgmigql815.cloudfront.net/fonts/muli-light-webfont.eot');
+    src: url('https://d3uzzgmigql815.cloudfront.net/fonts/muli-light-webfont.eot?#iefix') format('embedded-opentype'), url('https://d3uzzgmigql815.cloudfront.net/fonts/muli-light-webfont.woff') format('woff'), url('https://d3uzzgmigql815.cloudfront.net/fonts/muli-light-webfont.ttf') format('truetype'), url('https://d3uzzgmigql815.cloudfront.net/fonts/muli-light-webfont.svg#muli_light') format('svg');
     font-weight: normal;
     font-style: normal;
 }
@@ -222,6 +222,23 @@ body {
     display: inline-block;
     vertical-align: middle;
     margin-right: 8px;
+}
+
+/*
+ * Touch Slider
+ */
+.swiper-pagination-switch {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 10px;
+    background: #999;
+    box-shadow: 0px 1px 2px #555 inset;
+    margin: 0 3px;
+    cursor: pointer;
+}
+.swiper-active-switch {
+    background: #fff !important;
 }
 
 /*.svg-icons {
@@ -1788,6 +1805,7 @@ body {
 }
 .footer .sitemap a {
     margin-right: 8px;
+    font-size: 14px;
 }
 .footer .sitemap a:last-child {
     margin-right: 0px;

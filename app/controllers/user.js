@@ -13,6 +13,8 @@ ParseHelper
 from
 '../utils/parse-helper';
 
+import EmberParseAdapter from '../adapters/parse';
+
 export default
 Ember.ObjectController.extend(CurrentUser, {
     loading: {

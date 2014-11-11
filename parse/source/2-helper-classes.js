@@ -565,6 +565,25 @@ var getSwiftDocumentForObject = function (className, object) {
             break;
     }
     return document;
-
-
+}
+/**
+ * createSitemapNodeForUrl
+ * @param {String} url
+ * @param {Integer} priority
+ * @param {String} frequency
+ * @param {Date} lastmod
+ */
+var createSitemapNodeForUrl = function (url, priority, frequency, lastmod) {
+    if(!priority)
+        priority = 0.5;
+    if(!frequency)
+        frequency = "weekly";
+    if(!lastmod)
+        lastmod = new Date();
+    return "<url> \
+    <loc>"+url+"</loc> \
+    <priority>"+priority+"</priority> \
+    <changefreq>"+frequency+"</changefreq> \
+    <lastmod>"+moment(lastmod).format("YYYY-MM-DD")+"</lastmod>\
+    </url>";
 }

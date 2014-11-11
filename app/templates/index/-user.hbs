@@ -45,16 +45,26 @@
                 </div>
             </article>
         </section>
+        {{!--
         <section class="row">
             <article class="col-md-12">
                 <div class="card margin-top-16">
-                    {{!--
-                    <button {{action 'openModal' 'application/modal/srs-sales' 'application.stripe'}}>
-                        Spaced Repetition System
-                    </button>--}}
+                    <h4>Spaced Repetition Test</h4>
+
+                   <button class="btn btn-skype"
+                       {{action 'openModal' 'application/modal/srs-sales' 'application.stripe'}}>
+                        Learn more
+                    </button>
+
+                    {{#if currentUser.latestSRAttempt}}
+                        <p>Next due: {{currentUser.spacedRepetitionNextDue}}</p>
+
+                        {{#link-to 'srs' currentUser.latestSRAttempt}}Take now{{/link-to}}
+                    {{/if}}
                 </div>
             </article>
         </section>
+        --}}
     </div>
     <div class="col-md-9 col-fix-right">
 

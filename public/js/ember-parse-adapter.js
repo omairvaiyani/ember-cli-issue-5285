@@ -141,28 +141,26 @@ EmberParseAdapter.Serializer = DS.RESTSerializer.extend({
             this._super(record, json, key, attribute);
         }
     },
-
     serializeBelongsTo: function (record, json, relationship) {
         var key = relationship.key;
         var belongsTo = record.get(key);
         if (belongsTo) {
-            // TODO: Perhaps this is working around a bug in Ember-Data? Why should
-            // promises be returned here.
-            if (belongsTo instanceof DS.PromiseObject) {
-                if (!belongsTo.get('isFulfilled')) {
-                    /*
-                     * Modified by Omair
-                     * - This error seemed to be unnecessarily breaking the app
-                     * on newQuestion.save
-                     * - Return the function instead of throwing an error or
-                     * creating an empty json[key]
-                     */
+            /*
+             * Modified by Omair
+             * Sometimes .belongsTo was invalid
+             * Instead, record._relationships[key].inverseRecord
+             * was pointing to the object. Bizarre, but a
+             * workaround.
+             */
+            if (!belongsTo.constructor || !belongsTo.get('content')) {
+                if(!record._relationships[key])
+                    belongsTo = record.get(key).get('content');
+                else
+                    belongsTo = record._relationships[key].inverseRecord;
+                if (!belongsTo)
                     return;
-                    //throw new Error("belongsTo values *must* be fulfilled before attempting to serialize them");
-
-                }
+            } else
                 belongsTo = belongsTo.get('content');
-            }
 
             json[key] = {
                 "__type": "Pointer",
@@ -551,7 +549,9 @@ EmberParseAdapter.ParseUser = DS.Model.extend({
     numberOfFollowers: DS.attr('number', {defaultValue: 0}),
     latestAttempts: DS.hasMany('attempt', {async: true, array: true}),
     slug: DS.attr('string'),
-    finishedWelcomeTutorial: DS.attr('boolean')
+    finishedWelcomeTutorial: DS.attr('boolean'),
+    spacedRepetitionIntensity: DS.attr('number'),
+    spacedRepetitionNextDue: DS.attr('parse-date')
 });
 
 EmberParseAdapter.ParseUser.reopenClass({

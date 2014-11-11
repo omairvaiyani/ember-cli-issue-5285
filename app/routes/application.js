@@ -552,7 +552,7 @@ Ember.Route.extend({
                     controller.set('sendToMobileButtonText', "Sending...");
                     Parse.Cloud.run('sendPushToUser',
                         {
-                            recipientId: this.get('currentUser.id'),
+                            recipientUserId: this.get('currentUser.id'),
                             message: "Hey check out this test!",
                             testId: sendObject.get('id'),
                             type: "sendToMobile"

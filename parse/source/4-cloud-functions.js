@@ -355,18 +355,18 @@ Parse.Cloud.define("setNewPassword", function (request, response) {
 
 /***
  Sends a push message to the user (currently only used for Send to Mobile function, but potential to be rolled out to others
- @param message: A message to send with the push, i.e. 'You sent a test to your mobile' etc
- @param recipientUserId: objectId of the user to receive the message (in Send to Mobile this will be the current user)
- @param testId: objectId of the test to send the user
- @param type: string representing the type of message being sent, currently supported: 'sendToMobile' (will be properly implemented in code as we add new methods)
+ @param {String} message A message to send with the push, i.e. 'You sent a test to your mobile' etc
+ @param {String} recipientUserId objectId of the user to receive the message (in Send to Mobile this will be the current user)
+ @param {String} actionName e.g. take-test
+ @param {Array} actionParams e.g. [{name:test (testId), content:type (send-to-mobile)}, ...]
  **/
 
 Parse.Cloud.define("sendPushToUser", function (request, response) {
     var senderUser = request.user,
         recipientUserId = request.params.recipientUserId,
         message = request.params.message,
-        type = request.params.type,
-        testId = request.params.testId,
+        actionName = request.params.actionName,
+        actionParams = request.params.actionParams,
         sentToSelf = 0;
 
     if (senderUser && senderUser.id === recipientUserId) {
@@ -378,6 +378,22 @@ Parse.Cloud.define("sendPushToUser", function (request, response) {
         // Truncate and add a ...
         message = message.substring(0, 137) + "...";
     }
+
+    var actionUrl = "mycqs://" + actionName;
+
+    /* Avoid crashing until we have all instances
+     * of sendPushToUser updated to this method.
+     */
+    if (!actionParams)
+        actionParams = [];
+    else
+        console.log("Action params " + JSON.stringify(actionParams));
+
+    actionUrl += "?" + actionParams[0].name + "=" + actionParams[0].content;
+    for (var i = 1; i < actionParams.length; i++) {
+        actionUrl += "&" + actionParams[i].name + "=" + actionParams[i].content;
+    }
+
 
     // Send the push.
     // Find devices associated with the recipient user
@@ -393,7 +409,7 @@ Parse.Cloud.define("sendPushToUser", function (request, response) {
                 data: {
                     "title": "MyCQs",
                     "alert": message,
-                    "testId": testId,
+                    "url": actionUrl,
                     "sound": "default.caf",
                     "badge": "Increment",
                     "sentToSelf": sentToSelf
@@ -701,21 +717,35 @@ Parse.Cloud.define('isMobileUser', function (request, response) {
  * Our premium subscriptions will be handle
  * with Stripe for web users.
  */
-Parse.Cloud.define("createCustomer", function (request, response) {
-    Stripe.Customers.create({
-        plan: "MYL.MCQ.SRS",
-        email: null,
-        card: null
-    }, {
-        success: function (httpResponse) {
-            response.success(JSON.stringify(httpResponse));
-        },
-        error: function (httpResponse) {
-            response.error("Uh oh, something went wrong");
-        }
-    });
+Parse.Cloud.define("createSRSCustomer", function (request, response) {
+    Parse.Cloud.useMasterKey();
+
+    var user = request.user,
+        stripeObject,
+        stripeToken;
+
+    Stripe.Customers.create({email: request.params.email, card: request.params.card})
+        .then(function (httpResponse) {
+            stripeObject = httpResponse;
+            stripeToken = stripeObject.id;
+            return user.get('privateData').fetch();
+        }).then(function (privateData) {
+            privateData.set('stripeObject', stripeObject);
+            privateData.set('stripeToken', stripeToken);
+            return privateData.save();
+        }).then(function () {
+            response.success();
+        }, function (error) {
+            response.error(JSON.stringify(error));
+        });
 });
 
+Parse.Cloud.define('listStripePlans', function (request, response) {
+    Stripe.Plans.list()
+        .then(function (httpResponse) {
+            response.success(JSON.stringify(httpResponse.data));
+        });
+});
 
 Parse.Cloud.define("findTestsForModule", function (request, response) {
     var getQuery = new Parse.Query("Module");
@@ -1039,4 +1069,119 @@ Parse.Cloud.define("findTestsForUser", function (request, response) {
         }
     });
 
+});
+
+Parse.Cloud.define('generateSitemapForTests', function (request, response) {
+    var query = new Parse.Query('Test'),
+        limit = request.params.limit,
+        skip = request.params.skip,
+        priority = request.params.priority,
+        frequency = request.params.frequency,
+        sitemapUrls = "";
+
+    if (!limit)
+        limit = 1000;
+    if (!priority)
+        priority = 0.9;
+    if (!frequency)
+        frequency = "daily";
+
+    query.equalTo('privacy', 1);
+    query.limit(limit);
+    if (skip)
+        query.skip(skip);
+    query.descending('quality');
+    query.find().then(function (tests) {
+        for (var i = 0; i < tests.length; i++) {
+            var test = tests[i];
+            if (!test || !test.get('slug') || !test.get('slug').length)
+                continue;
+            var url = "http://mycqs.com/test/" + test.get('slug').trim();
+            sitemapUrls += createSitemapNodeForUrl(url, priority, frequency, test.updatedAt);
+        }
+        response.success(sitemapUrls);
+    }, function (error) {
+        response.error(JSON.stringify(error));
+    });
+});
+/**
+ * @CloudFunction Append Questions to SRS Test
+ * @name addOrRemoveQuestionsToSRSTest
+ * @param {String} testId
+ * @param {Array} questionIds
+ * @param {Integer} task 0: append, 1: remove, 2: replace
+ */
+Parse.Cloud.define('addOrRemoveQuestionsToSRSTest', function (request, response) {
+    Parse.Cloud.useMasterKey();
+    var user = request.user,
+        srTestId = request.params.testId,
+        questionIds = request.params.questionIds,
+        task = request.params.task,
+        updatedQuestionsList = [];
+
+    if (!user || !srTestId || !questionIds)
+        return response.error("User, SRS Test or Questions not set");
+
+    var query = new Parse.Query('Test');
+    query.include('questions');
+    query.get(srTestId)
+        .then(function (srTest) {
+            console.log(1);
+            var oldQuestionsList = srTest.get('questions');
+
+            switch (task) {
+                case 0: // Append questions
+                    console.log(2);
+                    /*
+                     * Add unique questions only
+                     */
+                    updatedQuestionsList = updatedQuestionsList.concat(oldQuestionsList);
+                    console.log("Question list pre add " + JSON.stringify(updatedQuestionsList));
+                    console.log("Old question list length " + oldQuestionsList.length);
+                    var oldQuestionIds = [];
+                    for (var i = 0; i < oldQuestionsList.length; i++) {
+                        oldQuestionIds.push(oldQuestionsList[i].id);
+                    }
+                    console.log("Old questionIds length " + oldQuestionIds.length);
+                    console.log("New questionIds length " + questionIds.length);
+                    for (var i = 0; i < questionIds.length; i++) {
+                        console.log("Should add questionId " + questionIds[i] + " to SR test?");
+                        if (oldQuestionIds.indexOf(questionIds[i]) === -1) {
+                            console.log("Yes");
+                            var newQuestion = new Parse.Object('Question');
+                            newQuestion.id = questionIds[i];
+                            updatedQuestionsList.push(newQuestion);
+                        } else
+                            console.log("No, duplicated " + questionIds[i]);
+                    }
+                    break;
+                case 1: // Remove
+                    console.log(3);
+                    /*
+                     * Remove questions
+                     */
+                    for (var i = 0; i < oldQuestionsList.length; i++) {
+                        var question = oldQuestionsList[i];
+                        if (questionIds.indexOf(question.id) === -1)
+                            updatedQuestionsList.push(question);
+                    }
+                    break;
+                case 2: // Replace
+                    for (var i = 0; i < questionIds.length; i++) {
+                        var newQuestion = new Parse.Object('Question');
+                        newQuestion.id = questionIds[i];
+                        updatedQuestionsList.push(newQuestion);
+                    }
+                    break;
+            }
+            console.log(4);
+            srTest.set('questions', updatedQuestionsList);
+            return srTest.save();
+        }).then(function () {
+            console.log(5 + "Test saved");
+            ;
+            response.success("Test saved, " + questionIds.length + " added!");
+        }, function (error) {
+            response.error(JSON.stringify(error));
+        });
 });

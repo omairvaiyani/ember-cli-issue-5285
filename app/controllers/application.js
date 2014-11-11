@@ -8,6 +8,8 @@ ParseHelper
 from
 '../utils/parse-helper';
 
+import EmberParseAdapter from '../adapters/parse';
+
 import
 ExpandingSearch
 from
@@ -76,6 +78,9 @@ Ember.Controller.extend({
                 break;
             case "terms":
                 title += "Terms and Conditions";
+                break;
+            case "presskit":
+                title += "Press Information";
                 break;
             default:
                 title += defaultTitle;
@@ -200,7 +205,8 @@ Ember.Controller.extend({
         this.incrementProperty('loadingItems');
         if (!currentUser.get('latestAttempts'))
             return;
-        currentUser.get('latestAttempts').then(function () {
+        currentUser.get('latestAttempts')
+            .then(function () {
                 var where = {
                     "user": ParseHelper.generatePointer(currentUser)
                 };
@@ -210,7 +216,8 @@ Ember.Controller.extend({
                     include: ['test.category', 'user'],
                     limit: 15
                 });
-            }.bind(this)).then(function (attempts) {
+            }.bind(this))
+            .then(function (attempts) {
                 currentUser.set('attempts', attempts);
                 this.send('decrementLoadingItems');
                 /*
@@ -220,6 +227,7 @@ Ember.Controller.extend({
             }.bind(this))
             .then(function (response) {
                 currentUser.set('isMobileUser', response);
+
             });
 
     }.observes('currentUser'),

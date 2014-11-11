@@ -2,33 +2,44 @@
     <div class="card">
         <div class="container-fluid">
             <div class="row">
-                <div class="col-md-3 text-center">
-                    {{#link-to 'index' tagName='a' class='logo-text'}}
-                        <img src="img/footer-icon-white.png" height="30px" class="logo-icon"/>
-                    {{/link-to}}
+                <div class="col-md-3 text-center margin-bottom-16">
+                    <section class="row">
+                        <article class="col-md-12">
+                            {{#link-to 'index' tagName='a' class='logo-text'}}
+                                <img src="img/footer-icon-white.png" height="30px" class="logo-icon"/>
+                            {{/link-to}}
+                        </article>
+                    </section>
+                    <section class="row">
+                        <article class="col-md-12">
+                            <p>Copyright 2014 by <a href='http://mylabs.io' target="_blank">MyLabs Ltd</a></p>
+                        </article>
+                    </section>
                 </div>
-                <div class="col-md-6 sitemap text-center">
-                    {{#link-to 'index' tagName='a'}}Home{{/link-to}}
-                    {{#link-to 'browse' tagName='a'}}Browse{{/link-to}}
-                    {{#link-to 'create' tagName='a'}}Create{{/link-to}}
-                    {{#link-to 'about' tagName='a'}}About{{/link-to}}
-                    <a href='http://blog.mycqs.com' target="_blank">Blog</a>
-                    {{#link-to 'support' tagName='a'}}Support{{/link-to}}
+                <div class="col-md-6 sitemap text-center margin-bottom-16">
+                    <section class="row">
+                        <article class="col-md-12">
+                            {{#link-to 'index' tagName='a'}}Home{{/link-to}}
+                            {{#link-to 'browse' tagName='a'}}Browse{{/link-to}}
+                            {{#link-to 'create' tagName='a'}}Create{{/link-to}}
+                            {{#link-to 'about' tagName='a'}}About{{/link-to}}
+                            <a href='http://blog.mycqs.com' target="_blank">Blog</a>
+                        </article>
+                    </section>
+                    <section class="row">
+                        <article class="col-md-12">
+                            {{#link-to 'support' tagName='a'}}Support{{/link-to}}
+                            {{#link-to 'presskit' tagName='a'}}Press{{/link-to}}
+                            {{#link-to 'privacyPolicy' tagName='a'}}Privacy Policy{{/link-to}}
+                            {{#link-to 'terms' tagName='a'}}Terms & Conditions{{/link-to}}
+                        </article>
+                    </section>
                 </div>
                 <div class="col-md-3 text-center">
                     <div class='social'>
-                        <a href='http://facebook.com/mycqs' target='_blank'><i class="fa fa-facebook"></i></a>
-                        <a href='http://twitter.com/mycqs' target='_blank'><i class="fa fa-twitter"></i></a>
+                        <a href='https://facebook.com/mycqs' target='_blank'><i class="fa fa-facebook"></i></a>
+                        <a href='https://twitter.com/mycqs' target='_blank'><i class="fa fa-twitter"></i></a>
                     </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-3 text-center">
-                    <p>Copyright 2014 by <a href='http://mylabs.io' target="_blank">MyLabs Ltd</a></p>
-                </div>
-                <div class="col-md-6 sitemap text-center">
-                    {{#link-to 'privacyPolicy' tagName='a'}}Privacy Policy{{/link-to}}
-                    {{#link-to 'terms' tagName='a'}}Terms & Conditions{{/link-to}}
                 </div>
             </div>
         </div>

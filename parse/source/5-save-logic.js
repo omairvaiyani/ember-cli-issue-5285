@@ -161,11 +161,9 @@ Parse.Cloud.beforeSave(Parse.User, function (request, response) {
 Parse.Cloud.afterSave("_User", function (request) {
     Parse.Cloud.useMasterKey();
     var user = request.object;
-    if (user.get('isProcessed'))
-        console.log("saving processed user");
-    else
-        console.log("saving unprocessed user");
+
     if (user.get('isProcessed')) {
+        console.log("AfterSave _User 1");
         /*
          * Check if following or followers
          * relation updated. Note,
@@ -183,7 +181,7 @@ Parse.Cloud.afterSave("_User", function (request) {
         var relation = user.relation('followers');
         return relation.query().count()
             .then(function (count) {
-                if (!user.get('numberOfFollowers') !== count) {
+                if (user.get('numberOfFollowers') !== count) {
                     user.set('numberOfFollowers', count);
                     followersOrFollowingUpdated = true;
                 }
@@ -195,12 +193,13 @@ Parse.Cloud.afterSave("_User", function (request) {
                     followersOrFollowingUpdated = true;
                 }
                 if (followersOrFollowingUpdated) {
+                    console.log("AfterSave _User updating followers following count");
                     return user.save();
                 } else
                     return;
             });
     }
-    if (user.get('name') && user.get('name').length) {
+    if (!user.get('isProcessed') && user.get('name') && user.get('name').length) {
         user.set('isProcessed', true);
         user.setACL(Security.createACLs(user, true));
         var Action = Parse.Object.extend('Action');
@@ -510,13 +509,33 @@ Parse.Cloud.beforeSave("Question", function (request, response) {
  * ------------------
  * beforeSave Attempt
  * ------------------
- * IF user is set:
+ * If timeStarted is NOT set
+ * - Ignore*
+ * If isProcessed:
+ * - Ignore
+ * ELSE
+ * If user is set:
+ * - Update User.numberOfAttempts count
+ * - Set User readOnly ACL
+ * Else:
+ * - Set Public readOnly ACL
  * - Create an Action object for User 'attemptFinished'
  * - Replace this attempt in the User's latestAttempts pointers for this test
+ *
+ * * timeStarted will be null if the
+ * * attempt is generated for SRS tests
+ * * until the attempt is taken by
+ * * the user.
  */
 Parse.Cloud.beforeSave("Attempt", function (request, response) {
     Parse.Cloud.useMasterKey();
     var attempt = request.object;
+
+    if (!attempt.get('timeStarted')) {
+        // SRS Attempt set, but not taken yet.
+        return response.success();
+    }
+
     if (!attempt.get('isProcessed')) {
         /*
          * Converts score to a float and
@@ -560,7 +579,8 @@ Parse.Cloud.beforeSave("Attempt", function (request, response) {
  */
 Parse.Cloud.afterSave("Attempt", function (request) {
     Parse.Cloud.useMasterKey();
-    if (!request.object.get('score') || request.object.get('isProcessed')) {
+    if ((!request.object.get('score') && request.object.get('score') !== 0) ||
+        request.object.get('isProcessed')) {
         return;
     }
     var attempt = request.object,
@@ -569,6 +589,7 @@ Parse.Cloud.afterSave("Attempt", function (request) {
         user = attempt.get('user');
 
     attempt.set('isProcessed', true);
+    console.log(1);
 
     /*
      * Available object:
@@ -585,6 +606,7 @@ Parse.Cloud.afterSave("Attempt", function (request) {
         author = test.get('author');
         return author.fetch();
     }).then(function () {
+        console.log(2);
         /*
          * Test numberOfAttempts and averageScore
          */
@@ -608,13 +630,14 @@ Parse.Cloud.afterSave("Attempt", function (request) {
             author.set('communityAverageScore', maxTwoDP(newCommunityAverageScore));
         }
         if (!user) {
+            console.log("Attempt user not set");
             var promises = [];
             promises.push(attempt.save());
             promises.push(test.save());
             promises.push(author.save());
             return Parse.Promise.when(promises);
         }
-
+        console.log(3);
         /*
          * AttemptFinished Action
          */
@@ -634,6 +657,34 @@ Parse.Cloud.afterSave("Attempt", function (request) {
         else {
             var newUserAverageScore = (user.get('averageScore') + attempt.get('score')) / 2;
             user.set('averageScore', maxTwoDP(newUserAverageScore));
+        }
+
+        /*
+         * User latestAttempts update
+         */
+        console.log(3);
+        if (!user.get('latestAttempts')) {
+            console.log(4);
+            user.set('latestAttempts', []);
+            user.get('latestAttempts').push(attempt);
+        } else {
+            console.log(5);
+            var previousAttemptFound = false;
+            for (var i = 0; i < user.get('latestAttempts').length; i++) {
+                var previousTest = user.get('latestAttempts')[i].get('test');
+                if (!previousTest)
+                    continue;
+                if (previousTest.id === test.id) {
+                    console.log(6);
+                    user.get('latestAttempts')[i] = attempt;
+                    previousAttemptFound = true;
+                    break;
+                }
+            }
+            if (!previousAttemptFound) {
+                console.log(7);
+                user.get('latestAttempts').push(attempt);
+            }
         }
 
         if (attempt.get('number') > 1) {
@@ -679,28 +730,6 @@ Parse.Cloud.afterSave("Attempt", function (request) {
             user.set('uniqueAverageScore', maxTwoDP(newUserUniqueAverageScore));
         }
 
-        /*
-         * User latestAttempts update
-         */
-        if (!user.get('latestAttempts')) {
-            user.set('latestAttempts', []);
-            user.get('latestAttempts').push(attempt);
-        } else {
-            var previousAttemptFound = false;
-            for (var i = 0; i < user.get('latestAttempts').length; i++) {
-                var previousTest = user.get('latestAttempts')[i].get('test');
-                if (!previousTest)
-                    continue;
-                if (previousTest.id === test.id) {
-                    user.get('latestAttempts')[i] = attempt;
-                    previousAttemptFound = true;
-                    break;
-                }
-            }
-            if (!previousAttemptFound)
-                user.get('latestAttempts').push(request.object);
-        }
-
         var promises = [];
         promises.push(attempt.save());
         promises.push(test.save());
@@ -708,6 +737,8 @@ Parse.Cloud.afterSave("Attempt", function (request) {
         promises.push(user.save());
         promises.push(attempt.save());
         return Parse.Promise.when(promises);
+    }).then(function() {
+        return;
     });
 });
 /**
@@ -770,7 +801,7 @@ Parse.Cloud.afterSave("Response", function (request) {
 
             question.set("options", options);
             promises.push(question.save());
-            if(user) {
+            if (user) {
                 query = new Parse.Query('UniqueResponse');
                 query.equalTo('user', user);
                 query.equalTo('question', responseObject.get('question'));
@@ -779,7 +810,7 @@ Parse.Cloud.afterSave("Response", function (request) {
                 return;
         })
         .then(function (results) {
-            if(!results)
+            if (!results)
                 return;
             var uniqueResponse = results[0];
             if (!uniqueResponse) {
@@ -805,7 +836,7 @@ Parse.Cloud.afterSave("Response", function (request) {
                     uniqueResponse.set('spacedRepetitionBox', 1);
 
                 // Highest box should be 4.
-                if(uniqueResponse.get('spacedRepetitionBox') > 4)
+                if (uniqueResponse.get('spacedRepetitionBox') > 4)
                     uniqueResponse.set('spacedRepetitionBox', 4);
             }
             uniqueResponse.set('latestResponse', responseObject);

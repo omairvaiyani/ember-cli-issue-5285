@@ -8,6 +8,8 @@ ParseHelper
 from
 '../utils/parse-helper';
 
+import EmberParseAdapter from '../adapters/parse';
+
 export default
 {
     name: 'parse-user-reopen',

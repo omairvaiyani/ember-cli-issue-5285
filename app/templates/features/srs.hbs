@@ -1,1 +1,69 @@
-{{outlet}}
+<div class="container">
+    <div class="card">
+        <h4><img src="img/srs-icon.png" width="80px"
+                 class="margin-right-16 margin-bottom-16 inline-block"/>
+
+            <p class="inline-block">What is MyCQs Spaced Repetition Service (SRS)?</p></h4>
+        <section class="row">
+            <article class="col-md-6 margin-bottom-16">
+                <p>The MyCQs SRS is an incredibly effective way to learn and retain lots of
+                    new information in a short space of time. Spaced Repetition is a
+                    scientifically proven theory which has been particularly successful in
+                    flashcards for learning new languages.</p>
+
+                <p>The idea is that the more you revisit a particular piece of information,
+                    the longer your brain retains it for.
+                    This makes a lot of sense - information we come across every day is likely
+                    to be very important to us, so our brain stores it in a way which can be
+                    accessed quickly. When was the last time you forgot your name or the
+                    boiling point of water?</p>
+
+                <p>Spaced Repetition systems take advantage of this fact by providing you
+                    with a set of questions, and encouraging you to revisit them at particular
+                    intervals. As you get better at answering a particular question, you
+                    should re-visit them less frequently. If you answer a question wrong, you
+                    should re-visit it more frequently. </p>
+            </article>
+
+            <article class="col-md-6">
+                <img src="img/srs-boxes.png" style="max-width: 100%;"
+                     class="pull-right"/>
+            </article>
+        </section>
+        <section class="row">
+            <article class="col-md-6 text-center">
+                <img src="img/srs-notification-example.png"
+                     style="max-width: 100%;max-height: 240px;" />
+            </article>
+            <article class="col-md-6 margin-bottom-16">
+                <p>Systems such as Anki and SuperMemo have been using this technique for
+                    flashcards for years, but at MyCQs we’re applying this fantastic theory
+                    to Multiple Choice Questions for the first time! </p>
+
+                <p>When you sign up to the MyCQs SRS, you can select a number of different
+                    Intensity Levels which will determine how often you receive notifications.
+                    If you’re a student, you may want to have a low intensity level early on
+                    in the year, receiving one notification a day at most, and then crank it up
+                    to a higher intensity level such as 3-4 notifications per day when your exams
+                    start to get nearer. </p>
+
+                <p>SRS costs just £0.99 per month if you purchase an annual subscription, or you
+                    can try it for one month at £1.99! To sign up online click here, or you can
+                    sign up in the iOS app! </p>
+            </article>
+        </section>
+        <section class="row">
+            <article class="col-md-12 text-center">
+                {{#if currentUser.id}}
+                    <button class="btn btn-success"
+                            {{action 'openModal' 'application/modal/srs-sales' 'application/stripe'}}
+                            >Sign up for MyCQs SRS now!</button>
+                {{else}}
+                    <button class="btn btn-success"
+                        {{action 'openModal' 'application/modal/login-or-register' 'application'}}
+                            >Sign up to MyCQs to get SRS!</button>
+                {{/if}}
+            </article>
+        </section>
+    </div>
+</div>

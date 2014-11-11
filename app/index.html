@@ -5,8 +5,8 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta property="fb:app_id"         content="394753023893264" />
         <title>MyCQs - A social learning network</title>
-        <meta name="description" content="Create, practice and share multiple-choice question (MCQ) tests for free! Search from 1000s of MCQs
-        in Medicine, Science, History, Aviation and lots more! Download our iOS app for free.">
+        <meta name="description" content="With MyCQs, you can create, practice and share MCQ tests. Thousands of MCQs
+        in Medicine, Science, Aviation and lots more! Now free on iOS.">
         <meta name="blitz" content="mu-9a3e19ff-8fd112af-9e4e861c-c5a91cb5">
         <meta name="google-site-verification" content="C52WW7r6nfyQJKtCmfJWFDR_qdyJQm31fAm0PZDnFw0" />
         <meta name="apple-itunes-app" content="app-id=921380709, app-argument=">
@@ -34,6 +34,7 @@
         {{BASE_TAG}}
 
         <link rel="stylesheet" href="style/social.css">
+        <link rel="stylesheet" href="style/touch-slider.css">
         <link rel="stylesheet" href="assets/vendor.css">
         <link rel="stylesheet" href="assets/mycqs-web.css">
         <script type="text/javascript">
@@ -76,6 +77,15 @@
                 fjs.parentNode.insertBefore(js, fjs);
             }(document, 'script', 'facebook-jssdk'));
         </script>
+        <script>!function (d, s, id) {
+            var js, fjs = d.getElementsByTagName(s)[0], p = /^http:/.test(d.location) ? 'http' : 'https';
+            if (!d.getElementById(id)) {
+                js = d.createElement(s);
+                js.id = id;
+                js.src = p + '://platform.twitter.com/widgets.js';
+                fjs.parentNode.insertBefore(js, fjs);
+            }
+        }(document, 'script', 'twitter-wjs');</script>
         <script>
             window.MycqsWebENV = {{ENV}};
             window.EmberENV = window.MycqsWebENV.EmberENV;
@@ -85,10 +95,9 @@
         </script>
         <script src="assets/vendor.js"></script>
         <script src="assets/mycqs-web.js"></script>
-        <script src="js/ember-parse-adapter.js"></script>
 
         <!-- Load Aviary/Feather code -->
-        <script type="text/javascript" src="http://feather.aviary.com/js/feather.js"></script>
+        <script type="text/javascript" src="https://dme0ih8comzn4.cloudfront.net/js/feather.js"></script>
         <!-- Load Stripe.js code -->
         <script src="https://checkout.stripe.com/v2/checkout.js"></script>
 

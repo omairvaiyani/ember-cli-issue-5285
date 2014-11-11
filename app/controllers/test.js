@@ -150,14 +150,17 @@ Ember.ObjectController.extend(CurrentUser, {
             this.send('incrementLoadingItems');
             this.send('closeModal');
             this.set('loading', 'Marking test...');
-            var attempt = this.store.createRecord('attempt', {
-                test: this.get('model'),
-                timeStarted: this.get('timeStarted'),
-                timeCompleted: new Date()
-            });
-            if(this.get('currentUser'))
-                attempt.set('user', this.get('currentUser'));
-            this.set('attempt', attempt);
+            var attempt;
+            if(!this.get('isSRSTest')) {
+                attempt = this.store.createRecord('attempt', {
+                    test: this.get('model'),
+                    timeStarted: this.get('timeStarted'),
+                    timeCompleted: new Date()
+                });
+                if(this.get('currentUser'))
+                    attempt.set('user', this.get('currentUser'));
+            } else
+                attempt = this.get('model');
 
             /*
              * Create an array of 'responses':
@@ -183,13 +186,12 @@ Ember.ObjectController.extend(CurrentUser, {
                     isCorrect = true;
                     score++;
                 }
-
                 var response = this.store.createRecord('response', {
                     chosenAnswer: chosenAnswer,
                     correctAnswer: correctAnswer,
                     question: question,
                     isCorrect: isCorrect,
-                    test: this.get('model')
+                    test: attempt.get('test.content')
                 });
                 if(this.get('currentUser'))
                     response.set('user', this.get('currentUser'));
@@ -197,7 +199,7 @@ Ember.ObjectController.extend(CurrentUser, {
             }.bind(this));
 
             score = (score / this.get('shuffledQuestions.length')) * 100;
-            this.set('attempt.score', score);
+            attempt.set('score', score);
 
             var arrayOfPromises = [],
                 savedResponses;
@@ -207,27 +209,31 @@ Ember.ObjectController.extend(CurrentUser, {
 
             Em.RSVP.Promise.all(arrayOfPromises).then(function (result) {
                     savedResponses = result;
-                    return this.get('attempt.responses');
+                    return attempt.get('responses');
                 }.bind(this))
                 .then(function (responses) {
                     responses.addObjects(savedResponses);
-                    return this.get('attempt.questions');
+                    if(!this.get('isSRSTest'))
+                        return attempt.get('questions');
+                    else
+                        return;
                 }.bind(this))
                 .then(function (questions) {
-                    questions.addObjects(this.get('shuffledQuestions'));
-                    return this.get('attempt').save();
+                    if(questions)
+                        questions.addObjects(this.get('shuffledQuestions'));
+                    return attempt.save();
                 }.bind(this))
                 .then(function (result) {
-                    this.transitionToRoute('result', this.get('attempt'));
+                    this.transitionToRoute('result', attempt);
                     this.send('decrementLoadingItems');
-                    this.send('recordEvent', Constants.TEST_TAKEN, this.get('attempt'));
+                    this.send('recordEvent', Constants.TEST_TAKEN, attempt);
                     if(this.get('currentUser')) {
                         this.get('currentUser').incrementProperty('numberOfAttempts');
                         this.store.createRecord('action', {
                             user: this.get('currentUser'),
                             type: 'attemptFinished',
-                            test: this.get('model'),
-                            attempt: this.get('attempt'),
+                            test: attempt.get('test.content'),
+                            attempt: attempt,
                             value: score
                         });
                     }

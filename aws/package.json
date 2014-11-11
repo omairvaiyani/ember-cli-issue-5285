@@ -7,7 +7,7 @@
     "aws-sdk": "^2.0.17",
     "express": "^4.9.0",
     "mime": "^1.2.11",
-    "newrelic": "^1.11.1",
+    "newrelic": "^1.13.2",
     "node-logentries": "^0.1.4",
     "node-schedule": "^0.1.13",
     "node-static": "*",

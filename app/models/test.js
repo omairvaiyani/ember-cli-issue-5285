@@ -31,6 +31,7 @@ export default DS.Model.extend(ParseMixin, {
     tags: DS.attr(),
     slug: DS.attr('string'),
     isObjectDeleted: DS.attr('boolean'),
+    isSpacedRepetition: DS.attr('boolean'),
     parseClassName: function() {
         return "Test";
     }

@@ -4,9 +4,41 @@
     <h4 class="modal-title">Spaced Repetition System</h4>
 </div>
 <div class="modal-body">
-    <div class="container-fluid">
-        <button {{action 'openCheckoutHandler'}}>
-            Purchase
-        </button>
-    </div>
+    {{#touch-slider type="fullWidth"}}
+        <!--First Slide-->
+        <div class="swiper-slide text-center">
+            <h3>What is Spaced Repetition?</h3>
+
+            <img src="img/srs-icon.png" width="80px"/>
+
+            <p class="margin-top-16">Learning is tough, remembering what you learnt is even tougher.
+            We can send you questions that you took at regular intervals using
+            an algorithm proven to help consolidate information in your memory!</p>
+        </div>
+        <!--Second Slide-->
+        <div class="swiper-slide text-center">
+            <h3>How does it work?</h3>
+
+            <img src="img/srs-boxes.png"/>
+
+            <p class="margin-top-16">As you answer questions, MyCQs SRS will decide when and
+                how often you should answer it again. You can set your revision
+                'Intensity Level', and we'll do the rest!
+            </p>
+        </div>
+
+        <!--Third Slide-->
+        <div class="swiper-slide text-center" style="overflow-y: scroll;">
+            <h3>Pick your subscription plan!</h3>
+
+            <p class="margin-top-16">Select your preferred currency.</p>
+
+            {{#each plan in plans}}
+                <button class="btn btn-primary margin-bottom-16" {{action 'openCheckoutHandler' plan}}
+                        >{{plan.name}} - {{stripe-price plan.currency plan.amount}}</button><br>
+            {{/each}}
+
+            <img src="img/stripe/powered-by.png" height="30px"/>
+        </div>
+    {{/touch-slider}}
 </div> <!-- /modal-body -->

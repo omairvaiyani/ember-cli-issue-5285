@@ -8,6 +8,8 @@ validateQuestion
 from
 '../utils/validate-question';
 
+import EmberParseAdapter from '../adapters/parse';
+
 /*
  * EditQuestionController for the following routes:
  * - edit.newQuestion

@@ -28,7 +28,6 @@ Ember.ObjectController.extend({
 
     allResponses: function () {
         if (!this.get('questionsLoaded')) {
-            console.log("Questions not loaded!");
             this.get('questions').then(function (questions) {
                 this.set('questionsLoaded', true);
             }.bind(this));
@@ -70,7 +69,6 @@ Ember.ObjectController.extend({
 
     categoryTests: [],
     getCategoryTests: function () {
-        console.log("Getting category tests in Results page");
         if (!this.get('test.category.id') || this.get('categoryTests.length'))
             return;
 
