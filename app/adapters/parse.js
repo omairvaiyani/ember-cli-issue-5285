@@ -279,6 +279,7 @@ EmberParseAdapter.Adapter = DS.RESTAdapter.extend({
      * Modified by Omair:
      * - Added 'users/me' check for session validation request
      * - Added 'signup' check and proper path for PARSE REST API
+     * - Our PrivateData class should've been called PrivateDatum, but oh well.
      */
     pathForType: function (type) {
         if ("parseUser" === type) {
@@ -289,7 +290,7 @@ EmberParseAdapter.Adapter = DS.RESTAdapter.extend({
             return "users";
         } else if ("users/me" === type) {
             return "users/me";
-        } else {
+        } else  {
             return this.classesPath + '/' + this.parsePathForType(type);
         }
     },
@@ -550,8 +551,15 @@ EmberParseAdapter.ParseUser = DS.Model.extend({
     latestAttempts: DS.hasMany('attempt', {async: true, array: true}),
     slug: DS.attr('string'),
     finishedWelcomeTutorial: DS.attr('boolean'),
+
+    timeZone: DS.attr('string'),
+    privateData: DS.belongsTo('user-private', {async: true}),
+    spacedRepetitionNotificationByEmail: DS.attr('boolean'),
+    spacedRepetitionNotificationByPush: DS.attr('boolean'),
+    spacedRepetitionMaxQuestions: DS.attr('number'),
     spacedRepetitionIntensity: DS.attr('number'),
-    spacedRepetitionNextDue: DS.attr('parse-date')
+    spacedRepetitionNextDue: DS.attr('parse-date'),
+    latestSRSAttempt: DS.belongsTo('attempt', {async: true})
 });
 
 EmberParseAdapter.ParseUser.reopenClass({

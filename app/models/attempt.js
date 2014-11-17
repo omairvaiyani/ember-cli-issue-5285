@@ -19,6 +19,7 @@ DS.Model.extend(ParseMixin, {
     timeCompleted: DS.attr('parse-date'),
     isLatest: DS.attr('boolean'),
     location: DS.attr('string'),
+    isProcessed: DS.attr('boolean'),
     parseClassName: function() {
         return "Attempt";
     }

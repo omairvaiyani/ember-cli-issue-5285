@@ -31,7 +31,8 @@
     "grunt": "^0.4.5",
     "grunt-autobots": "0.0.6",
     "grunt-hashres": "^0.4.1",
-    "grunt-s3": "^0.2.0-alpha.3"
+    "grunt-s3": "^0.2.0-alpha.3",
+    "stripe": "^2.9.0"
   },
   "dependencies": {
     "grunt-autobots": "0.0.6",

@@ -2,9 +2,6 @@ export default {
         MINIMUM_QUESTION_LENGTH_WARNING: 5,
         MINIMUM_QUESTION_LENGTH_ERROR: 1,
 
-        MAXIMUM_QUESTION_LENGTH_WARNING: 255,
-        MAXIMUM_QUESTION_LENGTH_ERROR: 500,
-
         STEM: -1,
 
         GENERIC_WORDS: ['which', 'who', 'what', 'where', 'why', 'the',
@@ -130,7 +127,7 @@ export default {
         }
 
         // BIG Warning IF TOO LONG
-        else if (stem.length > this.MAXIMUM_QUESTION_LENGTH_ERROR) {
+        /*else if (stem.length > this.MAXIMUM_QUESTION_LENGTH_ERROR) {
             validationResponse.warnings.push(
                 this.leaveComment(
                     "Your question is too long!",
@@ -146,9 +143,9 @@ export default {
                     "")
             );
         }
-
+        */
         // Warning if too long
-        else if (stem.length > this.MAXIMUM_QUESTION_LENGTH_WARNING) {
+        /*else if (stem.length > this.MAXIMUM_QUESTION_LENGTH_WARNING) {
             validationResponse.warnings.push(
                 this.leaveComment(
                     "Your question seems a little wordy.",
@@ -163,7 +160,7 @@ export default {
                     "",
                     "")
             );
-        }
+        }*/
 
         /*
          * Validating Options for

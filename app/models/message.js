@@ -16,5 +16,6 @@ DS.Model.extend(ParseMixin, {
     read: DS.attr('boolean'),
     type: DS.attr('string'),
     isAutomated: DS.attr('boolean'),
-    test: DS.belongsTo('test', {async: true})
+    test: DS.belongsTo('test', {async: true}),
+    attempt: DS.belongsTo('attempt', {async: true})
 });

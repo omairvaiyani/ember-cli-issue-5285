@@ -82,10 +82,12 @@ Ember.ObjectController.extend(CurrentUser, {
 
         beginAddingQuestions: function () {
             if (!this.get('category.content')) {
-                console.log("No category set!");
+                this.send('addNotification', 'warning', 'Category not set!', 'You must set a category!');
                 return;
-            }
-            if (!this.get('currentUser')) {
+            } else if (!this.get('title.length')) {
+                this.send('addNotification', 'warning', 'Title not set!', 'You must set a title for the test!');
+                return;
+            } else if (!this.get('currentUser')) {
                 this.send('askGuestToSignUp');
                 return;
             } else {

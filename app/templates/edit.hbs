@@ -4,7 +4,7 @@
             <div class="card">
                 <div class="row">
                     <div class="col-md-12 margin-bottom-16">
-                        <h3>{{title}} <small>{{category.name}}</small></h3>
+                        <h3>{{#link-to 'testInfo' slug}}{{title}}{{/link-to}} <small>{{category.name}}</small></h3>
                     </div>
                 </div>
                 <div class="row">
@@ -14,9 +14,12 @@
                                 data-target="#editTestDetail">
                             Edit test details
                         </button>
-                        <button type="button" class="btn btn-success" {{action 'saveTest'}}>
+                        <button type="button" class="btn btn-success  margin-right-16" {{action 'saveTest'}}>
                             Save test
                         </button>
+                        {{#link-to 'test' slug tagName="button" class="btn btn-xing"}}
+                            Take test
+                        {{/link-to}}
                     </div>
                 </div>
                 <div id="editTestDetail" class="collapse out">

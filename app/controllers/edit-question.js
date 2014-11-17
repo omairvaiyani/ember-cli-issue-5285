@@ -246,7 +246,6 @@ Ember.ObjectController.extend({
                  * EmberParseAdapter.File object and set it on the
                  * question.image property.
                  */
-                var file = document.getElementById("fileInput").files[0];
                 var parseFile = new Parse.File('image.jpg', {base64: this.get('imageFile.base64')});
                 return parseFile.save().then(function (image) {
                         var image = new EmberParseAdapter.File(image.name(), image.url());

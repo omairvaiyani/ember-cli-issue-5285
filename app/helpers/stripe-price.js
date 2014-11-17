@@ -9,6 +9,9 @@ function stripePrice(currency, amount) {
         case 'gbp':
             symbol = "£";
             break;
+        case 'eur':
+            symbol = "€";
+            break;
         default:
             symbol = "$";
             break;

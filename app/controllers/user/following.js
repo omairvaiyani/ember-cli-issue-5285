@@ -8,6 +8,8 @@ CurrentUser
 from
 '../../mixins/current-user';
 
+import EmberParseAdapter from '../../adapters/parse';
+
 export default
 Ember.ObjectController.extend(CurrentUser, {
     getFollowersAndFollowing: function() {

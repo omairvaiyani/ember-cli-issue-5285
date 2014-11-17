@@ -1,29 +1,29 @@
 <div class="modal-header">
     <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span
             class="sr-only">Close</span></button>
-    <h4 class="modal-title">Spaced Repetition System</h4>
+    <h4 class="modal-title">Spaced Repetition Service (SRS)</h4>
 </div>
 <div class="modal-body">
     {{#touch-slider type="fullWidth"}}
         <!--First Slide-->
         <div class="swiper-slide text-center">
+            <img src="img/srs-icon.png" width="50%"/>
+
             <h3>What is Spaced Repetition?</h3>
 
-            <img src="img/srs-icon.png" width="80px"/>
-
-            <p class="margin-top-16">Learning is tough, remembering what you learnt is even tougher.
-            We can send you questions that you took at regular intervals using
-            an algorithm proven to help consolidate information in your memory!</p>
+            <p class="margin-top-16">Learning is tough; remembering what you learnt is even tougher.
+                We can send you questions that you answer at regular intervals using
+                an algorithm proven to help consolidate information in your memory!</p>
         </div>
         <!--Second Slide-->
         <div class="swiper-slide text-center">
-            <h3>How does it work?</h3>
-
             <img src="img/srs-boxes.png"/>
 
+            <h3>How does it work?</h3>
+
             <p class="margin-top-16">As you answer questions, MyCQs SRS will decide when and
-                how often you should answer it again. You can set your revision
-                'Intensity Level', and we'll do the rest!
+                how often you should answer it again. You can personalise the number of times
+                we send you questions depending on how close you are to that crucial exam!
             </p>
         </div>
 
@@ -31,14 +31,33 @@
         <div class="swiper-slide text-center" style="overflow-y: scroll;">
             <h3>Pick your subscription plan!</h3>
 
-            <p class="margin-top-16">Select your preferred currency.</p>
+            <div class="currency-selection">
+                <i {{bind-attr class=":fa :fa-gbp :margin-right-16 isSelectedCurrencyGBP:active"}}
+                    {{action 'selectCurrency' 'gbp'}}></i>
+                <i {{bind-attr class=":fa :fa-usd isSelectedCurrencyUSD:active"}}
+                    {{action 'selectCurrency' 'usd'}}></i>
+                {{!--<i {{bind-attr class=":fa :fa-eur isSelectedCurrencyEUR:active"}}
+                    {{action 'selectCurrency' 'eur'}}></i>--}}
 
-            {{#each plan in plans}}
-                <button class="btn btn-primary margin-bottom-16" {{action 'openCheckoutHandler' plan}}
-                        >{{plan.name}} - {{stripe-price plan.currency plan.amount}}</button><br>
+                <p class="margin-top-16 text-uppercase">{{selectedCurrency}}</p>
+            </div>
+
+            {{#each plan in plansInSelectedCurrency}}
+                <button class="btn btn-primary margin-bottom-16" {{action 'openCheckoutHandler' plan}}>
+                    {{#unless plan.isCheckoutLoading}}
+                        {{plan.name}} - {{stripe-price plan.currency plan.amount}}
+                    {{else}}
+                        Opening checkout...
+                    {{/unless}}
+                </button>
+                <br>
             {{/each}}
 
-            <img src="img/stripe/powered-by.png" height="30px"/>
+            <p>Payments are made <strong>securely</strong> using <a href="https://stripe.com" target="_blank">Stripe</a>.
+                You will be charged <strong>7 days</strong> from purchase, and can cancel at any point. Otherwise,
+                your card will be automatically charged at the interval you pick.</p>
+
+            <a href="https://stripe.com" target="_blank"><img src="img/stripe/powered-by.png" height="30px"/></a>
         </div>
     {{/touch-slider}}
 </div> <!-- /modal-body -->

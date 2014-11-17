@@ -587,3 +587,32 @@ var createSitemapNodeForUrl = function (url, priority, frequency, lastmod) {
     <lastmod>"+moment(lastmod).format("YYYY-MM-DD")+"</lastmod>\
     </url>";
 }
+
+var getNextDueTimeForSRSTest = function (intensityLevelConfig, timeZone) {
+    var currentTime = new Date(),
+        localTime = new moment(currentTime).tz(timeZone),
+        nextDue;
+
+    for (var i = 0; i < intensityLevelConfig.times.length; i++) {
+        var dueTime = new moment().tz(timeZone)
+            .set("hours", intensityLevelConfig.times[i].slice(0, 2))
+            .set("minutes", 0)
+            .set("seconds", 0);
+
+        if (dueTime.isAfter(localTime)) {
+            nextDue = dueTime;
+            break;
+        } else {
+            continue;
+        }
+    }
+    if (!nextDue) {
+        // Due first thing tomorrow.
+        nextDue = new moment().tz(timeZone)
+            .set("hours", intensityLevelConfig.times[0].slice(0, 2))
+            .set("minutes", 0)
+            .set("seconds", 0)
+            .add(1, 'days');
+    }
+    return nextDue;
+}

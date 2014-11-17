@@ -8,44 +8,47 @@
 
         <!-- Wrapper for slides -->
         <div class="carousel-inner">
+            <!-- /item 1 -->
             <div class="item active">
-
                 <div class="container-fluid text-center login-item">
                     <button class="btn btn-facebook" {{action 'facebookConnect'}}>
                         <i class="fa fa-facebook margin-right-16"></i>Connect with Facebook
                     </button>
                     <hr>
-                    <div class="row">
-                        <div class="row margin-bottom-16">
-                            <div class="col-md-12 text-center">
-                                <h4>Log in using your email</h4>
-                            </div>
-                        </div>
-                        <div class="row margin-bottom-16">
-                            <div class="col-md-8 col-md-offset-2 text-center">
-                                {{input type='text' value=loginUser.email placeholder='Email'
-                                action='login' classNames='form-control'}}
-                            </div>
-                        </div>
-                        <div class="row margin-bottom-16">
-                            <div class="col-md-8 col-md-offset-2 text-center">
-                                {{input type='password' value=loginUser.password placeholder='Password'
-                                action='login' classNames='form-control'}}
-                            </div>
-                        </div>
-                        <div class="row margin-bottom-16">
-                        <div class="col-md-8 col-md-offset-2">
-                            <a href='' class='forgot-password pull-left' {{action 'forgotPassword'}}>Forgot password</a>
-                            {{#if loginMessage.error}}
-                                <span class="alert alert-danger login-connecting-error pull-right">{{loginMessage.error}}</span>
-                            {{else}}
-                                {{#if loginMessage.connecting}}
-                                    <span class="alert alert-info login-connecting-error pull-right">{{loginMessage.connecting}}</span>
+                    <div class="form-group">
+                        <div class="row">
+                            <div class="row margin-bottom-16">
+                                <div class="col-md-12 text-center">
+                                    <h4>Log in using your email</h4>
                                 </div>
+                            </div>
+                            <div class="row margin-bottom-16">
+                                <div class="col-md-8 col-md-offset-2 text-center">
+                                    {{input type='email' value=loginUser.email placeholder='Email'
+                                    action='login' classNames='form-control'}}
+                                </div>
+                            </div>
+                            <div class="row margin-bottom-16">
+                                <div class="col-md-8 col-md-offset-2 text-center">
+                                    {{input type='password' value=loginUser.password placeholder='Password'
+                                    action='login' classNames='form-control'}}
+                                </div>
+                            </div>
+                            <div class="row margin-bottom-16">
+                            <div class="col-md-8 col-md-offset-2">
+                                <a href='' class='forgot-password pull-left' {{action 'forgotPassword'}}>Forgot
+                                    password</a>
+                                {{#if loginMessage.error}}
+                                    <span class="alert alert-danger login-connecting-error pull-right">{{loginMessage.error}}</span>
                                 {{else}}
-                                    <button class="btn btn-primary pull-right" {{action 'login'}}>Login</button>
+                                    {{#if loginMessage.connecting}}
+                                        <span class="alert alert-info login-connecting-error pull-right">{{loginMessage.connecting}}</span>
+                                    </div>
+                                    {{else}}
+                                        <button class="btn btn-primary pull-right" {{action 'login'}}>Login</button>
+                                    {{/if}}
                                 {{/if}}
-                            {{/if}}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -66,7 +69,7 @@
                 </div>
             </div>
         </div>
-
+        <!-- /item 2 -->
         <div class="item">
             <div class="container-fluid">
                 <a href="#login-carousel" role="button" class="margin-bottom-16"
@@ -141,7 +144,5 @@
                 </div>
             </div>
         </div>
-        <!-- /item 2 -->
-
     </div>
 </div> <!-- /modal-body -->

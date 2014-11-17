@@ -112,7 +112,7 @@ Ember.Controller.extend({
         };
 
 
-        $.getJSON("http://api.swiftype.com/api/v1/public/engines/suggest.json", params)
+        $.getJSON("https://api.swiftype.com/api/v1/public/engines/suggest.json", params)
             .done(
                 function (data) {
                     var tests = {
@@ -190,14 +190,15 @@ Ember.Controller.extend({
             return;
         }
         this.send('incrementLoadingItems');
-        var currentUser = this.get('currentUser'),
-            arrayOfPromises = [];
+        var currentUser = this.get('currentUser');
 
         EmberParseAdapter.ParseUser.getFollowing(this.store, currentUser).then(function () {
                 return EmberParseAdapter.ParseUser.getFollowers(this.store, currentUser);
-            }.bind(this)).then(function () {
+            }.bind(this))
+            .then(function () {
                 return EmberParseAdapter.ParseUser.getMessages(this.store, currentUser);
-            }.bind(this)).then(function () {
+            }.bind(this))
+            .then(function () {
                 this.send('decrementLoadingItems');
             }.bind(this));
 

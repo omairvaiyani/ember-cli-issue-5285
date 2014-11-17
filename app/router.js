@@ -25,7 +25,7 @@ Router.map(function () {
      * Test browsing and searching
      */
     this.resource('browse');
-    this.resource('browseRedirect', {path: 'tests/*:'});
+    this.resource('browseRedirect', {path: 'tests/:category_slug'});
     this.resource('category', {path: 'browse/:category_slug'});
     /*
      * Test creation and edition
@@ -59,6 +59,13 @@ Router.map(function () {
      * Temporary sessions
      */
     this.resource('passwordReset', {path: 'password-reset/:password_reset_id'});
+
+    /*
+     * Premium dashboard. e.g. SRS
+     */
+    this.resource('dashboard', function () {
+       this.route('srs');
+    });
 
 
     /*

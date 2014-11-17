@@ -589,7 +589,6 @@ Parse.Cloud.afterSave("Attempt", function (request) {
         user = attempt.get('user');
 
     attempt.set('isProcessed', true);
-    console.log(1);
 
     /*
      * Available object:
@@ -601,12 +600,35 @@ Parse.Cloud.afterSave("Attempt", function (request) {
     var promises = [];
     if (user)
         promises.push(user.fetch());
+    if (attempt.get('isSRSAttempt')) {
+        /*
+         * If it's an SRS attempt:
+         * - Get the nextDue time for the user,
+         * - Update the user's nextDue time
+         * - Finish this afterSave hook.. we
+         * don't need any further logic such
+         * as averageScore calculations etc
+         */
+        return Parse.Promise.when(promises).then(function () {
+            return Parse.Cloud.run('getSpacedRepetitionNextDueForUser', {userId: user.id});
+        }).then(function (nextDue) {
+            if(nextDue) {
+                user.set('spacedRepetitionNextDue', nextDue);
+                promises.push(user.save());
+                // Need to save attempt so .isProcessed is updated to true.
+                promises.push(attempt.save());
+            }
+            return Parse.Promise.when(promises);
+        }, function (error) {
+            console.error("Error on attempt aftersave for SRS attempt, getting NextDue time " +
+            JSON.stringify(error));
+        });
+    }
     promises.push(test.fetch());
     Parse.Promise.when(promises).then(function () {
         author = test.get('author');
         return author.fetch();
     }).then(function () {
-        console.log(2);
         /*
          * Test numberOfAttempts and averageScore
          */
@@ -630,14 +652,12 @@ Parse.Cloud.afterSave("Attempt", function (request) {
             author.set('communityAverageScore', maxTwoDP(newCommunityAverageScore));
         }
         if (!user) {
-            console.log("Attempt user not set");
             var promises = [];
             promises.push(attempt.save());
             promises.push(test.save());
             promises.push(author.save());
             return Parse.Promise.when(promises);
         }
-        console.log(3);
         /*
          * AttemptFinished Action
          */
@@ -662,27 +682,22 @@ Parse.Cloud.afterSave("Attempt", function (request) {
         /*
          * User latestAttempts update
          */
-        console.log(3);
         if (!user.get('latestAttempts')) {
-            console.log(4);
             user.set('latestAttempts', []);
             user.get('latestAttempts').push(attempt);
         } else {
-            console.log(5);
             var previousAttemptFound = false;
             for (var i = 0; i < user.get('latestAttempts').length; i++) {
                 var previousTest = user.get('latestAttempts')[i].get('test');
                 if (!previousTest)
                     continue;
                 if (previousTest.id === test.id) {
-                    console.log(6);
                     user.get('latestAttempts')[i] = attempt;
                     previousAttemptFound = true;
                     break;
                 }
             }
             if (!previousAttemptFound) {
-                console.log(7);
                 user.get('latestAttempts').push(attempt);
             }
         }
@@ -735,9 +750,8 @@ Parse.Cloud.afterSave("Attempt", function (request) {
         promises.push(test.save());
         promises.push(author.save());
         promises.push(user.save());
-        promises.push(attempt.save());
         return Parse.Promise.when(promises);
-    }).then(function() {
+    }).then(function () {
         return;
     });
 });
@@ -782,6 +796,9 @@ Parse.Cloud.afterSave("Response", function (request) {
         question = responseObject.get('question'),
         promises = [],
         query;
+
+    if (!question)
+        return;
 
     question.fetch()
         .then(function () {

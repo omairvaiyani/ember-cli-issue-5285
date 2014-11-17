@@ -49,22 +49,49 @@
         <section class="row">
             <article class="col-md-12">
                 <div class="card margin-top-16">
-                    <h4>Spaced Repetition Test</h4>
+                    <h4>Spaced Repetition Service</h4>
 
-                   <button class="btn btn-skype"
-                       {{action 'openModal' 'application/modal/srs-sales' 'application.stripe'}}>
-                        Learn more
-                    </button>
+                    {{#if currentUser.privateData.spacedRepetitionActivated}}
+                        {{#link-to 'dashboard.srs' tagName='button' class='form-control btn margin-bottom-16'}}
+                            Open SRS dashboard
+                        {{/link-to}}
 
-                    {{#if currentUser.latestSRAttempt}}
-                        <p>Next due: {{currentUser.spacedRepetitionNextDue}}</p>
+                        <h5>Overview:</h5>
 
-                        {{#link-to 'srs' currentUser.latestSRAttempt}}Take now{{/link-to}}
+                        {{#unless currentUser.latestSRSAttempt.isProcessed}}
+                            <p>Your spaced repetition test is ready to take!</p>
+
+                            <p>We have prepared {{currentUser.latestSRSAttempt.questions.length}} questions
+                                for you. {{#link-to 'test' currentUser.latestSRSAttempt}}Take now!{{/link-to}}</p>
+                        {{else}}
+                            <p>You scored {{currentUser.latestSRSAttempt.score}}% for the
+                                {{currentUser.latestSRSAttempt.questions.length}} questions we
+                                sent to you earlier.</p>
+
+                            <p>
+                                {{#link-to 'result' currentUser.latestSRSAttempt}}See your
+                                    answers{{/link-to}} or
+                                {{#link-to 'test' currentUser.latestSRSAttempt.id}}Repeat the test{{/link-to}}.</p>
+                            {{from-now time=currentUser.latestSRSAttempt.updatedAt showIcon=true}}
+                        {{/unless}}
+                        <hr>
+
+                        {{from-now time=currentUser.spacedRepetitionNextDue showIcon=true prefix="Next due "}}
+
+                        <button class="btn btn-skype form-control margin-top-16"
+                            {{action 'openModal' 'application/modal/srs-sales' 'application.stripe'}}>
+                            Learn more
+                        </button>
+                    {{else}}
+                        <button class="btn btn-skype form-control"
+                            {{action 'openModal' 'application/modal/srs-sales' 'application.stripe'}}>
+                            Learn more
+                        </button>
                     {{/if}}
                 </div>
             </article>
         </section>
-        --}}
+    --}}
     </div>
     <div class="col-md-9 col-fix-right">
 
