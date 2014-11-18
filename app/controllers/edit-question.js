@@ -87,18 +87,8 @@ Ember.ObjectController.extend({
             {errors: [], warnings: []},
         ]
     },
-    clearValidity: function () {
-        this.set('validity.question.hasErrors', false);
-        this.set('validity.question.hasWarnings', false);
-        this.set('validity.stem.errors', []);
-        this.set('validity.stem.warnings', []);
-        for (var i = 0; i < this.get('validity.options.length'); i++) {
-            this.set('validity.options.' + i + '.errors', []);
-            this.set('validity.options.' + i + '.warnings', []);
-        }
-    },
     isQuestionValid: function () {
-        this.clearValidity();
+        this.send('clearValidity');
         var response = validateQuestion.beginValidation(this.get('model'));
         if (response.result === "pass") {
             return true;
@@ -167,6 +157,16 @@ Ember.ObjectController.extend({
     }.observes('content.objectId'),
 
     actions: {
+        clearValidity: function () {
+            this.set('validity.question.hasErrors', false);
+            this.set('validity.question.hasWarnings', false);
+            this.set('validity.stem.errors', []);
+            this.set('validity.stem.warnings', []);
+            for (var i = 0; i < this.get('validity.options.length'); i++) {
+                this.set('validity.options.' + i + '.errors', []);
+                this.set('validity.options.' + i + '.warnings', []);
+            }
+        },
         optionAltered: function (index) {
             this.set('areOptionsDirty', true);
             /*

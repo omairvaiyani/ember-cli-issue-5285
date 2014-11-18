@@ -235,7 +235,7 @@ input[type="range"]::-webkit-slider-thumb {
 !important
 }
 
-.profile-image {
+.profile-image, .circular-image {
     width: 50px;
     height: 50px;
     border-radius: 25px;
@@ -588,7 +588,7 @@ input[type="range"]::-webkit-slider-thumb {
     height: 30px;
     margin: 0;
     z-index: 10;
-    padding: 18px 38px 20px 6px;
+    padding: 3px 37px 0px 6px;
     font-family: inherit;
     font-size: 16px;
     color: #4f6640;
@@ -765,7 +765,7 @@ input[type="search"].sb-search-input {
     font-size: smaller;
     display: inline-block;
     vertical-align: top;
-    width: calc(250px - 60px);
+    width: calc(250px - 73px);
 }
 
 .user-message-item .message-text > p {
@@ -1964,23 +1964,34 @@ body {
 }
 
 .margin-top-16 {
-    margin-top: 16px;
-!important
+    margin-top: 16px !important;
 }
 
 .margin-right-16 {
-    margin-right: 16px;
-!important
+    margin-right: 16px !important;
 }
 
 .margin-bottom-16 {
-    margin-bottom: 16px;
-!important
+    margin-bottom: 16px !important;
 }
 
 .margin-left-16 {
-    margin-left: 16px;
-!important
+    margin-left: 16px !important;
+}
+.margin-top-8 {
+    margin-top: 8px !important;
+}
+
+.margin-right-8 {
+    margin-right: 8px !important;
+}
+
+.margin-bottom-8 {
+    margin-bottom: 8px !important;
+}
+
+.margin-left-8 {
+    margin-left: 8px !important;
 }
 
 .no-margin {

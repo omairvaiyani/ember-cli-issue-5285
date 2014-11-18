@@ -108,6 +108,7 @@ Ember.ObjectController.extend(CurrentUser, {
                 console.log("No category set!");
                 return;
             }
+            this.send('incrementLoadingItems');
             var questions = this.get('questions.content.content');
             for (var i = 0; i < questions.length; i++) {
                 var question = questions[i];
@@ -119,10 +120,12 @@ Ember.ObjectController.extend(CurrentUser, {
             this.set('title', this.get('title').capitalize());
             this.get('model').save().then(
                 function () {
+                    this.send('decrementLoadingItems');
                     this.send('addNotification', 'saved', this.get('title'), 'All changes saved!');
                 }.bind(this),
 
                 function (error) {
+                    this.send('decrementLoadingItems');
                     this.send('addNotification', 'error', 'An error occurred', "Could not save test!");
                 }.bind(this));
         },

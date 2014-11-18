@@ -45,7 +45,6 @@
                 </div>
             </article>
         </section>
-        {{!--
         <section class="row">
             <article class="col-md-12">
                 <div class="card margin-top-16">
@@ -77,11 +76,6 @@
                         <hr>
 
                         {{from-now time=currentUser.spacedRepetitionNextDue showIcon=true prefix="Next due "}}
-
-                        <button class="btn btn-skype form-control margin-top-16"
-                            {{action 'openModal' 'application/modal/srs-sales' 'application.stripe'}}>
-                            Learn more
-                        </button>
                     {{else}}
                         <button class="btn btn-skype form-control"
                             {{action 'openModal' 'application/modal/srs-sales' 'application.stripe'}}>
@@ -91,7 +85,6 @@
                 </div>
             </article>
         </section>
-    --}}
     </div>
     <div class="col-md-9 col-fix-right">
 

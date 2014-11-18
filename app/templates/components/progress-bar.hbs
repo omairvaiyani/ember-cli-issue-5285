@@ -1,0 +1,11 @@
+<div class="progress">
+    <div  role="progressbar"
+        {{bind-attr
+        class=":progress-bar progressBarDanger progressBarWarning progressBarSuccess"
+        aria-valuenow=test.averageScore
+        style=progressStyle
+        aria-valuemin=progressMin
+        aria-valuemax=progressMax}}>
+        {{progress}}%
+    </div>
+</div>

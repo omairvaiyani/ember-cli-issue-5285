@@ -111,6 +111,7 @@ Ember.View.extend({
                 'deleted': 'glyphicon-trash',
                 'unsavedChanges': 'glyphicon-warning-sign',
                 'warning': 'glyphicon-warning-sign',
+                'error': 'glyphicon-error-sign',
                 'facebook': 'fa fa-facebook',
                 'create': 'glyphicon-pencil'
             };

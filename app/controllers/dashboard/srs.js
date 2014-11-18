@@ -2,7 +2,7 @@ import Ember from 'ember';
 import CurrentUser from '../../mixins/current-user';
 import ParseHelper from '../../utils/parse-helper';
 
-export default Ember.Controller.extend(CurrentUser, {
+export default Ember.ObjectController.extend(CurrentUser, {
     parseConfig: null,
 
     getIntensityConfig: function () {
@@ -11,6 +11,7 @@ export default Ember.Controller.extend(CurrentUser, {
         Parse.Config.get()
             .then(function (config) {
                 this.set('parseConfig', config);
+                this.send('decrementLoadingItems');
             }.bind(this));
     }.on('init'),
 
@@ -23,7 +24,6 @@ export default Ember.Controller.extend(CurrentUser, {
     intensityConfig: function () {
         if (!this.get('parseConfig'))
             return;
-        console.dir(this.get('parseConfig'));
         return this.get('parseConfig').get('spacedRepetitionIntensityLevels')
             [this.get('currentUser.spacedRepetitionIntensity') - 1];
     }.property('parseConfig', 'currentUser.spacedRepetitionIntensity'),
@@ -89,12 +89,34 @@ export default Ember.Controller.extend(CurrentUser, {
         saveChangesToCurrentUser: function () {
             this.get('currentUser').save()
                 .then(function () {
-                    this.send('addNotification', 'save', 'Changes saved!');
+                    this.send('addNotification', 'saved', 'Changes saved!');
                 }.bind(this));
         },
         selectBox: function (box, uniqueResponsesInSelectedBox) {
             this.set('selectedBox', box);
             this.set('uniqueResponsesInSelectedBox', uniqueResponsesInSelectedBox);
+        },
+
+        cancelSubscriptionToSRS: function () {
+            Parse.Cloud.run('unsubscribeUserFromStripePlan', {})
+                .then(function (response) {
+                }, function (error) {
+                    console.dir(error);
+                });
+        },
+
+        removeAllQuestionsFromSRS: function () {
+            window.scrollTo(0, 0);
+            this.send('incrementLoadingItems');
+            Parse.Cloud.run('addOrRemoveQuestionsToSRSTest', {questionIds: [], task: 3})
+                .then(function (response) {
+                    this.get('questions').clear();
+                    this.send('decrementLoadingItems');
+                    this.send('addNotification', 'deleted', "SRS question bank clear.", "You will need to add more questions.");
+                }.bind(this), function (error) {
+                    console.dir(error);
+                    this.send('decrementLoadingItems');
+                }.bind(this));
         }
     }
 

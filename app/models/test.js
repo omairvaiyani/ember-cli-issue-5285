@@ -11,6 +11,9 @@ export default DS.Model.extend(ParseMixin, {
     category: DS.belongsTo('category', {defaultValue: null, async: true}),
     description: DS.attr('string'),
     questions: DS.hasMany('question', {async: true, array: true}),
+    totalQuestions: function () {
+        return this.get('_data.questions.length');
+    }.property(),
     privacy: DS.attr('number', {defaultValue: 1}),
     privacyBoolean: function () {
         return !!this.get('privacy');

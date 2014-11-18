@@ -8,8 +8,8 @@ var _ = require("underscore"),
 
 Mandrill.initialize(mandrillKey);
 
-Stripe.initialize('sk_test_AfBhaEg8Yojoc1hylUI0pdtc'); // testing key
-// Stripe.initialize('sk_live_AbPy747DUMLo8qr53u5REcaX'); // live key
+//Stripe.initialize('sk_test_AfBhaEg8Yojoc1hylUI0pdtc'); // testing key
+ Stripe.initialize('sk_live_AbPy747DUMLo8qr53u5REcaX'); // live key
 
 var MyCQs = {
     baseUrl: 'http://mycqs.com/'

@@ -90,7 +90,7 @@ Ember.Controller.extend({
             title = defaultTitle;
 
         this.send('updatePageTitle', title);
-
+        window.scrollTo(0, 0);
     }.observes('currentPath'),
 
     /*
@@ -203,32 +203,33 @@ Ember.Controller.extend({
             }.bind(this));
 
 
-        this.incrementProperty('loadingItems');
-        if (!currentUser.get('latestAttempts'))
+        /*this.incrementProperty('loadingItems');
+        if (!currentUser.get('latestAttempts')) {
+            this.incrementProperty('decrementLoadingItems');
             return;
-        currentUser.get('latestAttempts')
-            .then(function () {
-                var where = {
-                    "user": ParseHelper.generatePointer(currentUser)
-                };
-                return this.store.findQuery('attempt', {
-                    where: JSON.stringify(where),
-                    order: '-createdAt',
-                    include: ['test.category', 'user'],
-                    limit: 15
-                });
-            }.bind(this))
-            .then(function (attempts) {
-                currentUser.set('attempts', attempts);
-                this.send('decrementLoadingItems');
-                /*
-                 * Is mobile user?
-                 */
-                return Parse.Cloud.run('isMobileUser', {});
-            }.bind(this))
+        }*/
+        var where = {
+            "user": ParseHelper.generatePointer(currentUser),
+            "isSRSAttempt": {
+                "$ne": true
+            }
+        };
+        this.store.findQuery('attempt', {
+            where: JSON.stringify(where),
+            order: '-createdAt',
+            //include: ['test.category', 'user'],
+            limit: 15
+        }).then(function (attempts) {
+            currentUser.set('attempts', attempts);
+            this.send('decrementLoadingItems');
+            /*
+             * Is mobile user?
+             */
+            return Parse.Cloud.run('isMobileUser', {});
+        }.bind(this))
             .then(function (response) {
                 currentUser.set('isMobileUser', response);
-
+                currentUser.get('latestAttempts');
             });
 
     }.observes('currentUser'),

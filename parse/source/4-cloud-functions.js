@@ -1136,7 +1136,7 @@ Parse.Cloud.define("subscribeCustomerToSRS", function (request, response) {
             privateData.set('spacedRepetitionSignupSource', 'Web');
             return privateData.save();
         }).then(function (privateData) {
-            response.success({"privateData":privateData});
+            response.success({"privateData": privateData});
         },
         function (error) {
             response.error(JSON.stringify(error));
@@ -1166,7 +1166,7 @@ Parse.Cloud.define('activateSRSforUser', function (request, response) {
         activationKey = request.params.activationKey;
 
 
-    if(activationKey !== "pacRe6e8rUthusuDEhEwUPEWrUpruhat")
+    if (activationKey !== "pacRe6e8rUthusuDEhEwUPEWrUpruhat")
         return response.error("Unauthorized request.");
 
     user.get('privateData').fetch()
@@ -1182,6 +1182,41 @@ Parse.Cloud.define('activateSRSforUser', function (request, response) {
             return privateData.save();
         }).then(function (privateData) {
             response.success({"privateData": privateData});
+        }, function (error) {
+            response.error(JSON.stringify(error));
+        });
+});
+/**
+ * @CloudFunction unsubscribeUserFromStripePlan
+ * Currently only used for cancelling SRS subscriptions
+ */
+Parse.Cloud.define('unsubscribeUserFromStripePlan', function (request, response) {
+    Parse.Cloud.useMasterKey();
+    // We need a unique token for iAP that can be verified
+    var user = request.user;
+
+    if (!user)
+        return response.error("Unauthorized request.");
+
+    var privateData = user.get('privateData');
+
+    privateData.fetch()
+        .then(function () {
+            var subscription = privateData.get('stripeSubscription');
+            if (subscription) {
+                return Stripe.Customers.cancelSubscription(privateData.get('stripeToken'),
+                    subscription.id);
+            } else {
+                return;
+            }
+        }).then(function (httpResponse) {
+            privateData.set('stripeSubscription', {});
+            privateData.set('spacedRepetitionSubscriptionCancelled', true);
+            return privateData.save();
+        }, function (error) {
+            return error;
+        }).then(function () {
+            response.success();
         }, function (error) {
             response.error(JSON.stringify(error));
         });
@@ -1264,26 +1299,26 @@ Parse.Cloud.define('getSpacedRepetitionNextDueForUser', function (request, respo
 /**
  * @CloudFunction Append Questions to SRS Test
  * @name addOrRemoveQuestionsToSRSTest
- * @param {String} testId
  * @param {Array} questionIds
- * @param {Integer} task 0: append, 1: remove, 2: replace
+ * @param {Integer} task 0: append, 1: remove, 2: replace, 3: clear all!
  */
 Parse.Cloud.define('addOrRemoveQuestionsToSRSTest', function (request, response) {
     Parse.Cloud.useMasterKey();
     var user = request.user,
-        srTestId = request.params.testId,
         questionIds = request.params.questionIds,
         task = request.params.task,
         updatedQuestionsList = [];
 
-    if (!user || !srTestId || !questionIds)
+    if (!user || !questionIds)
         return response.error("User, SRS Test or Questions not set");
 
     var query = new Parse.Query('Test');
+    query.equalTo('author', user);
+    query.equalTo('isSpacedRepetition', true);
     query.include('questions');
-    query.get(srTestId)
-        .then(function (srTest) {
-            console.log(1);
+    query.find()
+        .then(function (tests) {
+            var srTest = tests[0];
             var oldQuestionsList = srTest.get('questions');
 
             switch (task) {
@@ -1329,6 +1364,9 @@ Parse.Cloud.define('addOrRemoveQuestionsToSRSTest', function (request, response)
                         newQuestion.id = questionIds[i];
                         updatedQuestionsList.push(newQuestion);
                     }
+                    break;
+                case 3:
+                    updatedQuestionsLists = [];
                     break;
             }
             console.log(4);
@@ -1405,6 +1443,48 @@ Parse.Cloud.define('redeemPromoCode', function (request, response) {
                 return response.success(successMessage);
         })
 
+});
+/**
+ * @CloudFunction - Get SRS Test for User
+ * This is particular useful for new subscribers,
+ * it generates an SRS test if one does not exist
+ */
+Parse.Cloud.define('getSRSTestForUser', function (request, response) {
+    Parse.Cloud.useMasterKey();
+
+    var user = request.user,
+        query = new Parse.Query('Test'),
+        srsTest;
+
+    query.equalTo('author', user);
+    query.equalTo('isSpacedRepetition', true);
+    query.find()
+        .then(function (results) {
+            if(results[0])
+                srsTest = results[0];
+            else {
+                srsTest = new Parse.Object('Test');
+                srsTest.set('isGenerated', true);
+                srsTest.set('isSpacedRepetition', true);
+                srsTest.set('author', user);
+                srsTest.set('title', "Spaced Repetition Test");
+                srsTest.set('privacy', 0);
+                srsTest.set('questions', []);
+                var Category = Parse.Object.extend('Category'),
+                    srCategory = new Category();
+                srCategory.id = "jWx56PKQzU"; // Spaced Repetition is a Category
+                srsTest.set('category', srCategory);
+                var ACL = new Parse.ACL();
+                ACL.setReadAccess(user.id, true);
+                srsTest.setACL(ACL);
+                return srsTest.save();
+            }
+        })
+        .then(function () {
+            return response.success(srsTest);
+        }, function (error) {
+            return response.error(error);
+        });
 });
 
 Parse.Cloud.define('generateSitemapForTests', function (request, response) {

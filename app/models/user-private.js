@@ -9,5 +9,6 @@ export default DS.Model.extend(ParseMixin, {
     spacedRepetitionTrialStartDate: DS.attr('parse-date'),
     spacedRepetitionTrialExpiryDate: DS.attr('parse-date'),
     spacedRepetitionSignupSource: DS.attr('string'),
-    spacedRepetitionLastPurchase: DS.attr('string')
+    spacedRepetitionLastPurchase: DS.attr('string'),
+    spacedRepetitionSubscriptionCancelled: DS.attr('boolean')
 });

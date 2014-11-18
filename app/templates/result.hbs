@@ -10,6 +10,44 @@
                 </h4>
             </div>
         </div>
+        {{#unless isSRSAttempt}}
+            <div class="row margin-bottom-16">
+                <div class="col-md-6">
+                    <p>Community average</p>
+                    {{progress-bar progress=test.averageScore}}
+                    <p>Your score</p>
+                    {{progress-bar progress=score}}
+                </div>
+                {{#if currentUser.privateData.spacedRepetitionActivated}}
+                    <div class="col-md-6">
+                        {{#unless addingOrRemovingQuestionsToSRS}}
+                            {{#if areQuestionsAddedToSRS}}
+                                <h5>
+                                    <img class="circular-image margin-right-8" src="img/srs-icon.png"/>
+                                    Questions in this test have been added to your spaced repetition list.
+                                </h5>
+                                <button class="btn btn-primary margin-top-16 margin-right-8"
+                                    {{action 'removeQuestionsFromSRS'}}>Remove questions from this test
+                                </button>
+                            {{else}}
+                                <h5>
+                                    <img class="circular-image margin-right-8" src="img/srs-icon.png"/>
+                                    Add these questions to your spaced repetition list?
+                                </h5>
+                                <button class="btn btn-primary margin-top-16 margin-right-8"
+                                    {{action 'addQuestionsToSRS' true}}>Add all questions
+                                </button>
+                                <button class="btn btn-success margin-top-16"
+                                    {{action 'addQuestionsToSRS' false}}>Only add incorrectly answered questions
+                                </button>
+                            {{/if}}
+                        {{else}}
+                            <h5>Making changes to your spaced repetition list...</h5>
+                        {{/unless}}
+                    </div>
+                {{/if}}
+            </div>
+        {{/unless}}
         <div class="row">
             <div {{bind-attr class=":col-md-4 :my-tab isTabAll:is-active"}} {{action 'switchTab' 'all'}}>
                 <h5 class="text-uppercase">All ({{allResponses.length}})</h5>

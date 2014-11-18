@@ -1,10 +1,13 @@
 import Ember from 'ember';
 
-export default Ember.Controller.extend({
+import CurrentUser from '../../mixins/current-user';
+
+export default Ember.Controller.extend(CurrentUser, {
     selectedCurrency: "gbp",
     isSelectedCurrencyGBP: true,
     isSelectedCurrencyUSD: false,
     isSelectedCurrencyEUR: false,
+    isCheckoutLoading: false,
 
     plans: [],
 
@@ -74,7 +77,8 @@ export default Ember.Controller.extend({
             plan.isCheckoutLoading = true;
             this.notifyPropertyChange('plans');
             StripeCheckout.open({
-                key: 'pk_test_chNbzOLgCjUMKlpjFJPfpmO4',
+                //key: 'pk_test_chNbzOLgCjUMKlpjFJPfpmO4',
+                key: 'pk_live_ktE3v0jGmY5oXvPXDcf0qnGc',
                 image: 'https://d3uzzgmigql815.cloudfront.net/img/mycqs-icon-header-0d5831348b3307fd99c84fb25770b5d0.png',
                 address: false,
                 currency: plan.currency,
@@ -98,10 +102,41 @@ export default Ember.Controller.extend({
                         },
                         function (error) {
                             console.dir(error);
-                        })
+                            this.send('addNotification', 'warning', 'Something went wrong!',
+                                'Please try again, you have not been charged.');
+                        }.bind(this))
                         .then(function (response) {
                             // All done, response is privateData
-                            console.dir(response);
+                            this.set('currentUser.privateData.spacedRepetitionActivated', true);
+                            this.set('currentUser.privateData.spacedRepetitionStartDate',
+                                response.privateData.get('spacedRepetitionStartDate'));
+
+                            this.set('currentUser.privateData.spacedRepetitionTrialStartDate',
+                                response.privateData.get('spacedRepetitionTrialStartDate'));
+
+                            this.set('currentUser.privateData.spacedRepetitionExpiryDate',
+                                response.privateData.get('spacedRepetitionExpiryDate'));
+
+                            this.set('currentUser.privateData.spacedRepetitionTrialExpiryDate',
+                                response.privateData.get('spacedRepetitionTrialExpiryDate'));
+
+                            this.set('currentUser.privateData.spacedRepetitionLastPurchase',
+                                response.privateData.get('spacedRepetitionLastPurchase'));
+
+                            this.set('currentUser.privateData.spacedRepetitionSignupSource',
+                                response.privateData.get('spacedRepetitionSignupSource'));
+
+                            this.set('currentUser.spacedRepetitionNotificationByEmail', true);
+                            this.set('currentUser.spacedRepetitionNotificationByPush', true);
+                            this.set('currentUser.spacedRepetitionIntensity', 1);
+                            this.set('currentUser.spacedRepetitionNotificationMaxQuestions', 10)
+                            this.get('currentUser').save();
+                            this.transitionTo('dashboard.srs');
+                        }.bind(this),
+                        function (error) {
+                            console.dir(error);
+                            this.send('addNotification', 'warning', 'Something went wrong!',
+                                'Please try again, you have not been charged.');
                         }.bind(this));
                 }.bind(this),
                 opened: function () {

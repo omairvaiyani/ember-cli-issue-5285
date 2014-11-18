@@ -5,7 +5,7 @@ export default Ember.Controller.extend({
     objectsController: null,
     modelType: '',
     objects: [],
-    updateTitle: function() {
+    updateTitle: function () {
         switch (this.get('objects.length')) {
             case 0:
                 this.set('title', "");
@@ -14,7 +14,7 @@ export default Ember.Controller.extend({
                 this.set('title', "1 " + this.get('modelType') + " selected.");
                 break;
             default:
-                this.set('title',  this.get('objects.length') + " " + this.get('modelType') + " selected.");
+                this.set('title', this.get('objects.length') + " " + this.get('modelType') + " selected.");
                 break;
         }
     }.observes('objects.length'),
@@ -36,8 +36,10 @@ export default Ember.Controller.extend({
         if (index !== -1)
             this.get('objects').removeObject(object);
     },
-    deleteAllObjects: function () {
-        this.get('objectsController').send('deleteObjectsInActionBar',this.get('objects'));
-        this.set('objects', []);
+    actions: {
+        deleteAllObjects: function () {
+            this.get('objectsController').send('deleteObjectsInActionBar', this.get('objects'));
+            this.set('objects', []);
+        }
     }
 });

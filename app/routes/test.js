@@ -48,7 +48,7 @@ export default
                 this.send('updatePageTitle', model.get('title'));
                 var description = model.get('description');
                 if (!description)
-                    description = "This mcq test on has " + model.get('_data.questions.length') + " questions! Take it now for free!";
+                    description = "This mcq test on has " + model.get('totalQuestions') + " questions! Take it now for free!";
                 this.send('updatePageDescription', description);
             }
             model.get('questions').then(function (questions) {
