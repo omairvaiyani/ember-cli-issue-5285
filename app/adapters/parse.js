@@ -12,14 +12,43 @@ EmberParseAdapter.Serializer = DS.RESTSerializer.extend({
 
     extractArray: function (store, primaryType, payload) {
         var namespacedPayload = {};
+
+        /*if (primaryType == "mycqs-web@model:attempt:") {
+            var results = payload.results,
+                normalizedSubrecords = [];
+            store.modelFor(primaryType).eachRelatedType(function (relation) {
+                if (relation.typeKey === "test") {
+                    for (var i = 0; i < results.length; i++) {
+                        var primaryRecord = results[i];
+                        var subRecord = primaryRecord[relation.typeKey];
+                        *//*for (var j = 0; j < subRecords.length; j++) {
+                         var subRecord = subRecords[j];
+                         console.log("SUBRECORD");
+                         console.dir(subRecord);
+                         var normalizedSubRecord = this.extractSingle(store, relation, subRecord);
+                         normalizedSubrecords.push(normalizedSubRecord);
+                         }*//*
+                        if(subRecord) {
+                            console.log("Attempt . test");
+                            var normalizedSubRecord = this.extractSingle(store, relation, subRecord, subRecord.objectId);
+                            normalizedSubrecords.push(normalizedSubRecord);
+                        }
+                    }
+                }
+            }.bind(this));
+        }*/
+
         namespacedPayload[Ember.String.pluralize(primaryType.typeKey)] = payload.results;
-        return this._super(store, primaryType, namespacedPayload);
+        var primaryArray = this._super(store, primaryType, namespacedPayload);
+        return primaryArray;
     },
+
 
     extractSingle: function (store, primaryType, payload, recordId) {
         var namespacedPayload = {};
         namespacedPayload[primaryType.typeKey] = payload; // this.normalize(primaryType, payload);
-        return this._super(store, primaryType, namespacedPayload, recordId);
+        var normalizedPayload = this._super(store, primaryType, namespacedPayload, recordId);
+        return normalizedPayload;
     },
 
     typeForRoot: function (key) {
@@ -153,7 +182,7 @@ EmberParseAdapter.Serializer = DS.RESTSerializer.extend({
              * workaround.
              */
             if (!belongsTo.constructor || !belongsTo.get('content')) {
-                if(!record._relationships[key])
+                if (!record._relationships[key])
                     belongsTo = record.get(key).get('content');
                 else
                     belongsTo = record._relationships[key].inverseRecord;
@@ -228,7 +257,7 @@ EmberParseAdapter.Serializer = DS.RESTSerializer.extend({
             if (hasMany._deletedItems && hasMany._deletedItems.length) {
                 if (options.relation) {
                     var addOperation = json[key];
-                    var deleteOperation = { "__op": "RemoveRelation", "objects": [] };
+                    var deleteOperation = {"__op": "RemoveRelation", "objects": []};
                     hasMany._deletedItems.forEach(function (item) {
                         deleteOperation.objects.push({
                             "__type": "Pointer",
@@ -236,10 +265,10 @@ EmberParseAdapter.Serializer = DS.RESTSerializer.extend({
                             "objectId": item.id
                         });
                     });
-                    json[key] = { "__op": "Batch", "ops": [addOperation, deleteOperation] };
+                    json[key] = {"__op": "Batch", "ops": [addOperation, deleteOperation]};
                 }
                 if (options.array) {
-                    json[key].deleteds = { "__op": "Remove", "objects": [] };
+                    json[key].deleteds = {"__op": "Remove", "objects": []};
                     hasMany._deletedItems.forEach(function (item) {
                         json[key].deleteds.objects.push({
                             "__type": "Pointer",
@@ -290,7 +319,7 @@ EmberParseAdapter.Adapter = DS.RESTAdapter.extend({
             return "users";
         } else if ("users/me" === type) {
             return "users/me";
-        } else  {
+        } else {
             return this.classesPath + '/' + this.parsePathForType(type);
         }
     },
@@ -310,10 +339,10 @@ EmberParseAdapter.Adapter = DS.RESTAdapter.extend({
     createRecord: function (store, type, record) {
         var data = {};
         var serializer = store.serializerFor(type.typeKey);
-        serializer.serializeIntoHash(data, type, record, { includeId: true });
+        serializer.serializeIntoHash(data, type, record, {includeId: true});
         var adapter = this;
         return new Ember.RSVP.Promise(function (resolve, reject) {
-            adapter.ajax(adapter.buildURL(type.typeKey), "POST", { data: data }).then(
+            adapter.ajax(adapter.buildURL(type.typeKey), "POST", {data: data}).then(
                 function (json) {
                     var completed = Ember.merge(data, json);
                     resolve(completed);
@@ -351,7 +380,7 @@ EmberParseAdapter.Adapter = DS.RESTAdapter.extend({
             if (sendDeletes) {
                 adapter.ajax(adapter.buildURL(type.typeKey, id), "PUT", {data: deleteds}).then(
                     function (json) {
-                        adapter.ajax(adapter.buildURL(type.typeKey, id), "PUT", { data: data }).then(
+                        adapter.ajax(adapter.buildURL(type.typeKey, id), "PUT", {data: data}).then(
                             function (updates) {
                                 // This is the essential bit - merge response data onto existing data.
                                 var completed = Ember.merge(data, updates);
@@ -367,7 +396,7 @@ EmberParseAdapter.Adapter = DS.RESTAdapter.extend({
                     }
                 );
             } else {
-                adapter.ajax(adapter.buildURL(type.typeKey, id), "PUT", { data: data }).then(function (json) {
+                adapter.ajax(adapter.buildURL(type.typeKey, id), "PUT", {data: data}).then(function (json) {
                     // This is the essential bit - merge response data onto existing data.
                     var completed = Ember.merge(data, json);
                     resolve(completed);
@@ -415,7 +444,7 @@ EmberParseAdapter.Adapter = DS.RESTAdapter.extend({
         };
         // the request is to the related type and not the type for the record.
         // the query is where there is a pointer to this record.
-        return this.ajax(this.buildURL(relatedInfo.type.typeKey), "GET", { data: query });
+        return this.ajax(this.buildURL(relatedInfo.type.typeKey), "GET", {data: query});
     },
 
     /**
@@ -453,7 +482,7 @@ EmberParseAdapter.Adapter = DS.RESTAdapter.extend({
                 "$in": ids
             }
         });
-        return this.ajax(this.buildURL(type.typeKey), 'GET', { data: {"where": where} });
+        return this.ajax(this.buildURL(type.typeKey), 'GET', {data: {"where": where}});
     },
 
     sessionToken: Ember.computed('headers.X-Parse-Session-Token', function (key, value) {
@@ -487,7 +516,7 @@ EmberParseAdapter.ParseUser = DS.Model.extend({
      */
     name: DS.attr('string'),
     firstName: function () {
-        if(this.get('name').split(' ')[1])
+        if (this.get('name').split(' ')[1])
             return this.get('name').split(' ').slice(0, -1).join(' ');
         else
             return this.get('name');
@@ -566,7 +595,7 @@ EmberParseAdapter.ParseUser.reopenClass({
 
     requestPasswordReset: function (email) {
         var adapter = this.get('store').adapterFor(this);
-        var data = { email: email };
+        var data = {email: email};
         return adapter.ajax(adapter.buildURL("requestPasswordReset"), "POST", {data: data})['catch'](
             function (response) {
                 return Ember.RSVP.reject(response.responseJSON);

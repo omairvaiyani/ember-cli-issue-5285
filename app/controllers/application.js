@@ -217,7 +217,7 @@ Ember.Controller.extend({
         this.store.findQuery('attempt', {
             where: JSON.stringify(where),
             order: '-createdAt',
-            //include: ['test.category', 'user'],
+            include: 'test.category',
             limit: 15
         }).then(function (attempts) {
             currentUser.set('attempts', attempts);

@@ -150,7 +150,7 @@
                         {{/if}}
                         {{#if homeIsAttempts}}
                             {{#each attempt in currentUser.attempts}}
-                                {{partial "user/item/attempt-card"}}
+                                {{render "user/item/-attempt-card" attempt}}
                             {{/each}}
                         {{/if}}
                     </div>

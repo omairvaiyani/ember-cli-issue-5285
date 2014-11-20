@@ -54,7 +54,7 @@
                         <h4 class="margin-bottom-16">Maximum questions per test<span class="pull-right"
                                 >{{currentUser.spacedRepetitionMaxQuestions}}</span></h4>
 
-                        {{input type="range" min=1 max=totalQuestions value=currentUser.spacedRepetitionMaxQuestions}}
+                        {{input type="range" min=1 max=model.totalQuestions value=currentUser.spacedRepetitionMaxQuestions}}
                         <div class="text-center">
                             <p class="margin-top-16">
                                 We will limit the number of questions to
