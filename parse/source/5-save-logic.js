@@ -239,19 +239,42 @@ Parse.Cloud.afterSave("_User", function (request) {
  */
 Parse.Cloud.beforeSave('UserPrivate', function (request, response) {
     Parse.Cloud.useMasterKey();
-    var query = new Parse.Query('UserPrivate');
+    var query = new Parse.Query('UserPrivate'),
+        user = request.user;
     query.equalTo('username', request.object.get('username'));
-    query.find().then(function (results) {
-        if (results[0] && request.object.isNew()) {
-            // iOS version, delete non-ACL object
-            return results[0].destroy();
-        } else {
-            // Web version, do nothing
-            return;
-        }
-    }).then(function () {
-        response.success();
-    });
+    query.find()
+        .then(function (results) {
+            var privateData = results[0];
+            if (privateData && request.object.isNew()) {
+                // iOS version, delete non-ACL object
+                return privateData.destroy();
+            } else if (!request.object.getACL()) {
+                console.log("No ACL set");
+                if (!user) {
+                    query = new Parse.Query(Parse.User);
+                    query.equalTo('username', request.object.get('username'));
+                    return query.find()
+                        .then(function (results) {
+                            if (results[0]) {
+                                var acl = new Parse.ACL(results[0]);
+                                acl.setWriteAccess(results[0].id, false);
+                                request.object.setACL(acl);
+                                return;
+                            }
+                        });
+                } else {
+                    var acl = new Parse.ACL(user);
+                    acl.setWriteAccess(user.id, false);
+                    request.object.setACL(acl);
+                    return;
+                }
+            } else {
+                // Web version, do nothing
+                return;
+            }
+        }).then(function () {
+            response.success();
+        });
 });
 /**
  * -------------------
@@ -612,7 +635,7 @@ Parse.Cloud.afterSave("Attempt", function (request) {
         return Parse.Promise.when(promises).then(function () {
             return Parse.Cloud.run('getSpacedRepetitionNextDueForUser', {userId: user.id});
         }).then(function (nextDue) {
-            if(nextDue) {
+            if (nextDue) {
                 user.set('spacedRepetitionNextDue', nextDue);
                 promises.push(user.save());
                 // Need to save attempt so .isProcessed is updated to true.

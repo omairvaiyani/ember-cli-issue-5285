@@ -3,6 +3,7 @@ import ParseMixin from '../mixins/ember-parse-mixin';
 
 export default DS.Model.extend(ParseMixin, {
     email: DS.attr('string'),
+    username: DS.attr('string'),
     spacedRepetitionActivated: DS.attr('boolean'),
     spacedRepetitionStartDate: DS.attr('parse-date'),
     spacedRepetitionExpiryDate: DS.attr('parse-date'),

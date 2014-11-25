@@ -4,10 +4,11 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>MyCQs - A social learning network</title>
-    <meta name="description" content="With MyCQs, you can create, practice and share MCQ tests. Thousands of MCQs
-        in Medicine, Science, Aviation and lots more! Now free on iOS.">
+    <meta name="description"
+          content="MyCQs - a test maker that allows you to create, practice and share multiple choice tests.
+          Take quizzes on medicine, science, math and find lots more MCQs!">
     <meta name="blitz" content="mu-9a3e19ff-8fd112af-9e4e861c-c5a91cb5">
-    <meta name="google-site-verification" content="C52WW7r6nfyQJKtCmfJWFDR_qdyJQm31fAm0PZDnFw0" />
+    <meta name="google-site-verification" content="C52WW7r6nfyQJKtCmfJWFDR_qdyJQm31fAm0PZDnFw0"/>
     <meta name="apple-itunes-app" content="app-id=921380709, app-argument=">
     <link rel="shortcut icon" href="img/favicon/favicon.ico">
     <link rel="apple-touch-icon" sizes="57x57" href="/img/favicon/apple-touch-icon-57x57.png">
@@ -28,7 +29,7 @@
     <meta name="msapplication-config" content="/img/favicon/browserconfig.xml">
     <!-- Required for AJAX crawling -->
     <meta name="fragment" content="!">
-    <meta property="fb:app_id"         content="394753023893264" />
+    <meta property="fb:app_id" content="394753023893264"/>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     {{content-for 'head'}}
@@ -39,10 +40,17 @@
     <link rel="stylesheet" href="assets/mycqs-web.css">
 
     <script>
-        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-            (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-                m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+        (function (i, s, o, g, r, a, m) {
+            i['GoogleAnalyticsObject'] = r;
+            i[r] = i[r] || function () {
+                (i[r].q = i[r].q || []).push(arguments)
+            }, i[r].l = 1 * new Date();
+            a = s.createElement(o),
+                    m = s.getElementsByTagName(o)[0];
+            a.async = 1;
+            a.src = g;
+            m.parentNode.insertBefore(a, m)
+        })(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
 
         ga('create', 'UA-34089671-1', 'auto');
         ga('require', 'displayfeatures');
@@ -52,29 +60,47 @@
 </head>
 <body>
 <script>
-    window.fbAsyncInit = function() {
+    window.fbAsyncInit = function () {
         FB.init({
-            appId      : '394753023893264',
-            xfbml      : true,
-            version    : 'v2.0'
+            appId: '394753023893264',
+            xfbml: true,
+            version: 'v2.0'
         });
     };
 
-    (function(d, s, id){
+    (function (d, s, id) {
         var js, fjs = d.getElementsByTagName(s)[0];
-        if (d.getElementById(id)) {return;}
-        js = d.createElement(s); js.id = id;
+        if (d.getElementById(id)) {
+            return;
+        }
+        js = d.createElement(s);
+        js.id = id;
         js.src = "//connect.facebook.net/en_US/sdk.js";
         fjs.parentNode.insertBefore(js, fjs);
     }(document, 'script', 'facebook-jssdk'));
 </script>
 <script type="text/javascript">
-    (function(h,a){var f=h.amplitude||{};var b=a.createElement("script");b.type="text/javascript";
-        b.async=true;b.src="https://d24n15hnbwhuhn.cloudfront.net/libs/amplitude-1.3-min.js";
-        var g=a.getElementsByTagName("script")[0];g.parentNode.insertBefore(b,g);
-        f._q=[];function e(i){f[i]=function(){f._q.push([i].concat(Array.prototype.slice.call(arguments,0)))}}
-        var c=["init","logEvent","setUserId","setUserProperties","setVersionName","setDomain","setGlobalUserProperties"];
-        for(var d=0;d<c.length;d++){e(c[d])}h.amplitude=f})(window,document);
+    (function (h, a) {
+        var f = h.amplitude || {};
+        var b = a.createElement("script");
+        b.type = "text/javascript";
+        b.async = true;
+        b.src = "https://d24n15hnbwhuhn.cloudfront.net/libs/amplitude-1.3-min.js";
+        var g = a.getElementsByTagName("script")[0];
+        g.parentNode.insertBefore(b, g);
+        f._q = [];
+        function e(i) {
+            f[i] = function () {
+                f._q.push([i].concat(Array.prototype.slice.call(arguments, 0)))
+            }
+        }
+
+        var c = ["init", "logEvent", "setUserId", "setUserProperties", "setVersionName", "setDomain", "setGlobalUserProperties"];
+        for (var d = 0; d < c.length; d++) {
+            e(c[d])
+        }
+        h.amplitude = f
+    })(window, document);
 
     amplitude.init("0b84efdda59409fdfe6353e1efba9491");
 </script>

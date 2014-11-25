@@ -419,9 +419,12 @@ Parse.Cloud.job('spacedRepetitionRunLoop', function (request, status) {
                             if (installations[0]) {
                                 installation = installations[0];
                                 timeZone = installation.get('timeZone');
+                                if(!timeZone || timeZone == "null" || timeZone === null)
+                                    timeZone = "Europe/London";
                             }
-                            var currentTime = new Date(),
-                                localTime = new moment(currentTime).tz(timeZone),
+                            var currentTime = new Date();
+                            console.log("Current time " + currentTime + " timeZone " + timeZone);
+                            var localTime = new moment(currentTime).tz(timeZone),
                                 localTimeHours = localTime.format('HH'),
                                 nextDue = getNextDueTimeForSRSTest(srIntensityLevel, timeZone);
 

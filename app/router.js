@@ -14,7 +14,7 @@ Router.map(function () {
     /*
      * User profiles and profile editing
      */
-    this.resource('user', {path: '/:user_slug'}, function() {
+    this.resource('user', {path: '/:user_slug'}, function () {
         this.route('tests');
         this.route('following');
         this.route('followers');
@@ -42,6 +42,13 @@ Router.map(function () {
     this.resource('result', {path: "result/:attempt_id"});
 
     /*
+     * Groups
+     */
+    this.route('createGroup', {path: 'group/create'});
+    this.resource('group', {path: 'group/:group_slug'}, function () {
+        this.resource('editGroup', {path: 'edit'});
+    });
+    /*
      * Static pages
      */
     this.route('about');
@@ -62,7 +69,7 @@ Router.map(function () {
      * Premium dashboard. e.g. SRS
      */
     this.resource('dashboard', function () {
-       this.route('srs');
+        this.route('srs');
     });
 
 
@@ -76,7 +83,7 @@ Router.map(function () {
 });
 
 Router.reopen({
-    notifyGoogleAnalytics: function() {
+    notifyGoogleAnalytics: function () {
         return ga('send', 'pageview', {
             'page': this.get('url'),
             'title': window.document.title
@@ -85,4 +92,4 @@ Router.reopen({
 });
 
 export default
-Router;
+    Router;

@@ -97,14 +97,21 @@ Parse.Cloud.define("preFacebookConnect", function (request, response) {
     Parse.Cloud.useMasterKey();
     var authResponse = request.params.authResponse,
         query = new Parse.Query(Parse.User);
+    console.log("Pre Facebook connect for fbid "+authResponse.userID);
     query.equalTo('fbid', authResponse.userID);
-    query.find().then(function (results) {
+    query.find()
+        .then(function (results) {
+            if(results)
+                console.log("PFC results "+results.length);
             if (results[0]) {
                 var user = results[0];
+                console.log("PFC user found "+user.get('name') + " and id "+user.id);
                 if (user.get('authData')) {
+                    console.log("PFC user authData found, success");
                     response.success();
                     return;
                 } else {
+                    console.log("PFC user authData not found");
                     var authData = {
                         facebook: {
                             access_token: authResponse.accessToken,
@@ -113,17 +120,24 @@ Parse.Cloud.define("preFacebookConnect", function (request, response) {
                         }
                     };
                     user.set('authData', authData);
+                    console.log("PFC new authData set");
                     return user.save()
                         .then(function () {
-                            response.success();
-                            return;
+                            console.log("PFC, saved user, success");
+                            return response.success();
+                        }, function (error) {
+                            console.error("PFC ERROR "+JSON.stringify(error));
+                            return response.error({message: error});
                         });
                 }
-            } else
-                response.success();
+            } else {
+                console.log("PFC no user with FBID, success and create new user");
+                return response.success();
+            }
         },
         function (error) {
-            response.error(error);
+            console.error("PFC error with first query "+ JSON.stringify(error));
+            return response.error(error);
         }
     );
 });
@@ -1163,14 +1177,16 @@ Parse.Cloud.define('activateSRSforUser', function (request, response) {
         interval = request.params.interval,
         intervalLength = request.params.intervalLength,
         signupSource = request.params.signupSource,
-        activationKey = request.params.activationKey;
-
+        activationKey = request.params.activationKey,
+        privateData,
+        promises = [];
 
     if (activationKey !== "pacRe6e8rUthusuDEhEwUPEWrUpruhat")
         return response.error("Unauthorized request.");
 
     user.get('privateData').fetch()
-        .then(function (privateData) {
+        .then(function (result) {
+            privateData = result;
             var startDate = new moment(),
                 expiryDate = new moment().add(intervalLength, interval);
 
@@ -1179,8 +1195,14 @@ Parse.Cloud.define('activateSRSforUser', function (request, response) {
             privateData.set('spacedRepetitionExpiryDate', expiryDate._d);
             privateData.set('spacedRepetitionLastPurchase', intervalLength + " " + interval);
             privateData.set('spacedRepetitionSignupSource', signupSource);
-            return privateData.save();
-        }).then(function (privateData) {
+            promises.push(privateData);
+            user.set('spacedRepetitionIntensity', 1);
+            user.set('spacedRepetitionMaxQuestions', 10);
+            user.set('spacedRepetitionNotificationByEmail', true);
+            user.set('spacedRepetitionNotificationByPush', true);
+            promises.push(user.save());
+            return Parse.Promise.when(promises);
+        }).then(function () {
             response.success({"privateData": privateData});
         }, function (error) {
             response.error(JSON.stringify(error));

@@ -1,0 +1,98 @@
+<div class="row margin-top-16">
+    <div class="col-md-12">
+        <h5>NAME</h5>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-6 margin-bottom-16">
+        {{input type="text" placeholder="Enter a name for this group" classNames="form-control" value=name}}
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <h5>PRIVACY</h5>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-6">
+        {{#each privacyOption in privacyOptions}}
+            {{#if privacyOption.isSelected}}
+                <label class="text-capitalize margin-right-16">
+                    <input type="radio" name="privacy" {{bind-attr value=privacyOption.value}}
+                           checked class="margin-right-8"/>
+                    {{privacyOption.value}}
+                </label>
+            {{else}}
+                <label class="text-capitalize margin-right-16">
+                    <input type="radio" name="privacy" {{bind-attr value=privacyOption.value}}
+                        {{action "setPrivacy" privacyOption.value on="change"}}
+                           class="margin-right-8"/>
+                    {{privacyOption.value}}
+                </label>
+            {{/if}}
+        {{/each}}
+    </div>
+    <div class="col-md-6">
+        <p>{{privacyDescription}}</p>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12 margin-bottom-16">
+        <label>
+            {{input type="checkbox" checked=isForCourse class="margin-right-8"}}
+            Is this group for a particular course, class or degree?</label>
+    </div>
+</div>
+{{#if isForCourse}}
+    <div class="row">
+        <div class="col-md-12">
+            <h5>COURSE</h5>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6 margin-bottom-16">
+            {{input type="text" placeholder="E.g. Medicine" classNames="form-control" value=course.name}}
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <h5>University</h5>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6 margin-bottom-16">
+            {{input type="text" placeholder="E.g. The University of Leeds" classNames="form-control" value=institution.fullName}}
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <h5>Year or Grade</h5>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6 margin-bottom-16">
+            {{input type="text" placeholder="E.g. 2, Foundation, etc." classNames="form-control" value=yearOrGrade}}
+        </div>
+    </div>
+{{/if}}
+<div class="row">
+    <div class="col-md-12">
+        <h5>PATH</h5>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12 margin-bottom-16">
+        <p>https://mycqs.com/group/{{suggestedSlug}}</p>
+    </div>
+</div>
+{{!--
+{{#if model.id}}
+    <!-- Delete test button -->
+    <div class="row">
+        <div class="col-md-12 margin-top-16">
+            <button class="btn btn-danger" {{action 'openModal' 'edit/modal/confirmDelete' 'group'}}>Delete group</button>
+        </div>
+    </div>
+
+{{/if}}
+--}}

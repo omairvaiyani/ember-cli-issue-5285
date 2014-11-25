@@ -501,7 +501,7 @@ EmberParseAdapter.Adapter = DS.RESTAdapter.extend({
  */
 EmberParseAdapter.ParseUser = DS.Model.extend({
     username: DS.attr('string'),
-    password: DS.attr('string'),
+    //password: DS.attr('string'),
     email: DS.attr('string'),
     emailVerified: DS.attr('boolean'),
     sessionToken: DS.attr('string'),
@@ -511,16 +511,16 @@ EmberParseAdapter.ParseUser = DS.Model.extend({
     /*
      * Modified by Omair:
      * - Added MyCQs ParseUser attributes
-     * - Extending or reopeninClass does
+     * - Extending or reopeningClass does
      * not seem to be working for now
      */
     name: DS.attr('string'),
     firstName: function () {
-        if (this.get('name').split(' ')[1])
+        if (this.get('name.length') && this.get('name').split(' ')[1])
             return this.get('name').split(' ').slice(0, -1).join(' ');
         else
             return this.get('name');
-    }.property('name'),
+    }.property('name.length'),
     fbid: DS.attr('string'),
     gender: DS.attr('string'),
     education: DS.attr(),

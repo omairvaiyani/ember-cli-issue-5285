@@ -1064,9 +1064,12 @@ Parse.Cloud.job('spacedRepetitionRunLoop', function (request, status) {
                             if (installations[0]) {
                                 installation = installations[0];
                                 timeZone = installation.get('timeZone');
+                                if(!timeZone || timeZone == "null" || timeZone === null)
+                                    timeZone = "Europe/London";
                             }
-                            var currentTime = new Date(),
-                                localTime = new moment(currentTime).tz(timeZone),
+                            var currentTime = new Date();
+                            console.log("Current time " + currentTime + " timeZone " + timeZone);
+                            var localTime = new moment(currentTime).tz(timeZone),
                                 localTimeHours = localTime.format('HH'),
                                 nextDue = getNextDueTimeForSRSTest(srIntensityLevel, timeZone);
 
@@ -1471,14 +1474,21 @@ Parse.Cloud.define("preFacebookConnect", function (request, response) {
     Parse.Cloud.useMasterKey();
     var authResponse = request.params.authResponse,
         query = new Parse.Query(Parse.User);
+    console.log("Pre Facebook connect for fbid "+authResponse.userID);
     query.equalTo('fbid', authResponse.userID);
-    query.find().then(function (results) {
+    query.find()
+        .then(function (results) {
+            if(results)
+                console.log("PFC results "+results.length);
             if (results[0]) {
                 var user = results[0];
+                console.log("PFC user found "+user.get('name') + " and id "+user.id);
                 if (user.get('authData')) {
+                    console.log("PFC user authData found, success");
                     response.success();
                     return;
                 } else {
+                    console.log("PFC user authData not found");
                     var authData = {
                         facebook: {
                             access_token: authResponse.accessToken,
@@ -1487,17 +1497,24 @@ Parse.Cloud.define("preFacebookConnect", function (request, response) {
                         }
                     };
                     user.set('authData', authData);
+                    console.log("PFC new authData set");
                     return user.save()
                         .then(function () {
-                            response.success();
-                            return;
+                            console.log("PFC, saved user, success");
+                            return response.success();
+                        }, function (error) {
+                            console.error("PFC ERROR "+JSON.stringify(error));
+                            return response.error({message: error});
                         });
                 }
-            } else
-                response.success();
+            } else {
+                console.log("PFC no user with FBID, success and create new user");
+                return response.success();
+            }
         },
         function (error) {
-            response.error(error);
+            console.error("PFC error with first query "+ JSON.stringify(error));
+            return response.error(error);
         }
     );
 });
@@ -2537,14 +2554,16 @@ Parse.Cloud.define('activateSRSforUser', function (request, response) {
         interval = request.params.interval,
         intervalLength = request.params.intervalLength,
         signupSource = request.params.signupSource,
-        activationKey = request.params.activationKey;
-
+        activationKey = request.params.activationKey,
+        privateData,
+        promises = [];
 
     if (activationKey !== "pacRe6e8rUthusuDEhEwUPEWrUpruhat")
         return response.error("Unauthorized request.");
 
     user.get('privateData').fetch()
-        .then(function (privateData) {
+        .then(function (result) {
+            privateData = result;
             var startDate = new moment(),
                 expiryDate = new moment().add(intervalLength, interval);
 
@@ -2553,8 +2572,14 @@ Parse.Cloud.define('activateSRSforUser', function (request, response) {
             privateData.set('spacedRepetitionExpiryDate', expiryDate._d);
             privateData.set('spacedRepetitionLastPurchase', intervalLength + " " + interval);
             privateData.set('spacedRepetitionSignupSource', signupSource);
-            return privateData.save();
-        }).then(function (privateData) {
+            promises.push(privateData);
+            user.set('spacedRepetitionIntensity', 1);
+            user.set('spacedRepetitionMaxQuestions', 10);
+            user.set('spacedRepetitionNotificationByEmail', true);
+            user.set('spacedRepetitionNotificationByPush', true);
+            promises.push(user.save());
+            return Parse.Promise.when(promises);
+        }).then(function () {
             response.success({"privateData": privateData});
         }, function (error) {
             response.error(JSON.stringify(error));
@@ -3134,19 +3159,42 @@ Parse.Cloud.afterSave("_User", function (request) {
  */
 Parse.Cloud.beforeSave('UserPrivate', function (request, response) {
     Parse.Cloud.useMasterKey();
-    var query = new Parse.Query('UserPrivate');
+    var query = new Parse.Query('UserPrivate'),
+        user = request.user;
     query.equalTo('username', request.object.get('username'));
-    query.find().then(function (results) {
-        if (results[0] && request.object.isNew()) {
-            // iOS version, delete non-ACL object
-            return results[0].destroy();
-        } else {
-            // Web version, do nothing
-            return;
-        }
-    }).then(function () {
-        response.success();
-    });
+    query.find()
+        .then(function (results) {
+            var privateData = results[0];
+            if (privateData && request.object.isNew()) {
+                // iOS version, delete non-ACL object
+                return privateData.destroy();
+            } else if (!request.object.getACL()) {
+                console.log("No ACL set");
+                if (!user) {
+                    query = new Parse.Query(Parse.User);
+                    query.equalTo('username', request.object.get('username'));
+                    return query.find()
+                        .then(function (results) {
+                            if (results[0]) {
+                                var acl = new Parse.ACL(results[0]);
+                                acl.setWriteAccess(results[0].id, false);
+                                request.object.setACL(acl);
+                                return;
+                            }
+                        });
+                } else {
+                    var acl = new Parse.ACL(user);
+                    acl.setWriteAccess(user.id, false);
+                    request.object.setACL(acl);
+                    return;
+                }
+            } else {
+                // Web version, do nothing
+                return;
+            }
+        }).then(function () {
+            response.success();
+        });
 });
 /**
  * -------------------
@@ -3507,7 +3555,7 @@ Parse.Cloud.afterSave("Attempt", function (request) {
         return Parse.Promise.when(promises).then(function () {
             return Parse.Cloud.run('getSpacedRepetitionNextDueForUser', {userId: user.id});
         }).then(function (nextDue) {
-            if(nextDue) {
+            if (nextDue) {
                 user.set('spacedRepetitionNextDue', nextDue);
                 promises.push(user.save());
                 // Need to save attempt so .isProcessed is updated to true.
