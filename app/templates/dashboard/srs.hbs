@@ -75,6 +75,13 @@
                             </small>
                         </h4>
                     </article>
+                    <article class="col-md-6 text-center">
+                        <h4>Time zone</h4>
+                        {{view 'select' content=timeZones class="form-control" value=currentUser.timeZone}}
+                    </article>
+                </section>
+
+                <section class="row">
                     <article class="col-md-6 margin-top-16">
                         <h4>
                             <i class="fa fa-bullhorn"></i>
@@ -85,14 +92,13 @@
                             </small>
                         </h4>
                     </article>
-                </section>
-                {{#if currentUser.isDirty}}
-                    <section class="row">
-                        <article class="col-md-4 col-md-offset-4 text-center">
+                    {{#if currentUser.isDirty}}
+                        <article class="col-md-6 text-center">
                             <button class="btn btn-success" {{action 'saveChangesToCurrentUser'}}>Save changes</button>
                         </article>
-                    </section>
-                {{/if}}
+                    {{/if}}
+                </section>
+
                 <section class="row">
                     <article class="col-md-12">
                         <h4>Question bank ({{totalQuestions}})</h4>
@@ -115,7 +121,7 @@
                                         <h4 class="margin-bottom-16">Questions in Box {{selectedBox}}</h4>
                                     {{else}}
                                         <h5>Click on a box to see which questions are currently in it.</h5>
-                                    <hr>
+                                        <hr>
 
                                         <h4>Adding more questions to the bank</h4>
 

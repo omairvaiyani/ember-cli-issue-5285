@@ -419,11 +419,12 @@ Parse.Cloud.job('spacedRepetitionRunLoop', function (request, status) {
                             if (installations[0]) {
                                 installation = installations[0];
                                 timeZone = installation.get('timeZone');
-                                if(!timeZone || timeZone == "null" || timeZone === null)
+                                if (!timeZone || timeZone == "null" || timeZone === null)
                                     timeZone = "Europe/London";
                             }
                             var currentTime = new Date();
                             console.log("Current time " + currentTime + " timeZone " + timeZone);
+                            console.log("About to call nextDue SRS function for " + user.get('name'));
                             var localTime = new moment(currentTime).tz(timeZone),
                                 localTimeHours = localTime.format('HH'),
                                 nextDue = getNextDueTimeForSRSTest(srIntensityLevel, timeZone);
@@ -608,8 +609,6 @@ Parse.Cloud.job('spacedRepetitionRunLoop', function (request, status) {
                                             {"name": "type", "content": "spaced-repetition"}]
                                     }));
                             }
-                            // TODO Remove this once we're happy to send out emails again!
-                            return;
 
                             if (user.get('spacedRepetitionNotificationByEmail')) {
                                 var query = new Parse.Query('UserPrivate');
@@ -626,7 +625,7 @@ Parse.Cloud.job('spacedRepetitionRunLoop', function (request, status) {
                             if (result === PromiseHelper.ABORT_CHAIN)
                                 return PromiseHelper.ABORT_CHAIN;
 
-                            if (!result || !result[0]) // Doesn't want email, or email not found.
+                            if (!result || !result[0] || !result[0].get('email')) // Doesn't want email, or email not found.
                                 return;
 
                             var email = result[0].get('email');
@@ -660,73 +659,28 @@ Parse.Cloud.job('spacedRepetitionRunLoop', function (request, status) {
         });
 });
 
-//@Deprecated
-/**
- * @BackgroundJob operationSortOutACLs
- * Our ACLs were messed up during migration
- * due to Request.User being null with
- * PHP mismanaging currentUser sessionTokens.
- *
- * Therefore, many objects were set with {}
- * ACLs, i.e., completely hidden without
- * masterkey. Sort. It. Out.
- *
- */
-/*
- Parse.Cloud.job('operationSortOutACLs', function (request, response) {
- Parse.Cloud.useMasterKey();
- var query = new Parse.Query(Parse.User),
- promises = [],
- numQuestionsWithBadACL = 0,
- user;
+Parse.Cloud.job('operationSortOutPrivateData', function (request, response) {
+    Parse.Cloud.useMasterKey();
+    var query = new Parse.Query(Parse.User),
+        num = 0;
 
- query.get(request.params.userId).then(function (result) {
- user = result;
- if (user)
- console.log("User found: " + user.get('name'));
- query = new Parse.Query("Test");
- query.equalTo('author', user);
- query.include('questions');
- return query.find();
- }).then(function (tests) {
- console.log(user.get('name') + " has " + tests.length + " tests.");
- for (var i = 0; i < tests.length; i++) {
- var test = tests[i],
- questions = test.get('questions');
- console.log("Test " + test.get('title') + " has " + questions.length + " questions.");
- if (!questions)
- continue;
- for (var j = 0; j < questions.length; j++) {
- var question = questions[j];
- if (!question) {
- console.log("question does not exist");
- } else {
- console.log("Checking ACL " + JSON.stringify(question.getACL()));
- var currentACL = question.getACL();
- if (!currentACL ||
- JSON.stringify(currentACL) === '{}' || JSON.stringify(currentACL) === '{"*":{"read":true}}') {
- console.log("BAD ACL match");
- var newACL = new Parse.ACL(user);
- newACL.setPublicReadAccess(true);
- question.setACL(newACL);
- question.set("ACLFixed", true);
- promises.push(question.save());
- numQuestionsWithBadACL++;
- }
- }
- }
- }
- },
- function (error) {
- console.error("Error getting test");
- })
- .then(function () {
- console.log("Waiting for promises " + promises.length);
- return Parse.Promise.when(promises);
- })
- .then(function () {
- response.success(numQuestionsWithBadACL + " questions with bad ACL flagged!");
- }, function (error) {
- response.error(JSON.stringify(error));
- });
- }); */
+    query.doesNotExist('privateData');
+    query.each(function (user) {
+        var pQuery = new Parse.Query('UserPrivate');
+        pQuery.equalTo('username', user.get('username'));
+        pQuery.exists('email');
+        return pQuery.find()
+            .then(function (results) {
+                if(results[0]) {
+                    var privateData = results[0];
+                    user.set('privateData', privateData);
+                    num++;
+                    return user.save();
+                }
+            });
+    }).then(function () {
+       response.success("Added privateData to "+num+" users");
+    }, function (error) {
+        response.error("Managed " + num + " before error " + JSON.stringify(error));
+    });
+});

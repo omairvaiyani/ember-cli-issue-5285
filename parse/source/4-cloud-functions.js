@@ -97,15 +97,15 @@ Parse.Cloud.define("preFacebookConnect", function (request, response) {
     Parse.Cloud.useMasterKey();
     var authResponse = request.params.authResponse,
         query = new Parse.Query(Parse.User);
-    console.log("Pre Facebook connect for fbid "+authResponse.userID);
+    console.log("Pre Facebook connect for fbid " + authResponse.userID);
     query.equalTo('fbid', authResponse.userID);
     query.find()
         .then(function (results) {
-            if(results)
-                console.log("PFC results "+results.length);
+            if (results)
+                console.log("PFC results " + results.length);
             if (results[0]) {
                 var user = results[0];
-                console.log("PFC user found "+user.get('name') + " and id "+user.id);
+                console.log("PFC user found " + user.get('name') + " and id " + user.id);
                 if (user.get('authData')) {
                     console.log("PFC user authData found, success");
                     response.success();
@@ -126,7 +126,7 @@ Parse.Cloud.define("preFacebookConnect", function (request, response) {
                             console.log("PFC, saved user, success");
                             return response.success();
                         }, function (error) {
-                            console.error("PFC ERROR "+JSON.stringify(error));
+                            console.error("PFC ERROR " + JSON.stringify(error));
                             return response.error({message: error});
                         });
                 }
@@ -136,7 +136,7 @@ Parse.Cloud.define("preFacebookConnect", function (request, response) {
             }
         },
         function (error) {
-            console.error("PFC error with first query "+ JSON.stringify(error));
+            console.error("PFC error with first query " + JSON.stringify(error));
             return response.error(error);
         }
     );
@@ -732,6 +732,29 @@ Parse.Cloud.define('isMobileUser', function (request, response) {
                 response.success(false);
         });
 });
+/**
+ * -----------------------
+ * getInstallationsForUser
+ * -----------------------
+ * Checks if the user has an installed device
+ * and returns all installations
+ */
+
+Parse.Cloud.define('getInstallationsForUser', function (request, response) {
+    if (!request.user) {
+        response.error("No user set.");
+        return;
+    }
+
+    Parse.Cloud.useMasterKey();
+    var query = new Parse.Query(Parse.Installation);
+    query.equalTo('user', request.user);
+    query.find()
+        .then(function (results) {
+            response.success(results);
+        });
+});
+
 Parse.Cloud.define("findTestsForModule", function (request, response) {
     var getQuery = new Parse.Query("Module");
 
@@ -1482,7 +1505,7 @@ Parse.Cloud.define('getSRSTestForUser', function (request, response) {
     query.equalTo('isSpacedRepetition', true);
     query.find()
         .then(function (results) {
-            if(results[0])
+            if (results[0])
                 srsTest = results[0];
             else {
                 srsTest = new Parse.Object('Test');

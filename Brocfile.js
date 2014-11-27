@@ -38,11 +38,15 @@ app.import({
     production: 'bower_components/font-awesome/css/font-awesome.min.css'
 });
 /*
- * MOMENT.JS
+ * MOMENT with Timezones
  */
 app.import({
     development: 'bower_components/moment/moment.js',
     production: 'bower_components/moment/min/moment.min.js'
+});
+app.import({
+    development: 'bower_components/moment-timezone/builds/moment-timezone-with-data.js',
+    production: 'bower_components/moment-timezone/builds/moment-timezone-with-data.min.js'
 });
 
 /*

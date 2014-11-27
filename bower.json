@@ -21,7 +21,7 @@
     "css-toggle-switch": "~2.1.6",
     "freewall": "~1.0.4",
     "numeral": "~1.5.3",
-    "moment-timezone": "~0.2.4",
+    "moment-timezone": "~0.2.5",
     "ember-data": "1.0.0-beta.11+canary.2997e47034"
   }
 }

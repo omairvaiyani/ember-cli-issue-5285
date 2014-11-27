@@ -343,6 +343,9 @@ export default
                                                 }, function (error) {
                                                     console.dir(error);
                                                 });
+                                        } else if (user.get('privateData') && !user.get('privateData.email')) {
+                                            user.get('privateData').set('email', email);
+                                            user.get('privateData').save();
                                         }
                                         /*
                                          * Update FB Friends list everytime

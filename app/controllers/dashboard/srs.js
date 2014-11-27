@@ -85,6 +85,37 @@ export default Ember.ObjectController.extend(CurrentUser, {
 
     }.property('selectedBox'),
 
+    timeZones: function () {
+        return moment.tz.names();
+    }.property(),
+
+    getInstallationTimeZone: function () {
+        /*
+         * If a timeZone is not set on the User,
+         * find their timeZone by using the
+         * getInstallationsForUser cloud function
+         * which sends back the Parse.Installation
+         * array along with timeZones
+         */
+        if(!this.get('currentUser'))
+            return;
+        if(this.get('currentUser.timeZone.length'))
+            return;
+        Parse.Cloud.run('getInstallationsForUser', {})
+            .then(function (installations) {
+                var installation = installations.objectAt(0);
+                if(installation) {
+                    this.set('currentUser.timeZone', installation.get('timeZone'));
+                } else {
+                    // CurrentUser is logged in, has not set a timeZone yet
+                    // And has no Parse.Installation to give us one.
+                    // Set default to Europe/London
+                    this.set('currentUser.timeZone', "Europe/London");
+                    return this.get('currentUser').save();
+                }
+            }.bind(this));
+    }.on('init'),
+
     actions: {
         saveChangesToCurrentUser: function () {
             this.get('currentUser').save()

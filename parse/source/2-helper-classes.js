@@ -589,6 +589,7 @@ var createSitemapNodeForUrl = function (url, priority, frequency, lastmod) {
 }
 
 var getNextDueTimeForSRSTest = function (intensityLevelConfig, timeZone) {
+    console.log("Get SRS next due "+JSON.stringify(intensityLevelConfig)+" timeZone "+timeZone);
     var currentTime = new Date(),
         localTime = new moment(currentTime).tz(timeZone),
         nextDue;
