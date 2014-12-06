@@ -2,12 +2,13 @@
     <div class="container">
         {{#if browseAll}}
             <h1>Browse</h1>
-
-            <p>Search from thousands of tests in MyCQs.</p>
+            <p>Search from thousands of mcq tests in MyCQs.</p>
         {{else}}
             <div class='inline-block svg-icon-white'>{{svg-icon icon=name height=120 width=120 colour="white"}}</div>
-            <h1 class="inline-block">{{name}}</h1>
-            <p>Search from {{totalTests}} tests in {{name}}.</p>
+            <h1 class="inline-block">{{seoPageHeader}}</h1>
+            <p>Search from over {{math-round totalTests 10}}
+                {{#if secondaryName}}{{secondaryName}}{{else}}{{name}}{{/if}} mcqs{{#if seoChildCategories.length}} on
+                    a range of subjects such as {{seoChildCategories}}{{/if}}.</p>
         {{/if}}
     </div>
 </div>
@@ -16,7 +17,6 @@
         <div class="col-md-3">
             <div class="card">
                 <h5>Search:</h5>
-
                 <div class="search-box">
                     {{input type='text' value=searchTerm placeholder='Type here to search' action='searchTests'
                     classNames='form-control margin-bottom-16'}}

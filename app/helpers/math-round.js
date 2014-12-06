@@ -4,9 +4,11 @@ from
 'ember';
 
 export default
-Ember.Handlebars.makeBoundHelper(function (value, dp) {
+Ember.Handlebars.makeBoundHelper(function (value, downTo) {
     if (!value)
         return 0;
+    else if(!downTo)
+        return Math.round(x);
     else
-        return Math.round(value);
+        return Math.round(value/downTo)*downTo;
 });

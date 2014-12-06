@@ -63,7 +63,10 @@ export default
                     break;
                 case "category":
                     var category = this.get('controllers.category');
-                    title += category.get('name');
+                    if(category.get('secondaryName'))
+                        title += category.get('secondaryName') + " MCQs";
+                    else
+                        title += category.get('name') + " MCQs";
                     break;
                 case "test":
                 case "testInfo":

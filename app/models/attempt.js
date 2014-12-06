@@ -20,15 +20,13 @@ export default
         testTitle: function () {
             if (this.get('_data.test._data.title'))
                 return this.get('_data.test._data.title');
-            else {
-                if(!this.get('_data.test.id'))
-                    return''
+            else if (this.get('_data.test.id')) {
                 this.store.findById('test', this.get('_data.test.id'))
                     .then(function (test) {
                         this.set('testTitle', test.get('title'));
                     }.bind(this));
             }
-        }.property(),
+        }.property('test.title.length'),
         testSlug: function () {
             return this.get('_data.test._data.slug');
         }.property(),

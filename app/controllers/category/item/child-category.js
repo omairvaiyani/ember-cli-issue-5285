@@ -45,7 +45,7 @@ Ember.ObjectController.extend(EachItem, {
             var categoryFilter = '';
             categoryFilter += this.get('categoryController.categoryFilter');
             if (categoryFilter.length)
-                categoryFilter += '-';
+                categoryFilter += ',';
             categoryFilter += this.get('model.slug');
             this.get('categoryController').transitionToRoute({queryParams:
                 {categoryFilter: categoryFilter, page: 1}});
@@ -53,7 +53,6 @@ Ember.ObjectController.extend(EachItem, {
             var isCurrent = false;
             if(this.get('categoryFilterSlugs').contains(this.get('model.slug'))) {
                 isCurrent =true;
-                console.log("Unchecked: "+ this.get('model.slug'));
 
                 var categoryFilterSlugs = [];
                 categoryFilterSlugs.addObjects(this.get('categoryFilterSlugs'));
@@ -62,7 +61,7 @@ Ember.ObjectController.extend(EachItem, {
                 for (var i = 0; i < categoryFilterSlugs.length; i++) {
                     categoryFilter += categoryFilterSlugs[i];
                     if (i < (categoryFilterSlugs.length - 1))
-                        categoryFilter += '-';
+                        categoryFilter += ',';
                 }
                 this.get('categoryController').transitionToRoute({queryParams:
                     {categoryFilter: categoryFilter, page: 1}});

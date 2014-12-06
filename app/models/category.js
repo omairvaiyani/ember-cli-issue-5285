@@ -11,5 +11,6 @@ export default DS.Model.extend(ParseMixin, {
     parent: DS.belongsTo('category', {async:true}),
     totalTests: DS.attr('number', {defaultValue: 0}),
     slug: DS.attr('string'),
-    hasChildren: DS.attr('boolean')
+    hasChildren: DS.attr('boolean'),
+    secondaryName: DS.attr('string')
 });
