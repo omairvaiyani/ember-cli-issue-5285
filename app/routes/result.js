@@ -9,7 +9,8 @@ Ember.Route.extend({
         var where = {
             "objectId": params.attempt_id
         };
-        return this.store.findQuery('attempt', {where: JSON.stringify(where)}).then(function(results) {
+        return this.store.findQuery('attempt', {where: JSON.stringify(where), include:'responses.questions'})
+            .then(function(results) {
             if(!results.objectAt(0)) {
                 this.transitionTo('notFound');
                 return;

@@ -15,8 +15,8 @@
         <div class="row">
             <div class="col-md-6 col-sm-6 col-md-offset-3 col-sm-offset-3 text-center">
                 <div class="search-box">
-                    {{autocomplete-field value=searchTermForTests placeholder='Type here to search for a test' action='searchTests'
-                    data=autocompleteTests key='title' itemAction='loadSearchedTest' parentController=this}}
+                    {{input type='text' value=searchTermForTests placeholder='Type here to search for a test' action='searchTests'
+                       class='margin-bottom-16'}}
                     <span class="glyphicon glyphicon-search  glyphicon-search-large" {{action 'searchTests'}}></span>
                 </div>
             </div>

@@ -4,7 +4,7 @@
     <h4 class="modal-title">Spaced Repetition Service (SRS)</h4>
 </div>
 <div class="modal-body">
-    {{#touch-slider type="fullWidth"}}
+    {{#touch-slider type="fullWidth" swiperContainer=touchSlider}}
         <!--First Slide-->
         <div class="swiper-slide text-center">
             <img src="img/srs-icon.png" width="50%"/>
@@ -17,7 +17,7 @@
         </div>
         <!--Second Slide-->
         <div class="swiper-slide text-center">
-            <img src="img/srs-boxes.png"/>
+            <img src="img/srs-boxes.png" width="95%"/>
 
             <h3>How does it work?</h3>
 
@@ -52,12 +52,43 @@
                 </button>
                 <br>
             {{/each}}
+            <div class="container-fluid">
+                <section class="row">
+                    <article class="col-md-6 col-md-offset-3 margin-bottom-16">
+                        {{input type="text" class="form-control" value=promoCode placeholder="Promotional Code"
+                        action='redeemPromoCode'}}
+                    </article>
+                    <article class="col-md-12">
+                        {{#unless subscriptionMessage.length}}
+                            <button class="btn btn-success" {{action 'redeemPromoCode'}}>Redeem code</button>
+                        {{else}}
+                            <h4 class="margin-top-16">{{subscriptionMessage}}</h4>
+                        {{/unless}}
+                    </article>
+                </section>
+            </div>
+            <hr>
 
             <p>Payments are made <strong>securely</strong> using <a href="https://stripe.com" target="_blank">Stripe</a>.
                 You will be charged <strong>7 days</strong> from purchase, and can cancel at any point. Otherwise,
                 your card will be automatically charged at the interval you pick.</p>
 
-            <a href="https://stripe.com" target="_blank"><img src="img/stripe/powered-by.png" height="30px"/></a>
+            <a href="https://stripe.com" target="_blank"><img src="/img/stripe/powered-by.png" height="30px"
+                    class="margin-bottom-16"/></a>
         </div>
     {{/touch-slider}}
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-6 col-xs-6">
+                {{#if previousSlide}}
+                    <button class="btn btn-warning margin-top-16" {{action "swipePrev"}}>Previous</button>
+                {{/if}}
+            </div>
+            <div class="col-md-6 col-xs-6">
+                {{#if nextSlide}}
+                    <button class="btn btn-primary margin-top-16 pull-right" {{action "swipeNext"}}>Next</button>
+                {{/if}}
+            </div>
+        </div>
+    </div>
 </div> <!-- /modal-body -->

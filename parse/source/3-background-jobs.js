@@ -419,9 +419,9 @@ Parse.Cloud.job('spacedRepetitionRunLoop', function (request, status) {
                             if (installations[0]) {
                                 installation = installations[0];
                                 timeZone = installation.get('timeZone');
-                                if (!timeZone || timeZone == "null" || timeZone === null)
-                                    timeZone = "Europe/London";
                             }
+                            if (!timeZone || timeZone == "null" || timeZone === null)
+                                timeZone = "Europe/London";
                             var currentTime = new Date();
                             console.log("Current time " + currentTime + " timeZone " + timeZone);
                             console.log("About to call nextDue SRS function for " + user.get('name'));
@@ -524,6 +524,8 @@ Parse.Cloud.job('spacedRepetitionRunLoop', function (request, status) {
                             gsrAttempt.set('user', user);
                             gsrAttempt.set('responses', []); // Only for convenience, not used here.
                             gsrAttempt.set('isSRSAttempt', true);
+                            var ACL = new Parse.ACL(user);
+                            gsrAttempt.setACL(ACL);
 
                             console.log(user.get("name") + " UR found " + uniqueResponses.length);
 
@@ -540,12 +542,8 @@ Parse.Cloud.job('spacedRepetitionRunLoop', function (request, status) {
 
                                 if (isTimeToRepeat) {
                                     gsrAttempt.get('questions').push(uniqueResponse.get('question'));
-                                } else {
-                                    // TODO REMOVE THIS WHEN LIVE
-                                    gsrAttempt.get('questions').push(uniqueResponse.get('question'));
                                 }
                             }
-                            console.log(user.get('name') + " Attempt question count " + gsrAttempt.get('questions').length);
                             var maxQuestions = user.get('spacedRepetitionMaxQuestions') ?
                                 user.get('spacedRepetitionMaxQuestions') : 15;
 
@@ -554,6 +552,7 @@ Parse.Cloud.job('spacedRepetitionRunLoop', function (request, status) {
                                 console.log(user.get('name') + " limited questions length " + limitedQuestions.length);
                                 gsrAttempt.set('questions', limitedQuestions);
                             }
+                            console.log(user.get('name') + " Attempt question count " + gsrAttempt.get('questions').length);
                             /*
                              * If GSRTest is new, we will have added
                              * new questions (URs) to it in the forLoop
@@ -637,7 +636,7 @@ Parse.Cloud.job('spacedRepetitionRunLoop', function (request, status) {
                                     content: gsrAttempt.get('questions').length
                                 }, {
                                     name: "TESTLINK",
-                                    content: "http://mycqs.com/mcq/srs/" + gsrAttempt.id
+                                    content: "https://mycqs.com/mcq/" + gsrAttempt.id
                                 }]));
                         });
                 },
@@ -671,7 +670,7 @@ Parse.Cloud.job('operationSortOutPrivateData', function (request, response) {
         pQuery.exists('email');
         return pQuery.find()
             .then(function (results) {
-                if(results[0]) {
+                if (results[0]) {
                     var privateData = results[0];
                     user.set('privateData', privateData);
                     num++;
@@ -679,8 +678,36 @@ Parse.Cloud.job('operationSortOutPrivateData', function (request, response) {
                 }
             });
     }).then(function () {
-       response.success("Added privateData to "+num+" users");
+        response.success("Added privateData to " + num + " users");
     }, function (error) {
         response.error("Managed " + num + " before error " + JSON.stringify(error));
+    });
+});
+
+Parse.Cloud.job('exportEmailList', function (request, response) {
+    Parse.Cloud.useMasterKey();
+    var query = new Parse.Query(Parse.User);
+    query.include('privateData');
+    query.exists('privateData');
+    query.exists('name');
+    query.notEqualTo('addedToMailingList', true);
+    var promises = [];
+    query.each(function (user) {
+        if(!user || !user.get('privateData') || !user.get('name'))
+            return;
+        user.set('addedToMailingList', true);
+        var mailing = new Parse.Object('MailingList');
+        mailing.set('name', user.get('name'));
+        mailing.set('firstName', user.get('name').split(' ')[0]);
+        mailing.set('email', user.get('privateData').get('email'));
+        mailing.set('user', user);
+        promises.push(user.save());
+        return mailing.save();
+    }).then(function () {
+        return Parse.Promise.when(promises);
+    }).then(function() {
+        response.success("Mailing list size "+ promises.length);
+    }, function (error) {
+        response.error(JSON.stringify(error));
     });
 });

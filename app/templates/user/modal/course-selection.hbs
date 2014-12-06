@@ -20,9 +20,21 @@
                     </div>
                     <div class="row">
                         <div class="col-md-11">
-                            {{autocomplete-field data=autocompleteInstitutionNames key='fullName'
-                            value=newCourse.institutionName class='form-control' relativeLayout=true
-                            activeSelection=true}}
+                            {{#ic-autocomplete
+                            value=newCourse.institutionName
+                            inputValue=newCourse.institutionName
+                            on-select="clearAutocompleteList"
+                            placeholder="Enter an institution name"
+                            }}
+                                {{#each autocompleteInstitutionNames}}
+                                    {{#ic-autocomplete-option value=fullName label=fullName}}
+                                        <div {{bind-attr class=':autocomplete-row'}}>
+                                            <div class="title"><p>{{fullName}}</p></div>
+                                        </div>
+                                    {{/ic-autocomplete-option}}
+                                {{else}}
+                                {{/each}}
+                            {{/ic-autocomplete}}
                         </div>
                         <div class="col-md-1 text-center">
                             {{#if loading.autocompleteInstitutionNames}}
@@ -32,15 +44,27 @@
                     </div>
 
                     <div class="row">
-                        <div class="col-md-12">
+                        <div class="col-md-12 margin-top-16">
                             <p>Course</p>
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-md-11">
-                            {{autocomplete-field data=autocompleteCourseNames key='name'
-                            value=newCourse.courseName class='form-control' relativeLayout=true
-                            activeSelection=true}}
+                            {{#ic-autocomplete
+                            value=newCourse.courseName
+                            inputValue=newCourse.courseName
+                            on-select="clearAutocompleteList"
+                            placeholder="Enter an institution name"
+                            }}
+                                {{#each autocompleteCourseNames}}
+                                    {{#ic-autocomplete-option value=name label=name}}
+                                        <div {{bind-attr class=':autocomplete-row'}}>
+                                            <div class="title"><p>{{name}}</p></div>
+                                        </div>
+                                    {{/ic-autocomplete-option}}
+                                {{else}}
+                                {{/each}}
+                            {{/ic-autocomplete}}
                         </div>
                         <div class="col-md-1 text-center">
                             {{#if loading.autocompleteCourseNames}}
@@ -49,13 +73,13 @@
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-md-12">
+                        <div class="col-md-12 margin-top-16">
                             <p class="margin-bottom-16">Current study year</p>
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-md-11">
-                            {{view Ember.Select
+                            {{view 'select'
                             classNames='form-control'
                             content=courseYearsToChooseFrom
                             optionValuePath="content"
@@ -96,17 +120,17 @@
                             </div>
                         {{/each}}
                     {{else}}
-                        {{!--
-                        {{#unless fbid}}
-                            <div class="row">
-                                <div class="col-md-12 text-center">
-                                    <button class="btn btn-facebook" {{action 'facebookLink'}}>
-                                        <i class="fa fa-facebook margin-right-16"></i>Get education history
-                                    </button>
-                                </div>
+                    {{!--
+                    {{#unless fbid}}
+                        <div class="row">
+                            <div class="col-md-12 text-center">
+                                <button class="btn btn-facebook" {{action 'facebookLink'}}>
+                                    <i class="fa fa-facebook margin-right-16"></i>Get education history
+                                </button>
                             </div>
-                        {{/unless}}
-                        --}}
+                        </div>
+                    {{/unless}}
+                    --}}
                     {{/if}}
                 </div>
             </div>
@@ -126,7 +150,7 @@
                     <p>Course: {{selectedCourse.concentration.0.name}}</p>
 
                     <p>Current year:
-                        {{view Ember.Select
+                        {{view 'select'
                         content=courseYearsToChooseFrom
                         optionValuePath="content"
                         optionLabelPath="content"
@@ -134,7 +158,7 @@
                     </p>
 
                     <p class="margin-bottom-16">Total length of course (years):
-                        {{view Ember.Select
+                        {{view 'select'
                         content=courseLengthsToChooseFrom
                         optionValuePath="content"
                         optionLabelPath="content"

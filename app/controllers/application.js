@@ -230,7 +230,7 @@ export default
             this.store.findQuery('attempt', {
                 where: JSON.stringify(where),
                 order: '-createdAt',
-                include: 'test.category',
+                include: 'test.category,user',
                 limit: 15
             }).then(function (attempts) {
                 currentUser.set('attempts', attempts);
@@ -238,7 +238,7 @@ export default
                 /*
                  * Is mobile user?
                  */
-                return Parse.Cloud.run('isMobileUser', {});
+                return Parse.Cloud.run('isMobileUser', {userId: currentUser.get('id')});
             }.bind(this))
                 .then(function (response) {
                     currentUser.set('isMobileUser', response);

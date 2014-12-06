@@ -12,43 +12,14 @@ EmberParseAdapter.Serializer = DS.RESTSerializer.extend({
 
     extractArray: function (store, primaryType, payload) {
         var namespacedPayload = {};
-
-        /*if (primaryType == "mycqs-web@model:attempt:") {
-            var results = payload.results,
-                normalizedSubrecords = [];
-            store.modelFor(primaryType).eachRelatedType(function (relation) {
-                if (relation.typeKey === "test") {
-                    for (var i = 0; i < results.length; i++) {
-                        var primaryRecord = results[i];
-                        var subRecord = primaryRecord[relation.typeKey];
-                        *//*for (var j = 0; j < subRecords.length; j++) {
-                         var subRecord = subRecords[j];
-                         console.log("SUBRECORD");
-                         console.dir(subRecord);
-                         var normalizedSubRecord = this.extractSingle(store, relation, subRecord);
-                         normalizedSubrecords.push(normalizedSubRecord);
-                         }*//*
-                        if(subRecord) {
-                            console.log("Attempt . test");
-                            var normalizedSubRecord = this.extractSingle(store, relation, subRecord, subRecord.objectId);
-                            normalizedSubrecords.push(normalizedSubRecord);
-                        }
-                    }
-                }
-            }.bind(this));
-        }*/
-
         namespacedPayload[Ember.String.pluralize(primaryType.typeKey)] = payload.results;
-        var primaryArray = this._super(store, primaryType, namespacedPayload);
-        return primaryArray;
+        return this._super(store, primaryType, namespacedPayload);
     },
-
 
     extractSingle: function (store, primaryType, payload, recordId) {
         var namespacedPayload = {};
         namespacedPayload[primaryType.typeKey] = payload; // this.normalize(primaryType, payload);
-        var normalizedPayload = this._super(store, primaryType, namespacedPayload, recordId);
-        return normalizedPayload;
+        return this._super(store, primaryType, namespacedPayload, recordId);
     },
 
     typeForRoot: function (key) {

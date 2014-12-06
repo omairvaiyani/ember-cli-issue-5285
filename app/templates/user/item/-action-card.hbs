@@ -1,18 +1,18 @@
 <div class="row">
     <div class="col-md-12">
         <div class="card action-card margin-top-16">
-            {{#link-to 'user' userAction.user.slug
-            tagName='a'}}{{render 'profile-image' userAction.user}}{{/link-to}}
+            {{#link-to 'user' userAction.userSlug
+            tagName='a'}}{{render 'profile-image' userAction.userProfileImageUrl}}{{/link-to}}
 
             <div class="action-title">
-                <p>{{#link-to 'user' userAction.user.slug}}
-                    {{userAction.user.name}}{{/link-to}}
+                <p>{{#link-to 'user' userAction.userSlug}}
+                    {{userAction.userName}}{{/link-to}}
                     {{userAction.title}}</p>
                 <p>
-                    {{#if userAction.test}}
-                        {{#link-to 'testInfo' userAction.test.slug}}{{userAction.test.title}}{{/link-to}}
+                    {{#if userAction.testTitle}}
+                        {{#link-to 'testInfo' userAction.testSlug}}{{userAction.testTitle}}{{/link-to}}
                         <small> in </small>
-                        {{#link-to 'category' userAction.test.category.slug}}{{userAction.test.category.name}}{{/link-to}}
+                        {{#link-to 'category' userAction.testCategorySlug}}{{userAction.testCategoryName}}{{/link-to}}
                     {{/if}}
                 </p>
             </div>

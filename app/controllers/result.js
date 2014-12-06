@@ -30,7 +30,7 @@ export default
 
         allResponses: function () {
             if (!this.get('questionsLoaded')) {
-                this.get('questions').then(function (questions) {
+                this.get('questions').then(function () {
                     this.set('questionsLoaded', true);
                 }.bind(this));
                 return;
@@ -39,7 +39,10 @@ export default
             this.get('questions').forEach(function (question) {
                 var questionHasResponse = false;
                 this.get('responses').forEach(function (response) {
-                    if (response.get('_data.question.id') === question.get('id')) {
+                    var responseQuestionId = response.get('_data.question.id');
+                    if(!responseQuestionId)
+                        responseQuestionId = response.get('question.id');
+                    if (responseQuestionId === question.get('id')) {
                         allResponses.pushObject(response);
                         questionHasResponse = true;
                     }

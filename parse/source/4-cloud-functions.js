@@ -405,9 +405,13 @@ Parse.Cloud.define("sendPushToUser", function (request, response) {
     else
         console.log("Action params " + JSON.stringify(actionParams));
 
-    actionUrl += "?" + actionParams[0].name + "=" + actionParams[0].content;
-    for (var i = 1; i < actionParams.length; i++) {
-        actionUrl += "&" + actionParams[i].name + "=" + actionParams[i].content;
+    if(actionParams.name) {
+        actionUrl += "?" + actionParams[0].name + "=" + actionParams[0].content;
+        if (actionParams.length > 0) {
+            for (var i = 1; i < actionParams.length; i++) {
+                actionUrl += "&" + actionParams[i].name + "=" + actionParams[i].content;
+            }
+        }
     }
 
     if (!sound)
@@ -716,14 +720,15 @@ Parse.Cloud.define('bulkFollowUsers', function (request, response) {
  */
 
 Parse.Cloud.define('isMobileUser', function (request, response) {
-    if (!request.user) {
-        response.error();
-        return;
-    }
-
     Parse.Cloud.useMasterKey();
     var query = new Parse.Query(Parse.Installation);
-    query.equalTo('user', request.user);
+    if (request.user)
+        query.equalTo('user', request.user);
+    else if (request.params.userId) {
+        query.equalTo('user', request.params.id);
+    } else {
+        return response.error("User or UserId not set.");
+    }
     query.count()
         .then(function (count) {
             if (count)
@@ -1154,26 +1159,38 @@ Parse.Cloud.define("subscribeCustomerToSRS", function (request, response) {
         })
         .then(function (httpResponse) {
             console.log("Subscription " + JSON.stringify(httpResponse));
-            var subscription = httpResponse,
-                privateData = user.get('privateData'),
-                startDate = new moment(),
+            var stripeSubscription = httpResponse,
+            //privateData = user.get('privateData'),
+            //startDate = new moment(),
                 trialStartDate = new moment(),
-                expiryDate = new moment().add(subscription.plan.trial_period_days, 'day')
-                    .add(subscription.plan.interval_count, subscription.plan.interval),
-                trialExpiryDate = new moment().add(subscription.plan.trial_period_days, 'day');
-            privateData.set('stripeSubscription', subscription);
-            privateData.set('spacedRepetitionActivated', true);
+            //expiryDate = new moment().add(subscription.plan.trial_period_days, 'day')
+            //  .add(subscription.plan.interval_count, subscription.plan.interval),
+                trialExpiryDate = new moment().add(stripeSubscription.plan.trial_period_days, 'day');
 
-            privateData.set('spacedRepetitionTrialStartDate', trialStartDate._d);
-            privateData.set('spacedRepetitionTrialExpiryDate', trialExpiryDate._d);
+            return Parse.Cloud.run('activateSRSforUser', {
+                interval: stripeSubscription.plan.interval,
+                intervalLength: stripeSubscription.plan.interval_count,
+                signupSource: "Web",
+                activationKey: "pacRe6e8rUthusuDEhEwUPEWrUpruhat",
+                stripeSubscription: stripeSubscription,
+                trialStartDate: trialStartDate,
+                trialExpiryDate: trialExpiryDate
+            });
 
-            privateData.set('spacedRepetitionStartDate', startDate._d);
-            privateData.set('spacedRepetitionExpiryDate', expiryDate._d);
-            privateData.set('spacedRepetitionLastPurchase', subscription.plan.interval_count + " " + subscription.plan.interval);
-            privateData.set('spacedRepetitionSignupSource', 'Web');
-            return privateData.save();
-        }).then(function (privateData) {
-            response.success({"privateData": privateData});
+            /*privateData.set('stripeSubscription', subscription);
+             privateData.set('spacedRepetitionActivated', true);
+
+             privateData.set('spacedRepetitionTrialStartDate', trialStartDate._d);
+             privateData.set('spacedRepetitionTrialExpiryDate', trialExpiryDate._d);
+
+             privateData.set('spacedRepetitionStartDate', startDate._d);
+             privateData.set('spacedRepetitionExpiryDate', expiryDate._d);
+             privateData.set('spacedRepetitionLastPurchase', subscription.plan.interval_count + " " + subscription.plan.interval);
+             privateData.set('spacedRepetitionSignupSource', 'Web');
+             return privateData.save();*/
+        }).then(function (result) {
+            response.success({"privateData": result.privateData});
+
         },
         function (error) {
             response.error(JSON.stringify(error));
@@ -1181,9 +1198,12 @@ Parse.Cloud.define("subscribeCustomerToSRS", function (request, response) {
 });
 /**
  * @CloudFunction Activate SRS for User
- * Either called from iOS, or from the
- * CloudFunction after subscribing users
- * to a Stripe payment plan.
+ * Either called from iOS, from the
+ * CloudFunction after subscribing stripe
+ * usersor from CloudFundtion redeemPromoCode.
+ *
+ * Also creates an SRS test for the user
+ * if one doesn't already exist.
  *
  * Never called directly from Web as
  * activationKey will be seen in Javascript code.
@@ -1191,6 +1211,9 @@ Parse.Cloud.define("subscribeCustomerToSRS", function (request, response) {
  * @param {String} interval e.g. month, year
  * @param {Integer} intervalLength e.g. 6
  * @param {String} signupSource e.g. iOS, Web
+ * @param {Object} stripeSubscription (Web only)
+ * @param {Date} trialStartDate (Web only)
+ * @param {Date} trialExpiryDate (Web only)
  * @param {String} activationKey, expects pacRe6e8rUthusuDEhEwUPEWrUpruhat
  */
 Parse.Cloud.define('activateSRSforUser', function (request, response) {
@@ -1201,13 +1224,30 @@ Parse.Cloud.define('activateSRSforUser', function (request, response) {
         intervalLength = request.params.intervalLength,
         signupSource = request.params.signupSource,
         activationKey = request.params.activationKey,
+        stripeSubscription = request.params.stripeSubscription,
+        trialStartDate = request.params.trialStartDate,
+        trialExpiryDate = request.params.trialExpiryDate,
         privateData,
+        test,
         promises = [];
 
     if (activationKey !== "pacRe6e8rUthusuDEhEwUPEWrUpruhat")
         return response.error("Unauthorized request.");
 
-    user.get('privateData').fetch()
+    if(!user) {
+        if (request.params.userId) {
+            user = new Parse.User();
+            user.id = request.params.userId;
+            promises.push(user.fetch());
+        } else {
+            return response.error("User is not set.");
+        }
+    }
+
+    Parse.Promise.when(promises)
+        .then(function () {
+            return user.get('privateData').fetch();
+        })
         .then(function (result) {
             privateData = result;
             var startDate = new moment(),
@@ -1218,12 +1258,61 @@ Parse.Cloud.define('activateSRSforUser', function (request, response) {
             privateData.set('spacedRepetitionExpiryDate', expiryDate._d);
             privateData.set('spacedRepetitionLastPurchase', intervalLength + " " + interval);
             privateData.set('spacedRepetitionSignupSource', signupSource);
-            promises.push(privateData);
-            user.set('spacedRepetitionIntensity', 1);
-            user.set('spacedRepetitionMaxQuestions', 10);
-            user.set('spacedRepetitionNotificationByEmail', true);
-            user.set('spacedRepetitionNotificationByPush', true);
+            privateData.set('spacedRepetitionSubscriptionCancelled', false);
+            if (trialStartDate && trialStartDate) {
+                privateData.set('spacedRepetitionTrialStartDate', trialStartDate._d);
+                privateData.set('spacedRepetitionTrialExpiryDate', trialExpiryDate._d);
+            }
+            if (stripeSubscription)
+                privateData.set('stripeSubscription', stripeSubscription);
+            promises.push(privateData.save());
+            if (!user.get('spacedRepetitionIntensity'))
+                user.set('spacedRepetitionIntensity', 1);
+            if (!user.get('spacedRepetitionMaxQuestions'))
+                user.set('spacedRepetitionMaxQuestions', 10);
+            if (!user.get('spacedRepetitionNotificationByEmail') &&
+                user.get('spacedRepetitionNotificationByEmail') !== false)
+                user.set('spacedRepetitionNotificationByEmail', true);
+            if (!user.get('spacedRepetitionNotificationByPush') &&
+                user.get('spacedRepetitionNotificationByPush') !== false)
+                user.set('spacedRepetitionNotificationByPush', true);
             promises.push(user.save());
+            // See if the user has an SRS test already
+            var query = new Parse.Query('Test');
+            query.equalTo('author', user);
+            query.equalTo('isSpacedRepetition', true);
+            return query.find();
+        }).then(function (results) {
+            if (!results[0]) {
+                // Create a new SRS test
+                var Test = Parse.Object.extend('Test');
+                test = new Test();
+                test.set('isGenerated', true);
+                test.set('isSpacedRepetition', true);
+                test.set('author', user);
+                test.set('title', "Spaced Repetition Test");
+                test.set('privacy', 0);
+                test.set('questions', []);
+                var Category = Parse.Object.extend('Category'),
+                    srCategory = new Category();
+                srCategory.id = "jWx56PKQzU"; // Spaced Repetition is a Category
+                test.set('category', srCategory);
+                var ACL = new Parse.ACL();
+                ACL.setReadAccess(user.id, true);
+                test.setACL(ACL);
+                query = new Parse.Query('UniqueResponse');
+                query.equalTo('user', user);
+                query.descending('updatedAt');
+                query.limit(250);
+                return query.find();
+            }
+        }).then(function (uniqueResponses) {
+            if (uniqueResponses) {
+                for (var i = 0; i < uniqueResponses.length; i++) {
+                    test.get('questions').push(uniqueResponses[i].get('question'));
+                }
+                promises.push(test.save());
+            }
             return Parse.Promise.when(promises);
         }).then(function () {
             response.success({"privateData": privateData});
@@ -1429,6 +1518,7 @@ Parse.Cloud.define('addOrRemoveQuestionsToSRSTest', function (request, response)
 /**
  * @CloudFunction - PromoCode Redemption
  * Checks for validity of an entered promo code
+ * @param {String} code
  * @param {String} source e.g. iOS, Web
  */
 Parse.Cloud.define('redeemPromoCode', function (request, response) {
@@ -1455,7 +1545,8 @@ Parse.Cloud.define('redeemPromoCode', function (request, response) {
             } else {
                 promotionalCode = result[0];
 
-                if (promotionalCode.get('maximumNumberOfUses') >= promotionalCode.get('numberOfRedemptions') && !promotionalCode.get('isInfinite')) {
+                if (promotionalCode.get('maximumNumberOfUses') <= promotionalCode.get('numberOfRedemptions')
+                    && !promotionalCode.get('isInfinite')) {
                     // promo code is used up
                     errorMessage = "Sorry but this code is no longer valid!";
                 } else if (!promotionalCode.get('isActive')) {
@@ -1466,27 +1557,28 @@ Parse.Cloud.define('redeemPromoCode', function (request, response) {
                     promotionalCode.increment('numberOfRedemptions');
                     promises.push(promotionalCode.save());
                     if (promotionalCode.get('action') === 'SRS-1-Month-Trial') {
-                        var privateData = user.get('privateData');
-                        privateData.set('spacedRepetitionActivated', true);
-                        var startDate = new moment(),
-                            expiryDate = new moment();
-                        privateData.set('spacedRepetitionStartDate', startDate._d);
-                        privateData.set('spacedRepetitionExpiryDate', expiryDate.add(1, 'month')._d);
-                        privateData.set('spacedRepetitionSignupSource', request.params.source);
-                        privateData.set('spacedRepetitionLastPurchase', '1 Month');
                         successMessage = "Your Spaced Repetition Service is now activated for 1 month!";
-                        promises.push(privateData.save());
+                        return Parse.Cloud.run('activateSRSforUser', {
+                            interval: 'month',
+                            intervalLength: 1,
+                            signupSource: request.params.source,
+                            activationKey: "pacRe6e8rUthusuDEhEwUPEWrUpruhat",
+                            userId: user.id
+                        });
                     }
                 }
             }
-            return Parse.Promise.when(promises);
         })
-        .then(function () {
+        .then(
+        function (activationResponse) {
             if (errorMessage)
                 return response.error(errorMessage);
-            else
+            else if (activationResponse) {
                 return response.success(successMessage);
-        })
+            }
+        }, function (error) {
+            return response.error(error.message);
+        });
 
 });
 /**

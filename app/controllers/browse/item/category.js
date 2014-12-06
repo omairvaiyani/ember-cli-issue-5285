@@ -10,7 +10,7 @@ from
 
 export default
 Ember.ObjectController.extend(EachItem, {
-    style: "width:220px;height:200px;",
+    style: "width:180px;height:200px;",
 
     setStyleBasedOnRelativeNumberOfTests: function () {
         var totalTests = this.get('parentController.totalTests');

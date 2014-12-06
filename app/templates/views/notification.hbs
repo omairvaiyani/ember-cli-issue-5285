@@ -1,4 +1,8 @@
-<i class="icon glyphicon {{unbound view.iconType}}"></i>
+{{#if view.isSRSNotification}}
+    <img src="img/srs-icon.png" class="circular-image" style="height:30px;width:30px;margin-left: -37px;margin-right: 4px;"/>
+{{else}}
+    <i class="icon glyphicon {{unbound view.iconType}}"></i>
+{{/if}}
 <a class="close-notification" {{action "close" target="view"}}>
     <i class="icon-remove glyphicon glyphicon-remove-sign"></i>
 </a>

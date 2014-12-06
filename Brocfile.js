@@ -84,5 +84,9 @@ app.import({
  */
 app.import('bower_components/css-toggle-switch/dist/toggle-switch.css');
 
+/*
+ * Auto complete component
+ */
+app.import('bower_components/ic-autocomplete/dist/globals/main.js');
 
 module.exports = app.toTree();

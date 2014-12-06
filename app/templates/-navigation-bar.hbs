@@ -36,7 +36,7 @@
                     Create{{/link-to}}{{/link-to}}
             </ul>
 
-            {{view 'expanding-search'}}
+            {{!--{{view 'expanding-search'}} --}}
 
             <ul class="nav navbar-nav navbar-right">
                 {{#if currentUser}}
@@ -45,7 +45,7 @@
                     {{partial 'application/navbar/current-user'}}
                 {{else}}
                     <li>
-                        <a href='' {{action 'openModal' 'application/modal/login-or-register' 'application'}}>Log in | Sign up</a>
+                        <a href='' {{action 'openModal' 'application/modal/login-or-register' 'application'}}>Log in | Start creating tests</a>
                     </li>
                 {{/if}}
             </ul>

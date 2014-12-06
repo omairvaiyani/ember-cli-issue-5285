@@ -5,7 +5,7 @@
         <div class="row margin-bottom-16">
             <div class="col-md-12">
                 <h4>You scored <span style="font-size:x-large;">{{math-round score 2}}% </span>
-                    in {{#link-to 'testInfo' test.slug tagName='a'}}{{test.title}}{{/link-to}}.
+                    in {{#link-to 'testInfo' testSlug tagName='a'}}{{testTitle}}{{/link-to}}.
                     <small class="pull-right text-center">Test taken {{from-now time=createdAt}}</small>
                 </h4>
             </div>

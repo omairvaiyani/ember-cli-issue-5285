@@ -81,7 +81,7 @@ app.all('/scripts/*', function (req, res) {
 
 app.get("*", function (req, res) {
     if (req.headers.host.match(/^www/) !== null || !req.secure) {
-        res.redirect('https://' + req.headers.host.replace(/^www\./, '') + req.url);
+        res.redirect(301, 'https://' + req.headers.host.replace(/^www\./, '') + req.url);
     }
     if (!indexFile) {
         res.sendFile(__dirname + '/index.html');

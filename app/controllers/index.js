@@ -1,22 +1,7 @@
-import
-    Ember
-    from
-        'ember';
-
-import
-    CurrentUser
-    from
-        '../mixins/current-user';
-
-import
-    ParseHelper
-    from
-        '../utils/parse-helper';
-
-import
-    parallaxHandler
-    from
-        '../utils/parallax-handler';
+import Ember from 'ember';
+import CurrentUser from '../mixins/current-user';
+import ParseHelper from '../utils/parse-helper';
+import parallaxHandler from '../utils/parallax-handler';
 
 export default
     Ember.Controller.extend(CurrentUser, {
@@ -103,14 +88,14 @@ export default
 
         testsAreOrderedByTitle: true,
         testsOrderedByTitle: function () {
-            if(!this.get('currentUser.tests'))
+            if (!this.get('currentUser.tests'))
                 return [];
             return this.get('currentUser.tests').sortBy('title');
         }.property('currentUser.tests.length'),
 
         testsAreOrderedByDate: false,
         testsOrderedByDate: function () {
-            if(!this.get('currentUser.tests'))
+            if (!this.get('currentUser.tests'))
                 return [];
             return this.get('currentUser.tests').sortBy('createdAt');
         }.property('currentUser.tests.length'),
@@ -153,7 +138,7 @@ export default
                     "$ne": true
                 }
             };
-            this.store.findQuery('test', {where: JSON.stringify(where), order: 'title', include: 'category'})
+            this.store.findQuery('test', {where: JSON.stringify(where), order: 'title', include: 'category,author'})
                 .then(function (tests) {
                     this.get('currentUser.tests').clear();
                     this.get('currentUser.tests').addObjects(tests);
@@ -177,6 +162,7 @@ export default
             this.store.findQuery('action', {
                 where: JSON.stringify(query),
                 order: "-createdAt",
+                include: "user,test.category",
                 limit: 15
             }).then(function (actions) {
                 actions.forEach(function (action) {

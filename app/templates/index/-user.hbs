@@ -60,11 +60,11 @@
                         {{#unless currentUser.latestSRSAttempt.isProcessed}}
                             <p>Your spaced repetition test is ready to take!</p>
 
-                            <p>We have prepared {{currentUser.latestSRSAttempt.questions.length}} questions
+                            <p>We have prepared {{currentUser.latestSRSAttempt.totalQuestions}} questions
                                 for you. {{#link-to 'test' currentUser.latestSRSAttempt}}Take now!{{/link-to}}</p>
                         {{else}}
                             <p>You scored {{currentUser.latestSRSAttempt.score}}% for the
-                                {{currentUser.latestSRSAttempt.questions.length}} questions we
+                                {{currentUser.latestSRSAttempt.totalQuestions}} questions we
                                 sent to you earlier.</p>
 
                             <p>

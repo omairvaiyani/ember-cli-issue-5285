@@ -22,6 +22,7 @@ export default
                 ParseUser = store.modelFor('parse-user'),
                 currentUser;
 
+            store.find('category');
             ParseUser.validateSessionToken(store, sessionToken)
                 .then(function (userMinimal) {
                     return store.findById('parse-user', userMinimal.get('id'));

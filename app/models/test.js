@@ -11,9 +11,6 @@ export default DS.Model.extend(ParseMixin, {
     category: DS.belongsTo('category', {defaultValue: null, async: true}),
     description: DS.attr('string'),
     questions: DS.hasMany('question', {async: true, array: true}),
-    totalQuestions: function () {
-        return this.get('_data.questions.length');
-    }.property(),
     privacy: DS.attr('number', {defaultValue: 1}),
     privacyBoolean: function () {
         return !!this.get('privacy');
@@ -37,5 +34,29 @@ export default DS.Model.extend(ParseMixin, {
     isSpacedRepetition: DS.attr('boolean'),
     parseClassName: function() {
         return "Test";
-    }
+    },
+    totalQuestions: function () {
+        return this.get('_data.questions.length');
+    }.property(),
+    authorProfileImageUrl: function () {
+        return this.getUserProfileImageUrl('author');
+    }.property(),
+    authorSlug: function () {
+        return this.getIncludedProperty('author', 'slug');
+    }.property(),
+    categoryName: function () {
+        var value = this.getIncludedProperty('category','name');
+        if(value)
+            return value;
+        else {
+            this.store.findById('category', this.getIncludedProperty('category','id'))
+                .then(function (category) {
+                    this.set('categorySlug', category.get('slug'));
+                    this.set('categoryName', category.get('name'));
+                }.bind(this));
+        }
+    }.property(),
+    categorySlug: function () {
+        return this.getIncludedProperty('category','slug');
+    }.property()
 });

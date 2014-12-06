@@ -72,7 +72,23 @@ export default Ember.Controller.extend(CurrentUser, {
             }.bind(this));
     }.on('init'),
 
+    subscriptionMessage: "",
+
+    previousSlide: false,
+    nextSlide: true,
     actions: {
+        swipeNext: function () {
+            this.set('previousSlide', true);
+            this.get('touchSlider').swipeNext();
+            if(this.get('touchSlider').activeIndex === (this.get('touchSlider').slides.length - 1))
+                this.set('nextSlide', false);
+        },
+        swipePrev: function () {
+            this.set('nextSlide', true);
+            this.get('touchSlider').swipePrev();
+            if(this.get('touchSlider').activeIndex === 0)
+                this.set('previousSlide', false);
+        },
         openCheckoutHandler: function (plan) {
             plan.isCheckoutLoading = true;
             this.notifyPropertyChange('plans');
@@ -107,6 +123,7 @@ export default Ember.Controller.extend(CurrentUser, {
                         }.bind(this))
                         .then(function (response) {
                             // All done, response is privateData
+                            this.set('subscriptionMessage', "Spaced Repetition Service Activated!");
                             this.set('currentUser.privateData.spacedRepetitionActivated', true);
                             this.set('currentUser.privateData.spacedRepetitionStartDate',
                                 response.privateData.get('spacedRepetitionStartDate'));
@@ -162,6 +179,34 @@ export default Ember.Controller.extend(CurrentUser, {
             } else if (currency === "eur") {
                 this.set('isSelectedCurrencyEUR', true);
             }
+        },
+
+        redeemPromoCode: function () {
+            this.send('incrementLoadingItems');
+            Parse.Cloud.run('redeemPromoCode', {code: this.get('promoCode'), source: "Web"})
+                .then(function (response) {
+                    this.set('subscriptionMessage', response);
+                    // Update the currentUser.privateData
+                    var where = {
+                        "objectId": this.get('currentUser.privateData.id')
+                    };
+                    this.store.findQuery('user-private', {where: JSON.stringify(where)});
+                    // Update the currentUser info for SRS
+                    var where = {
+                        "objectId": this.get('currentUser.id')
+                    };
+                    this.store.findQuery('parse-user', {where: JSON.stringify(where)});
+                    this.transitionToRoute('dashboard.srs');
+                    this.send('addNotification', 'srs', "SRS Activated!", '');
+                    this.send('decrementLoadingItems');
+                }.bind(this), function (error) {
+                    this.send('addNotification', 'srs-error', "Error!", error.message);
+                    this.set('subscriptionMessage', error.message);
+                    setTimeout(function () {
+                        this.set('subscriptionMessage', "");
+                    }.bind(this), 2500);
+                    this.send('decrementLoadingItems');
+                }.bind(this));
         }
     }
 });

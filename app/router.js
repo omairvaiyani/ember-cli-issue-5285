@@ -40,7 +40,7 @@ Router.map(function () {
     this.resource('testRedirect', {path: "mcq/:test_old_id/:test_tile"});
     this.resource('testInfo', {path: "test/:test_slug"});
     this.resource('result', {path: "result/:attempt_id"});
-
+    this.resource('result.new', {path: 'result/new'});
     /*
      * Groups
      */
@@ -59,6 +59,7 @@ Router.map(function () {
         this.route('srs');
     });
     this.route('presskit', {path: 'press'});
+    this.route('contact');
 
     /*
      * Temporary sessions

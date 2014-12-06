@@ -215,8 +215,8 @@ Parse.Cloud.afterSave("_User", function (request) {
             console.log("Setting private data acls");
             var email = privateData.get('email');
             if (email && email.length) {
-                // sendEmail('welcome-email', user, privateData.get('email'));
-                // user.set('welcomeEmailSent', true)
+                sendEmail('welcome-email', user, privateData.get('email'));
+                user.set('welcomeEmailSent', true)
             }
             privateData.setACL(Security.createACLs(user, false, false, true));
             promises.push(privateData.save());

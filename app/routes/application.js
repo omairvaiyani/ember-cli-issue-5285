@@ -329,26 +329,7 @@ export default
                                         this.controllerFor('application').set('currentUser', user);
                                         this.send('decrementLoadingItems');
                                         /*
-                                         * Sometimes user info is missing,
-                                         * let's add some of it here:
-                                         */
-                                        if (!user.get('privateData.id')) {
-                                            var privateData = this.store.createRecord('user-private', {
-                                                email: email,
-                                                username: user.get('username')
-                                            });
-                                            privateData.save()
-                                                .then(function () {
-                                                    user.set('privateData', privateData);
-                                                }, function (error) {
-                                                    console.dir(error);
-                                                });
-                                        } else if (user.get('privateData') && !user.get('privateData.email')) {
-                                            user.get('privateData').set('email', email);
-                                            user.get('privateData').save();
-                                        }
-                                        /*
-                                         * Update FB Friends list everytime
+                                         * Update FB Friends list every time
                                          */
                                         user.set('facebookFriends', fbFriendsArray);
                                         if (!user.get('slug.length')) {
@@ -367,9 +348,21 @@ export default
                                             this.store.findQuery('parse-user', {where: JSON.stringify(where)})
                                                 .then(function (results) {
                                                     user = results.objectAt(0);
-                                                    /*
-                                                     * Update FB Friends list everytime
-                                                     */
+                                                    if (!user.get('privateData.id')) {
+                                                        var privateData = this.store.createRecord('user-private', {
+                                                            email: email,
+                                                            username: user.get('username')
+                                                        });
+                                                        privateData.save()
+                                                            .then(function () {
+                                                                user.set('privateData', privateData);
+                                                            }, function (error) {
+                                                                console.dir(error);
+                                                            });
+                                                    } else if (user.get('privateData') && !user.get('privateData.email')) {
+                                                        user.get('privateData').set('email', email);
+                                                        user.get('privateData').save();
+                                                    }
                                                     user.set('sessionToken', sessionToken);
                                                     this.controllerFor('application').set('currentUser', user);
                                                     this.send('redirectAfterLogin');
