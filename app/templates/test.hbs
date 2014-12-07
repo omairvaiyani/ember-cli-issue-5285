@@ -1,5 +1,33 @@
 <div class="container">
     <section class="row">
+        <article class="col-md-12">
+            <ol class="breadcrumb">
+                {{#link-to 'browse' tagName='li'}}{{#link-to 'browse'}}Browse{{/link-to}}{{/link-to}}
+                {{#if category.parentCategorySlug}}
+                    {{#link-to 'category' category.parentCategorySlug tagName='li'}}
+                        {{#link-to 'category' category.parentCategorySlug}}
+                            {{category.parentCategoryName}}
+                        {{/link-to}}
+                    {{/link-to}}
+                    {{#link-to 'subcategory' category.parent.slug slug tagName='li'}}
+                        {{#link-to 'subcategory' category.parent.slug slug}}
+                        {{category.name}}
+                        {{/link-to}}
+                    {{/link-to}}
+                {{else}}
+                    {{#link-to 'category' category.slug tagName='li'}}
+                        {{#link-to 'category' category.slug}}
+                            {{category.name}}
+                        {{/link-to}}
+                    {{/link-to}}
+                {{/if}}
+                {{#link-to 'testInfo' slug tagName='li'}}
+                        {{title}}
+                {{/link-to}}
+            </ol>
+        </article>
+    </section>
+    <section class="row">
         <article class="col-md-9 margin-bottom-16">
             {{#unless loading}}
                 <div class="card take-test">

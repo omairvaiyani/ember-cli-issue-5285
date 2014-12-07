@@ -94,7 +94,15 @@ function sendEmail(templateName, user, email, data) {
     return promise;
 }
 
-
+/*
+ * Is User anonymous?
+ */
+function isAnonymous(authData) {
+    if(!authData)
+        return false;
+    else
+        return _.has(authData, 'anonymous');
+}
 
 
 /*
@@ -377,9 +385,18 @@ var slugify = function (className, string, object) {
     var slug;
     switch (className) {
         case "_User":
-            var firstInitial = string.charAt(0),
-                lastName = string.split(" ")[string.split(" ").length - 1];
-            slug = (firstInitial + lastName).toLowerCase();
+            var names = string.split(" ");
+            switch(names.length) {
+                case 1:
+                    slug = names[0].toLowerCase();
+                    break;
+                default:
+                    var firstInitial = string.charAt(0),
+                        lastName = names[names.length - 1];
+                    slug = (firstInitial + lastName).toLowerCase();
+                    break;
+            }
+
             break;
         case "Category":
             if (string.toLowerCase() === "other") {
@@ -3085,10 +3102,12 @@ Parse.Cloud.beforeSave(Parse.User, function (request, response) {
      * They may have been anonymous and therefore .isNew() would
      * not be sufficient.
      */
-    if (!user.get('isProcessed') && user.get('name') && user.get('name').length) {
+    if (!user.get('isProcessed') && !isAnonymous(user.get('authData'))) {
         /*
          * Create a unique slug
          */
+        if(user.get('name'))
+            user.set('name', capitaliseFirstLetter(user.get('name')));
         var slug = slugify('_User', user.get('name'));
         /*
          * Check if slug is unique before saving
@@ -3216,7 +3235,7 @@ Parse.Cloud.afterSave("_User", function (request) {
                     return;
             });
     }
-    if (!user.get('isProcessed') && user.get('name') && user.get('name').length) {
+    if (!user.get('isProcessed') && !isAnonymous(user.get('authData'))) {
         user.set('isProcessed', true);
         user.setACL(Security.createACLs(user, true));
         var Action = Parse.Object.extend('Action');

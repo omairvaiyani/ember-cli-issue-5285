@@ -2,21 +2,49 @@
     <div class="container">
         {{#if browseAll}}
             <h1>Browse</h1>
-            <p>Search from thousands of mcq tests in MyCQs.</p>
+
+            <h4>Search from thousands of mcq tests in MyCQs.</h4>
         {{else}}
-            <div class='inline-block svg-icon-white'>{{svg-icon icon=name height=120 width=120 colour="white"}}</div>
+            <div class='inline-block svg-icon-white'>
+                {{#if parentCategoryName}}
+                    {{svg-icon icon=parentCategoryName height=120 width=120 colour="white"}}
+                {{else}}
+                    {{svg-icon icon=name height=120 width=120 colour="white"}}
+                {{/if}}
+            </div>
             <h1 class="inline-block">{{seoPageHeader}}</h1>
-            <p>Search from over {{math-round totalTests 10}}
+
+            <h4>Search from over {{math-round totalTests 10}}
                 {{#if secondaryName}}{{secondaryName}}{{else}}{{name}}{{/if}} mcqs{{#if seoChildCategories.length}} on
-                    a range of subjects such as {{seoChildCategories}}{{/if}}.</p>
+                    a range of subjects such as {{seoChildCategories}}{{/if}}.</h4>
         {{/if}}
     </div>
 </div>
 <div class="container">
+    <ol class="breadcrumb">
+        {{#link-to 'browse' tagName='li'}}{{#link-to 'browse'}}Browse{{/link-to}}{{/link-to}}
+        {{#if hasChildren}}
+            {{#link-to 'category' slug tagName='li'}}
+                {{name}}
+            {{/link-to}}
+        {{else}}
+            {{#if parentCategorySlug}}
+                {{#link-to 'category' parentCategorySlug tagName='li'}}
+                    {{#link-to 'category' parentCategorySlug}}
+                        {{parentCategoryName}}
+                    {{/link-to}}
+                {{/link-to}}
+            {{/if}}
+            {{#link-to 'subcategory' parentCategorySlug slug tagName='li'}}
+                {{name}}
+            {{/link-to}}
+        {{/if}}
+    </ol>
     <div class="row">
         <div class="col-md-3">
             <div class="card">
                 <h5>Search:</h5>
+
                 <div class="search-box">
                     {{input type='text' value=searchTerm placeholder='Type here to search' action='searchTests'
                     classNames='form-control margin-bottom-16'}}
@@ -30,28 +58,33 @@
                 {{#if childCategories.length}}
                     <h5>Filter {{tests.count}} results</h5>
 
-                    {{#each category in childCategories itemController='category.item.childCategory'}}
-                        <div class="row">
-                            <div class="col-md-12">
-                                {{#if browseAll}}
-                                    <p>
-                                        {{#link-to 'category' category.slug}}
-                                            {{category.name}}
-                                        {{/link-to}}
+                    <ul class="nav nav-pills nav-stacked">
+                        {{#each category in childCategories itemController='category.item.childCategory'}}
+                            {{#if browseAll}}
+                                <li>
+                                    {{#link-to 'category' category.slug}}
+                                        {{category.name}}
                                         <small>({{category.totalTests}})</small>
-                                    </p>
-                                {{else}}
-                                    <p>{{input type="checkbox" checked=category.isChecked}}
-                                        {{#link-to 'category' this.slug
-                                        (query-params categoryFilter=category.slug page=1)}}
-                                            {{category.name}}
-                                        {{/link-to}}
+                                    {{/link-to}}
+                                </li>
+                            {{else}}
+                            {{!--<p>{{{input type="checkbox" checked=category.isChecked}}
+                                {{#link-to 'category' this.slug
+                                (query-params categoryFilter=category.slug page=1)}}
+                                    {{category.name}}
+                                {{/link-to}}
+                                <small>({{category.totalTests}})</small>
+                            </p>--}}
+                                {{#link-to 'subcategory' category.parentCategorySlug category.slug tagName='li'}}
+                                    {{#link-to 'subcategory' category.parentCategorySlug category.slug tagName='a'}}
+                                        {{category.name}}
                                         <small>({{category.totalTests}})</small>
-                                    </p>
-                                {{/if}}
-                            </div>
-                        </div>
-                    {{/each}}
+                                    {{/link-to}}
+                                {{/link-to}}
+                            {{/if}}
+                        {{/each}}
+                    </ul>
+
                 {{/if}}
             </div>
         </div>

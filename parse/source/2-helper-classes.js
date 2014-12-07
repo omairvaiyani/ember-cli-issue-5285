@@ -66,7 +66,15 @@ function sendEmail(templateName, user, email, data) {
     return promise;
 }
 
-
+/*
+ * Is User anonymous?
+ */
+function isAnonymous(authData) {
+    if(!authData)
+        return false;
+    else
+        return _.has(authData, 'anonymous');
+}
 
 
 /*
@@ -349,9 +357,18 @@ var slugify = function (className, string, object) {
     var slug;
     switch (className) {
         case "_User":
-            var firstInitial = string.charAt(0),
-                lastName = string.split(" ")[string.split(" ").length - 1];
-            slug = (firstInitial + lastName).toLowerCase();
+            var names = string.split(" ");
+            switch(names.length) {
+                case 1:
+                    slug = names[0].toLowerCase();
+                    break;
+                default:
+                    var firstInitial = string.charAt(0),
+                        lastName = names[names.length - 1];
+                    slug = (firstInitial + lastName).toLowerCase();
+                    break;
+            }
+
             break;
         case "Category":
             if (string.toLowerCase() === "other") {

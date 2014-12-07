@@ -15,6 +15,17 @@ export default {
             "objectId": object.get('id')
         }
     },
+    generatePointerFromIdAndClass: function(objectId, className) {
+        if(!objectId || !className)
+            return;
+        if(className === "parseUser")
+            className = "_User";
+        return {
+            "__type": "Pointer",
+            "className": StringHelper.upperCaseFirst(className),
+            "objectId": objectId
+        }
+    },
     generatePointers: function(array) {
         var pointers = [];
         array.forEach(function(object) {

@@ -6,6 +6,7 @@ from
 export default
 Ember.Route.extend({
     model: function (params, transition) {
+        console.log("Changing model in Route.Category "+JSON.stringify(params));
         if(params.category_slug.toLowerCase() === "all")
             return {};
 
@@ -21,29 +22,10 @@ Ember.Route.extend({
             }
         ).then(function (results) {
                 if (results.objectAt(0)) {
-                    category = results.objectAt(0);
-                    if (category.get('level') === 1)
-                        return category;
-                    else {
-                        /*
-                         * Get category.parent and filter to this one
-                         */
-                        return this.store.findById('category', category._data.parent.id);
-                    }
+                    return results.objectAt(0);
                 } else {
                     return;
                 }
-            }.bind(this))
-            .then(function (topLevelCategory) {
-                if(!topLevelCategory)
-                    return null;
-
-                if (topLevelCategory.get('slug') !== params.category_slug) {
-                    this.transitionTo('category', topLevelCategory.get('slug'),
-                        {queryParams: {categoryFilter: params.category_slug, page: 1}});
-                }
-                else
-                    return topLevelCategory;
             }.bind(this));
     },
     /*
@@ -66,6 +48,7 @@ Ember.Route.extend({
         if(controller.get('model')) {
             controller.set('alreadyGotChildCategoriesForBrowseAll', false);
             controller.set('alreadyGotChildCategories', false);
+            controller.set('readyToGetTests', false);
         }
         controller.set('model', model);
         controller.set('browseAll', !model.id);

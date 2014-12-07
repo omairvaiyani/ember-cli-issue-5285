@@ -24,9 +24,8 @@ Router.map(function () {
      */
     this.resource('browse');
     this.resource('browseRedirect', {path: 'tests/:category_slug'});
-    this.resource('category', {path: 'browse/:category_slug'}, function () {
-        this.resource('subcategory', {path: ':subcategory_slug'});
-    });
+    this.resource('category', {path: 'browse/:category_slug'});
+    this.resource('subcategory', {path: 'browse/:category_slug/:subcategory_slug'});
     /*
      * Test creation and edition
      */

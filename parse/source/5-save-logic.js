@@ -68,10 +68,12 @@ Parse.Cloud.beforeSave(Parse.User, function (request, response) {
      * They may have been anonymous and therefore .isNew() would
      * not be sufficient.
      */
-    if (!user.get('isProcessed') && user.get('name') && user.get('name').length) {
+    if (!user.get('isProcessed') && !isAnonymous(user.get('authData'))) {
         /*
          * Create a unique slug
          */
+        if(user.get('name'))
+            user.set('name', capitaliseFirstLetter(user.get('name')));
         var slug = slugify('_User', user.get('name'));
         /*
          * Check if slug is unique before saving
@@ -199,7 +201,7 @@ Parse.Cloud.afterSave("_User", function (request) {
                     return;
             });
     }
-    if (!user.get('isProcessed') && user.get('name') && user.get('name').length) {
+    if (!user.get('isProcessed') && !isAnonymous(user.get('authData'))) {
         user.set('isProcessed', true);
         user.setACL(Security.createACLs(user, true));
         var Action = Parse.Object.extend('Action');

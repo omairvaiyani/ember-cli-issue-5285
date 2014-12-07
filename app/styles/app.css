@@ -1893,8 +1893,9 @@ body {
     color: #97AA86;
 }
 .footer .footer-dependencies img {
-    height: 80px;
+    max-width: 80px;
     opacity: 0.4;
+    margin-right:8px
 }
 .footer .footer-dependencies img:hover {
     opacity: 1;
