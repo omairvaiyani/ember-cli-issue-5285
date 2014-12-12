@@ -1,0 +1,44 @@
+<!-- Author info -->
+<h4>AUTHOR</h4>
+{{#link-to 'user' author.slug tagName="a"}}{{render 'profile-image' author}}{{/link-to}}
+<div class="author-info inline-block">
+    <p>{{#link-to 'user' author.slug tagName="a"}}{{author.name}}{{/link-to}}</p>
+
+    <p>{{author.numberOfFollowers}} followers</p>
+    {{#if currentUser}}
+        {{#unless isCurrentUser}}
+            {{#if isFollowing}}
+                <p><a href="javascript:void(0)" {{action 'unfollowUser' author.content}}>Following</a></p>
+            {{else}}
+                <p><a href="javascript:void(0)" {{action 'followUser' author.content}}>Follow</a></p>
+            {{/if}}
+        {{/unless}}
+    {{/if}}
+</div>
+
+<hr>
+<h4>CATEGORY</h4>
+
+<p>
+    {{#if category.parentCategorySlug}}
+        {{#link-to 'category' category.parentCategorySlug}}{{category.parentCategoryName}}{{/link-to}} /
+        {{#link-to 'subcategory' category.parentCategorySlug category.slug}}{{category.name}}{{/link-to}}
+    {{else}}
+        {{#link-to 'category' category.slug}}{{category.name}}{{/link-to}}
+    {{/if}}
+</p>
+
+{{#if description.length}}
+    <hr>
+    <h4>TEST DESCRIPTION</h4>
+
+    <p>{{description}}</p>
+{{/if}}
+<hr>
+<h4>STATS</h4>
+
+<p>{{totalQuestions}} <strong>multiple choice {{pluralize-word "question" totalQuestions ""}}</strong></p>
+
+<p>{{math-round averageScore 2}}% community average</p>
+
+<p>{{numberOfAttempts}} community {{pluralize-word "attempt" numberOfAttempts ""}}</p>

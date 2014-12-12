@@ -2,6 +2,7 @@ import Ember from 'ember';
 import Resolver from 'ember/resolver';
 import loadInitializers from 'ember/load-initializers';
 import config from './config/environment';
+import EventTracker from './utils/event-tracker';
 
 Ember.MODEL_FACTORY_INJECTIONS = true;
 

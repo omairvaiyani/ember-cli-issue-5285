@@ -110,20 +110,20 @@
                         <ul class="pagination pull-right">
                             <li {{bind-attr class='previousPage::disabled'}}>
                                 {{#if previousPage}}
-                                    {{#link-to 'category' (query-params page=previousPage)
+                                    {{#link-to (query-params page=previousPage)
                                     tagName='a'}}Prev{{/link-to}}
                                 {{else}}
                                     <a href="javascript:void(0)" {{action 'changePage' previousPage}}>Prev</a>
                                 {{/if}}
                             </li>
                             {{#each page in pagesInPagination}}
-                                {{#link-to 'category' (query-params page=page) tagName='li'}}
-                                    {{#link-to 'category' (query-params page=page) tagName='a'}}{{page}}{{/link-to}}
+                                {{#link-to (query-params page=page) tagName='li'}}
+                                    {{#link-to (query-params page=page) tagName='a'}}{{page}}{{/link-to}}
                                 {{/link-to}}
                             {{/each}}
                             <li {{bind-attr class='nextPage::disabled'}}>
                                 {{#if nextPage}}
-                                    {{#link-to 'category' (query-params page=nextPage)
+                                    {{#link-to (query-params page=nextPage)
                                     tagName='a'}}Next{{/link-to}}
                                 {{else}}
                                     <a href="javascript:void(0)" {{action 'changePage' nextPage}}>Next</a>

@@ -65,6 +65,8 @@ export default
                     pagesToShow.push(i);
                 }
             }
+            if (pagesToShow.indexOf(1) === -1)
+                pagesToShow.insertAt(0, 1);
             if (pagesToShow.indexOf(this.get('totalPages')) === -1)
                 pagesToShow.push(this.get('totalPages'));
             return pagesToShow;
@@ -138,7 +140,6 @@ export default
                 this.set('alreadyGotChildCategories', true);
                 return this.set('childCategories', []);
             }
-            console.dir(where);
             this.store.findQuery('category', {
                 where: JSON.stringify(where),
                 order: 'name'
@@ -196,10 +197,8 @@ export default
         testsOnPage: function () {
             if (!this.get('tests.length'))
                 return;
-
             return this.get('tests').slice(this.get('skip'), this.get('skip') + this.get('limit'));
-
-        }.property('page', 'tests.length', 'order'),
+        }.property('tests.length', 'order', 'skip'),
 
         /*
          * Sets a semantic page description for SEO.

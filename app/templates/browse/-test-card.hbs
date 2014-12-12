@@ -1,42 +1,54 @@
 <div class="row">
     <div class="col-md-12">
         <div class="card test-info-card margin-top-16">
-            {{#link-to 'user' author.slug tagName="a"}}{{render 'profile-image' author}}{{/link-to}}
-
-            <small class="test-actions">
-                {{#if isCurrentUsersTest}}
-                    {{#link-to 'edit' slug tagName='a'}}Edit{{/link-to}}
-                {{/if}}
-            </small>
-
-            <div class="title-and-category">
+            {{#link-to 'user' author.slug tagName="a" class='inline-block'}}{{render 'profile-image' author}}{{/link-to}}
+            <div class="test-details inline-block">
                 <h4>
-                    <a href="" {{action 'openModal' 'browse/modal/test-info' 'browse.modal.testInfo' this}}>{{title}}</a>
-                    {{!--{{#link-to 'testInfo' slug tagName='a'}}{{title}}{{/link-to}}--}}
+                    <a href="javascript:void(0)"
+                        {{action 'openModal' 'browse/modal/test-info' 'browse.modal.testInfo' this}}>
+                        {{title}}
+                    </a>
                 </h4>
-
                 <p>
-                    {{#link-to 'category' category.slug tagName='a'}}{{category.name}}{{/link-to}}
+                    {{#if category.parentCategorySlug}}
+                        <small>
+                            {{#link-to 'category' category.parentCategorySlug}}{{category.parentCategoryName}}{{/link-to}}
+                        </small>
+                        /
+                        {{#link-to 'subcategory' category.parentCategorySlug category.slug}}{{category.name}}{{/link-to}}
+                    {{else}}
+                        {{#link-to 'category' category.slug}}{{category.name}}{{/link-to}}
+                    {{/if}}
                 </p>
-            </div>
-            <div class="statistics">
-                <div class="container-fluid">
-                    <div class="row">
-                        <div class="col-md-3">
-                            <div class="text-center"><p>Q{{totalQuestions}}</p></div>
-                        </div>
-                        <div class="col-md-4">
+                <p class="margin-bottom-8">{{text-preview description 80}}</p>
+                <div class="statistics">
+                    <div class="container-fluid">
+                        <div class="row">
+                            <div class="col-md-3 col-xs-4 margin-bottom-8">
+                                <div class="text-center"><p>Q{{totalQuestions}}</p></div>
+                            </div>
+                            <div class="col-md-3 col-xs-4 margin-bottom-8">
                                 <div class="text-center">
                                     <p>Attempts {{numberOfAttempts}}</p></div>
-                        </div>
-                        <div class="col-md-5">
-                            <div class="text-center">
-                                <p>Avg Score {{math-round averageScore 2}}%</p></div>
+                            </div>
+                            <div class="col-md-3 col-xs-4 margin-bottom-8">
+                                <div class="text-center">
+                                    <p>Avg Score {{math-round averageScore 2}}%</p></div>
+                            </div>
+                            <div class="col-md-3 col-xs-4 text-center">
+                                {{#link-to 'test' slug}}<i class="fa fa-pencil-square-o"> Take now</i>{{/link-to}}
+                            </div>
+                            <div class="col-md-3 col-xs-4 text-center">
+                                {{#if isCurrentUsersTest}}
+                                    {{#link-to 'edit' slug tagName='a'}}
+                                        <i class="fa fa-pencil-square"> Edit test</i>
+                                    {{/link-to}}
+                                {{/if}}
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-
         </div>
     </div>
 </div>

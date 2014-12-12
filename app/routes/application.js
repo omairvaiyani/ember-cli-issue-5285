@@ -1,22 +1,7 @@
-import
-    Ember
-    from
-        'ember';
-
-import
-    FormValidation
-    from
-        '../utils/form-validation';
-
-import
-    ParseHelper
-    from
-        '../utils/parse-helper';
-
-import
-    Constants
-    from
-        '../utils/constants';
+import Ember from 'ember';
+import FormValidation from '../utils/form-validation';
+import ParseHelper from '../utils/parse-helper';
+import Constants from '../utils/constants';
 
 export default
     Ember.Route.extend({

@@ -4,45 +4,7 @@
     <h4 class="modal-title">{{#link-to 'testInfo' slug}}{{title}}{{/link-to}}</h4>
 </div>
 <div class="container-fluid test-info-modal">
-    <!-- Author info -->
-    <h4>AUTHOR</h4>
-    {{#link-to 'user' author.slug tagName="a"}}{{render 'profile-image' author}}{{/link-to}}
-    <div class="author-info inline-block">
-        <p>{{#link-to 'user' author.slug tagName="a"}}{{author.name}}{{/link-to}}</p>
-
-        <p>{{author.numberOfFollowers}} followers</p>
-        {{#if currentUser}}
-            {{#unless isCurrentUser}}
-                {{#if isFollowing}}
-                    <p><a href="" {{action 'unfollowUser' author.content}}>Following</a></p>
-                {{else}}
-                    <p><a href="" {{action 'followUser' author.content}}>Follow</a></p>
-                {{/if}}
-            {{/unless}}
-        {{/if}}
-    </div>
-
-    <hr>
-    <h4>CATEGORY</h4>
-
-    <p>{{#if category.parent}}{{#link-to 'category' category.parent.slug}}{{category.parent.name}}{{/link-to}} -{{/if}}
-        {{#link-to 'category' category.slug}}{{category.name}}{{/link-to}}</p>
-
-    {{#if description.length}}
-        <hr>
-        <h4>DESCRIPTION</h4>
-
-        <p>{{description}}</p>
-    {{/if}}
-    <hr>
-    <h4>STATS</h4>
-
-    <p>{{totalQuestions}} questions</p>
-
-    <p>{{math-round averageScore 2}}% community average</p>
-
-    <p>{{numberOfAttempts}} community attempts</p>
-
+   {{partial 'test/test-info-base'}}
 </div>
 <div class="modal-footer">
     {{#if currentUser}}

@@ -58,5 +58,20 @@ export default DS.Model.extend(ParseMixin, {
     }.property(),
     categorySlug: function () {
         return this.getIncludedProperty('category','slug');
+    }.property(),
+    categoryParentCategoryName: function () {
+        var value = this.getIncludedProperty('category','name', 'parent');
+        if(value)
+            return value;
+        else {
+            this.store.findById('category', this.getIncludedProperty('category','id', 'parent'))
+                .then(function (category) {
+                    this.set('categoryParentCategorySlug', category.get('slug'));
+                    this.set('categoryParentCategoryName', category.get('name'));
+                }.bind(this));
+        }
+    }.property(),
+    categoryParentCategorySlug: function () {
+        return this.getIncludedProperty('category','slug', 'parent');
     }.property()
 });

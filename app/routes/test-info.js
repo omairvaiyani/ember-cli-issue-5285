@@ -1,7 +1,4 @@
-import
-Ember
-from
-'ember';
+import Ember from 'ember';
 
 export default
 Ember.Route.extend({
@@ -31,6 +28,15 @@ Ember.Route.extend({
         if(!description)
             description = "This mcq test on has "+model.get('_data.questions.length')+ " questions! Take it now for free!";
         this.send('updatePageDescription', description);
-        this.send('prerenderReady');
+        Ember.$('head').append('<meta property="og:type" content="mycqs_app:test"/>');
+        Ember.$('head').append('<meta property="og:url" content="https://mycqs.com'+this.get('router.url')+'" />');
+        Ember.$('head').append('<meta property="og:title" content="'+model.get('title')+'" />');
+        Ember.$('head').append('<meta property="og:image" content="'+model.get('author.profileImageURL')+'" />');
+        Ember.$('head').append('<meta property="mycqs_app:author" content="'+model.get('author.name')+'" />');
+        Ember.$('head').append('<meta property="mycqs_app:questions" content="'+model.get('totalQuestions')+'" />');
+        Ember.$('head').append('<meta property="mycqs_app:category" content="'+model.get('category.name')+'" />');
+        setTimeout(function () {
+            this.send('prerenderReady');
+        }.bind(this), 1500);
     }
 });

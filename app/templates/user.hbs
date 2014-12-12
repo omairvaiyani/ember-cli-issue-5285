@@ -103,10 +103,15 @@
                     <div class="card margin-top-16">
                         <!-- This will force fetch course and institution before displaying -->
                         {{#if course.name}}
-                            <p>In year {{yearNumber}} of <a {{bind-attr href=courseFacebookPageUrl}}
-                                    >{{course.name}}</a> at <a {{bind-attr href=institutionFacebookPageUrl}}
-                                    >{{institution.fullName}}</a>
-                            </p>
+                            <p><i class="fa fa-calendar-o margin-right-8"></i> Year {{yearNumber}}</p>
+
+                            <p><i class="fa fa-book margin-right-8"></i><a {{bind-attr href=courseFacebookPageUrl}}
+                                    target="_blank"
+                                    >{{course.name}}</a></p>
+                            <p><i class="fa fa-university margin-right-8"></i><a
+                                {{bind-attr href=institutionFacebookPageUrl}}
+                                    target="_blank"
+                                    >{{institution.fullName}}</a></p>
                         {{else}}
                             <p>{{#if isCurrentUser}}You have not{{else}}{{firstName}} has not{{/if}} added any
                                 course
@@ -124,9 +129,9 @@
             </div>
         </div>
 
-            <div {{bind-attr class=':action-column isCurrentUser:col-md-6:col-md-9'}}>
-                {{outlet}}
-            </div>
+        <div {{bind-attr class=':action-column isCurrentUser:col-md-6:col-md-9'}}>
+            {{outlet}}
+        </div>
         {{#if isCurrentUser}}
             <div class="col-md-3 col-fix-right">
 

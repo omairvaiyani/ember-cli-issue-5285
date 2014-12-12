@@ -1,19 +1,8 @@
-import
-    Ember
-    from
-        'ember';
-
-import
-    ParseHelper
-    from
-        '../utils/parse-helper';
-
+import Ember from 'ember';
+import ParseHelper from '../utils/parse-helper';
 import EmberParseAdapter from '../adapters/parse';
-
-import
-    ExpandingSearch
-    from
-        '../utils/expanding-search';
+import ExpandingSearch from '../utils/expanding-search';
+import EventTracker from '../utils/event-tracker';
 
 export default
     Ember.Controller.extend({
@@ -246,6 +235,7 @@ export default
                 .then(function (response) {
                     currentUser.set('isMobileUser', response);
                     currentUser.get('latestAttempts');
+                    EventTracker.profileUser(currentUser);
                 });
 
         }.observes('currentUser'),

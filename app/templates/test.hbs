@@ -9,9 +9,9 @@
                             {{category.parentCategoryName}}
                         {{/link-to}}
                     {{/link-to}}
-                    {{#link-to 'subcategory' category.parent.slug slug tagName='li'}}
-                        {{#link-to 'subcategory' category.parent.slug slug}}
-                        {{category.name}}
+                    {{#link-to 'subcategory' category.parentCategorySlug category.slug tagName='li'}}
+                        {{#link-to 'subcategory' category.parentCategorySlug category.slug}}
+                            {{category.name}}
                         {{/link-to}}
                     {{/link-to}}
                 {{else}}
@@ -22,7 +22,12 @@
                     {{/link-to}}
                 {{/if}}
                 {{#link-to 'testInfo' slug tagName='li'}}
+                    {{#link-to 'testInfo' slug}}
                         {{title}}
+                    {{/link-to}}
+                {{/link-to}}
+                {{#link-to 'test' slug tagName='li'}}
+                    Take test
                 {{/link-to}}
             </ol>
         </article>
@@ -72,14 +77,53 @@
                             <button class="flat-button" {{action 'nextQuestion'}}>Next</button>
                         </div>
                         <div class="col-md-2 text-center">
-                            <p>Q{{currentQuestionNumber}} of {{questions.length}}</p>
+                            <p class="margin-top-16">Q{{currentQuestionNumber}} of {{questions.length}}</p>
                         </div>
                         <div class="col-md-5">
                             <button class="flat-button pull-right"
                                 {{action 'confirmFinish'}}>Finish
                             </button>
                         </div>
+                        <div class="col-md-12 text-center">
+                            <a href="javascript:void(0)">
+                                <i class="fa fa-print" {{action 'readyToPrint'}}></i>
+                            </a>
+                        </div>
                     </div>
+                </div>
+                <div id="printView" style="display:none;">
+                    <h3>MyCQs - A social learning network</h3>
+                    <h4><small>https://mycqs.com</small></h4>
+                    <h4>{{title}} -
+                    <small class="margin-bottom-16">{{category.name}} written by {{author.name}}</small></h4>
+                    {{#each question in shuffledQuestions}}
+                        <div class="row margin-bottom-16">
+                            <div class="col-md-12">
+                            <span class="question-stem"><strong>Q{{math-helper _view.contentIndex '+' 1}}</strong>
+                                {{question.stem}}</span>
+                            </div>
+                        </div>
+
+                        {{#each option in question.shuffledOptions}}
+                            <div class="row">
+                                <div {{bind-attr class=":col-md-12"}}>
+                                    <span class="option-label margin-right-16">{{alphabetise-index _view.contentIndex}}</span>
+                                    <span class="phrase">{{option.phrase}}</span>
+                                </div>
+                            </div>
+                        {{/each}}
+                        <hr>
+                    {{/each}}
+                    <p class="margin-top-16">Correct Answers</p>
+
+                    <div style="transform: rotate(180deg);">
+                        {{#each question in shuffledQuestions itemController='test/item/question'}}
+                            Q{{question.itemNumber}}-{{alphabetise-index question.correctOptionIndex}}
+                            <p class="small">{{question.feedback}}</p>
+                        {{/each}}
+                    </div>
+
+                    <small>Copyright 2014 MyLabs Ltd. All rights reserved. https://mycqs.com</small>
                 </div>
             {{else}}
                 <div class="card text-center">

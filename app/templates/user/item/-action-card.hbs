@@ -12,7 +12,15 @@
                     {{#if userAction.testTitle}}
                         {{#link-to 'testInfo' userAction.testSlug}}{{userAction.testTitle}}{{/link-to}}
                         <small> in </small>
-                        {{#link-to 'category' userAction.testCategorySlug}}{{userAction.testCategoryName}}{{/link-to}}
+                        {{#if userAction.test.category.parentCategorySlug}}
+                            {{#link-to 'subcategory' userAction.test.category.parentCategorySlug userAction.testCategorySlug}}
+                                {{userAction.testCategoryName}}
+                            {{/link-to}}
+                        {{else}}
+                            {{#link-to 'category' userAction.testCategorySlug}}
+                                {{userAction.testCategoryName}}
+                            {{/link-to}}
+                        {{/if}}
                     {{/if}}
                 </p>
             </div>

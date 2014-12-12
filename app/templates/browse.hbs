@@ -6,25 +6,7 @@
     </div>
 </div>
 <div class="container">
-    <div class="row">
-        {{!--
-        <div class="col-md-12 freewall margin-bottom-16" id='top-category-container'>
-            {{#each category in content itemController='browse.item.category'}}
-                <div {{bind-attr style=category.style class=':item :card isGridReady::hidden'}}>
-                    {{#link-to 'category' category.slug}}
-                        {{svg-icon icon=category.name width=100 height=100 margin='auto'}}
-                    {{/link-to}}
-                    <h4>
-                        {{#link-to 'category' category.slug tagName='a'}}
-                            {{category.name}}
-                        {{/link-to}}
-                    </h4>
-                    <p class="subtitle">{{category.totalTests}} tests</p>
-                </div>
-            {{/each}}
-        </div>
-        --}}
-
+    <div class="row category-container">
         {{#each category in content}}
             <div class="col-xs-6 col-sm-3 col-md-2 col-lg-2 col-fix-middle margin-bottom-16">
                 <div {{bind-attr class=':item :card'}}>

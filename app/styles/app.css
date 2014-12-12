@@ -1468,7 +1468,8 @@ hr.user-message-item-separator {
 }
 
 /* TEMPLATE - BROWSE */
-.test-info-card {
+.category-container .card  {
+    min-height: 216px;
 }
 
 .test-info-card .profile-image {
@@ -1482,22 +1483,16 @@ hr.user-message-item-separator {
     background-size: cover;
 }
 
-.test-info-card .title-and-category {
-    position: absolute;
-    top: 16px;
-    left: 82px;
-    right: 16px;
+.test-info-card .test-details {
+    width: calc(100% - 82px);
 }
-
-.test-info-card .title-and-category h4, p.lead {
+.test-info-card .test-details h4, p {
     margin-top: 0px;
     margin-bottom: 0px;
 }
-
 .test-info-card .statistics {
-    margin-left: 66px;
-    height: 20px;
-    margin-top: -30px;
+    /*margin-left: 66px;*/
+    min-height: 20px;
 }
 
 .test-info-card .statistics > div p.lead {

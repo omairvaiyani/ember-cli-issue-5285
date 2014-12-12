@@ -48,7 +48,7 @@ export default
 
         courseFacebookPageUrl: function () {
             if (!this.get('course.facebookId'))
-                return;
+                return "/";
             return "https://www.facebook.com/" + this.get('course.facebookId');
         }.property('course.facebookId'),
 

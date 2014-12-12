@@ -162,7 +162,7 @@ export default
             this.store.findQuery('action', {
                 where: JSON.stringify(query),
                 order: "-createdAt",
-                include: "user,test.category",
+                include: "user,test.category.parent",
                 limit: 15
             }).then(function (actions) {
                 actions.forEach(function (action) {

@@ -492,6 +492,12 @@ EmberParseAdapter.ParseUser = DS.Model.extend({
         else
             return this.get('name');
     }.property('name.length'),
+    lastName: function () {
+        if (this.get('name.length') && this.get('name').split(' ')[1])
+            return this.get('name').split(' ')[this.get('name').split(' ').length - 1];
+        else
+            return "";
+    }.property('name.length'),
     fbid: DS.attr('string'),
     gender: DS.attr('string'),
     education: DS.attr(),
