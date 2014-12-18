@@ -4,7 +4,7 @@
     </div>
 </div>
 <div class="row">
-    <div class="col-md-6 margin-bottom-16">
+    <div class="col-md-12 margin-bottom-16">
         {{input type="text" placeholder="Enter a name for this group" classNames="form-control" value=name}}
     </div>
 </div>
@@ -14,26 +14,25 @@
     </div>
 </div>
 <div class="row">
-    <div class="col-md-6">
+    <div class="col-md-12">
         {{#each privacyOption in privacyOptions}}
             {{#if privacyOption.isSelected}}
-                <label class="text-capitalize margin-right-16">
+                <label class="text-capitalize margin-right-16 margin-bottom-8">
                     <input type="radio" name="privacy" {{bind-attr value=privacyOption.value}}
                            checked class="margin-right-8"/>
                     {{privacyOption.value}}
                 </label>
+                <p class="margin-bottom-16">{{privacyOption.description}}</p>
             {{else}}
-                <label class="text-capitalize margin-right-16">
+                <label class="text-capitalize margin-right-16 margin-bottom-8">
                     <input type="radio" name="privacy" {{bind-attr value=privacyOption.value}}
                         {{action "setPrivacy" privacyOption.value on="change"}}
                            class="margin-right-8"/>
                     {{privacyOption.value}}
                 </label>
+                <p class="margin-bottom-16">{{privacyOption.description}}</p>
             {{/if}}
         {{/each}}
-    </div>
-    <div class="col-md-6">
-        <p>{{privacyDescription}}</p>
     </div>
 </div>
 <div class="row">
@@ -50,17 +49,17 @@
         </div>
     </div>
     <div class="row">
-        <div class="col-md-6 margin-bottom-16">
+        <div class="col-md-12 margin-bottom-16">
             {{input type="text" placeholder="E.g. Medicine" classNames="form-control" value=course.name}}
         </div>
     </div>
     <div class="row">
         <div class="col-md-12">
-            <h5>University</h5>
+            <h5>Institution</h5>
         </div>
     </div>
     <div class="row">
-        <div class="col-md-6 margin-bottom-16">
+        <div class="col-md-12 margin-bottom-16">
             {{input type="text" placeholder="E.g. The University of Leeds" classNames="form-control" value=institution.fullName}}
         </div>
     </div>
@@ -70,7 +69,7 @@
         </div>
     </div>
     <div class="row">
-        <div class="col-md-6 margin-bottom-16">
+        <div class="col-md-12 margin-bottom-16">
             {{input type="text" placeholder="E.g. 2, Foundation, etc." classNames="form-control" value=yearOrGrade}}
         </div>
     </div>

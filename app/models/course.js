@@ -15,5 +15,11 @@ DS.Model.extend(ParseMixin, {
     institution: DS.belongsTo('university', {async: true}),
     institutionFacebookId: DS.attr('string'),
     structure: DS.attr(),
-    courseLength: DS.attr('number')
+    courseLength: DS.attr('number'),
+    facebookPageUrl: function () {
+        if(this.get('facebookId.length'))
+            return "https://facebook.com/"+this.get('facebookId');
+        else
+            return "#";
+    }.property('facebookId.length')
 });

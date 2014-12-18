@@ -8,6 +8,10 @@ export default Ember.Route.extend(CurrentUser, {
 
     controllerName: 'group.create',
 
+    renderTemplate: function() {
+        this.render('group/create');
+    },
+
     setupController: function (controller, model) {
         controller.set('model', model);
         if(this.get('currentUser.course')) {

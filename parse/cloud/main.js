@@ -12,7 +12,7 @@ Mandrill.initialize(mandrillKey);
  Stripe.initialize('sk_live_AbPy747DUMLo8qr53u5REcaX'); // live key
 
 var MyCQs = {
-    baseUrl: 'http://mycqs.com/'
+    baseUrl: 'https://mycqs.com/'
 };
 var FB = {
     API: {
@@ -455,7 +455,7 @@ function getUserProfileImageUrl(user) {
  * 80      // 80
  *
  * @param {Number} number
- * @return {float} float
+ * @return {Number} float
  */
 var maxTwoDP = function (number) {
     var float = +parseFloat(number).toFixed(2);
@@ -1602,7 +1602,6 @@ Parse.Cloud.define("resetPasswordRequest", function (request, response) {
     if (!email) {
         return response.error(Parse.Error.EMAIL_MISSING);
     }
-
     query.equalTo('email', email);
     query.find()
         .then(function (result) {
@@ -1781,7 +1780,7 @@ Parse.Cloud.define("sendPushToUser", function (request, response) {
     else
         console.log("Action params " + JSON.stringify(actionParams));
 
-    if(actionParams.name) {
+    if (actionParams.name) {
         actionUrl += "?" + actionParams[0].name + "=" + actionParams[0].content;
         if (actionParams.length > 0) {
             for (var i = 1; i < actionParams.length; i++) {
@@ -2610,7 +2609,7 @@ Parse.Cloud.define('activateSRSforUser', function (request, response) {
     if (activationKey !== "pacRe6e8rUthusuDEhEwUPEWrUpruhat")
         return response.error("Unauthorized request.");
 
-    if(!user) {
+    if (!user) {
         if (request.params.userId) {
             user = new Parse.User();
             user.id = request.params.userId;
@@ -3032,7 +3031,60 @@ Parse.Cloud.define('generateSitemapForTests', function (request, response) {
     }, function (error) {
         response.error(JSON.stringify(error));
     });
-});/*
+});
+
+/**
+ * @CloudFunction Add members to Group
+ * Add unique members to a group,
+ * add these members to the respective
+ * Parse.Role. Must return error if
+ * request.user is not a group moderator
+ * or admin.
+ * @param {String} groupId
+ * @param {Array} memberIds
+ */
+Parse.Cloud.define('addMembersToGroup', function (request, response) {
+    var user = request.user,
+        groupId = request.params.groupId,
+        memberIds = request.params.memberIds,
+        membersToAdd,
+        promises = [],
+        errorMessage;
+
+    var group = new Parse.Object('Group');
+    group.id = groupId;
+    group.fetch()
+        .then(function () {
+            if (group.get('admin').id !== user.id)
+                return errorMessage = "You do not have permission to edit this group.";
+            var query = new Parse.Query(Parse.User);
+            query.containedIn('objectId', memberIds);
+            return query.find();
+        }).then(function(results) {
+            membersToAdd = results;
+            var members = group.relation('members');
+            members.add(membersToAdd);
+            var query = new Parse.Query(Parse.Role);
+            query.equalTo('name', 'group-members-' + group.id);
+            return query.find();
+        }).then(function (results) {
+            var role = results[0];
+            if(!role)
+                return errorMessage = "Member roles not defined for group!";
+            role.getUsers().add(membersToAdd);
+            promises.push(role.save());
+            promises.push(group.save());
+            return Parse.Promise.when(promises);
+        }).then(function () {
+            if(errorMessage)
+                return response.error(errorMessage);
+            else
+                return response.success();
+        }, function (error) {
+            return response.error(JSON.stringify(error));
+        });
+});
+/*
  * SAVE LOGIC
  */
 /*
@@ -3106,7 +3158,7 @@ Parse.Cloud.beforeSave(Parse.User, function (request, response) {
         /*
          * Create a unique slug
          */
-        if(user.get('name'))
+        if (user.get('name'))
             user.set('name', capitaliseFirstLetter(user.get('name')));
         var slug = slugify('_User', user.get('name'));
         /*
@@ -3122,8 +3174,11 @@ Parse.Cloud.beforeSave(Parse.User, function (request, response) {
                     user.set('slug', slug);
                 else
                     user.set('slug', slug + (count + 1));
+
+                console.log("Setting slug to " + user.get('slug'));
             })
             .then(function () {
+                console.log(user.id + " " + 1);
                 /*
                  * Get cover photo url
                  */
@@ -3136,6 +3191,7 @@ Parse.Cloud.beforeSave(Parse.User, function (request, response) {
                     return;
             })
             .then(function (httpResponse) {
+                console.log(user.id + " " + 2);
                 if (httpResponse.cover && httpResponse.cover.source && httpResponse.cover.source.length)
                     user.set('coverImageURL', httpResponse.cover.source);
                 return;
@@ -3146,6 +3202,7 @@ Parse.Cloud.beforeSave(Parse.User, function (request, response) {
                 return;
             })
             .then(function () {
+                console.log(user.id + " " + 3);
                 if (!user.get('authData') || user.get('graphObjectId')) {
                     return;
                 }
@@ -3235,7 +3292,7 @@ Parse.Cloud.afterSave("_User", function (request) {
                     return;
             });
     }
-    if (!user.get('isProcessed') && !isAnonymous(user.get('authData'))) {
+    if (!user.get('isProcessed') && !isAnonymous(user.get('authData')) && user.get('slug')) {
         user.set('isProcessed', true);
         user.setACL(Security.createACLs(user, true));
         var Action = Parse.Object.extend('Action');
@@ -3949,4 +4006,90 @@ Parse.Cloud.beforeSave("Message", function (request, response) {
     ACLs.setWriteAccess(to, true);
     request.object.setACL(ACLs);
     response.success();
+});
+/**
+ * -----------------
+ * beforeSave Group
+ * -----------------
+ * - Must verify slug // TODO
+ */
+Parse.Cloud.beforeSave("Group", function (request, response) {
+    var group = request.object,
+        user = request.user;
+
+    if (group.get('areRolesSetUp')) {
+        /*
+         * Old group, in case privacy is changed..
+         * Set ACLs accordingly.
+         */
+        switch (group.get('privacy')) {
+            case "open":
+                group.getACL().setPublicReadAccess(true);
+                break;
+            case "closed":
+                group.getACL().setPublicReadAccess(true);
+                break;
+            case "secret":
+                group.getACL().setPublicReadAccess(false);
+                break;
+        }
+    }
+    return response.success();
+
+});
+/**
+ * -----------------
+ * afterSave Group
+ * -----------------
+ * - Roles and ACLs
+ */
+Parse.Cloud.afterSave("Group", function (request) {
+    var group = request.object,
+        user = request.user,
+        promises = [],
+        groupAdminsRole,
+        groupModeratorsRole,
+        groupMembersRole;
+
+    if (group.get('areRolesSetUp') || !user)
+        return;
+
+    Parse.Cloud.useMasterKey();
+
+    groupAdminsRole = new Parse.Role("group-admins-" + group.id, new Parse.ACL());
+    groupModeratorsRole = new Parse.Role("group-moderators-" + group.id, new Parse.ACL());
+    groupMembersRole = new Parse.Role('group-members-' + group.id, new Parse.ACL());
+    promises.push(groupAdminsRole.save());
+    promises.push(groupModeratorsRole.save());
+    promises.push(groupMembersRole.save());
+    Parse.Promise.when(promises)
+        .then(function () {
+            groupMembersRole.getACL().setRoleWriteAccess(groupModeratorsRole, true);
+            groupMembersRole.getACL().setRoleReadAccess(groupModeratorsRole, true);
+            groupMembersRole.getRoles().add(groupModeratorsRole);
+
+            groupModeratorsRole.getACL().setRoleWriteAccess(groupAdminsRole, true);
+            groupModeratorsRole.getACL().setRoleReadAccess(groupAdminsRole, true);
+            groupModeratorsRole.getRoles().add(groupAdminsRole);
+
+            groupAdminsRole.getACL().setRoleWriteAccess(groupAdminsRole, true);
+            groupAdminsRole.getACL().setRoleReadAccess(groupAdminsRole, true);
+            groupAdminsRole.getUsers().add(user);
+
+            promises.push(groupMembersRole.save());
+            promises.push(groupModeratorsRole.save());
+            promises.push(groupAdminsRole.save());
+            return Parse.Promise.when(promises);
+        }).then(function () {
+            var groupACL = new Parse.ACL(user);
+            groupACL.setRoleWriteAccess(groupModeratorsRole, true);
+            groupACL.setRoleReadAccess(groupMembersRole, true);
+            if (group.get('privacy') === "secret")
+                groupACL.setPublicReadAccess(false);
+            else
+                groupACL.setPublicReadAccess(true);
+            group.setACL(groupACL);
+            group.set('areRolesSetUp', true);
+            return group.save();
+        });
 });

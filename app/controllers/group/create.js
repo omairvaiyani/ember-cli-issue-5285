@@ -7,13 +7,20 @@ export default Ember.ObjectController.extend(CurrentUser, {
     privacyOptions: function () {
         var privacyOptions = [
             {
-                value: "open"
+                value: "open",
+                description: "This group will be open to the public. Anyone can view its tests, join the group" +
+                " and post comments."
             },
             {
-                value: "closed"
+                value: "closed",
+                description: "This group will be invite only. The public can find this group and see who's in" +
+                " it, but they cannot take tests made for the group."
             },
             {
-                value: "secret"
+                value: "secret",
+                description: "This group will be hidden from our website and search results. You can share the" +
+                " link with others so that they can interact with it as if it was a closed group. Member lists" +
+                " will be hidden."
             }];
         switch(this.get('privacy')) {
             case "open":
@@ -27,26 +34,6 @@ export default Ember.ObjectController.extend(CurrentUser, {
                 break;
         }
         return privacyOptions;
-    }.property('privacy.length'),
-
-    privacyDescription: function () {
-        var privacyDescription;
-        switch(this.get('privacy')) {
-            case "open":
-                privacyDescription = "This group will be open to the public. Anyone can view its tests, join the group" +
-                " and post comments.";
-                break;
-            case "closed": // lol
-                privacyDescription = "This group will be invite only. The public can find this group and see who's in" +
-                " it, but they cannot take tests made for the group.";
-                break;
-            case "secret":
-                privacyDescription = "This group will be hidden from our website and search results. You can share the" +
-                " link with others so that they can interact with it as if it was a closed group. Member lists" +
-                " will be hidden.";
-                break;
-        }
-        return privacyDescription;
     }.property('privacy.length'),
 
     suggestedSlug: function () {
@@ -63,12 +50,15 @@ export default Ember.ObjectController.extend(CurrentUser, {
             if (errorMessage)
                 return this.send('addNotification', 'warning', 'Hold on!', errorMessage);
 
-            this.set('admin', this.get('currentUser'));
+            this.set('creator', this.get('currentUser'));
+            this.get('admins').pushObject(this.get('currentUser'));
             this.send('incrementLoadingItems');
+            // TODO verify slug
+            this.set('slug', this.get(('suggestedSlug')));
             this.get('model').save()
                 .then(function () {
                     this.send('decrementLoadingItems');
-                    this.transitionTo('group', this.get('model'));
+                    this.transitionToRoute('group', this.get('model.slug'));
                 }.bind(this),
                 function (error) {
                     this.send('decrementLoadingItems');

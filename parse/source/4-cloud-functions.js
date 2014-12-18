@@ -226,7 +226,6 @@ Parse.Cloud.define("resetPasswordRequest", function (request, response) {
     if (!email) {
         return response.error(Parse.Error.EMAIL_MISSING);
     }
-
     query.equalTo('email', email);
     query.find()
         .then(function (result) {
@@ -405,7 +404,7 @@ Parse.Cloud.define("sendPushToUser", function (request, response) {
     else
         console.log("Action params " + JSON.stringify(actionParams));
 
-    if(actionParams.name) {
+    if (actionParams.name) {
         actionUrl += "?" + actionParams[0].name + "=" + actionParams[0].content;
         if (actionParams.length > 0) {
             for (var i = 1; i < actionParams.length; i++) {
@@ -1234,7 +1233,7 @@ Parse.Cloud.define('activateSRSforUser', function (request, response) {
     if (activationKey !== "pacRe6e8rUthusuDEhEwUPEWrUpruhat")
         return response.error("Unauthorized request.");
 
-    if(!user) {
+    if (!user) {
         if (request.params.userId) {
             user = new Parse.User();
             user.id = request.params.userId;
@@ -1656,4 +1655,56 @@ Parse.Cloud.define('generateSitemapForTests', function (request, response) {
     }, function (error) {
         response.error(JSON.stringify(error));
     });
+});
+
+/**
+ * @CloudFunction Add members to Group
+ * Add unique members to a group,
+ * add these members to the respective
+ * Parse.Role. Must return error if
+ * request.user is not a group moderator
+ * or admin.
+ * @param {String} groupId
+ * @param {Array} memberIds
+ */
+Parse.Cloud.define('addMembersToGroup', function (request, response) {
+    var user = request.user,
+        groupId = request.params.groupId,
+        memberIds = request.params.memberIds,
+        membersToAdd,
+        promises = [],
+        errorMessage;
+
+    var group = new Parse.Object('Group');
+    group.id = groupId;
+    group.fetch()
+        .then(function () {
+            if (group.get('admin').id !== user.id)
+                return errorMessage = "You do not have permission to edit this group.";
+            var query = new Parse.Query(Parse.User);
+            query.containedIn('objectId', memberIds);
+            return query.find();
+        }).then(function(results) {
+            membersToAdd = results;
+            var members = group.relation('members');
+            members.add(membersToAdd);
+            var query = new Parse.Query(Parse.Role);
+            query.equalTo('name', 'group-members-' + group.id);
+            return query.find();
+        }).then(function (results) {
+            var role = results[0];
+            if(!role)
+                return errorMessage = "Member roles not defined for group!";
+            role.getUsers().add(membersToAdd);
+            promises.push(role.save());
+            promises.push(group.save());
+            return Parse.Promise.when(promises);
+        }).then(function () {
+            if(errorMessage)
+                return response.error(errorMessage);
+            else
+                return response.success();
+        }, function (error) {
+            return response.error(JSON.stringify(error));
+        });
 });

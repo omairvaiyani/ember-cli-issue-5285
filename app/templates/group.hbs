@@ -1,1 +1,70 @@
-{{outlet}}
+<div class="full-width-cover-container">
+    <div class="cover-image" {{bind-attr style=coverStyle}}>
+        <div class="scrim"></div>
+        <div class="cover-info">
+            <div class="container">
+                <section class="row">
+                    <div class="col-md-8">
+                        <h3>{{name}}</h3>
+
+                        <p>
+                            <i class="fa fa-calendar-o margin-right-8"></i>
+                            Year {{yearOrGrade}}
+                            <i class="fa fa-book margin-right-8 margin-left-16"></i>
+                            <a {{bind-attr href=course.facebookPageUrl}}
+                                    target="_blank">{{course.name}}</a>
+                            <i class="fa fa-university margin-right-8 margin-left-16"></i>
+                            <a {{bind-attr href=institution.facebookPageUrl}}
+                                    target="_blank">{{institution.fullName}}</a>
+                            {{#if hasModeratorAccess}}
+                                <i class="fa fa-lock margin-right-8 margin-left-16"></i>
+                                <a href="javascript:void(0)" class="text-capitalize">{{privacy}}</a>
+                            {{/if}}
+                        </p>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="container">
+    <section class="row">
+        <article class="col-md-9 margin-top-16">
+            <section class="row">
+                <article class="col-md-4 margin-top-16">
+                    <button class="card btn">
+                        <i class="fa fa-pencil-square-o margin-right-8"></i> Create a Group Test
+                    </button>
+                </article>
+                <article class="col-md-4 col-fix-middle margin-top-16">
+                    <button class="card btn">
+                        <i class="fa fa-search-plus margin-right-8"></i> Search and add tests to Group
+                    </button>
+                </article>
+                <article class="col-md-4 margin-top-16">
+                    <button class="card btn">
+                        <i class="fa fa-comment margin-right-8"></i> Post a comment
+                    </button>
+                </article>
+            </section>
+        </article>
+        <article class="col-md-3 col-fix-right">
+            <div class="card">
+                <h4>Creator</h4>
+                {{#link-to 'user' creator.slug}}{{render 'profile-image' creator}}{{/link-to}}
+
+                <h4>Members</h4>
+
+                <div class="margin-bottom-16">
+                    {{#each member in membersPreview}}
+                        {{#link-to 'user' member.slug class="margin-bottom-8"}}
+                            {{render 'profile-image' member}}
+                        {{/link-to}}
+                    {{/each}}
+                </div>
+                <a href="javascript:void(0)"
+                    {{action 'openModal' 'group/modal/add-members' 'group'}}>+ add members</a>
+            </div>
+        </article>
+    </section>
+</div>

@@ -427,7 +427,7 @@ function getUserProfileImageUrl(user) {
  * 80      // 80
  *
  * @param {Number} number
- * @return {float} float
+ * @return {Number} float
  */
 var maxTwoDP = function (number) {
     var float = +parseFloat(number).toFixed(2);
