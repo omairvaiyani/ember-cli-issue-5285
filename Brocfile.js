@@ -66,13 +66,6 @@ app.import({
 });
 
 /*
- * FREEWALL
- */
-app.import({
-    development: 'bower_components/freewall/freewall.js',
-    production: 'bower_components/freewall/freewall.js'
-});
-/*
  * NUMERAL.JS
  */
 app.import({
@@ -83,10 +76,5 @@ app.import({
  * CSS TOGGLE SWITCH
  */
 app.import('bower_components/css-toggle-switch/dist/toggle-switch.css');
-
-/*
- * Auto complete component
- */
-app.import('bower_components/ic-autocomplete/dist/globals/main.js');
 
 module.exports = app.toTree();
