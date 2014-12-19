@@ -21,5 +21,6 @@ export default DS.Model.extend({
     slug: DS.attr('string'),
     course: DS.belongsTo('course', {async:true}),
     institution: DS.belongsTo('university', {async:true}),
-    yearOrGrade: DS.attr('string')
+    yearOrGrade: DS.attr('string'),
+    membersCanInvite: DS.attr('boolean')
 });

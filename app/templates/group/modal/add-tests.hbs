@@ -1,0 +1,42 @@
+<div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span
+            class="sr-only">Close</span></button>
+    <h4 class="modal-title">Add Tests</h4>
+</div>
+<div class="modal-body">
+    <div class="form-control taggable-input margin-bottom-16">
+        {{#each test in selectedSuggestedTests}}
+            <label class="default-tag">
+                {{test.title}}
+                <i class="fa fa-times-circle delete-tag" title="remove this test"
+                    {{action 'unselectSuggestedTest' test}}></i>
+            </label>
+        {{/each}}
+        {{input type="text" value=suggestedTestTitle id='suggestedTestTitle'
+        placeholder="What tests do you want to add?"}}
+    </div>
+    {{#if suggestedTests.length}}
+        <div class="autocomplete-container">
+            {{#each test in suggestedTests}}
+                <div {{bind-attr class=':autocomplete-row'}} {{action 'selectSuggestedTest' test}}>
+                    {{render 'profile-image' test.authorImageUrl}}
+                    <div class="title"><p>{{test.title}}</p></div>
+                </div>
+            {{/each}}
+        </div>
+    {{/if}}
+</div>
+<div class="modal-footer">
+    {{#if selectedSuggestedTests.length}}
+        {{async-button
+        class="btn btn-success"
+        action="addTestsToGroup"
+        default="Add Tests" pending="Adding..."
+        }}
+    {{else}}
+        <button class="btn btn-success" disabled>
+            Add Tests
+        </button>
+    {{/if}}
+</div>
+

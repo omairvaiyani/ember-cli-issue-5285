@@ -3055,12 +3055,10 @@ Parse.Cloud.define('addMembersToGroup', function (request, response) {
     group.id = groupId;
     group.fetch()
         .then(function () {
-            if (group.get('admin').id !== user.id)
-                return errorMessage = "You do not have permission to edit this group.";
             var query = new Parse.Query(Parse.User);
             query.containedIn('objectId', memberIds);
             return query.find();
-        }).then(function(results) {
+        }).then(function (results) {
             membersToAdd = results;
             var members = group.relation('members');
             members.add(membersToAdd);
@@ -3069,14 +3067,49 @@ Parse.Cloud.define('addMembersToGroup', function (request, response) {
             return query.find();
         }).then(function (results) {
             var role = results[0];
-            if(!role)
+            if (!role)
                 return errorMessage = "Member roles not defined for group!";
             role.getUsers().add(membersToAdd);
             promises.push(role.save());
             promises.push(group.save());
             return Parse.Promise.when(promises);
         }).then(function () {
-            if(errorMessage)
+            if (errorMessage)
+                return response.error(errorMessage);
+            else
+                return response.success();
+        }, function (error) {
+            return response.error(JSON.stringify(error));
+        });
+});
+/**
+ * @CloudFunction Add tests to Group
+ * Add unique tests to a group.
+ * @param {String} groupId
+ * @param {Array} testIds
+ */
+Parse.Cloud.define('addTestsToGroup', function (request, response) {
+    var user = request.user,
+        groupId = request.params.groupId,
+        testIds = request.params.testIds,
+        testsToAdd,
+        promises = [],
+        errorMessage;
+
+    var group = new Parse.Object('Group');
+    group.id = groupId;
+    group.fetch()
+        .then(function () {
+            var query = new Parse.Query("Test");
+            query.containedIn('objectId', testIds);
+            return query.find();
+        }).then(function (results) {
+            testsToAdd = results;
+            var tests = group.relation('gatheredTests');
+            tests.add(testsToAdd);
+            return group.save();
+        }).then(function () {
+            if (errorMessage)
                 return response.error(errorMessage);
             else
                 return response.success();

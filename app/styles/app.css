@@ -854,6 +854,7 @@ hr.user-message-item-separator {
 .full-width-cover-container .cover-image {
     background-size: cover;
     height: 100%;
+    margin-top: -20px;
 }
 .full-width-cover-container .cover-info {
     position: absolute;
@@ -1373,6 +1374,7 @@ hr.user-message-item-separator {
     background-color: white;
     z-index: 9;
     border: 1px #32492c solid;
+    margin-top: -16px;
 }
 
 .autocomplete-container.relative-layout {

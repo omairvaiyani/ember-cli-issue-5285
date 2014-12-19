@@ -18,7 +18,12 @@
                                     target="_blank">{{institution.fullName}}</a>
                             {{#if hasModeratorAccess}}
                                 <i class="fa fa-lock margin-right-8 margin-left-16"></i>
-                                <a href="javascript:void(0)" class="text-capitalize">{{privacy}}</a>
+                                {{view select content=privacyOptions value=privacy
+                                optionValuePath="content.value"
+                                optionLabelPath="content.label"}}
+                            {{else}}
+                                <i class="fa fa-lock margin-right-8 margin-left-16"></i>
+                                <label class="text-capitalize">{{privacy}}</label>
                             {{/if}}
                         </p>
                     </div>
@@ -29,25 +34,35 @@
 </div>
 <div class="container">
     <section class="row">
+        {{!-- Main Body --}}
         <article class="col-md-9 margin-top-16">
             <section class="row">
-                <article class="col-md-4 margin-top-16">
-                    <button class="card btn">
-                        <i class="fa fa-pencil-square-o margin-right-8"></i> Create a Group Test
-                    </button>
+                {{!-- Chat area --}}
+                <article class="col-md-5">
+                    <div class="card margin-top-16">
+                        CHAT AREA
+                    </div>
                 </article>
-                <article class="col-md-4 col-fix-middle margin-top-16">
-                    <button class="card btn">
-                        <i class="fa fa-search-plus margin-right-8"></i> Search and add tests to Group
-                    </button>
+
+                {{!-- List of Tests --}}
+                <article class="col-md-7 col-fix-right">
+                    <section class="row">
+                        <article class="col-md-6 margin-top-16">
+                            <button class="card btn">
+                                <i class="fa fa-pencil-square-o margin-right-8"></i> Create a Group Test
+                            </button>
+                        </article>
+                        <article class="col-md-6 col-fix-right margin-top-16">
+                            <button class="card btn" {{action 'openModal' 'group/modal/add-tests' 'group'}}>
+                                <i class="fa fa-search-plus margin-right-8"></i>  Add Tests to Group
+                            </button>
+                        </article>
+                    </section>
                 </article>
-                <article class="col-md-4 margin-top-16">
-                    <button class="card btn">
-                        <i class="fa fa-comment margin-right-8"></i> Post a comment
-                    </button>
-                </article>
+
             </section>
         </article>
+        {{!-- Member list (Right) --}}
         <article class="col-md-3 col-fix-right">
             <div class="card">
                 <h4>Creator</h4>
@@ -62,8 +77,11 @@
                         {{/link-to}}
                     {{/each}}
                 </div>
-                <a href="javascript:void(0)"
-                    {{action 'openModal' 'group/modal/add-members' 'group'}}>+ add members</a>
+                {{#if canAddMembers}}
+                    <a href="javascript:void(0)"
+                        {{action 'openModal' 'group/modal/add-members' 'group'}}>
+                        <i class="fa fa-plus margin-right-8"></i>Add members</a>
+                {{/if}}
             </div>
         </article>
     </section>
