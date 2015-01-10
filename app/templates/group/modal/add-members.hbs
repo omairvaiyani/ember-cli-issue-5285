@@ -28,10 +28,15 @@
 </div>
 <div class="modal-footer">
     {{#if selectedSuggestedMembers.length}}
-        <button class="btn btn-success pull-right"
-            {{action 'addMembersToGroup'}}>Add members</button>
+        {{async-button
+        class="btn btn-primary" action="addMembersToGroup"
+        default="Add members" pending="Adding..."
+        fulfilled='Members added!' rejected='Error! Try again later'
+        }}
     {{else}}
-        <button class="btn btn-success pull-right" disabled>Add members</button>
+        <button class="btn btn-primary" disabled>
+            Add members
+        </button>
     {{/if}}
 </div>
 

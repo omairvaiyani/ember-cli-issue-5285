@@ -54,7 +54,7 @@ body {
 .ic-autocomplete-input {
     width: 100%;
 }
-ic-autocomplete-toggle {
+.ic-autocomplete-toggle {
     display: none;
 }
 .btn-facebook {
@@ -87,12 +87,6 @@ ic-autocomplete-toggle {
     text-shadow: 1px 1px 1px rgba(0, 0, 0, .2);
 }
 
-.freewall {
-    margin: auto;
-}
-.freewall .item {
-    margin-left: 16px;
-}
 .hidden-file-input {
     position: absolute;
     left: -9999em;
@@ -239,11 +233,10 @@ input[type="range"]::-webkit-slider-thumb {
     margin: 0px;
 !important
 }
-
 .profile-image, .circular-image {
     width: 50px;
     height: 50px;
-    border-radius: 25px;
+    border-radius: 50%;
     background-size: cover;
     display: inline-block;
     vertical-align: middle;
@@ -526,7 +519,12 @@ input[type="range"]::-webkit-slider-thumb {
 .tag:hover::after {
     border-left-color: crimson;
 }
-
+.btn.fulfilled {
+    background-color: green;
+}
+.btn.rejected {
+    background-color: crimson;
+}
 /* NAVBAR */
 
 .navbar-main {
@@ -821,8 +819,6 @@ hr.user-message-item-separator {
 
 @media (min-width: 768px) {
     .mycqs-page-header {
-        padding-top: 60px;
-        padding-bottom: 60px;
         font-size: 18px;
         text-align: left;
     }
@@ -855,6 +851,8 @@ hr.user-message-item-separator {
     background-size: cover;
     height: 100%;
     margin-top: -20px;
+    margin-left: 0px;
+    margin-right: 0px;
 }
 .full-width-cover-container .cover-info {
     position: absolute;
@@ -1031,7 +1029,7 @@ hr.user-message-item-separator {
     bottom: 0px;
     left: 0px;
     right: 0px;
-    background-color: rgba(255, 255, 255, 0.2);
+    background: linear-gradient(to right, rgba(0, 0, 0, 0.23) 0%,rgba(255, 255, 255, 0.3) 100%);
 }
 
 .index-stats {
@@ -1097,7 +1095,9 @@ hr.user-message-item-separator {
     -webkit-filter: none;
     opacity: 1;
 }
-
+.grey-body {
+    background-color: #edf1f2;
+}
 /* TEMPLATE - USER */
 .cover-image {
     background-size: cover;
@@ -1375,6 +1375,8 @@ hr.user-message-item-separator {
     z-index: 9;
     border: 1px #32492c solid;
     margin-top: -16px;
+    max-height: 300px;
+    overflow-y: scroll;
 }
 
 .autocomplete-container.relative-layout {
@@ -1412,7 +1414,7 @@ hr.user-message-item-separator {
     pointer-events: none;
 }
 
-.autocomplete-row:hover, .autocomplete-row.is-focussed {
+.autocomplete-row:hover, .autocomplete-row.is-focused {
     background-color: rgb(241, 241, 241);
     cursor: pointer;
 }
@@ -1512,7 +1514,7 @@ hr.user-message-item-separator {
 }
 
 .test-info-card .test-details {
-    width: calc(100% - 82px);
+    width: calc(100% - 70px);
 }
 .test-info-card .test-details h4, p {
     margin-top: 0px;
@@ -1939,7 +1941,9 @@ body {
         padding-right: 1px;
     }
 }
-
+.cursor-pointer {
+    cursor: pointer;
+}
 .text-input-div-with-tag {
     padding: 7px 3px !important;
     height: 36px !important;
@@ -2004,11 +2008,19 @@ body {
     display: inline-block;
     vertical-align: middle;
 }
+.inline-top {
+    display: inline-block;
+    vertical-align: top;
+}
 
 .link-disabled {
     opacity: 0.4;
 !important pointer-events : none;
 !important
+}
+.linkify {
+    cursor: pointer;
+    color: #428bca;
 }
 
 .red-link {
@@ -2091,3 +2103,197 @@ body {
 .text-color-unimportant {
     color: #97A07D;
 }
+
+/**************************** PRICE BOX BODY **************************/
+.pricing-table {
+    text-align:center;
+    font-weight:400;
+    border:6px solid #1ABC9C;
+    margin-bottom:30px;
+    background:#fff;
+
+    -webkit-transition: all 0.2s ease-in-out;
+    -moz-transition: all 0.2s ease-in-out;
+    -o-transition: all 0.2s ease-in-out;
+    -ms-transition: all 0.2s ease-in-out;
+    transition: all 0.2s ease-in-out;
+}
+
+.pricing-table:hover{
+    -moz-box-shadow: 0 2px 8px 0 rgba(0,0,0,.5);
+    -webkit-box-shadow: 0 2px 8px 0 rgba(0,0,0,.5);
+    box-shadow: 0 2px 8px 0 rgba(0,0,0,.5);
+}
+
+
+
+/******************************** ROUND CORENERS ************************/
+
+.rounded{
+    -webkit-border-radius: 7px;
+    -moz-border-radius: 7px;
+    border-radius: 7px;
+}
+
+/******************************** COLORS BODY *************************/
+.pricing-table.green {
+    font-weight:400;
+    border: 6px solid #D7D7D7;
+}
+
+.pricing-table.red {
+    font-weight:400;
+    border:6px solid #E74C3C;
+}
+
+.pricing-table.orange {
+    font-weight:400;
+    border:6px solid #F39C12;
+}
+
+.pricing-table.dark-blue {
+    font-weight:400;
+    border:6px solid #34495E;
+}
+
+.pricing-table.blue {
+    font-weight:400;
+    border:6px solid #3498DB;
+}
+
+/********************************** BOX CONTENT ************************/
+.pricing-table-sign-up {
+    border-top:1px solid #BDC3C7;
+    padding:10px 20px;
+    background:#ECF0F1;
+}
+
+.pricing-table-features p {
+    text-align: left;
+    padding:16px 20px;
+}
+.pricing-table-features p:nth-child(2n){
+    background:#ECF0F1;
+}
+
+.pricing-table-features, .pricing-table-space{
+    background:#fff;
+}
+
+.pricing-table p{
+    padding:5px;
+    margin-top:5px;
+    font-size:110%;
+    font-weight:400;
+    background:#fff;
+}
+.pricing-table p strong{
+    font-weight:600;
+    margin-left: 8px;
+}
+
+
+/********************************* BOX HEADER ********************************/
+.pricing-table .pricing-table-header {
+    color:#fff;
+    background: #1ABC9C;
+    padding:0px;
+}
+
+.pricing-table-header .heading{
+    display:inline-block;
+    width:100%;
+    padding:15px 0px;
+    text-transform:uppercase;
+
+}
+
+/**************************** COLOR BOX HEDER ***************************/
+
+.pricing-table.orange .heading{
+    background: #F39C12;
+}
+
+.pricing-table.green .heading{
+    background: #2ECC71;
+}
+
+.pricing-table.red .heading{
+    background: #E74C3C;
+}
+
+.pricing-table.dark-blue .heading{
+    background: #34495E;
+}
+
+.pricing-table.blue .heading{
+    background: #3498DB;
+}
+
+
+.pricing-table .pricing-table-header .price-value{
+    background: #16A085;
+
+}
+
+.pricing-table.red .pricing-table-header .price-value{
+    background: #C0392B;
+
+}
+
+.pricing-table.orange .pricing-table-header .price-value{
+    background: #D35400;
+
+}
+.pricing-table.green .pricing-table-header .price-value{
+    background: #27AE60;
+
+}
+
+.pricing-table.dark-blue .pricing-table-header .price-value{
+    background: #2C3E50;
+
+}
+
+.pricing-table.blue .pricing-table-header .price-value{
+    background: #2980B9;
+
+}
+
+.pricing-table-header .price-value {
+    display:inline-block;
+    width:100%;
+    padding:20px 0px;
+    background: #1ABC9C;
+}
+
+.pricing-table-header .price-value span{
+    font-size:300%;
+}
+.pricing-table-header .price-value span.mo{
+    font-size:200%;
+}
+.pricing-table.blue .btn {
+    background: #2980B9;
+}
+/*Form Wizard*/
+.bs-wizard {border-bottom: solid 1px #e0e0e0; padding: 0 0 10px 0;}
+.bs-wizard > .bs-wizard-step {padding: 0; position: relative;}
+.bs-wizard > .bs-wizard-step + .bs-wizard-step {}
+.bs-wizard > .bs-wizard-step .bs-wizard-stepnum {color: #595959; font-size: 16px; margin-bottom: 5px;}
+.bs-wizard > .bs-wizard-step .bs-wizard-info {color: #999; font-size: 14px;}
+.bs-wizard > .bs-wizard-step > .bs-wizard-dot {position: absolute; width: 30px; height: 30px; display: block; background: rgba(153, 166, 144, 1); top: 45px; left: 50%; margin-top: -15px; margin-left: -15px; border-radius: 50%;}
+.bs-wizard > .bs-wizard-step > .bs-wizard-dot:after {content: ' '; width: 14px; height: 14px; background: #4f6640; border-radius: 50px; position: absolute; top: 8px; left: 8px; }
+.bs-wizard > .bs-wizard-step.active > .bs-wizard-dot:after {width: 22px;  height: 22px;  left: 4px;  top: 4px;}
+.bs-wizard > .bs-wizard-step > .progress {position: relative; border-radius: 0px; height: 8px; box-shadow: none; margin: 20px 0;}
+.bs-wizard > .bs-wizard-step > .progress > .progress-bar {width:0px; box-shadow: none; background:  rgba(153, 166, 144, 1);}
+.bs-wizard > .bs-wizard-step.completed > .progress > .progress-bar {width:100%;}
+.bs-wizard > .bs-wizard-step.active > .progress > .progress-bar {width:50%;}
+.bs-wizard > .bs-wizard-step:first-child.active > .progress > .progress-bar {width:0%;}
+.bs-wizard > .bs-wizard-step:last-child.active > .progress > .progress-bar {width: 100%;}
+.bs-wizard > .bs-wizard-step.disabled > .bs-wizard-dot {background-color: #f5f5f5;}
+.bs-wizard > .bs-wizard-step.disabled > .bs-wizard-dot:after {opacity: 0;}
+.bs-wizard > .bs-wizard-step:first-child  > .progress {left: 50%; width: 50%;}
+.bs-wizard > .bs-wizard-step:last-child  > .progress {width: 50%;}
+.bs-wizard > .bs-wizard-step.disabled a.bs-wizard-dot{ pointer-events: none; }
+/*END Form Wizard*/

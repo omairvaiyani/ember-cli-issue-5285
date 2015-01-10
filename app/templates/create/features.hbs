@@ -1,0 +1,94 @@
+<h4>How can it get any <strong>better</strong>?</h4>
+
+<h5>Select the package that best suits you</h5>
+<section class="row">
+    <article class="col-md-5 margin-top-16">
+        <div class="pricing-table red rounded"><!-- BODY BOX-->
+            <div class="pricing-table-header"><!-- HEADER BOX-->
+
+                <span class="heading">BASIC</span>
+                <span class="price-value">Free</span>
+
+            </div>
+            <!--/ BODY BOX-->
+
+            <div class="pricing-table-space"></div>
+            <!-- CONTENT BOX-->
+            <div class="pricing-table-features">
+                <p><strong>Create, practice and share </strong> multiple-choice question tests (MCQs)</p>
+
+                <p><strong>Unlimited</strong> questions with images</p>
+
+                <p><strong>Track</strong> results over time</p>
+
+                <p><strong>Save</strong> unlimited tests from the community</p>
+
+                <p><strong>Private</strong> tests for you and within Groups</p>
+
+                <p><strong>Sync</strong> everything between your desktop and mobile devices</p>
+            </div>
+            <!-- /  CONTENT BOX-->
+
+            <div class="pricing-table-sign-up"><!-- BUTTON BOX-->
+                {{#if currentUser}}
+                    <button class="btn btn-large btn-block btn-danger">Continue</button>
+                {{else}}
+                    <button {{action 'openModal' 'application/modal/login-or-register'}}
+                            class="btn btn-large btn-block btn-danger">Join now</button>
+                {{/if}}
+            </div>
+            <!-- BUTTON BOX-->
+        </div>
+        <!--/ BODY BOX-->
+    </article>
+    <article class="col-md-7 margin-top-16">
+        <div class="pricing-table blue rounded"><!-- BODY BOX-->
+            <div class="pricing-table-header"><!-- HEADER BOX-->
+
+                <span class="heading">PREMIUM</span>
+                <span class="price-value">$<span>1.41</span><span class="mo">/mo*</span></span>
+            </div>
+            <!--/ BODY BOX-->
+
+            <div class="pricing-table-space"></div>
+            <!-- CONTENT BOX-->
+            <div class="pricing-table-features">
+                <p><strong>Basic</strong> package</p>
+
+                <p><strong>Spaced Repetition Service</strong>: never forget what you learn!</p>
+
+                <p><strong>Personalised learning</strong>: we figure out what you should revise!</p>
+
+                <p><strong>Advanced statistics</strong> on your results</p>
+
+                <p><strong>Community statistics</strong>: breakdown on each question</p>
+
+                <p><strong>No contract</strong>: cancel at any time, no charge within 30 days.</p>
+
+                <p>* Value on annual $16.99 subscription, else $2.99/mo.</p>
+            </div>
+            <!-- /  CONTENT BOX-->
+
+            <div class="pricing-table-sign-up"><!-- BUTTON BOX-->
+                {{#if currentUser}}
+                    {{#if currentUser.privateData.isPremium}}
+                        <button disabled class="btn btn-large btn-block btn-info">Active</button>
+                    {{else}}
+                        {{#if currentUser.privateData.premiumMonthTrialRedeemed}}
+                            <button {{action 'openModal' 'application/modal/premium-payment' 'application/stripe'}}
+                                    class="btn btn-large btn-block btn-info">Upgrade now</button>
+                        {{else}}
+                            <button {{action 'openModal' 'application/modal/premium-payment' 'application/stripe'}}
+                                    class="btn btn-large btn-block btn-info">Start your free month trial!</button>
+                        {{/if}}
+                    {{/if}}
+                {{else}}
+                    <button {{action 'openModal' 'application/modal/premium-payment' 'application/stripe'}}
+                            class="btn btn-large btn-block btn-info">Start your free month trial!</button>
+                {{/if}}
+            </div>
+            <!-- BUTTON BOX-->
+        </div>
+        <!--/ BODY BOX-->
+    </article>
+</section>

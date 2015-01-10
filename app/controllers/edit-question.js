@@ -1,13 +1,5 @@
-import
-Ember
-from
-'ember';
-
-import
-validateQuestion
-from
-'../utils/validate-question';
-
+import Ember from 'ember';
+import validateQuestion from '../utils/validate-question';
 import EmberParseAdapter from '../adapters/parse';
 
 /*
@@ -15,8 +7,7 @@ import EmberParseAdapter from '../adapters/parse';
  * - edit.newQuestion
  * - editQuestion
  */
-export default
-Ember.ObjectController.extend({
+export default Ember.ObjectController.extend({
     needs: ['application', 'create'],
 
     featherEditor: null,
@@ -48,8 +39,10 @@ Ember.ObjectController.extend({
 
     imageFile: function () {
         if (this.get('model.image'))
-            return {name: 'image', url: this.get('model.image.url'), base64: null,
-                style: "background-image:url('" + this.get('model.image.url') + "');"};
+            return {
+                name: 'image', url: this.get('model.image.url'), base64: null,
+                style: "background-image:url('" + this.get('model.image.url') + "');"
+            };
         else
             return {name: 'image', url: '', base64: null, style: ''};
     }.property('model.image'),
@@ -248,17 +241,17 @@ Ember.ObjectController.extend({
                  */
                 var parseFile = new Parse.File('image.jpg', {base64: this.get('imageFile.base64')});
                 return parseFile.save().then(function (image) {
-                        var image = new EmberParseAdapter.File(image.name(), image.url());
-                        this.set('model.image', image);
-                        return this.get('model').save();
-                    }.bind(this)).
+                    var image = new EmberParseAdapter.File(image.name(), image.url());
+                    this.set('model.image', image);
+                    return this.get('model').save();
+                }.bind(this)).
                     then(function (question) {
                         this.get('questions').pushObject(question);
                         return this.get('test').save();
                     }.bind(this)).then(function (test) {
                         this.send('decrementLoadingItems');
                         this.set('saving', false);
-                        this.send('addNotification', 'saved', 'Question saved!', 'This test now has '+this.get('questions.length')+' questions.');
+                        this.send('addNotification', 'saved', 'Question saved!', 'This test now has ' + this.get('questions.length') + ' questions.');
                     }.bind(this));
             } else {
                 /*
@@ -271,7 +264,7 @@ Ember.ObjectController.extend({
                     }.bind(this)).then(function (test) {
                         this.send('decrementLoadingItems');
                         this.set('saving', false);
-                        this.send('addNotification', 'saved', 'Question saved!', 'This test now has '+this.get('questions.length')+' questions.');
+                        this.send('addNotification', 'saved', 'Question saved!', 'This test now has ' + this.get('questions.length') + ' questions.');
                     }.bind(this));
             }
         },
@@ -292,17 +285,17 @@ Ember.ObjectController.extend({
             if (this.get('imageFile.base64.length')) {
                 var parseFile = new Parse.File('image.jpg', {base64: this.get('imageFile.base64')});
                 return parseFile.save().then(function (image) {
-                        var image = new EmberParseAdapter.File(image.name(), image.url());
-                        this.set('model.image', image);
-                        return this.get('model').save();
-                    }.bind(this), function (error) {
-                        alert(error);
-                        // The file either could not be read, or could not be saved to Parse.
-                    }.bind(this)).then(function () {
-                        this.set('updating', false);
-                        this.send('decrementLoadingItems');
-                        this.send('addNotification', 'saved', 'Question updated!', 'Your test is up to date.');
-                    }.bind(this));
+                    var image = new EmberParseAdapter.File(image.name(), image.url());
+                    this.set('model.image', image);
+                    return this.get('model').save();
+                }.bind(this), function (error) {
+                    alert(error);
+                    // The file either could not be read, or could not be saved to Parse.
+                }.bind(this)).then(function () {
+                    this.set('updating', false);
+                    this.send('decrementLoadingItems');
+                    this.send('addNotification', 'saved', 'Question updated!', 'Your test is up to date.');
+                }.bind(this));
             } else {
                 this.get('model').save().then(function () {
                     this.set('updating', false);

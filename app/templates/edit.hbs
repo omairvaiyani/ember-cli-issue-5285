@@ -4,7 +4,8 @@
             <div class="card">
                 <div class="row">
                     <div class="col-md-12 margin-bottom-16">
-                        <h3>{{#link-to 'testInfo' slug}}{{title}}{{/link-to}} <small>{{category.name}}</small></h3>
+                        <h3>{{#link-to 'testInfo' slug}}{{title}}{{/link-to}} <small>{{category.name}}</small>
+                            {{#if group}}{{#link-to 'group' group.slug}}<small>{{group.name}}</small>{{/link-to}}{{/if}}</h3>
                     </div>
                 </div>
                 <div class="row">

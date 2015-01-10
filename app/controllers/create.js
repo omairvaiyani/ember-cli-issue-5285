@@ -1,16 +1,7 @@
-import
-Ember
-from
-'ember';
+import Ember from 'ember';
+import CurrentUser from '../mixins/current-user';
 
-
-import
-CurrentUser
-from
-'../mixins/current-user';
-
-export default
-Ember.ObjectController.extend(CurrentUser, {
+export default Ember.ObjectController.extend(CurrentUser, {
     needs: ['application', 'editQuestion'],
 
     isTestDirty: function () {
@@ -21,7 +12,7 @@ Ember.ObjectController.extend(CurrentUser, {
         else
             return false;
     }.property('isDirty', 'controllers.editQuestion.content.isDirty',
-            'controllers.editQuestion.content.areOptionsDirty'),
+        'controllers.editQuestion.content.areOptionsDirty'),
 
     categories: function () {
         return this.store.find('category');
@@ -68,9 +59,70 @@ Ember.ObjectController.extend(CurrentUser, {
     }.observes('privacyBoolean'),
 
     isCreatingNewQuestion: function () {
-        console.log(this.get('controllers.application.currentPath'));
         return this.get('controllers.application.currentPath') === "edit.newQuestion";
     }.property('controllers.application.currentPath'),
+
+    /*
+     * Group Test
+     */
+    selectedGroup: null,
+    setSelectedGroup: function () {
+        if (this.get('group'))
+            this.set('selectedGroup', this.get('group.content'));
+        else
+            this.set('selectedGroup', null);
+    }.observes('group.id'),
+    setGroup: function () {
+        if (this.get('group.id') !== this.get('selectedGroup.id'))
+            this.set('group', this.get('selectedGroup'));
+    }.observes('selectedGroup.id'),
+
+    getGroups: function () {
+        if (this.get('currentUser'))
+            this.get('currentUser').getGroups(this.store);
+    }.on('init'),
+
+    /*
+     * Join process
+     */
+    joinStep: {
+        create: {
+            active: false,
+            disabled: false,
+            completed: false
+        },
+        join: {
+            active: false,
+            disabled: true,
+            completed: false
+        },
+        personalise: {
+            active: false,
+            disabled: true,
+            completed: false
+        },
+        addQuestions: {
+            active: false,
+            disabled: true,
+            completed: false
+        }
+    },
+
+    inJoinProcess: function () {
+        if (!this.get('currentUser')) {
+            this.set('joinStep.create.active', true);
+            return true;
+        } else {
+            // Logged in but are they in the middle of joining?
+            if (this.get('joinStep.create.active') ||
+                this.get('joinStep.join.active') ||
+                this.get('joinStep.personalise.active') ||
+                this.get('joinStep.addQuestions.active'))
+                return true;
+            else
+                return false;
+        }
+    }.property('currentUser', 'joinStep'),
 
     actions: {
         removeCategory: function (category) {
@@ -80,27 +132,38 @@ Ember.ObjectController.extend(CurrentUser, {
             this.set('childCategory', null);
         },
 
-        beginAddingQuestions: function () {
+        checkTest: function () {
             if (!this.get('category.content')) {
                 this.send('addNotification', 'warning', 'Category not set!', 'You must set a category!');
                 return;
             } else if (!this.get('title.length')) {
                 this.send('addNotification', 'warning', 'Title not set!', 'You must set a title for the test!');
                 return;
-            } else if (!this.get('currentUser')) {
-                this.send('askGuestToSignUp');
+            } else if (this.get('inJoinProcess')) {
+                this.send('goToJoinStep', 'join');
                 return;
             } else {
                 this.set('model.author', this.get('currentUser'));
             }
+            if (this.get('selectedGroup.id')) {
+                this.set('group', this.get('selectedGroup'));
+                if (this.get('group.privacy') === 'open')
+                    this.set('privacy', 1);
+                else
+                    this.set('privacy', 0);
+            }
             this.send('incrementLoadingItems');
-            this.get('model').save().then(function (test) {
-                this.set('categorySelectionInput', '');
-                this.transitionToRoute('edit.newQuestion', test.get('slug'));
-                this.send('decrementLoadingItems');
-                if(this.get('currentUser.tests'))
-                    this.get('currentUser.tests').pushObject(this.get('model'));
-            }.bind(this));
+            this.get('model').save()
+                .then(function (test) {
+                    this.set('categorySelectionInput', '');
+                    this.transitionToRoute('edit.newQuestion', test.get('slug'));
+                    this.send('decrementLoadingItems');
+                    if (this.get('currentUser.tests'))
+                        this.get('currentUser.tests').pushObject(this.get('model'));
+                }.bind(this),
+                function (error) {
+                    this.send('decrementLoadingItems');
+                });
         },
 
         saveTest: function () {
@@ -171,7 +234,38 @@ Ember.ObjectController.extend(CurrentUser, {
                 this.send('addNotification', 'deleted', length + ' questions deleted!', 'Your test is up to date!');
         },
 
+        goToJoinStep: function (step) {
+            this.set('joinStep.create.active', false);
+            this.set('joinStep.join.active', false);
+            this.set('joinStep.personalise.active', false);
+            this.set('joinStep.addQuestions.active', false);
+            switch (step) {
+                case "create":
+                    this.set('joinStep.create.active', true);
+                    this.transitionToRoute('create.index');
+                    break;
+                case "join":
+                    if (this.get('currentUser'))
+                        return this.send('goToJoinStep', "personalise"); // Already joined.
+                    this.set('joinStep.create.completed', true);
+                    this.set('joinStep.join.disabled', false);
+                    this.set('joinStep.join.active', true);
+                    this.transitionToRoute('create.join');
+                    this.controllerFor('application').set('redirectAfterLoginToRoute', 'create.personalise');
+                    this.controllerFor('application').set('redirectAfterLoginToController', 'create');
+                    break;
+                case "personalise":
+                    this.set('joinStep.join.completed', true);
+                    this.set('joinStep.personalise.active', true);
+                    this.set('joinStep.personalise.disabled', false);
+                    this.transitionToRoute('create.personalise');
+                    break;
+            }
+        },
+
         /*
+         * Deprecated
+         *
          * No support for anonymous users on JS SDK
          * Therefore, force users to sign up/log in before
          * continuing. Redirect application route to
@@ -183,8 +277,12 @@ Ember.ObjectController.extend(CurrentUser, {
             this.send('openModal', 'application/modal/login-or-register', 'application');
             this.get('controllers.application').set('redirectAfterLoginToRoute', 'create');
         },
+
+
         returnedFromRedirect: function () {
-            this.send('beginAddingQuestions');
+            if (this.get('joinStep.join.active')) {
+                this.send('goToJoinStep', 'personalise');
+            }
         }
     }
 

@@ -1,5 +1,6 @@
 import DS from 'ember-data';
 import Ember from 'ember';
+import ParseHelper from '../utils/parse-helper';
 
 export default DS.Model.extend({
     name: DS.attr('string'),
@@ -22,5 +23,48 @@ export default DS.Model.extend({
     course: DS.belongsTo('course', {async:true}),
     institution: DS.belongsTo('university', {async:true}),
     yearOrGrade: DS.attr('string'),
-    membersCanInvite: DS.attr('boolean')
+    membersCanInvite: DS.attr('boolean'),
+    membersCanAddTests: DS.attr('boolean'),
+    getMembers: function (store) {
+        var where = {
+            "$relatedTo": {
+                "object": ParseHelper.generatePointer(this, "group"),
+                "key": "members"
+            }
+        };
+        return store.findQuery('parse-user', {where: JSON.stringify(where)})
+            .then(function(members) {
+                this.get('members').clear();
+                this.get('members').addObjects(members);
+                return members;
+            }.bind(this));
+    },
+    getGatheredTests: function (store) {
+        var where = {
+            "$relatedTo": {
+                "object": ParseHelper.generatePointer(this, "group"),
+                "key": "gatheredTests"
+            }
+        };
+        return store.findQuery('test', {where: JSON.stringify(where)})
+            .then(function(results) {
+                this.get('gatheredTests').clear();
+                this.get('gatheredTests').addObjects(results);
+                return results;
+            }.bind(this));
+    },
+    getGroupTests: function (store) {
+        var where = {
+            "$relatedTo": {
+                "object": ParseHelper.generatePointer(this, "group"),
+                "key": "groupTests"
+            }
+        };
+        return store.findQuery('test', {where: JSON.stringify(where)})
+            .then(function(results) {
+                this.get('groupTests').clear();
+                this.get('groupTests').addObjects(results);
+                return results;
+            }.bind(this));
+    }
 });

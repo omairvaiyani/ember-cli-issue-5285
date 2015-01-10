@@ -15,8 +15,8 @@
 </div>
 {{#unless category}}
     <div class="row">
-        <div class="col-md-12">
-            {{view Ember.Select
+        <div class="col-md-12 margin-bottom-16">
+            {{view 'select'
             classNames='form-control'
             content=parentCategories
             optionValuePath="content"
@@ -27,8 +27,8 @@
     </div>
     {{#if childCategories.length}}
         <div class="row">
-            <div class="col-md-12 margin-top-16">
-                {{view Ember.Select
+            <div class="col-md-12 margin-bottom-16">
+                {{view 'select'
                 classNames='form-control'
                 content=childCategories
                 optionValuePath="content"
@@ -39,7 +39,8 @@
         </div>
     {{/if}}
 {{else}}
-    {{#if category.parent}}<div {{action 'removeCategory' category.parent}} class="tag category-edit">{{category.parent.name}}</div>{{/if}}
+    {{#if category.parent}}
+        <div {{action 'removeCategory' category.parent}} class="tag category-edit">{{category.parent.name}}</div>{{/if}}
     <div {{action 'removeCategory' category}} class="tag category-edit">{{category.name}}</div>
 {{/unless}}
 <div class="row">
@@ -58,33 +59,56 @@
         <h5>SHARING</h5>
     </div>
 </div>
-<div class="row">
-    <div class="col-md-4">
-        <label class="switch-light well privacy-switch">
-            {{input type="checkbox" checked=privacyBoolean}}
-            <span>
+{{#if currentUser.groups.length}}
+    <div class="row">
+        <div class="col-md-12 margin-bottom-16">
+            {{view 'select'
+            classNames='form-control'
+            content=currentUser.groups
+            optionValuePath="content"
+            optionLabelPath="content.name"
+            value=selectedGroup
+            prompt="Make test for a Group?"
+            }}
+        </div>
+    </div>
+{{/if}}
+{{#unless selectedGroup.id}}
+    <div class="row">
+        <div class="col-md-4">
+            <label class="switch-light well privacy-switch">
+                {{input type="checkbox" checked=privacyBoolean}}
+                <span>
                 <span {{bind-attr class='privacyBoolean::is-active'}}>Private</span>
                 <span {{bind-attr class='privacyBoolean:is-active'}}>Public</span>
               </span>
-            <a class="btn"></a>
-        </label>
+                <a class="btn"></a>
+            </label>
+        </div>
     </div>
-</div>
-<div class="row">
-    <div class="col-md-12">
-        {{#if privacy}}
-            <p>This test is visible to everyone.</p>
-        {{else}}
-            <p>Only you can see this test.</p>
-        {{/if}}
+    <div class="row">
+        <div class="col-md-12">
+            {{#if privacy}}
+                <p>This test is visible to everyone.</p>
+            {{else}}
+                <p>Only you can see this test.</p>
+            {{/if}}
+        </div>
     </div>
-</div>
-
+{{else}}
+    <div class="row">
+        <div class="col-md-12">
+            <i class="fa fa-lock margin-right-8"></i>
+            <label class='text-capitalize'>{{group.privacy}}</label>
+        </div>
+    </div>
+{{/unless}}
 {{#if model.id}}
     <!-- Delete test button -->
     <div class="row">
         <div class="col-md-12 margin-top-16">
-            <button class="btn btn-danger" {{action 'openModal' 'edit/modal/confirmDelete' 'create'}}>Delete test</button>
+            <button class="btn btn-danger" {{action 'openModal' 'edit/modal/confirmDelete' 'create'}}>Delete test
+            </button>
         </div>
     </div>
 

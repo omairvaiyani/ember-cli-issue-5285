@@ -1,0 +1,33 @@
+<div class="full-width-cover-container">
+    <div class="cover-image margin-top-16" {{bind-attr style=group.coverStyle}}>
+        <div class="scrim"></div>
+        <div class="cover-info">
+            <div class="container">
+                <section class="row">
+                    <div class="col-md-8">
+                        <h3>{{#link-to 'group' group.slug}}{{group.name}}{{/link-to}}</h3>
+
+                        <p>
+                            <i class="fa fa-calendar-o margin-right-8"></i>
+                            Year {{group.yearOrGrade}}
+
+                            <i class="fa fa-book margin-right-8 margin-left-16"></i>
+                            <a {{bind-attr href=group.course.facebookPageUrl}}
+                                    target="_blank">{{group.course.name}}</a>
+
+                            <i class="fa fa-university margin-right-8 margin-left-16"></i>
+                            <a {{bind-attr href=group.institution.facebookPageUrl}}
+                                    target="_blank">{{group.institution.fullName}}</a>
+
+                            <i class="fa fa-group margin-right-8 margin-left-16"></i>
+                            <label class="text-capitalize margin-right-16">{{math-helper group.members.length "+" 1}}</label>
+
+                            <i class="fa fa-lock margin-right-8"></i>
+                            <label class="text-capitalize margin-right-16">{{group.privacy}}</label>
+                        </p>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+</div>

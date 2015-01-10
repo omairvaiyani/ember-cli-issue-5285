@@ -15,6 +15,16 @@ export default Ember.Route.extend({
                     this.set('notFound', true);
             }.bind(this));
     },
+    setupController: function (controller, model) {
+        if(this.get('notFound')) {
+            this.send('updateStatusCode', 404);
+            return;
+        }
+        controller.set('model', model);
+        model.getMembers(this.store);
+        model.getGroupTests(this.store);
+        model.getGatheredTests(this.store);
+    },
     /*
      * Instead of transitioning to Route.notFound
      * Trying this method of rendering a 404 template.

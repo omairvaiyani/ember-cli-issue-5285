@@ -12,87 +12,61 @@
             <div class="item active">
                 <div class="container-fluid course-selection">
                     <p class="lead">Enter course information</p>
-
                     <div class="row">
                         <div class="col-md-12">
-                            <p class="margin-top-16">Institution</p>
+                            <p>School or University</p>
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-md-11">
-                            {{#ic-autocomplete
-                            value=newCourse.institutionName
-                            inputValue=newCourse.institutionName
-                            on-select="clearAutocompleteList"
-                            placeholder="Enter an institution name"
+                        <div class="col-md-12">
+                            {{search-suggestions
+                                type='educationalInstitutions'
+                                labelPath='name'
+                                facebookSearch=true
+                                actionOnSelection='educationalInstitutionSelected'
+                                contextController=this
+                                defaultItem=newEducationCohort.institution.fbObject
                             }}
-                                {{#each autocompleteInstitutionNames}}
-                                    {{#ic-autocomplete-option value=fullName label=fullName}}
-                                        <div {{bind-attr class=':autocomplete-row'}}>
-                                            <div class="title"><p>{{fullName}}</p></div>
-                                        </div>
-                                    {{/ic-autocomplete-option}}
-                                {{else}}
-                                {{/each}}
-                            {{/ic-autocomplete}}
-                        </div>
-                        <div class="col-md-1 text-center">
-                            {{#if loading.autocompleteInstitutionNames}}
-                                <div class="loading-spinner"></div>
-                            {{/if}}
                         </div>
                     </div>
-
                     <div class="row">
                         <div class="col-md-12 margin-top-16">
                             <p>Course</p>
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-md-11">
-                            {{#ic-autocomplete
-                            value=newCourse.courseName
-                            inputValue=newCourse.courseName
-                            on-select="clearAutocompleteList"
-                            placeholder="Enter an institution name"
+                        <div class="col-md-12">
+                            {{search-suggestions
+                                type='studyFields'
+                                labelPath='name'
+                                facebookSearch=true
+                                actionOnSelection='studyFieldSelected'
+                                contextController=this
+                                defaultItem=newEducationCohort.studyField.fbObject
                             }}
-                                {{#each autocompleteCourseNames}}
-                                    {{#ic-autocomplete-option value=name label=name}}
-                                        <div {{bind-attr class=':autocomplete-row'}}>
-                                            <div class="title"><p>{{name}}</p></div>
-                                        </div>
-                                    {{/ic-autocomplete-option}}
-                                {{else}}
-                                {{/each}}
-                            {{/ic-autocomplete}}
-                        </div>
-                        <div class="col-md-1 text-center">
-                            {{#if loading.autocompleteCourseNames}}
-                                <div class="loading-spinner"></div>
-                            {{/if}}
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-md-12 margin-top-16">
-                            <p class="margin-bottom-16">Current study year</p>
+                            <p>Current study year</p>
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-md-11">
+                        <div class="col-md-12">
                             {{view 'select'
                             classNames='form-control'
-                            content=courseYearsToChooseFrom
+                            content=studyYearsToChooseFrom
                             optionValuePath="content"
                             optionLabelPath="content"
-                            selection=newCourse.yearNumber}}
-                        </div>
-                        <div class="col-md-1">
+                            selection=newEducationCohort.currentYear
+                            }}
                         </div>
                     </div>
-                    {{#if newCourse.canBeSaved}}
+                    {{#if newEducationCohort.isDirty}}
                         <div class="row">
                             <div class="col-md-12 margin-top-16">
-                                <button class="btn btn-primary" {{action 'saveCourseChanges' newCourse false}}>Save
+                                <button class="btn btn-primary" {{action 'saveEducationCohort'}}>
+                                    Save
                                 </button>
                             </div>
                         </div>

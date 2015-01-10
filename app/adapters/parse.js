@@ -1,5 +1,5 @@
 import DS from 'ember-data';
-
+import ParseHelper from '../utils/parse-helper';
 var EmberParseAdapter = {};
 EmberParseAdapter.Transforms = {};
 
@@ -565,7 +565,29 @@ EmberParseAdapter.ParseUser = DS.Model.extend({
     spacedRepetitionMaxQuestions: DS.attr('number'),
     spacedRepetitionIntensity: DS.attr('number'),
     spacedRepetitionNextDue: DS.attr('parse-date'),
-    latestSRSAttempt: DS.belongsTo('attempt', {async: true})
+    latestSRSAttempt: DS.belongsTo('attempt', {async: true}),
+
+    groups: new Ember.A(),
+    getGroups: function (store) {
+        var where = {
+            "$relatedTo": {
+                "object": ParseHelper.generatePointer(this, "_User"),
+                "key": "groups"
+            }
+        };
+        return store.findQuery('group', {where: JSON.stringify(where)})
+            .then(function(groups) {
+                this.get('groups').clear();
+                this.get('groups').addObjects(groups);
+                return groups;
+            }.bind(this));
+    },
+
+    /*
+     * Education
+     */
+    educationCohort: DS.belongsTo('education-cohort', {async: true}),
+    educationInfoConfirmed: DS.attr('boolean')
 });
 
 EmberParseAdapter.ParseUser.reopenClass({

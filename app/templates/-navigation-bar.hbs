@@ -30,14 +30,16 @@
             <ul class="nav navbar-nav">
                 {{#link-to 'index' tagName='li' title='Home'}}{{#link-to 'index' tagName='a'}}
                     Home{{/link-to}}{{/link-to}}
-                {{#link-to 'browse' tagName='li' title='Browse MCQ tests'}}{{#link-to 'browse' tagName='a'}}
-                    Browse{{/link-to}}{{/link-to}}
                 {{#link-to 'create' tagName='li' title='MCQ Test Maker'}}{{#link-to 'create' tagName='a'}}
                     Create{{/link-to}}{{/link-to}}
+                {{#link-to 'browse' tagName='li' title='Browse MCQ tests'}}{{#link-to 'browse' tagName='a'}}
+                    Browse{{/link-to}}{{/link-to}}
+                {{#link-to 'groups' tagName='li' title='Browse Groups'}}{{#link-to 'groups' tagName='a'}}
+                    Groups{{/link-to}}{{/link-to}}
                 {{#link-to 'support' tagName='li' title='Support and FAQs'}}{{#link-to 'support' tagName='a'}}
                     Support{{/link-to}}{{/link-to}}
-                {{#link-to 'contact' tagName='li' title='Contact us'}}{{#link-to 'contact' tagName='a'}}
-                    Contact{{/link-to}}{{/link-to}}
+                {{#link-to 'features' tagName='li' title='Features'}}{{#link-to 'features' tagName='a'}}
+                    Features{{/link-to}}{{/link-to}}
             </ul>
 
             {{!--{{view 'expanding-search'}} --}}
@@ -49,7 +51,8 @@
                     {{partial 'application/navbar/current-user'}}
                 {{else}}
                     <li>
-                        <a href='' {{action 'openModal' 'application/modal/login-or-register' 'application'}}>Log in | Start creating tests</a>
+                        <a href='' {{action 'openModal' 'application/modal/login-or-register' 'application'}}>Log in |
+                            Start creating tests</a>
                     </li>
                 {{/if}}
             </ul>

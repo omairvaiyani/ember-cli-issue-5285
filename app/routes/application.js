@@ -247,6 +247,7 @@ export default
              * - Once 'connected', we call the next method in the chain 'signUpAuthorisedFacebookUser'
              */
             facebookConnect: function () {
+                console.log("FB");
                 FB.login(function (response) {
                     if (response.authResponse) {
                         this.send('signUpAuthorisedFacebookUser', response.authResponse);
@@ -418,7 +419,12 @@ export default
             redirectAfterLogin: function () {
                 if (this.get('applicationController.redirectAfterLoginToRoute')) {
                     this.transitionTo(this.get('applicationController.redirectAfterLoginToRoute'));
-                    this.controllerFor(this.get('applicationController.redirectAfterLoginToRoute')).send('returnedFromRedirect');
+                    if(this.get('applicationController.redirectAfterLoginToController'))
+                        this.controllerFor(this.get('applicationController.redirectAfterLoginToController'))
+                            .send('returnedFromRedirect');
+                    else
+                        this.controllerFor(this.get('applicationController.redirectAfterLoginToRoute'))
+                            .send('returnedFromRedirect');
                     this.set('applicationController.redirectAfterLoginToRoute', null);
                 }
                 else if (!this.get('currentUser.finishedWelcomeTutorial')) {
@@ -435,11 +441,28 @@ export default
                     this.transitionTo('index');
             },
 
+            /**
+             * Open Modal
+             * - Must supply modalName.
+             * If controller name is set as *true*,
+             * controller path will be presumed as
+             * modalName.
+             *
+             * @param {String} modalName (Template)
+             * @param {String} controller (Name)
+             * @param {EmberModel} model
+             * @returns {*}
+             */
             openModal: function (modalName, controller, model) {
                 var myModal = jQuery('#myModal');
 
+                if(controller === true)
+                    controller = modalName;
+
                 if (model)
                     this.controllerFor(controller).set('model', model);
+
+
                 this.render(modalName, {
                     into: 'application',
                     outlet: 'modal',

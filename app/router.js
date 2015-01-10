@@ -29,7 +29,12 @@ Router.map(function () {
     /*
      * Test creation and edition
      */
-    this.route('create');
+    this.resource('create', {path: "create"}, function () {
+        this.route('join');
+        this.route('personalise');
+        this.route('features');
+        this.route('addQuestions');
+    });
     this.resource('edit', {path: 'edit/:test_slug'}, function () {
         this.route('newQuestion', {path: 'new-question'});
         this.resource('editQuestion', {path: ':question_id'});
@@ -45,6 +50,7 @@ Router.map(function () {
     /*
      * Groups
      */
+    this.resource('groups');
     this.route('createGroup', {path: 'group/create'});
     this.resource('group', {path: 'group/:group_slug'}, function () {
         this.resource('editGroup', {path: 'edit'});
@@ -70,9 +76,7 @@ Router.map(function () {
     /*
      * Premium dashboard. e.g. SRS
      */
-    this.resource('dashboard', function () {
-        this.route('srs');
-    });
+    this.resource('dashboard');
 
 
     /*

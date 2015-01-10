@@ -6,25 +6,25 @@
                 <section class="row">
                     <div class="col-md-8">
                         <h3>{{name}}</h3>
-
                         <p>
                             <i class="fa fa-calendar-o margin-right-8"></i>
                             Year {{yearOrGrade}}
+
                             <i class="fa fa-book margin-right-8 margin-left-16"></i>
                             <a {{bind-attr href=course.facebookPageUrl}}
                                     target="_blank">{{course.name}}</a>
+
                             <i class="fa fa-university margin-right-8 margin-left-16"></i>
                             <a {{bind-attr href=institution.facebookPageUrl}}
                                     target="_blank">{{institution.fullName}}</a>
-                            {{#if hasModeratorAccess}}
-                                <i class="fa fa-lock margin-right-8 margin-left-16"></i>
-                                {{view select content=privacyOptions value=privacy
-                                optionValuePath="content.value"
-                                optionLabelPath="content.label"}}
-                            {{else}}
-                                <i class="fa fa-lock margin-right-8 margin-left-16"></i>
-                                <label class="text-capitalize">{{privacy}}</label>
-                            {{/if}}
+
+                            <i class="fa fa-lock margin-right-8 margin-left-16"></i>
+                            <label class="text-capitalize margin-right-16">{{privacy}}</label>
+
+                            <label class="cursor-pointer" {{action 'openModal' 'group/modal/edit-group' 'group.create' model}}>
+                                <i class="fa fa-cog margin-right-8 "></i>
+                                Edit
+                            </label>
                         </p>
                     </div>
                 </section>
@@ -38,24 +38,59 @@
         <article class="col-md-9 margin-top-16">
             <section class="row">
                 {{!-- Chat area --}}
-                <article class="col-md-5">
+                <article class="col-md-4">
                     <div class="card margin-top-16">
                         CHAT AREA
                     </div>
                 </article>
 
                 {{!-- List of Tests --}}
-                <article class="col-md-7 col-fix-right">
+                <article class="col-md-8 col-fix-right">
                     <section class="row">
-                        <article class="col-md-6 margin-top-16">
-                            <button class="card btn">
-                                <i class="fa fa-pencil-square-o margin-right-8"></i> Create a Group Test
-                            </button>
+                        <article class="col-md-4 margin-top-16">
+                            {{#if canAddTestsToGroup}}
+                                {{#tool-tipster title="Create a Group Test" position="top" class="inline-block"}}
+                                    <a href="javascript:void(0)" class="margin-right-16"
+                                        {{action 'createAGroupTest'}}>
+                                        <i class="glyphicon glyphicon-plus-sign"></i>
+                                        Create
+                                    </a>
+                                {{/tool-tipster}}
+                                {{#tool-tipster title="Add tests to this Group" position="top" class="inline-block"}}
+                                    <a href="javascript:void(0)" class="margin-right-16"
+                                        {{action 'openModal' 'group/modal/add-tests' 'group'}}>
+                                        <i class="fa fa-search-plus"></i>
+                                        Add
+                                    </a>
+                                {{/tool-tipster}}
+                            {{/if}}
                         </article>
-                        <article class="col-md-6 col-fix-right margin-top-16">
-                            <button class="card btn" {{action 'openModal' 'group/modal/add-tests' 'group'}}>
-                                <i class="fa fa-search-plus margin-right-8"></i>  Add Tests to Group
-                            </button>
+                        <article class="col-md-8 margin-top-16">
+                            <div class="pull-right">
+                                {{view 'select' value=showAllTests class="margin-right-16"
+                                content=testsToShow optionValuePath='content.value' optionLabelPath='content.label'}}
+
+                                {{view 'select' value=orderTestsBy
+                                content=orderTypes optionValuePath='content.value' optionLabelPath='content.label'}}
+                            </div>
+                        </article>
+                    </section>
+                    <section class="row">
+                        <article class="col-md-12">
+                            {{#with hasModeratorAccess as hasModeratorAccess}}
+                                {{#if testsList.length}}
+                                    {{#each testsList itemController='browse.item.test'}}
+                                        {{partial 'group/item/test'}}
+                                    {{/each}}
+                                {{else}}
+                                    {{list-empty title="This Group has no Tests"
+                                    parentController=this
+                                    action1='createAGroupTest'
+                                    prompt1="Create a Group Test"
+                                    action2='openAddTestsModal'
+                                    prompt2="Add Tests to Group"}}
+                                {{/if}}
+                            {{/with}}
                         </article>
                     </section>
                 </article>
@@ -68,11 +103,17 @@
                 <h4>Creator</h4>
                 {{#link-to 'user' creator.slug}}{{render 'profile-image' creator}}{{/link-to}}
 
-                <h4>Members</h4>
+                <h4>Members
+                    {{#if members.length}}
+                        <a href="javascript:void(0)" {{action 'openModal' 'group/modal/members-list' 'group'}}>
+                            <small class="pull-right">view</small>
+                        </a>
+                    {{/if}}
+                </h4>
 
                 <div class="margin-bottom-16">
                     {{#each member in membersPreview}}
-                        {{#link-to 'user' member.slug class="margin-bottom-8"}}
+                        {{#link-to 'user' member.slug class="margin-bottom-8 inline-block"}}
                             {{render 'profile-image' member}}
                         {{/link-to}}
                     {{/each}}

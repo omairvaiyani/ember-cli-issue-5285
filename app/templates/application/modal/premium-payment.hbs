@@ -1,0 +1,58 @@
+<div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span
+            class="sr-only">Close</span></button>
+    <h4 class="modal-title">Upgrade to Premium</h4>
+</div>
+<div class="modal-body">
+    <div class="container-fluid">
+        <section class="row">
+            <article class="col-md-12 text-center">
+                <h3>Pick your payment plan!</h3>
+
+                <div class="currency-selection">
+                    <i {{bind-attr class=":fa :fa-usd isSelectedCurrencyUSD:active"}}
+                        {{action 'selectCurrency' 'usd'}}></i>
+                    <i {{bind-attr class=":fa :fa-gbp :margin-right-16 isSelectedCurrencyGBP:active"}}
+                        {{action 'selectCurrency' 'gbp'}}></i>
+                    {{!--<i {{bind-attr class=":fa :fa-eur isSelectedCurrencyEUR:active"}}
+                        {{action 'selectCurrency' 'eur'}}></i>--}}
+
+                    <p class="margin-top-16 margin-bottom-16 text-uppercase">{{selectedCurrency}}</p>
+                </div>
+
+                {{#each plan in plansInSelectedCurrency}}
+                    {{#async-button class="btn btn-info margin-bottom-16" action='openCheckoutHandler' param1=plan}}
+                        {{plan.name}} - {{stripe-price plan.currency plan.amount}}
+                    {{/async-button}}
+                    <br>
+                {{/each}}
+                <div class="container-fluid">
+                    <section class="row">
+                        <article class="col-md-6 col-md-offset-3 margin-bottom-16">
+                            {{input type="text" class="form-control" value=promoCode placeholder="Promotional Code"
+                            action='redeemPromoCode'}}
+                        </article>
+                        <article class="col-md-12">
+                            {{#unless subscriptionMessage.length}}
+                                {{async-button class="btn btn-success" action='redeemPromoCode'
+                                default="Redeem Code" pending="Validating..." rejected="Error!"
+                                fulfilled="Code Activated!" reset=true}}
+                            {{else}}
+                                <h4 class="margin-top-16">{{subscriptionMessage}}</h4>
+                            {{/unless}}
+                        </article>
+                    </section>
+                </div>
+                <hr>
+
+                <p>Payments are made <strong>securely</strong> using <a href="https://stripe.com"
+                                                                        target="_blank">Stripe</a>.
+                    You may cancel at any point the subscription at any point, otherwise,
+                    your card will be automatically charged at the interval you pick.</p>
+
+                <a href="https://stripe.com" target="_blank"><img src="/img/stripe/powered-by.png" height="30px"
+                                                                  class="margin-bottom-16 margin-top-16"/></a>
+            </article>
+        </section>
+    </div>
+</div> <!-- /modal-body -->

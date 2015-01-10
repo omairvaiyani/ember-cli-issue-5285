@@ -23,29 +23,45 @@
                 <p class="margin-bottom-8">{{text-preview description 80}}</p>
                 <div class="statistics">
                     <div class="container-fluid">
-                        <div class="row">
-                            <div class="col-md-3 col-xs-4 margin-bottom-8">
-                                <div class="text-center"><p>Q{{totalQuestions}}</p></div>
+                        <section class="row">
+                            <div class="col-md-6 col-sm-6 col-xs-12 col-fix-right">
+                                <label class="margin-right-8">
+                                    {{#tool-tipster title="Total questions" position="top"}}
+                                        Q{{totalQuestions}}
+                                    {{/tool-tipster}}
+                                </label>
+                                <label class="margin-right-8">
+                                    {{#tool-tipster title="Number of community attempts" position="top"}}
+                                        <i class='fa fa-bar-chart-o'></i>
+                                        {{numberOfAttempts}}
+                                    {{/tool-tipster}}
+                                </label>
+                                <label class="margin-right-8">
+                                    {{#tool-tipster title="Community Average score" position="top"}}
+                                        <i class='glyphicon glyphicon-stats'></i>
+                                        {{math-round averageScore 2}}%
+                                    {{/tool-tipster}}
+                                </label>
                             </div>
-                            <div class="col-md-3 col-xs-4 margin-bottom-8">
-                                <div class="text-center">
-                                    <p>Attempts {{numberOfAttempts}}</p></div>
+                            <div class="col-md-6 col-sm-6 col-xs-12 col-fix-middle">
+                                <div class="pull-right">
+                                    <label class="margin-right-8">
+                                        {{#tool-tipster title="Take Test!" position="top"}}
+                                            {{#link-to 'test' slug}}<i class="fa fa-pencil-square-o"></i>{{/link-to}}
+                                        {{/tool-tipster}}
+                                    </label>
+                                    {{#if isCurrentUsersTest}}
+                                        <label>
+                                            {{#tool-tipster title="Edit Test" position="top"}}
+                                                {{#link-to 'edit' slug tagName='a'}}
+                                                    <i class="fa fa-file-text-o"></i>
+                                                {{/link-to}}
+                                            {{/tool-tipster}}
+                                        </label>
+                                    {{/if}}
+                                </div>
                             </div>
-                            <div class="col-md-3 col-xs-4 margin-bottom-8">
-                                <div class="text-center">
-                                    <p>Avg Score {{math-round averageScore 2}}%</p></div>
-                            </div>
-                            <div class="col-md-3 col-xs-4 text-center">
-                                {{#link-to 'test' slug}}<i class="fa fa-pencil-square-o"> Take now</i>{{/link-to}}
-                            </div>
-                            <div class="col-md-3 col-xs-4 text-center">
-                                {{#if isCurrentUsersTest}}
-                                    {{#link-to 'edit' slug tagName='a'}}
-                                        <i class="fa fa-pencil-square"> Edit test</i>
-                                    {{/link-to}}
-                                {{/if}}
-                            </div>
-                        </div>
+                        </section>
                     </div>
                 </div>
             </div>

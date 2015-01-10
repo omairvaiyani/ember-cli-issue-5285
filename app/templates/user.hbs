@@ -101,27 +101,24 @@
             <div class="row">
                 <div class="col-md-12">
                     <div class="card margin-top-16">
-                        <!-- This will force fetch course and institution before displaying -->
-                        {{#if course.name}}
-                            <p><i class="fa fa-calendar-o margin-right-8"></i> Year {{yearNumber}}</p>
-
-                            <p><i class="fa fa-book margin-right-8"></i><a {{bind-attr href=courseFacebookPageUrl}}
-                                    target="_blank"
-                                    >{{course.name}}</a></p>
-                            <p><i class="fa fa-university margin-right-8"></i><a
-                                {{bind-attr href=institutionFacebookPageUrl}}
-                                    target="_blank"
-                                    >{{institution.fullName}}</a></p>
-                        {{else}}
-                            <p>{{#if isCurrentUser}}You have not{{else}}{{firstName}} has not{{/if}} added any
-                                course
-                                information yet.</p>
+                        {{#if educationCohort.isFulfilled}}
+                            {{#if educationCohort.institution}}
+                                <p><i class="fa fa-university margin-right-8"></i><a
+                                    {{bind-attr href=educationCohort.institution.fbObject.link}}
+                                        target="_blank">{{educationCohort.institution.name}}</a></p>
+                            {{/if}}
+                            {{#if educationCohort.studyField}}
+                                <p><i class="fa fa-book margin-right-8"></i><a
+                                    {{bind-attr href=educationCohort.studyField.fbObject.link}}
+                                        target="_blank">{{educationCohort.studyField.name}}</a></p>
+                            {{/if}}
+                            {{#if educationCohort.currentYear}}
+                                <p><i class="fa fa-group margin-right-8"></i>{{educationCohort.currentYear}}</p>
+                            {{/if}}
                         {{/if}}
                         {{#if isEditMode}}
-                            <p>
-                                <a href=''
-                                    {{action 'openModal' 'user/modal/course-selection' 'user'}}>Add or Edit course
-                                    details</a>
+                            <p class="linkify"
+                                {{action 'openModal' 'user/modal/course-selection' 'user'}}>Add or Edit Education
                             </p>
                         {{/if}}
                     </div>

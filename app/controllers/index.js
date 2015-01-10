@@ -84,6 +84,8 @@ export default
 
         homeIsAttempts: false,
 
+        homeIsGroups: false,
+
         tests: [],
 
         testsAreOrderedByTitle: true,
@@ -182,6 +184,20 @@ export default
             }.bind(this));
         }.observes('initialized', 'currentUser.following.length'),
 
+        getGroups: function () {
+            if (this.get('currentUser.groups.length'))
+                return;
+            return this.get('currentUser').getGroups(this.store);
+            var where = {
+                creator: ParseHelper.generatePointer(this.get('currentUser', "_User"))
+            };
+            this.store.findQuery("group", {where: JSON.stringify(where)})
+                .then(function (groups) {
+                    this.get('currentUser.groups').clear();
+                    this.get('currentUser.groups').addObjects(groups);
+                }.bind(this));
+        }.observes('homeIsGroups'),
+
         /**
          * @Observes Set the Generated SRS test
          */
@@ -214,6 +230,7 @@ export default
                 this.set('homeIsActivities', false);
                 this.set('homeIsTests', false);
                 this.set('homeIsAttempts', false);
+                this.set('homeIsGroups', false);
 
                 switch (navigation) {
                     case 'activities':
@@ -224,6 +241,9 @@ export default
                         break;
                     case 'attempts':
                         this.set('homeIsAttempts', true);
+                        break;
+                    case 'groups':
+                        this.set('homeIsGroups', true);
                         break;
                 }
 

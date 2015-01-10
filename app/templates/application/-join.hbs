@@ -1,0 +1,80 @@
+<div class="text-center">
+    <button class="btn btn-facebook" {{action 'facebookConnect'}}>
+        <i class="fa fa-facebook margin-right-16"></i>Connect with Facebook
+    </button>
+</div>
+
+<hr>
+<h3>Or sign up with your Email</h3>
+
+<h4>Name</h4>
+
+<div class="row">
+    {{#if signUpValidationErrors.name}}
+        <div class="col-md-12 text-center sign-up-validation margin-bottom-16">
+            <span class="alert alert-danger">Full name please!</span>
+        </div>
+    {{/if}}
+    <div class="col-md-12 margin-bottom-16">
+        {{input type='text' value=newUser.name action='signUp'
+        placeholder='Please enter your full name' classNames='form-control'
+        }}
+    </div>
+</div>
+
+<h4>Email</h4>
+
+<div class="row">
+    {{#if signUpValidationErrors.email}}
+        <div class="col-md-12 text-center sign-up-validation margin-bottom-16">
+            <span class="alert alert-danger">Invalid email</span>
+        </div>
+    {{/if}}
+    <div class="col-md-12 margin-bottom-16">
+        {{input type='email' value=newUser.email action='signUp'
+        placeholder='University or college email recommended' classNames='form-control'}}
+    </div>
+</div>
+
+<h4>Password</h4>
+
+<div class="row">
+    {{#if signUpValidationErrors.password}}
+        <div class="col-md-12 text-center sign-up-validation margin-bottom-16">
+            <span class="alert alert-danger">6-18 characters only</span>
+        </div>
+    {{/if}}
+    <div class="col-md-12 margin-bottom-16">
+        {{input type='password' value=newUser.password action='signUp'
+        placeholder='Enter a password' classNames='form-control'}}
+    </div>
+</div>
+
+<h4>Confirm password</h4>
+
+<div class="row">
+    {{#if signUpValidationErrors.confirmPassword}}
+        <div class="col-md-12 text-center sign-up-validation margin-bottom-16">
+            <span class="alert alert-danger">Mismatch!</span>
+        </div>
+    {{/if}}
+    <div class="col-md-12 margin-bottom-16">
+        {{input type='password' value=newUser.confirmPassword action='signUp'
+        placeholder='Retype your password just to make sure' classNames='form-control'}}
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12 text-center margin-bottom-16">
+        <button class="btn btn-primary" {{action 'signUp'}}>
+            Sign me up!
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12 text-center">
+        <p>View our <a href='/privacy-policy' target="_blank">Privacy Policy</a>
+            and <a href='/terms' target="_blank">Terms & Conditions</a>.</p>
+    </div>
+</div>

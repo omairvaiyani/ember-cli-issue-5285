@@ -6,7 +6,6 @@ from
 export default
 Ember.Route.extend({
     model: function (params, transition) {
-        console.log("Changing model in Route.Category "+JSON.stringify(params));
         if(params.category_slug.toLowerCase() === "all")
             return {};
 

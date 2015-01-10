@@ -24,5 +24,12 @@ export default Ember.Route.extend(CurrentUser, {
         if(this.get('currentUser.yearNumber')) {
             controller.set('yearOrGrade', this.get('currentUser.yearNumber'));
         }
+    },
+
+    actions: {
+        willTransition: function () {
+            if (!this.controllerFor('createGroup').get('model.id'))
+                this.controllerFor('createGroup').get('model').destroyRecord();
+        }
     }
 });

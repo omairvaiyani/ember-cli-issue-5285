@@ -29,12 +29,12 @@
 <div class="modal-footer">
     {{#if selectedSuggestedTests.length}}
         {{async-button
-        class="btn btn-success"
-        action="addTestsToGroup"
+        class="btn btn-primary" action="addTestsToGroup"
         default="Add Tests" pending="Adding..."
+        fulfilled='Tests added!' rejected='Error! Try again later'
         }}
     {{else}}
-        <button class="btn btn-success" disabled>
+        <button class="btn btn-primary" disabled>
             Add Tests
         </button>
     {{/if}}

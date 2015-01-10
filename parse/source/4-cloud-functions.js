@@ -456,6 +456,10 @@ Parse.Cloud.define("sendPushToUser", function (request, response) {
  * university objects while updating the user's
  * education pointers and info.
  *
+ * NOTE - Can now be used for Groups
+ * Just send:
+ * @param {String} groupId
+ *
  * request.params:
  * @param education {
  *  courseName
@@ -471,94 +475,109 @@ Parse.Cloud.define("sendPushToUser", function (request, response) {
 Parse.Cloud.define("updateUserEducation", function (request, response) {
     Parse.Cloud.useMasterKey();
     var education = request.params.education,
-        user = request.user;
+        user = request.user,
+        groupId = request.params.groupId,
+        group,
+        promises = [];
 
-    /*
-     * Find university from institutionName
-     * Otherwise create a new university object
-     */
-    var query = new Parse.Query('University');
-    query.equalTo('fullName', education.institutionName);
+    if (groupId) {
+        group = new Parse.Object("Group");
+        group.id = groupId;
+        promises.push(group.fetch());
+    }
 
-    query.find()
-        .then(function (results) {
-            if (results.length) {
-                /*
-                 * University already exists:
-                 * - Check to add facebookId
-                 * - Return it to the next promise
-                 */
-                var university = results[0];
-                /*
-                 * If this university was previously added to the database
-                 * manually, it many not have a facebookId. If the current
-                 * user has selected it from the facebook education list,
-                 * we can use the opportunity to update the university.
-                 */
-                if (!university.get('facebookId') && education.institutionFacebookId) {
-                    university.set('facebookId', education.institutionFacebookId);
-                    return university.save();
-                } else
-                    return university;
-            } else {
-                /*
-                 * University not found:
-                 * - Create a new one
-                 * - Save it and return the promise
-                 */
-                var University = Parse.Object.extend('University'),
-                    newUniversity = new University();
-                newUniversity.set('fullName', education.institutionName);
-                if (education.institutionFacebookId)
-                    newUniversity.set('facebookId', education.institutionFacebookId);
-                return newUniversity.save();
-            }
-        }).then(function (university) {
+
+    Parse.Promise.when(promises).then(function () {
+        /*
+         * Find university from institutionName
+         * Otherwise create a new university object
+         */
+        var query = new Parse.Query('University');
+        query.equalTo('fullName', education.institutionName);
+
+        return query.find();
+    }).then(function (results) {
+        if (results.length) {
+            /*
+             * University already exists:
+             * - Check to add facebookId
+             * - Return it to the next promise
+             */
+            var university = results[0];
+            /*
+             * If this university was previously added to the database
+             * manually, it many not have a facebookId. If the current
+             * user has selected it from the facebook education list,
+             * we can use the opportunity to update the university.
+             */
+            if (!university.get('facebookId') && education.institutionFacebookId) {
+                university.set('facebookId', education.institutionFacebookId);
+                return university.save();
+            } else
+                return university;
+        } else {
+            /*
+             * University not found:
+             * - Create a new one
+             * - Save it and return the promise
+             */
+            var University = Parse.Object.extend('University'),
+                newUniversity = new University();
+            newUniversity.set('fullName', education.institutionName);
+            if (education.institutionFacebookId)
+                newUniversity.set('facebookId', education.institutionFacebookId);
+            return newUniversity.save();
+        }
+    }).then(function (university) {
+        if (!group) {
             /*
              * Add university (new or old) to the user
              */
             user.set('institution', university);
+        } else
+            group.set('institution', university);
 
+        /*
+         * Find the course object:
+         * - It has to match the name
+         * - It has to match the university
+         */
+        query = new Parse.Query('Course');
+        query.equalTo('name', education.courseName);
+        query.equalTo('institution', university);
+        return query.find();
+    }).then(function (results) {
+        if (results.length) {
             /*
-             * Find the course object:
-             * - It has to match the name
-             * - It has to match the university
+             * Course exists:
+             * - Return it as a promise
              */
-            query = new Parse.Query('Course');
-            query.equalTo('name', education.courseName);
-            query.equalTo('institution', university);
-            return query.find();
-        }).then(function (results) {
-            if (results.length) {
-                /*
-                 * Course exists:
-                 * - Return it as a promise
-                 */
-                var course = results[0];
-                if (!course.get('institutionFacebookId') && education.institutionFacebookId) {
-                    course.set('institutionFacebookId', education.institutionFacebookId)
-                    return course.save();
-                } else
-                    return course;
-            } else {
-                /*
-                 * Create does not exist:
-                 * - Create a new course
-                 * - Save it and return the promise
-                 */
-                var Course = Parse.Object.extend('Course'),
-                    newCourse = new Course();
-                newCourse.set('name', education.courseName);
-                newCourse.set('institution', user.get('institution'));
-                if (education.courseFacebookId)
-                    newCourse.set('facebookId', education.courseFacebookId);
-                if (education.courseLength)
-                    newCourse.set('courseLength', education.courseLength);
-                if (education.institutionFacebookId)
-                    newCourse.set('institutionFacebookId', education.institutionFacebookId);
-                return newCourse.save();
-            }
-        }).then(function (course) {
+            var course = results[0];
+            if (!course.get('institutionFacebookId') && education.institutionFacebookId) {
+                course.set('institutionFacebookId', education.institutionFacebookId)
+                return course.save();
+            } else
+                return course;
+        } else {
+            /*
+             * Course does not exist:
+             * - Create a new course
+             * - Save it and return the promise
+             */
+            var Course = Parse.Object.extend('Course'),
+                newCourse = new Course();
+            newCourse.set('name', education.courseName);
+            newCourse.set('institution', user.get('institution'));
+            if (education.courseFacebookId)
+                newCourse.set('facebookId', education.courseFacebookId);
+            if (education.courseLength)
+                newCourse.set('courseLength', education.courseLength);
+            if (education.institutionFacebookId)
+                newCourse.set('institutionFacebookId', education.institutionFacebookId);
+            return newCourse.save();
+        }
+    }).then(function (course) {
+        if (!group) {
             /*
              * Set new or old course on user.
              * Finally, also set yearNumber on
@@ -567,17 +586,26 @@ Parse.Cloud.define("updateUserEducation", function (request, response) {
             user.set('course', course);
             user.set('yearNumber', education.yearNumber);
             return user.save();
-        }).then(function () {
-            /*
-             * Success response,
-             * return course and university
-             * objects for client app to
-             * use without calling a user
-             * update.
-             */
+        } else {
+            group.set('course', course);
+            group.set('yearOrGrade', education.yearNumber);
+            return group.save();
+        }
+    }).then(function () {
+        /*
+         * Success response,
+         * return course and university
+         * objects for client app to
+         * use without calling a user
+         * update.
+         */
+        if (!group) {
             response.success({course: user.get('course'), university: user.get('institution')});
-        });
-});
+        } else
+            response.success({course: group.get('course'), institution: group.get('institution')});
+    });
+})
+;
 
 Parse.Cloud.define("followUser", function (request, response) {
     if (!request.user) {
@@ -1098,7 +1126,10 @@ Parse.Cloud.define('listStripePlans', function (request, response) {
         }
     });
 });
+
 /**
+ * --Deprecated--
+ *
  * @Cloudfunction Create a Stripe customer
  * Our premium subscriptions will be handled
  * with Stripe for web users.
@@ -1139,6 +1170,52 @@ Parse.Cloud.define("createSRSCustomer", function (request, response) {
         });
 });
 /**
+ * @Cloudfunction Create a Stripe customer
+ * Our premium subscriptions will be handled
+ * with Stripe for web users.
+ * - Receives card token
+ * - Creates customer
+ * - Updates user's private data with stripe token
+ * IF User already has stripeToken, return that
+ * instead!.
+ */
+Parse.Cloud.define("createStripeCustomer", function (request, response) {
+    Parse.Cloud.useMasterKey();
+
+    var user = request.user,
+        privateData,
+        card = request.params.card,
+        stripeObject,
+        stripeToken,
+        promises = [];
+
+    if (!card)
+        return response.error("Please send the card details!");
+    if (!user)
+        return response.error("User not set!");
+    privateData = user.get('privateData');
+    if (!privateData)
+        return response.error("User does not have privateData!");
+
+    privateData.fetch()
+        .then(function () {
+            if (!privateData.get('stripeToken') || !privateData.get('stripeToken').length)
+                return Stripe.Customers.create({email: request.params.email, card: request.params.card})
+                    .then(function (httpResponse) {
+                        stripeObject = httpResponse;
+                        stripeToken = stripeObject.id;
+                        privateData.set('stripeObject', stripeObject);
+                        privateData.set('stripeToken', stripeToken);
+                        return privateData.save();
+                    });
+        }).then(function () {
+            response.success({"stripeToken": privateData.get('stripeToken')});
+        }, function (error) {
+            response.error(JSON.stringify(error));
+        });
+});
+/**
+ * -- DEPRECATED --
  * @CloudFunction Subscribe a Stripe customer to SRS
  * @param {String} customerId Stripe cus_id
  * @param {String} planId Stripe plan_id
@@ -1196,10 +1273,66 @@ Parse.Cloud.define("subscribeCustomerToSRS", function (request, response) {
         });
 });
 /**
+ * @CloudFunction Begin charging Stripe customer
+ * @param {String} customerId Stripe cus_id
+ * @param {String} planId Stripe plan_id
+ */
+Parse.Cloud.define("beginStripePaymentPlan", function (request, response) {
+    Parse.Cloud.useMasterKey();
+    var user = request.user,
+        customerId = request.params.customerId,
+        planId = request.params.planId;
+
+    if (!user || !customerId || !planId)
+        return response.error("User, customerId or planId is not set");
+
+    user.get('privateData').fetch()
+        .then(function () {
+            var subscription = {
+                    plan: planId
+                },
+                trial_end;
+
+            // If already on some other promo trial
+            if (user.get('privateData').get('premiumTrialExpiryDate'))
+                trial_end = new moment(user.get('privateData').get('premiumTrialExpiryDate'));
+            // If first time payment, offer 30 day extra trial.
+            if (!user.get('privateData').get('premiumMonthTrialRedeemed')) {
+                if (!trial_end)
+                    trial_end = new moment();
+                trial_end.add(30, 'day');
+            }
+            if (trial_end)
+                subscription.trial_end = trial_end.toDate();
+            return Stripe.Customers.updateSubscription(customerId, subscription);
+        })
+        .then(function (httpResponse) {
+            var stripeSubscription = httpResponse,
+                trialStartDate,
+                trialExpiryDate;
+            return Parse.Cloud.run('upgradeUserToPremium', {
+                interval: stripeSubscription.plan.interval,
+                intervalLength: stripeSubscription.plan.interval_count,
+                signupSource: "Web",
+                activationKey: "pacRe6e8rUthusuDEhEwUPEWrUpruhat",
+                stripeSubscription: stripeSubscription,
+                trialInterval: stripeSubscription.plan.trial_period_interval,
+                trialLength: stripeSubscription.plan.trial_period_days,
+                userId: user.id
+            });
+        }).then(function (result) {
+            response.success({"privateData": result.privateData});
+        },
+        function (error) {
+            response.error(JSON.stringify(error));
+        });
+});
+/**
+ * -- Deprecated --
  * @CloudFunction Activate SRS for User
  * Either called from iOS, from the
  * CloudFunction after subscribing stripe
- * usersor from CloudFundtion redeemPromoCode.
+ * users or from CloudFunction redeemPromoCode.
  *
  * Also creates an SRS test for the user
  * if one doesn't already exist.
@@ -1228,6 +1361,7 @@ Parse.Cloud.define('activateSRSforUser', function (request, response) {
         trialExpiryDate = request.params.trialExpiryDate,
         privateData,
         test,
+        premium,
         promises = [];
 
     if (activationKey !== "pacRe6e8rUthusuDEhEwUPEWrUpruhat")
@@ -1238,6 +1372,14 @@ Parse.Cloud.define('activateSRSforUser', function (request, response) {
             user = new Parse.User();
             user.id = request.params.userId;
             promises.push(user.fetch());
+
+            var query = new Parse.Query(Parse.Role);
+            query.equalTo('name', "Premium");
+            promises.push(query.find().then(function (results) {
+                premium = results[0];
+                premium.getUsers().add(user);
+                return premium.save();
+            }));
         } else {
             return response.error("User is not set.");
         }
@@ -1245,12 +1387,22 @@ Parse.Cloud.define('activateSRSforUser', function (request, response) {
 
     Parse.Promise.when(promises)
         .then(function () {
+
             return user.get('privateData').fetch();
         })
         .then(function (result) {
             privateData = result;
             var startDate = new moment(),
+                nextPaymentDate = new moment().add(intervalLength, interval),
                 expiryDate = new moment().add(intervalLength, interval);
+
+            privateData.set('isPremium', true);
+            privateData.set('premiumStartDate', startDate.toDate());
+            privateData.set('premiumNextPaymentDate', nextPaymentDate.toDate());
+            privateData.set('premiumExpiryDate', expiryDate.toDate());
+            privateData.set('premiumLastPurchase', intervalLength + " " + interval);
+            privateData.set('premiumSignupSource', signupSource);
+            privateData.set('premiumCancelled', false);
 
             privateData.set('spacedRepetitionActivated', true);
             privateData.set('spacedRepetitionStartDate', startDate._d);
@@ -1259,11 +1411,12 @@ Parse.Cloud.define('activateSRSforUser', function (request, response) {
             privateData.set('spacedRepetitionSignupSource', signupSource);
             privateData.set('spacedRepetitionSubscriptionCancelled', false);
             if (trialStartDate && trialStartDate) {
-                privateData.set('spacedRepetitionTrialStartDate', trialStartDate._d);
-                privateData.set('spacedRepetitionTrialExpiryDate', trialExpiryDate._d);
+                privateData.set('spacedRepetitionTrialStartDate', trialStartDate.toDate());
+                privateData.set('spacedRepetitionTrialExpiryDate', trialExpiryDate.toDate());
             }
             if (stripeSubscription)
                 privateData.set('stripeSubscription', stripeSubscription);
+
             promises.push(privateData.save());
             if (!user.get('spacedRepetitionIntensity'))
                 user.set('spacedRepetitionIntensity', 1);
@@ -1319,11 +1472,196 @@ Parse.Cloud.define('activateSRSforUser', function (request, response) {
             response.error(JSON.stringify(error));
         });
 });
+
 /**
- * @CloudFunction unsubscribeUserFromStripePlan
- * Currently only used for cancelling SRS subscriptions
+ * @CloudFunction Upgrade User to Premium
+ * Called once payment is set up.
+ * activationKey is required as iOS
+ * payment validation is not possible.
+ * Trusting source code robustness.
+ * Therefore, this method CANNOT be called
+ * from the Web: it is called by the
+ * Cloudfunctions beginStripePaymentPlan
+ * or redeemPromoCode.
+ *
+ * Also creates an SRS test for the user
+ * if one doesn't already exist.
+ *
+ * @param {String} interval e.g. month, year
+ * @param {Integer} intervalLength e.g. 6
+ * @param {String} signupSource e.g. iOS, Web
+ * @param {String} activationKey, expects pacRe6e8rUthusuDEhEwUPEWrUpruhat
+ *
+ * Additional if called from beginStripePaymentPlan
+ * or redeemPromoCode:
+ * @param {String} userId (request.user not set via Cloudfunctions)
+ * @param {Object} stripeSubscription
+ * @param {String} trialLength e.g. day, month
+ * @param {Interger} trialLength
+ *
+ * @return {UserPrivate} privateData
  */
-Parse.Cloud.define('unsubscribeUserFromStripePlan', function (request, response) {
+Parse.Cloud.define('upgradeUserToPremium', function (request, response) {
+    Parse.Cloud.useMasterKey();
+    // We need a unique token for iAP that can be verified
+    var user = request.user,
+        interval = request.params.interval,
+        intervalLength = request.params.intervalLength,
+        signupSource = request.params.signupSource,
+        activationKey = request.params.activationKey,
+        stripeSubscription = request.params.stripeSubscription,
+    /*trialStartDate = request.params.trialStartDate,
+     trialExpiryDate = request.params.trialExpiryDate,*/
+        trialInterval = request.params.trialInterval,
+        trialLength = request.params.trialLength,
+        privateData,
+        test,
+        premium,
+        promises = [];
+
+    if (activationKey !== "pacRe6e8rUthusuDEhEwUPEWrUpruhat")
+        return response.error("Unauthorized request.");
+
+    if (!user) { // Called from another Cloudfunction
+        if (request.params.userId) {
+            user = new Parse.User();
+            user.id = request.params.userId;
+            promises.push(user.fetch());
+        } else {
+            return response.error("User is not set.");
+        }
+    }
+    // Get Parse.Role "Premium"
+    var query = new Parse.Query(Parse.Role);
+    query.equalTo('name', "Premium");
+    promises.push(query.find().then(function (results) {
+        premium = results[0];
+        premium.getUsers().add(user);
+        return premium.save();
+    }));
+
+    Parse.Promise.when(promises)
+        .then(function () {
+            return user.get('privateData').fetch();
+        })
+        .then(function (result) {
+            privateData = result;
+            var startDate,
+                nextPaymentDate,
+                trialStartDate,
+                trialExpiryDate;
+
+            // Clear previous values
+            privateData.set('premiumStartDate', null);
+            privateData.set('premiumExpiryDate', null);
+            privateData.set('premiumNextPaymentDate', null);
+
+            if (trialInterval && trialLength) {
+                // Promo code or First time payment plan has trial period
+                if (privateData.get('isPremium') && privateData.get('premiumTrialExpiryDate')) {
+                    // Extend premium trial expiry, no need to change trialStartDate.
+                    trialExpiryDate = new moment(privateData.get('premiumTrialExpiryDate'))
+                        .add(trialLength, trialInterval);
+                    privateData.set('premiumTrialExpiryDate', trialExpiryDate.toDate());
+                } else {
+                    // New Trial
+                    trialStartDate = new moment();
+                    trialExpiryDate = new moment()
+                        .add(trialLength, trialInterval);
+                    privateData.set('premiumTrialStartDate', trialStartDate.toDate());
+                    privateData.set('premiumTrialExpiryDate', trialExpiryDate.toDate());
+                }
+            }
+            if (interval && intervalLength) {
+                // Payment Premium Subscription
+                if (!privateData.get('premiumMonthTrialRedeemed'))
+                    privateData.set('premiumMonthTrialRedeemed', true);
+                if (trialExpiryDate) {
+                    startDate = new moment(trialExpiryDate);
+                    nextPaymentDate = new moment(trialExpiryDate);
+                }
+                else {
+                    startDate = new moment();
+                    nextPaymentDate = new moment().add(intervalLength, interval);
+                }
+                privateData.set('premiumStartDate', startDate.toDate());
+                privateData.set('premiumNextPaymentDate', nextPaymentDate.toDate());
+                privateData.set('premiumLastPurchase', intervalLength + " " + interval);
+            }
+
+            privateData.set('isPremium', true);
+            privateData.set('premiumSignupSource', signupSource);
+            privateData.set('premiumCancelled', false);
+
+            if (stripeSubscription)
+                privateData.set('stripeSubscription', stripeSubscription);
+
+            promises.push(privateData.save());
+
+            if (!user.get('spacedRepetitionIntensity'))
+                user.set('spacedRepetitionIntensity', 1);
+            if (!user.get('spacedRepetitionMaxQuestions'))
+                user.set('spacedRepetitionMaxQuestions', 10);
+            if (!user.get('spacedRepetitionNotificationByEmail') &&
+                user.get('spacedRepetitionNotificationByEmail') !== false)
+                user.set('spacedRepetitionNotificationByEmail', true);
+            if (!user.get('spacedRepetitionNotificationByPush') &&
+                user.get('spacedRepetitionNotificationByPush') !== false)
+                user.set('spacedRepetitionNotificationByPush', true);
+
+            promises.push(user.save());
+            // See if the user has an SRS test already
+            var query = new Parse.Query('Test');
+            query.equalTo('author', user);
+            query.equalTo('isSpacedRepetition', true);
+            return query.find();
+        }).then(function (results) {
+            if (!results[0]) {
+                // Create a new SRS test
+                var Test = Parse.Object.extend('Test');
+                test = new Test();
+                test.set('isGenerated', true);
+                test.set('isSpacedRepetition', true);
+                test.set('author', user);
+                test.set('title', "Spaced Repetition Test");
+                test.set('privacy', 0);
+                test.set('questions', []);
+                var Category = Parse.Object.extend('Category'),
+                    srCategory = new Category();
+                srCategory.id = "jWx56PKQzU"; // Spaced Repetition is a Category
+                test.set('category', srCategory);
+                var ACL = new Parse.ACL();
+                ACL.setReadAccess(user.id, true);
+                test.setACL(ACL);
+                query = new Parse.Query('UniqueResponse');
+                query.equalTo('user', user);
+                query.descending('updatedAt');
+                query.limit(50);
+                return query.find();
+            }
+        }).then(function (uniqueResponses) {
+            if (uniqueResponses) {
+                for (var i = 0; i < uniqueResponses.length; i++) {
+                    test.get('questions').push(uniqueResponses[i].get('question'));
+                }
+                promises.push(test.save());
+            }
+            return Parse.Promise.when(promises);
+        }).then(function () {
+            response.success({"privateData": privateData});
+        }, function (error) {
+            response.error(JSON.stringify(error));
+        });
+});
+/**
+ * @CloudFunction cancelSubscription
+ * No params needed
+ * Just call from any user,
+ * the function will cancel their
+ * subscription
+ */
+
+Parse.Cloud.define('cancelSubscription', function (request, response) {
     Parse.Cloud.useMasterKey();
     // We need a unique token for iAP that can be verified
     var user = request.user;
@@ -1332,22 +1670,26 @@ Parse.Cloud.define('unsubscribeUserFromStripePlan', function (request, response)
         return response.error("Unauthorized request.");
 
     var privateData = user.get('privateData');
+    if (!privateData)
+        return response.error("User does not have private data.");
 
     privateData.fetch()
         .then(function () {
             var subscription = privateData.get('stripeSubscription');
-            if (subscription) {
+            if (subscription && subscription.id) {
+                var subscriptionId = subscription.id;
+                privateData.set('stripeSubscription', {});
                 return Stripe.Customers.cancelSubscription(privateData.get('stripeToken'),
-                    subscription.id);
+                    subscriptionId);
             } else {
                 return;
             }
         }).then(function (httpResponse) {
-            privateData.set('stripeSubscription', {});
             privateData.set('spacedRepetitionSubscriptionCancelled', true);
+            privateData.set('premiumCancelled', true);
+            privateData.set('premiumExpiryDate', privateData.get('premiumNextPayment'));
+            privateData.set('premiumNextPayment', null);
             return privateData.save();
-        }, function (error) {
-            return error;
         }).then(function () {
             response.success();
         }, function (error) {
@@ -1557,13 +1899,15 @@ Parse.Cloud.define('redeemPromoCode', function (request, response) {
                     promises.push(promotionalCode.save());
                     if (promotionalCode.get('action') === 'SRS-1-Month-Trial') {
                         successMessage = "Your Spaced Repetition Service is now activated for 1 month!";
-                        return Parse.Cloud.run('activateSRSforUser', {
-                            interval: 'month',
-                            intervalLength: 1,
+                        return Parse.Cloud.run('upgradeUserToPremium', {
+                            trialInterval: 'month',
+                            trialLength: 1,
                             signupSource: request.params.source,
                             activationKey: "pacRe6e8rUthusuDEhEwUPEWrUpruhat",
                             userId: user.id
                         });
+                    } else {
+                        console.error("Unkown action for this valid promo code.");
                     }
                 }
             }
@@ -1648,7 +1992,7 @@ Parse.Cloud.define('generateSitemapForTests', function (request, response) {
             var test = tests[i];
             if (!test || !test.get('slug') || !test.get('slug').length)
                 continue;
-            var url = "http://mycqs.com/test/" + test.get('slug').trim();
+            var url = "https://mycqs.com/test/" + test.get('slug').trim();
             sitemapUrls += createSitemapNodeForUrl(url, priority, frequency, test.updatedAt);
         }
         response.success(sitemapUrls);
@@ -1661,9 +2005,7 @@ Parse.Cloud.define('generateSitemapForTests', function (request, response) {
  * @CloudFunction Add members to Group
  * Add unique members to a group,
  * add these members to the respective
- * Parse.Role. Must return error if
- * request.user is not a group moderator
- * or admin.
+ * Only use masterkey if membersCanInvite
  * @param {String} groupId
  * @param {Array} memberIds
  */
@@ -1684,8 +2026,83 @@ Parse.Cloud.define('addMembersToGroup', function (request, response) {
             return query.find();
         }).then(function (results) {
             membersToAdd = results;
+            if (!membersToAdd.length)
+                return errorMessage = "User(s) not found!";
             var members = group.relation('members');
             members.add(membersToAdd);
+            var query = new Parse.Query(Parse.Role);
+            query.equalTo('name', 'group-members-' + group.id);
+            return query.find();
+        }).then(function (results) {
+            if (!membersToAdd.length)
+                return;
+            var role = results[0];
+            if (!role)
+                return errorMessage = "Member roles not defined for group!";
+            role.getUsers().add(membersToAdd);
+            if (group.get('membersCanInvite'))
+                Parse.Cloud.useMasterKey();
+            promises.push(role.save());
+            promises.push(group.save());
+            // Add the group to each members respective
+            // _User.groups relation
+            // Need masterKey to alter _User.groups
+            Parse.Cloud.useMasterKey();
+            _.each(membersToAdd, function (member) {
+                var memberGroups = member.relation('groups');
+                memberGroups.add(group);
+                promises.push(member.save());
+            });
+            return Parse.Promise.when(promises);
+        }).then(function () {
+            var relation = group.relation('members'),
+                query = relation.query();
+            return query.count();
+        }).then(function (count) {
+            group.set('numberOfMembers', count);
+            return group.save();
+        }).then(function () {
+            if (errorMessage)
+                return response.error(errorMessage);
+            else
+                return response.success();
+        }, function (error) {
+            return response.error(JSON.stringify(error));
+        });
+});
+/**
+ * @CloudFunction Remove members from Group
+ * Remove members from a group,
+ * remove these members from the respective
+ * Parse.Role. Must return error if
+ * request.user is not a group moderator
+ * or admin.
+ *
+ * NOTE - Do not use for removing
+ * moderators or admins, create/user
+ * separate function to handle different roles
+ * @param {String} groupId
+ * @param {Array} memberIds
+ */
+Parse.Cloud.define('removeMembersFromGroup', function (request, response) {
+    var user = request.user,
+        groupId = request.params.groupId,
+        memberIds = request.params.memberIds,
+        membersToRemove,
+        promises = [],
+        errorMessage;
+
+    var group = new Parse.Object('Group');
+    group.id = groupId;
+    group.fetch()
+        .then(function () {
+            var query = new Parse.Query(Parse.User);
+            query.containedIn('objectId', memberIds);
+            return query.find();
+        }).then(function (results) {
+            membersToRemove = results;
+            var members = group.relation('members');
+            members.remove(membersToRemove);
             var query = new Parse.Query(Parse.Role);
             query.equalTo('name', 'group-members-' + group.id);
             return query.find();
@@ -1693,10 +2110,31 @@ Parse.Cloud.define('addMembersToGroup', function (request, response) {
             var role = results[0];
             if (!role)
                 return errorMessage = "Member roles not defined for group!";
-            role.getUsers().add(membersToAdd);
+            role.getUsers().remove(membersToRemove);
             promises.push(role.save());
             promises.push(group.save());
+            /*
+             * Need MasterKey to alter members
+             * _User.groups relation. By this stage,
+             * if the request.user did not have
+             * permission, the code would have rejected.
+             */
+            Parse.Cloud.useMasterKey();
+            // Remove the group to each members respective
+            // _User.groups relation
+            _.each(membersToRemove, function (member) {
+                var memberGroups = member.relation('groups');
+                memberGroups.remove(group);
+                promises.push(member.save());
+            });
             return Parse.Promise.when(promises);
+        }).then(function () {
+            var relation = group.relation('members'),
+                query = relation.query();
+            return query.count();
+        }).then(function (count) {
+            group.set('numberOfMembers', count);
+            return group.save();
         }).then(function () {
             if (errorMessage)
                 return response.error(errorMessage);
@@ -1709,6 +2147,8 @@ Parse.Cloud.define('addMembersToGroup', function (request, response) {
 /**
  * @CloudFunction Add tests to Group
  * Add unique tests to a group.
+ * Make sure the tests are not private.
+ * Only use masterkey if membersCanAddTests
  * @param {String} groupId
  * @param {Array} testIds
  */
@@ -1716,7 +2156,7 @@ Parse.Cloud.define('addTestsToGroup', function (request, response) {
     var user = request.user,
         groupId = request.params.groupId,
         testIds = request.params.testIds,
-        testsToAdd,
+        testsToAdd = [],
         promises = [],
         errorMessage;
 
@@ -1728,9 +2168,75 @@ Parse.Cloud.define('addTestsToGroup', function (request, response) {
             query.containedIn('objectId', testIds);
             return query.find();
         }).then(function (results) {
-            testsToAdd = results;
+            // Remove private tests
+            for (var i = 0; i < results.length; i++) {
+                if (results[i].get('privacy') === 1)
+                    testsToAdd.push(results[i]);
+            }
             var tests = group.relation('gatheredTests');
             tests.add(testsToAdd);
+            if (group.get('membersCanAddTests'))
+                Parse.Cloud.useMasterKey();
+            return group.save();
+        }).then(function () {
+            var relation = group.relation('gatheredTests'),
+                query = relation.query();
+            return query.count();
+        }).then(function (count) {
+            group.set('numberOfGatheredTests', count);
+            return group.save();
+        }).then(function () {
+            if (errorMessage)
+                return response.error(errorMessage);
+            else
+                return response.success();
+        }, function (error) {
+            return response.error(JSON.stringify(error));
+        });
+});
+/**
+ * @CloudFunction Remove tests from Group
+ * Remove tests from a group. Ambgious
+ * to groupTests or gatheredTests.
+ * However, a groupTest must be set
+ * as isObjectDeleted to true from the
+ * client app if deleted by an author.
+ * Don't user masterkey.. the user should
+ * have correct ACL role to achieve this.
+ * @param {String} groupId
+ * @param {Array} testIds
+ */
+Parse.Cloud.define('removeTestsFromGroup', function (request, response) {
+    var user = request.user,
+        groupId = request.params.groupId,
+        testIds = request.params.testIds,
+        testsToRemove,
+        promises = [],
+        errorMessage;
+
+    var group = new Parse.Object('Group');
+    group.id = groupId;
+    group.fetch()
+        .then(function () {
+            var query = new Parse.Query("Test");
+            query.containedIn('objectId', testIds);
+            return query.find();
+        }).then(function (results) {
+            testsToRemove = results;
+            /*
+             * Ambigious removal from either relation.
+             */
+            var tests = group.relation('gatheredTests'),
+                groupTests = group.relation('groupTests');
+            tests.remove(testsToRemove);
+            groupTests.remove(testsToRemove);
+            return group.save();
+        }).then(function () {
+            var relation = group.relation('gatheredTests'),
+                query = relation.query();
+            return query.count();
+        }).then(function (count) {
+            group.set('numberOfGatheredTests', count);
             return group.save();
         }).then(function () {
             if (errorMessage)

@@ -1,0 +1,11 @@
+<div class="mycqs-page-header">
+    <div class="container">
+        <h1>Groups</h1>
+
+        <p>Find Groups to share knowledge and discuss tests! {{#link-to 'createGroup'}}Create a new
+            group.{{/link-to}}</p>
+    </div>
+</div>
+{{#each group in content}}
+    {{partial 'user/item/group-card'}}
+{{/each}}

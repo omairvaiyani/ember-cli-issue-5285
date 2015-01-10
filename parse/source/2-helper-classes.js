@@ -70,7 +70,7 @@ function sendEmail(templateName, user, email, data) {
  * Is User anonymous?
  */
 function isAnonymous(authData) {
-    if(!authData)
+    if (!authData)
         return false;
     else
         return _.has(authData, 'anonymous');
@@ -358,7 +358,7 @@ var slugify = function (className, string, object) {
     switch (className) {
         case "_User":
             var names = string.split(" ");
-            switch(names.length) {
+            switch (names.length) {
                 case 1:
                     slug = names[0].toLowerCase();
                     break;
@@ -392,6 +392,8 @@ var slugify = function (className, string, object) {
  * @returns {string}
  */
 function capitaliseFirstLetter(string) {
+    if (!string)
+        return "";
     return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
@@ -408,11 +410,11 @@ function capitaliseFirstLetter(string) {
  */
 function getUserProfileImageUrl(user) {
     if (user.get('profilePicture') && user.get('profilePicture').url())
-        return user.get('profilePicture').url();
+        return getSecureParseUrl(user.get('profilePicture').url());
     else if (user.get('fbid') && user.get('fbid').length)
-        return "http://res.cloudinary.com/mycqs/image/facebook/c_thumb,e_improve,g_faces:center,w_150/" + user.get('fbid');
+        return "https://res.cloudinary.com/mycqs/image/facebook/c_thumb,e_improve,g_faces:center,w_150/" + user.get('fbid');
     else
-        return "http://assets.mycqs.com/img/silhouette.png";
+        return MyCQs.baseCDN + "img/silhouette.png";
 }
 
 /**
@@ -432,6 +434,14 @@ function getUserProfileImageUrl(user) {
 var maxTwoDP = function (number) {
     var float = +parseFloat(number).toFixed(2);
     return float;
+}
+/**
+ * -----------------------
+ * getSwiftUpdateRecordUrl
+ * -----------------------
+ */
+var getSwiftUpdateRecordUrl = function (recordType) {
+    return "http://api.swiftype.com/api/v1/engines/mycqs/document_types/" + recordType + "/documents/create_or_update.json";
 }
 /**
  * -------------------------
@@ -511,7 +521,8 @@ var getSwiftDocumentForObject = function (className, object) {
             }
             break;
         case "Test":
-            if (!object.get('title') || !object.get('slug') || !object.get('category') || !object.get('author'))
+            if (!object.get('title') || !object.get('slug') || !object.get('category')
+                || !object.get('author') || !object.get('author').get('name'))
                 return;
 
             var description = object.get('description'),
@@ -580,6 +591,58 @@ var getSwiftDocumentForObject = function (className, object) {
                 }
             ];
             break;
+        case "Course":
+            if (!object.get('name') || !object.get('name').length)
+                return;
+
+            document.fields = [
+                {
+                    name: 'name',
+                    value: capitaliseFirstLetter(object.get('name')),
+                    type: 'string'
+                },
+                {
+                    name: 'facebookId',
+                    value: object.get('facebookId') ? object.get('facebookId') : "",
+                    type: 'string'
+                }
+            ];
+            if (object.get('institution')) {
+                document.fields.push({
+                        name: 'institutionFullName',
+                        value: capitaliseFirstLetter(object.get('institution').get('fullName')) ?
+                            object.get('institution').get('fullName') : "",
+                        type: 'enum'
+                    },
+                    {
+                        name: 'institutionFacebookId',
+                        value: object.get('institution').get('facebookId') ?
+                            object.get('institution').get('facebookId') : "",
+                        type: 'string'
+                    },
+                    {
+                        name: 'institutionObjectId',
+                        value: object.get('institution').id,
+                        type: 'enum'
+                    });
+            }
+            break;
+        case "University":
+            if (!object.get('fullName') || !object.get('fullName').length)
+                return;
+            document.fields = [
+                {
+                    name: 'fullName',
+                    value: capitaliseFirstLetter(object.get('fullName')),
+                    type: 'string'
+                },
+                {
+                    name: 'facebookId',
+                    value: object.get('facebookId') ? object.get('facebookId') : "",
+                    type: 'string'
+                }
+            ];
+            break;
     }
     return document;
 }
@@ -591,22 +654,22 @@ var getSwiftDocumentForObject = function (className, object) {
  * @param {Date} lastmod
  */
 var createSitemapNodeForUrl = function (url, priority, frequency, lastmod) {
-    if(!priority)
+    if (!priority)
         priority = 0.5;
-    if(!frequency)
+    if (!frequency)
         frequency = "weekly";
-    if(!lastmod)
+    if (!lastmod)
         lastmod = new Date();
     return "<url> \
-    <loc>"+url+"</loc> \
-    <priority>"+priority+"</priority> \
-    <changefreq>"+frequency+"</changefreq> \
-    <lastmod>"+moment(lastmod).format("YYYY-MM-DD")+"</lastmod>\
+    <loc>" + url + "</loc> \
+    <priority>" + priority + "</priority> \
+    <changefreq>" + frequency + "</changefreq> \
+    <lastmod>" + moment(lastmod).format("YYYY-MM-DD") + "</lastmod>\
     </url>";
 }
 
 var getNextDueTimeForSRSTest = function (intensityLevelConfig, timeZone) {
-    console.log("Get SRS next due "+JSON.stringify(intensityLevelConfig)+" timeZone "+timeZone);
+    console.log("Get SRS next due " + JSON.stringify(intensityLevelConfig) + " timeZone " + timeZone);
     var currentTime = new Date(),
         localTime = new moment(currentTime).tz(timeZone),
         nextDue;
@@ -633,4 +696,11 @@ var getNextDueTimeForSRSTest = function (intensityLevelConfig, timeZone) {
             .add(1, 'days');
     }
     return nextDue;
+}
+
+var getSecureParseUrl = function (url) {
+    if (url)
+        return url.replace("http://", "https://s3.amazonaws.com/");
+    else
+        return "";
 }

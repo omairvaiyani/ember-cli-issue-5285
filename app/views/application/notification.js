@@ -139,6 +139,7 @@ export default
                 case 'deleted':
                 case 'warning':
                 case 'srs-error':
+                case 'premium-error':
                     return true;
                     break;
                 default:
@@ -163,7 +164,8 @@ export default
             },
 
             confirmCallback: function (isPositive) {
-                this.get('content.confirm.controller').send(this.get('content.confirm.callbackAction'), isPositive);
+                this.get('content.confirm.controller').send(this.get('content.confirm.callbackAction'), isPositive,
+                this.get('content.confirm.returnItem'));
                 this.set('content.confirm', null);
                 this.send('close');
             }

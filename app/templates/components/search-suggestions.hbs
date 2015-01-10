@@ -1,0 +1,28 @@
+{{#if selectedItem}}
+    <div class="form-control" {{action 'editSelectedItem'}}>
+        <label>{{selectedItem.label}}</label>
+    </div>
+{{else}}
+    {{autocomplete-input type='text' value=textInput class='form-control' contextController=this}}
+{{/if}}
+{{#if suggestions.length}}
+    <div {{bind-attr class=":autocomplete-container"}} style="margin-top:0px;">
+        {{#each item in suggestions}}
+            <div {{bind-attr class=':autocomplete-row item.isFocused'}} {{action 'itemSelected' item}}>
+                {{#if item.imageUrl}}
+                    {{render 'profile-image' item.imageUrl}}
+                {{/if}}
+                <div class="title"><p>{{item.label}}</p></div>
+                {{#if item.secondaryLabel}}
+                    <div class="subtitle"><p class="small">{{item.secondaryLabel}}</p></div>
+                {{/if}}
+            </div>
+        {{/each}}
+    </div>
+{{else}}
+    {{#if isLoading}}
+        <div {{bind-attr class=":autocomplete-container"}} style="margin-top:0px;">
+            {{loading-bar isLoading=isLoading class="text-center"}}
+        </div>
+    {{/if}}
+{{/if}}

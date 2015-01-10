@@ -143,41 +143,29 @@ Parse.Cloud.job('testQualityScore', function (request, status) {
 });
 
 /**
- * @BackgroundJob - Index Objects for Class
- * Search indexing
- * Add objects to Swiftype
- * @param className
+ * @BackgroundJob - Index Objects for Swiftype
+ * Search indexing for Users and Tests.
+ * Only indexes/updates objects updated in the last
+ * 24hrs.
  */
-Parse.Cloud.job("indexObjectsForClass", function (request, status) {
-    Parse.Cloud.useMasterKey();
+Parse.Cloud.job("indexObjectsForSwiftype", function (request, status) {
+    var totalCount = 0;
 
-    var className = request.params.className,
-        query = new Parse.Query(className),
-        swiftApiUrl;
+    var query = new Parse.Query(Parse.User);
+    query.exists('name');
+    query.exists('slug');
+    query.include('course');
+    query.include('institution');
+    var yesterday = moment().subtract(1, 'day');
+    query.greaterThanOrEqualTo("updatedAt", yesterday._d);
 
-    switch (className) {
-        case "_User":
-            query = new Parse.Query(Parse.User);
-            query.include('course');
-            query.include('institution');
-            swiftApiUrl = "http://api.swiftype.com/api/v1/engines/mycqs/document_types/users/documents/create_or_update.json";
-            break;
-        case "Test":
-            query.include('author');
-            query.include('category');
-            swiftApiUrl = "http://api.swiftype.com/api/v1/engines/mycqs/document_types/tests/documents/create_or_update.json";
-            break;
-    }
-
-    var document;
     query.each(function (object) {
-        document = getSwiftDocumentForObject(className, object);
+        var document = getSwiftDocumentForObject("_User", object);
         if (!document)
             return;
-
         return Parse.Cloud.httpRequest({
             method: 'POST',
-            url: swiftApiUrl,
+            url: getSwiftUpdateRecordUrl('users'),
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -186,19 +174,100 @@ Parse.Cloud.job("indexObjectsForClass", function (request, status) {
                 document: document
             }
         }).then(function (success) {
-                console.log("Successful call to swiftype, " + JSON.stringify(success.data));
+                totalCount++;
             },
             function (error) {
-                console.log("Document error: " + JSON.stringify(document));
-                console.log("Failure to call to swiftype, " + error.text);
+                console.error("Document error: " + JSON.stringify(document));
+                console.error("Failure to call to swiftype, " + error.text);
             });
-
-    }).then(
-        function () {
-            status.success();
-        }, function () {
-            status.error();
+    }).then(function () {
+        query = new Parse.Query('Test');
+        query.include('author');
+        query.include('category');
+        var yesterday = moment().subtract(1, 'day');
+        query.greaterThanOrEqualTo("updatedAt", yesterday._d);
+        return query.each(function (object) {
+            var document = getSwiftDocumentForObject("Test", object);
+            if (!document)
+                return;
+            return Parse.Cloud.httpRequest({
+                method: 'POST',
+                url: getSwiftUpdateRecordUrl('tests'),
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: {
+                    auth_token: "xBAVD6EFQzt23WJFhp1v",
+                    document: document
+                }
+            }).then(function (success) {
+                    totalCount++;
+                },
+                function (error) {
+                    console.error("Document error: " + JSON.stringify(document));
+                    console.error("Failure to call to swiftype, " + error.text);
+                });
         });
+    }).then(function () {
+        query = new Parse.Query('Course');
+        query.include('institution');
+        query.exists('name');
+        var yesterday = moment().subtract(1, 'day');
+        query.greaterThanOrEqualTo("updatedAt", yesterday._d);
+        return query.each(function (object) {
+            var document = getSwiftDocumentForObject("Course", object);
+            if (!document)
+                return;
+            return Parse.Cloud.httpRequest({
+                method: 'POST',
+                url: getSwiftUpdateRecordUrl('courses'),
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: {
+                    auth_token: "xBAVD6EFQzt23WJFhp1v",
+                    document: document
+                }
+            }).then(function (success) {
+                    totalCount++;
+                },
+                function (error) {
+                    console.error("Document error: " + JSON.stringify(document));
+                    console.error("Failure to call to swiftype, " + error.text);
+                });
+        });
+    }).then(function () {
+        query = new Parse.Query('University');
+        query.exists('fullName');
+        var yesterday = moment().subtract(1, 'day');
+        query.greaterThanOrEqualTo("updatedAt", yesterday._d);
+        return query.each(function (object) {
+            var document = getSwiftDocumentForObject("University", object);
+            if (!document)
+                return;
+            return Parse.Cloud.httpRequest({
+                method: 'POST',
+                url: getSwiftUpdateRecordUrl('institutions'),
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: {
+                    auth_token: "xBAVD6EFQzt23WJFhp1v",
+                    document: document
+                }
+            }).then(function (success) {
+                    totalCount++;
+                },
+                function (error) {
+                    console.error("Document error: " + JSON.stringify(document));
+                    console.error("Failure to call to swiftype, " + error.text);
+                });
+        });
+    }).then(function () {
+        status.success();
+    }, function (error) {
+        status.error(JSON.stringify(error));
+    });
 
 });
 
@@ -347,6 +416,56 @@ Parse.Cloud.job("calculateTotalTestsInEachCategory", function (request, status) 
     }).then(function () {
         status.success();
     })
+});
+/**
+ * @BackgroundJob CancelExpiredSubscriptions
+ *
+ * Check each active premium or professional
+ * user, and confirm that they have not
+ * surpassed expiry date. If they have,
+ * deactive their booleans and roles.
+ *
+ * // TODO Change to privateData.isPremium true
+ */
+Parse.Cloud.job('cancelExpiredSubscriptions', function (request, status) {
+    Parse.Cloud.useMasterKey();
+    var query = new Parse.Query('UserPrivate');
+
+    query.equalTo('spacedRepetitionActivated', true);
+    // query.equalTo('isPremium',true);
+    query.lessThan('spacedRepetitionExpiryDate', moment().toDate());
+    // query.lessTan('premiumExpiryDate, moment().toDate());
+    var usernames = [],
+        premium;
+    query.each(function (privateData) {
+        privateData.set('spacedRepetitionActivated', false);
+        privateData.set('spacedRepetitionCancelled', true);
+        privateData.set('isPremium', false);
+        privateData.set('premiumCancelled', true);
+        usernames.push(privateData.get('username'));
+        return privateData.save();
+    }).then(function () {
+        if(!usernames.length)
+            return;
+        query = new Parse.Query(Parse.Role);
+        query.equalTo('name', "Premium");
+        return query.find();
+    }).then(function (premium) {
+        if(!premium)
+            return;
+        query = new Parse.Query(Parse.User);
+        query.containedIn("username", usernames);
+        return query.find();
+    }).then(function (users) {
+        if(!users || !users.length)
+            return;
+        premium.getUsers().remove(users);
+        return premium.save();
+    }).then(function () {
+        status.success("Success!");
+    }, function (error) {
+        status.error(JSON.stringify(error));
+    });
 });
 
 /**
@@ -693,7 +812,7 @@ Parse.Cloud.job('exportEmailList', function (request, response) {
     query.notEqualTo('addedToMailingList', true);
     var promises = [];
     query.each(function (user) {
-        if(!user || !user.get('privateData') || !user.get('name'))
+        if (!user || !user.get('privateData') || !user.get('name'))
             return;
         user.set('addedToMailingList', true);
         var mailing = new Parse.Object('MailingList');
@@ -705,8 +824,8 @@ Parse.Cloud.job('exportEmailList', function (request, response) {
         return mailing.save();
     }).then(function () {
         return Parse.Promise.when(promises);
-    }).then(function() {
-        response.success("Mailing list size "+ promises.length);
+    }).then(function () {
+        response.success("Mailing list size " + promises.length);
     }, function (error) {
         response.error(JSON.stringify(error));
     });

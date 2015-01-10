@@ -72,8 +72,7 @@ Parse.Cloud.beforeSave(Parse.User, function (request, response) {
         /*
          * Create a unique slug
          */
-        if (user.get('name'))
-            user.set('name', capitaliseFirstLetter(user.get('name')));
+        user.set('name', capitaliseFirstLetter(user.get('name')));
         var slug = slugify('_User', user.get('name'));
         /*
          * Check if slug is unique before saving
@@ -149,6 +148,18 @@ Parse.Cloud.beforeSave(Parse.User, function (request, response) {
             function (httpResponse) {
                 if (httpResponse)
                     console.error(httpResponse.data);
+                response.success();
+            });
+    } else if (!isAnonymous(user.get('authData')) && !user.get('privateData')) {
+        console.error("This user " + user.id + " should have private data but does not. " + user.get('signUpSource'));
+        var query = new Parse.Query('UserPrivate');
+        query.equalTo('username', user.get('username'));
+        query.find()
+            .then(function (results) {
+                if (results[0]) {
+                    user.set('privateData', results[0]);
+                    results[0].save(); // Updates privateData ACL
+                }
                 response.success();
             });
     } else
@@ -333,6 +344,8 @@ Parse.Cloud.beforeSave("Test", function (request, response) {
         response.error("Title of the test is required!");
         return;
     }
+    var test = request.object,
+        author;
 
     /*
      * Set ACLs based on privacy if object is not deleted,
@@ -365,7 +378,6 @@ Parse.Cloud.beforeSave("Test", function (request, response) {
             request.object.set("uniqueNumberOfAttempts", 0);
         }
         var query = new Parse.Query(Parse.User),
-            author,
             slug;
         query.get(request.object.get('author').id)
             .then(function (result) {
@@ -388,7 +400,12 @@ Parse.Cloud.beforeSave("Test", function (request, response) {
                 else
                     request.object.set('slug', slug + '-' + (count + 1));
 
-                if (request.object.get('isGenerated') || !author.get('authData') || !author.get('authData').facebook)
+                /*
+                 * Don't create graph object if generated, SRS, private,
+                 * or group test. Also, if author does not have FB auth.
+                 */
+                if (test.get('isGenerated') || test.get('isSpacedRepetition') || !test.get('privacy') ||
+                    test.get('group') || !author.get('authData') || !author.get('authData').facebook)
                     return;
 
                 /*
@@ -416,17 +433,27 @@ Parse.Cloud.beforeSave("Test", function (request, response) {
                     }
                 });
             })
-            .then(
-            function (httpResponse) {
-                if (httpResponse) {
+            .then(function (httpResponse) {
+                if (httpResponse && httpResponse.data) {
                     request.object.set('graphObjectId', httpResponse.data.id);
                 }
+                if (test.get('group')) {
+                    var query = new Parse.Query(Parse.Role);
+                    query.equalTo('name', 'group-members-' + test.get('group').id);
+                    return query.find();
+                } else
+                    return;
+            }).then(function (roles) {
+                if (roles && roles[0]) {
+                    var ACL = new Parse.ACL(author);
+                    ACL.setRoleReadAccess(roles[0], true);
+                    test.setACL(ACL);
+                }
                 response.success();
-            },
-            function () {
+            }, function (error) {
+                console.error(JSON.stringify(error));
                 response.success();
-            }
-        );
+            });
     } else {
         if (request.object.get('isObjectDeleted')) {
             request.object.setACL(Security.createACLs());
@@ -446,7 +473,8 @@ Parse.Cloud.afterSave("Test", function (request) {
     Parse.Cloud.useMasterKey();
 
     var authorObjectId = request.object.get('author').id,
-        author;
+        author,
+        test = request.object;
 
     var query = new Parse.Query(Parse.User);
     query.get(authorObjectId).then(function (result) {
@@ -455,6 +483,11 @@ Parse.Cloud.afterSave("Test", function (request) {
             author.increment("numberOfTests");
             var relation = author.relation('savedTests');
             relation.add(request.object);
+            if (test.get('group')) {
+                test.get('group').relation('groupTests').add(test);
+                test.get('group').increment('numberOfGroupTests');
+                test.get('group').save();
+            }
         }
         if (request.object.get('isSpacedRepetition') || request.object.get('isGenerated'))
             return;
@@ -488,8 +521,8 @@ Parse.Cloud.afterSave("Test", function (request) {
             action.save();
         }
     }).then(function () {
-        if (request.object.existed() || !author.get('shareOnCreateTest') || request.object.get('isSpacedRepetition') ||
-            request.object.get('isGenerated'))
+        if (test.existed() || !author.get('shareOnCreateTest') || test.get('isSpacedRepetition') ||
+            test.get('isGenerated') || test.get('group'))
             return;
         /*
          * Share 'make' test action on graph api
@@ -955,6 +988,7 @@ Parse.Cloud.beforeSave("Group", function (request, response) {
  * -----------------
  * afterSave Group
  * -----------------
+ * - Add group to user's group relation
  * - Roles and ACLs
  */
 Parse.Cloud.afterSave("Group", function (request) {
@@ -969,6 +1003,10 @@ Parse.Cloud.afterSave("Group", function (request) {
         return;
 
     Parse.Cloud.useMasterKey();
+
+    var userGroups = user.relation('groups');
+    userGroups.add(group);
+    promises.push(user.save());
 
     groupAdminsRole = new Parse.Role("group-admins-" + group.id, new Parse.ACL());
     groupModeratorsRole = new Parse.Role("group-moderators-" + group.id, new Parse.ACL());
@@ -1006,4 +1044,101 @@ Parse.Cloud.afterSave("Group", function (request) {
             group.set('areRolesSetUp', true);
             return group.save();
         });
+});
+/**
+ * -----------------
+ * beforeSave EducationalInstitution
+ * -----------------
+ * capitalize name
+ */
+Parse.Cloud.beforeSave("EducationalInstitution", function (request, response) {
+    var educationalInstitution = request.object,
+        user = request.user;
+
+    if (!educationalInstitution.get('name') || !educationalInstitution.get('name').length)
+        return response.error("Name is required!");
+
+    educationalInstitution.set('name', capitaliseFirstLetter(educationalInstitution.get('name')));
+    if (educationalInstitution.get('facebookId')) {
+        educationalInstitution.set('pictureUrl',
+            "https://res.cloudinary.com/mycqs/image/facebook/c_thumb,e_improve,w_150/" +
+            educationalInstitution.get('facebookId'));
+        if (!educationalInstitution.get('fbObject') && user && user.get('authData') && user.get('authData').facebook) {
+            Parse.Cloud.httpRequest({
+                url: 'https://graph.facebook.com/v2.2/' + educationalInstitution.get('facebookId')
+                + "?access_token=" + user.get('authData').facebook.access_token,
+            }).then(function (httpResponse) {
+                educationalInstitution.set('cover', httpResponse.data.cover);
+                educationalInstitution.set('fbObject', httpResponse.data);
+                return response.success();
+            }, function (error) {
+                console.error(JSON.stringify(error));
+                return response.success();
+            });
+        } else
+            response.success();
+    } else
+        response.success();
+});
+/**
+ * -----------------
+ * beforeSave StudyField
+ * -----------------
+ * capitalize name
+ */
+Parse.Cloud.beforeSave("StudyField", function (request, response) {
+    var studyField = request.object,
+        user = request.user;
+
+    if (!studyField.get('name') || !studyField.get('name').length)
+        return response.error("Name is required!");
+
+    studyField.set('name', capitaliseFirstLetter(studyField.get('name')));
+    if (studyField.get('facebookId')) {
+        studyField.set('pictureUrl',
+            "https://res.cloudinary.com/mycqs/image/facebook/c_thumb,e_improve,w_150/" +
+            studyField.get('facebookId'));
+        if (!studyField.get('fbObject') && user && user.get('authData') && user.get('authData').facebook) {
+            Parse.Cloud.httpRequest({
+                url: 'https://graph.facebook.com/v2.2/' + studyField.get('facebookId')
+                + "?access_token=" + user.get('authData').facebook.access_token,
+            }).then(function (httpResponse) {
+                studyField.set('fbObject', httpResponse.data);
+                return response.success();
+            }, function (error) {
+                console.error(JSON.stringify(error));
+                return response.success();
+            });
+        } else
+            response.success();
+    } else
+        response.success();
+});
+/**
+ * -----------------
+ * beforeSave Course
+ * -----------------
+ * capialize course.name
+ */
+Parse.Cloud.beforeSave("Course", function (request, response) {
+    var course = request.object;
+
+    if (course.get('name'))
+        course.set('name', capitaliseFirstLetter(course.get('name')));
+
+    response.success();
+});
+/**
+ * ----------------------
+ * beforeSave Institution
+ * ---------------------
+ * capialize institution.fullName
+ */
+Parse.Cloud.beforeSave("Institution", function (request, response) {
+    var institution = request.object;
+
+    if (institution.get('fullName'))
+        institution.set('fullName', capitaliseFirstLetter(institution.get('fullName')));
+
+    response.success();
 });

@@ -207,8 +207,11 @@ export default
             if (this.get('testsOnPage.length') || !window.prerenderReady) {
                 var childCategoryText = "";
                 if (this.get('childCategories.length')) {
-                    childCategoryText += ": " + this.get('childCategories').objectAt(0).get('name');
-                    childCategoryText += ", " + this.get('childCategories').objectAt(1).get('name');
+                    if(this.get('childCategories').objectAt(0))
+                        childCategoryText += ": " + this.get('childCategories').objectAt(0).get('name');
+                    if(this.get('childCategories').objectAt(1))
+                        childCategoryText += ", " + this.get('childCategories').objectAt(1).get('name');
+                    if(this.get('childCategories').objectAt(2))
                     childCategoryText += ", " + this.get('childCategories').objectAt(2).get('name');
                     childCategoryText += " and more";
                 }

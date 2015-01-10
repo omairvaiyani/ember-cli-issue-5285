@@ -12,7 +12,8 @@ Mandrill.initialize(mandrillKey);
  Stripe.initialize('sk_live_AbPy747DUMLo8qr53u5REcaX'); // live key
 
 var MyCQs = {
-    baseUrl: 'https://mycqs.com/'
+    baseUrl: 'https://mycqs.com/',
+    baseCDN: 'https://d3uzzgmigql815.cloudfront.net/'
 };
 var FB = {
     API: {
