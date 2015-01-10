@@ -3,7 +3,7 @@
 <h5>Select the package that best suits you</h5>
 <section class="row">
     <article class="col-md-5 margin-top-16">
-        <div class="pricing-table red rounded"><!-- BODY BOX-->
+        <div class="pricing-table plain rounded"><!-- BODY BOX-->
             <div class="pricing-table-header"><!-- HEADER BOX-->
 
                 <span class="heading">BASIC</span>
@@ -31,17 +31,17 @@
 
             <div class="pricing-table-sign-up"><!-- BUTTON BOX-->
                 {{#if currentUser}}
-                    <button class="btn btn-large btn-block btn-danger">Continue</button>
+                    <button class="btn btn-large btn-block">Continue</button>
                 {{else}}
                     <button {{action 'openModal' 'application/modal/login-or-register'}}
-                            class="btn btn-large btn-block btn-danger">Join now</button>
+                            class="btn btn-large btn-block">Join now</button>
                 {{/if}}
             </div>
             <!-- BUTTON BOX-->
         </div>
         <!--/ BODY BOX-->
     </article>
-    <article class="col-md-7 margin-top-16">
+    <article class="col-md-7 col-fix-right margin-top-16">
         <div class="pricing-table blue rounded"><!-- BODY BOX-->
             <div class="pricing-table-header"><!-- HEADER BOX-->
 

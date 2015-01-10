@@ -2160,6 +2160,9 @@ body {
     font-weight:400;
     border:6px solid #3498DB;
 }
+.pricing-table.plain {
+    border:6px solid #CFCFCF;
+}
 
 /********************************** BOX CONTENT ************************/
 .pricing-table-sign-up {
@@ -2181,7 +2184,7 @@ body {
 }
 
 .pricing-table p{
-    padding:5px;
+    padding:5px 16px;
     margin-top:5px;
     font-size:110%;
     font-weight:400;
@@ -2189,7 +2192,6 @@ body {
 }
 .pricing-table p strong{
     font-weight:600;
-    margin-left: 8px;
 }
 
 
@@ -2229,6 +2231,9 @@ body {
 .pricing-table.blue .heading{
     background: #3498DB;
 }
+.pricing-table.plain .heading {
+    background: #CFCFCF;
+}
 
 
 .pricing-table .pricing-table-header .price-value{
@@ -2259,7 +2264,9 @@ body {
     background: #2980B9;
 
 }
-
+.pricing-table.plain .pricing-table-header .price-value {
+    background: #898989;
+}
 .pricing-table-header .price-value {
     display:inline-block;
     width:100%;
@@ -2275,6 +2282,10 @@ body {
 }
 .pricing-table.blue .btn {
     background: #2980B9;
+}
+.pricing-table.plain .btn {
+    backgroud: #CFCFCF;
+    color: white;
 }
 /*Form Wizard*/
 .bs-wizard {border-bottom: solid 1px #e0e0e0; padding: 0 0 10px 0;}

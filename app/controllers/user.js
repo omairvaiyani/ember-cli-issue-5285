@@ -178,12 +178,14 @@ export default Ember.ObjectController.extend(CurrentUser, {
     isGettingCourseSuggestedFollowing: false,
 
     getCourseSuggestedFollowing: function () {
-        if (this.get('isGettingCourseSuggestedFollowing') || !this.get('isCurrentUser') || !this.get('course.name'))
+        if (this.get('isGettingCourseSuggestedFollowing') || !this.get('isCurrentUser') ||
+            !this.get('educationCohort.id.length'))
             return;
         this.set('isGettingCourseSuggestedFollowing', true);
         var where = {
-            course: ParseHelper.generatePointer(this.get('course.content'), 'Course')
+            educationCohort: ParseHelper.generatePointer(this.get('educationCohort'), 'EducationCohort')
         };
+        console.dir(where);
         this.store.find('parse-user', {where: JSON.stringify(where)})
             .then(function (results) {
                 this.get('courseSuggestedFollowing').clear();
@@ -191,7 +193,7 @@ export default Ember.ObjectController.extend(CurrentUser, {
                 this.get('courseSuggestedFollowing').addObjects(results);
                 this.set('isGettingCourseSuggestedFollowing', false);
             }.bind(this));
-    }.observes('course.id'),
+    }.observes('educationCohort.id'),
 
     /*
      * Facebook friends
@@ -401,8 +403,10 @@ export default Ember.ObjectController.extend(CurrentUser, {
                     'study-field'),
                 currentYear: this.get('newEducationCohort.currentYear')
             };
+            console.dir(where);
             this.store.findQuery('education-cohort', {where: JSON.stringify(where)})
                 .then(function (results) {
+                    console.dir(results);
                     if (results.objectAt(0))
                         return results.objectAt(0);
                     else {
