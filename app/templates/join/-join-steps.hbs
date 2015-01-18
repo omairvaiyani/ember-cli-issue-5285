@@ -1,0 +1,58 @@
+<div class="container">
+    <div class="row bs-wizard" style="border-bottom:0;">
+        <div {{bind-attr class=":col-xs-3 :bs-wizard-step
+            joinStep.create.active joinStep.create.disabled joinStep.create.completed"}}>
+            <div class="text-center bs-wizard-stepnum">
+                <i class="fa fa-pencil-square-o margin-right-8"></i>Create a Test
+            </div>
+            <div class="progress">
+                <div class="progress-bar"></div>
+            </div>
+            <span class="linkify bs-wizard-dot" {{action 'goToJoinStep' 'create'}}></span>
+        </div>
+
+        <div {{bind-attr class=":col-xs-2 :bs-wizard-step
+            joinStep.join.active joinStep.join.disabled joinStep.join.completed"}}>
+            <div class="text-center bs-wizard-stepnum">
+                <i class="fa fa-graduation-cap margin-right-8"></i>Join MyCQs
+            </div>
+            <div class="progress">
+                <div class="progress-bar"></div>
+            </div>
+            <span class="linkify bs-wizard-dot" {{action 'checkTest'}}></span>
+        </div>
+
+        <div {{bind-attr class=":col-xs-2 :bs-wizard-step
+            joinStep.personalise.active joinStep.personalise.disabled joinStep.personalise.completed"}}>
+            <div class="text-center bs-wizard-stepnum">
+                <i class="fa fa-magic margin-right-8"></i>Personalise
+            </div>
+            <div class="progress">
+                <div class="progress-bar"></div>
+            </div>
+            <span class="linkify bs-wizard-dot" {{action 'goToJoinStep' 'personalise'}}></span>
+        </div>
+
+        <div {{bind-attr class=":col-xs-2 :bs-wizard-step
+            joinStep.features.active joinStep.features.disabled joinStep.features.completed"}}>
+            <div class="text-center bs-wizard-stepnum">
+                <i class="fa fa-list margin-right-8"></i>Features
+            </div>
+            <div class="progress">
+                <div class="progress-bar"></div>
+            </div>
+            <span class="linkify bs-wizard-dot" {{action 'goToJoinStep' 'features'}}></span>
+        </div>
+
+        <div {{bind-attr class=":col-xs-3 :bs-wizard-step
+            joinStep.addQuestions.active joinStep.addQuestions.disabled joinStep.addQuestions.completed"}}>
+            <div class="text-center bs-wizard-stepnum">
+                <i class="fa fa-list-alt margin-right-8"></i>Add Questions
+            </div>
+            <div class="progress">
+                <div class="progress-bar"></div>
+            </div>
+            <span class="linkify bs-wizard-dot" {{action 'goToJoinStep' 'addQuestions'}}></span>
+        </div>
+    </div>
+</div>

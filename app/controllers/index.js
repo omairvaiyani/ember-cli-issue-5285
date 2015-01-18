@@ -99,6 +99,11 @@ export default
         testsOrderedByDate: function () {
             if (!this.get('currentUser.tests'))
                 return [];
+            return Em.ArrayProxy.createWithMixins(Em.SortableMixin, {
+                content: this.get('currentUser.tests'),
+                sortProperties: ['createdAt'],
+                sortAscending: false
+            });
             return this.get('currentUser.tests').sortBy('createdAt');
         }.property('currentUser.tests.length'),
 

@@ -1049,42 +1049,60 @@ Parse.Cloud.afterSave("Group", function (request) {
  * -----------------
  * beforeSave EducationalInstitution
  * -----------------
- * capitalize name
+ * - capitalize name
+ * - Use facebookId to set pictureUrl
+ * and fbObject if user is fb authenticated
  */
 Parse.Cloud.beforeSave("EducationalInstitution", function (request, response) {
     var educationalInstitution = request.object,
         user = request.user;
-
+    // Must have name
     if (!educationalInstitution.get('name') || !educationalInstitution.get('name').length)
         return response.error("Name is required!");
 
+    // Always make sure name is capitalised.
     educationalInstitution.set('name', capitaliseFirstLetter(educationalInstitution.get('name')));
-    if (educationalInstitution.get('facebookId')) {
-        educationalInstitution.set('pictureUrl',
-            "https://res.cloudinary.com/mycqs/image/facebook/c_thumb,e_improve,w_150/" +
-            educationalInstitution.get('facebookId'));
-        if (!educationalInstitution.get('fbObject') && user && user.get('authData') && user.get('authData').facebook) {
-            Parse.Cloud.httpRequest({
-                url: 'https://graph.facebook.com/v2.2/' + educationalInstitution.get('facebookId')
-                + "?access_token=" + user.get('authData').facebook.access_token,
-            }).then(function (httpResponse) {
-                educationalInstitution.set('cover', httpResponse.data.cover);
-                educationalInstitution.set('fbObject', httpResponse.data);
-                return response.success();
-            }, function (error) {
-                console.error(JSON.stringify(error));
-                return response.success();
-            });
-        } else
-            response.success();
-    } else
-        response.success();
+    var query = new Parse.Query("EducationalInstitution");
+    query.equalTo('name', educationalInstitution.get('name'));
+    if (educationalInstitution.id)
+        query.notEqualTo('objectId', educationalInstitution.id);
+    query.find()
+        .then(function (results) {
+            if (results[0]) {
+                return Parse.Promise.error({
+                    message: "Duplicate Educational Institution detected. Use returned object.",
+                    educationalInstitution: results[0]
+                });
+            }
+            if (educationalInstitution.get('facebookId') && (!educationalInstitution.get('pictureUrl')
+                || !educationalInstitution.get('pictureUrl').length)) {
+                educationalInstitution.set('pictureUrl',
+                    "https://res.cloudinary.com/mycqs/image/facebook/c_thumb,e_improve,w_150/" +
+                    educationalInstitution.get('facebookId'));
+                if (!educationalInstitution.get('fbObject') && user && user.get('authData') && user.get('authData').facebook) {
+                    return Parse.Cloud.httpRequest({
+                        url: 'https://graph.facebook.com/v2.2/' + educationalInstitution.get('facebookId')
+                        + "?access_token=" + user.get('authData').facebook.access_token,
+                    }).then(function (httpResponse) {
+                        educationalInstitution.set('fbObject', httpResponse.data);
+                        educationalInstitution.set('cover', httpResponse.data.cover);
+                        return;
+                    });
+                }
+            }
+        }).then(function () {
+            return response.success();
+        }, function (error) {
+            return response.success(error);
+        });
 });
 /**
  * -----------------
  * beforeSave StudyField
  * -----------------
- * capitalize name
+ * - capitalize name
+ * - Use facebookId to set pictureUrl
+ * and fbObject if user is fb authenticated
  */
 Parse.Cloud.beforeSave("StudyField", function (request, response) {
     var studyField = request.object,
@@ -1094,25 +1112,37 @@ Parse.Cloud.beforeSave("StudyField", function (request, response) {
         return response.error("Name is required!");
 
     studyField.set('name', capitaliseFirstLetter(studyField.get('name')));
-    if (studyField.get('facebookId')) {
-        studyField.set('pictureUrl',
-            "https://res.cloudinary.com/mycqs/image/facebook/c_thumb,e_improve,w_150/" +
-            studyField.get('facebookId'));
-        if (!studyField.get('fbObject') && user && user.get('authData') && user.get('authData').facebook) {
-            Parse.Cloud.httpRequest({
-                url: 'https://graph.facebook.com/v2.2/' + studyField.get('facebookId')
-                + "?access_token=" + user.get('authData').facebook.access_token,
-            }).then(function (httpResponse) {
-                studyField.set('fbObject', httpResponse.data);
-                return response.success();
-            }, function (error) {
-                console.error(JSON.stringify(error));
-                return response.success();
-            });
-        } else
-            response.success();
-    } else
-        response.success();
+    var query = new Parse.Query("StudyField");
+    query.equalTo('name', studyField.get('name'));
+    if (studyField.id)
+        query.notEqualTo('objectId', studyField.id);
+    query.find()
+        .then(function (results) {
+            if (results[0]) {
+                return Parse.Promise.error({
+                    message: "Duplicate Study field detected. Use returned object.",
+                    studyField: results[0]
+                });
+            }
+            if (studyField.get('facebookId') && (!studyField.get('pictureUrl') || !studyField.get('pictureUrl').length)) {
+                studyField.set('pictureUrl',
+                    "https://res.cloudinary.com/mycqs/image/facebook/c_thumb,e_improve,w_150/" +
+                    studyField.get('facebookId'));
+                if (!studyField.get('fbObject') && user && user.get('authData') && user.get('authData').facebook) {
+                    return Parse.Cloud.httpRequest({
+                        url: 'https://graph.facebook.com/v2.2/' + studyField.get('facebookId')
+                        + "?access_token=" + user.get('authData').facebook.access_token,
+                    }).then(function (httpResponse) {
+                        studyField.set('fbObject', httpResponse.data);
+                        return;
+                    });
+                }
+            }
+        }).then(function () {
+            return response.success();
+        }, function (error) {
+            return response.success(error);
+        });
 });
 /**
  * -----------------

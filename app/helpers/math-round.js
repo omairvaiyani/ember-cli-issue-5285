@@ -20,5 +20,6 @@ export default
                     removeLastNumber = valueString.slice(0, -1);
                 return parseInt(removeLastNumber += "0");
             }
+            return rounded;
         }
     });

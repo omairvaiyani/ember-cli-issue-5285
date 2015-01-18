@@ -161,6 +161,9 @@ export default
                 adapter.headers['X-Parse-Session-Token'] = currentUser.get('sessionToken');
                 Parse.User.become(currentUser.get('sessionToken'))
                     .then(function (user) {
+                        /*console.log("Connecting to ZZISH");
+                        var zzish = Zzish.getUser(user.id, user.get('name'));
+                        console.dir(zzish);*/
                     }, function (error) {
                         console.dir(error);
                     });

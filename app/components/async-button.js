@@ -13,23 +13,30 @@ export default Ember.Component.extend({
 
     click: function () {
         var _this = this;
-        this.sendAction('action', function (promise) {
-            _this.set('promise', promise);
-        }, this.get('param1'), this.get('param2'));
         this.set('textState', 'pending');
+        this.sendAction('action', function (promise) {
+            if (promise)
+                _this.set('promise', promise);
+            else {
+                _this.set('textState', 'rejected');
+            }
+        }, this.get('param1'), this.get('param2'));
 
         // If this is part of a form, it will perform an HTML form
         // submission
         return false;
     },
 
-    text: Ember.computed('textState', 'default', 'pending', 'resolved', 'fulfilled', 'rejected', function () {
+    text: function () {
         return this.getWithDefault(this.textState, this.get('default'));
-    }),
+    }.property('textState', 'default', 'pending', 'resolved', 'fulfilled', 'rejected'),
 
     resetObserver: Ember.observer('textState', 'reset', function () {
         if (this.get('reset') && ['resolved', 'rejected', 'fulfilled'].contains(this.get('textState'))) {
-            this.set('textState', 'default');
+            setTimeout(function () {
+                if(this)
+                    this.set('textState', 'default');
+            }.bind(this), 1500);
         }
     }),
 

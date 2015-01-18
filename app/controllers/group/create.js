@@ -2,16 +2,52 @@ import Ember from 'ember';
 import CurrentUser from '../../mixins/current-user';
 
 export default Ember.ObjectController.extend(CurrentUser, {
-    isForCourse: function () {
-        if(this.get('course') || this.get('institution'))
-            return true;
-        this.set('course', this.get('currentUser.course'));
-        this.set('institution', this.get('currentUser.institution'));
-        if (this.get('currentUser.course') || this.get('currentUser.institution'))
+    setDefaults: function () {
+        this.notifyPropertyChange('currentUser.educationCohort');
+    }.on('init'),
+
+    isForEducationCohort: function () {
+        if (this.get('defaultEducationCohort'))
             return true;
         else
             return false;
-    }.property('currentUser.course', 'currentUser.institution'),
+    }.property('defaultEducationCohort'),
+
+    /*   isForEducationCohortDidChange: function () {
+     if (this.get('isForEducationCohort') && !this.get('defaultEducationCohort')) {
+     this.set('defaultEducationCohort', this.store.createRecord('education-cohort'));
+     } else if (!this.get('isForEducationCohort'))
+     this.set('defaultEducationCohort', null);
+     console.log("Is for education cohort? "+this.get('isForEducationCohort'));
+     }.observes('isForEducationCohort'),*/
+
+    defaultEducationCohort: null,
+
+    setDefaultEducationCohort: function () {
+        if (this.get('id') && !this.get('educationCohort.id'))
+            return;
+
+        if (this.get('educationCohort.id')) {
+            this.set('defaultEducationCohort', this.store.createRecord('education-cohort', {
+                institution: this.get('educationCohort.institution'),
+                studyField: this.get('educationCohort.studyField'),
+                currentYear: this.get('educationCohort.currentYear'),
+                graduation: this.get('educationCohort.graduation')
+            }));
+            return;
+        }
+
+        if (!this.get('currentUser.educationCohort.isFulfilled') && !this.get('currentUser.educationCohort.institution.isFulfilled') && !this.get('currentUser.educationCohort.studyField.isFulfilled'))
+            return;
+        this.set('defaultEducationCohort', this.store.createRecord('education-cohort', {
+            institution: this.get('currentUser.educationCohort.institution'),
+            studyField: this.get('currentUser.educationCohort.studyField'),
+            currentYear: this.get('currentUser.educationCohort.currentYear'),
+            graduation: this.get('currentUser.educationCohort.graduation')
+        }));
+    }.observes('currentUser.educationCohort', 'currentUser.educationCohort.institution.isFulfilled',
+        'currentUser.educationCohort.studyField.isFulfilled'),
+
 
     privacyOptions: function () {
         var privacyOptions = [
@@ -58,38 +94,51 @@ export default Ember.ObjectController.extend(CurrentUser, {
         return new Ember.A();
     }.property(),
 
+    studyYearsToChooseFrom: [
+        "Foundation Year", "Year 1", "Year 2", "Year 3",
+        "Year 4", "Year 5", "Year 6", "Intercalation Year",
+        "Master's", "Ph.D", "Professional Education"
+    ],
+
     actions: {
-        courseSelected: function (record, name) {
-            if (record) {
-                this.store.find('course', record.external_id)
-                    .then(function (course) {
-                        this.set('course', course);
-                        return course.get('institution');
-                    }.bind(this))
-                    .then(function (institution) {
-                        this.set('institution', institution);
-                    }.bind(this));
-            } else {
-                var newCourse = this.store.createRecord('course', {
-                    name: name
-                });
-                this.set('course', newCourse);
-            }
+        educationalInstitutionSelected: function (object) {
+            var facebookId;
+            if (object.recordType === "facebook")
+                facebookId = object.id;
+            else
+                facebookId = object.facebookId;
+            Parse.Cloud.run('createOrUpdateEducationalInstitution', {
+                name: object.name,
+                facebookId: facebookId,
+                type: object.category // from facebook // TODO need non-facebook input
+            }).then(function (educationalInstitutionParse) {
+                return this.store.find('educational-institution', educationalInstitutionParse.id);
+            }.bind(this)).then(function (educationalInstitution) {
+                this.set('defaultEducationCohort.institution', educationalInstitution);
+            }.bind(this), function (error) {
+                console.dir(error);
+            });
         },
-        institutionSelected: function (record, name) {
-            if (record) {
-                this.store.find('university', record.external_id)
-                    .then(function (institution) {
-                        this.set('institution', institution);
-                    }.bind(this));
-            } else {
-                var newInstitution = this.store.createRecord('university', {
-                    fullName: name
-                });
-                this.set('institution', newInstitution);
-            }
+
+        studyFieldSelected: function (object) {
+            var facebookId;
+            if (object.recordType === "facebook")
+                facebookId = object.id;
+            else
+                facebookId = object.facebookId;
+            Parse.Cloud.run('createOrUpdateStudyField', {
+                name: object.name,
+                facebookId: facebookId
+            }).then(function (studyFieldParse) {
+                return this.store.find('study-field', studyFieldParse.id);
+            }.bind(this)).then(function (studyField) {
+                this.set('defaultEducationCohort.studyField', studyField);
+            }.bind(this), function (error) {
+                console.dir(error);
+            });
         },
-        createGroup: function () {
+
+        saveChanges: function (callback) {
             var errorMessage;
             if (!this.get('name.length'))
                 errorMessage = "Please enter a name for the group!";
@@ -97,57 +146,53 @@ export default Ember.ObjectController.extend(CurrentUser, {
             if (errorMessage)
                 return this.send('addNotification', 'warning', 'Hold on!', errorMessage);
 
-            this.set('creator', this.get('currentUser'));
-            //this.get('admins').pushObject(this.get('currentUser'));
-            this.send('incrementLoadingItems');
-            // TODO verify slug
-            this.set('slug', this.get(('suggestedSlug')));
-            this.get('model').save()
+            var promise,
+                promises = [],
+                isNewGroup;
+            if (this.get('isForEducationCohort') && this.get('defaultEducationCohort')) {
+                promise = Parse.Cloud.run('createOrGetEducationCohort', {
+                    educationalInstitutionId: this.get('defaultEducationCohort.institution.id'),
+                    studyFieldId: this.get('defaultEducationCohort.studyField.id'),
+                    currentYear: this.get('defaultEducationCohort.currentYear'),
+                    graduationYear: this.get('defaultEducationCohort.graduationYear')
+                }).then(function (educationCohortParse) {
+                    return this.store.find('education-cohort', educationCohortParse.id);
+                }.bind(this)).then(function (educationCohort) {
+                    this.set('educationCohort', educationCohort);
+                }.bind(this));
+                promises.push(promise);
+            } else {
+                this.set('educationCohort', null);
+            }
+            Promise.all(promises).then(function () {
+                if (!this.get('id')) {
+                    isNewGroup = true;
+                    this.set('creator', this.get('currentUser'));
+                    // Get slug
+                    return Parse.Cloud.run('generateSlugForGroup', {groupName: this.get('name')})
+                        .then(function (slug) {
+                            this.set('slug', slug);
+                            return this.get('model').save();
+                        }.bind(this));
+                } else
+                    return this.get('model').save();
+            }.bind(this))
                 .then(function () {
-                    this.send('decrementLoadingItems');
-                    this.transitionToRoute('group', this.get('model.slug'));
-                }.bind(this),
-                function (error) {
-                    this.send('decrementLoadingItems');
+                    if (isNewGroup)
+                        this.transitionToRoute('group', this.get('model.slug'));
+                    else {
+                        this.send('addNotification', 'saved', 'Group changes saved!');
+                        this.send('closeModal');
+                    }
+                }.bind(this), function (error) {
                     if (error && error.message)
                         return this.send('addNotification', 'warning', 'Something went wrong!', error.message);
                     else
                         return this.send('addNotification', 'warning', 'Something went wrong!', "Please try again later.");
-                }.bind(this)
-            )
+                });
+            callback(promise);
         },
-        saveGroup: function (callback) {
-            if ((this.get('course.name') && !this.get('course.id') ) ||
-                (this.get('institution.fullName') && !this.get('institution.id') )) {
-                var promise =
-                    Parse.Cloud.run('updateUserEducation', {
-                        education: {
-                            courseName: this.get('course.name'),
-                            courseFacebookId: this.get('course.facebookId'),
-                            institutionName: this.get('institution.fullName'),
-                            institutionFacebookId: this.get('institution.facebookId'),
-                            yearNumber: this.get('yearOrGrade')
-                        },
-                        groupId: this.get('id')
-                    });
-                callback(promise);
-                promise.then(function (response) {
-                    var institution = response.institution,
-                        course = response.course;
 
-                    this.send('closeModal');
-                    this.send('addNotification', 'saved', 'Group changes saved!');
-                    this.get('model').save();
-                }.bind(this));
-            } else {
-                this.send('closeModal');
-                var promise = this.get('model').save();
-                callback(promise);
-                promise.then(function () {
-                    this.send('addNotification', 'saved', 'Group changes saved!');
-                }.bind(this));
-            }
-        },
         setPrivacy: function (privacy) {
             this.set('privacy', privacy);
         }

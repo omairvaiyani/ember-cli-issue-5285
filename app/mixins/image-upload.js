@@ -9,7 +9,8 @@ export default Ember.Mixin.create({
     imageFile: {
         url: null,
         base64: null,
-        style: null
+        style: null,
+        isDefault: true
     },
 
     initializeFeatherEditor: function () {
@@ -28,6 +29,7 @@ export default Ember.Mixin.create({
                 this.set('imageFile.base64', base64String);
                 this.set('imageFile.url', newURL);
                 this.set('imageFile.style', "background-image:url('" + newURL + "');");
+                this.set('imageFile.isDefault', false);
                 this.get('featherEditor').close();
             }.bind(this),
             onError: function (errorObj) {
@@ -48,6 +50,7 @@ export default Ember.Mixin.create({
                 this.set('imageFile.base64', base64);
                 this.set('imageFile.style', "background-image:url('" + base64 + "');");
                 this.send('editImage');
+                this.set('imageFile.isDefault', false);
             }.bind(this);
         },
         editImage: function () {

@@ -444,6 +444,15 @@ var getSwiftUpdateRecordUrl = function (recordType) {
     return "http://api.swiftype.com/api/v1/engines/mycqs/document_types/" + recordType + "/documents/create_or_update.json";
 }
 /**
+ * -----------------------
+ * getSwiftBulkUpdateRecordUrl
+ * -----------------------
+ */
+var getSwiftBulkUpdateRecordUrl = function (recordType) {
+    return "https://api.swiftype.com/api/v1/engines/mycqs/document_types/" + recordType +
+        "/documents/bulk_create_or_update_verbose";
+}
+/**
  * -------------------------
  * getSwiftDocumentForObject
  * -------------------------
@@ -506,18 +515,24 @@ var getSwiftDocumentForObject = function (className, object) {
                     type: 'date'
                 }
             ];
-            if (object.get('institution') && object.get('institution').get('name')) {
-                document.fields.push({name: 'institutionId', value: object.get('institution').id, type: 'enum'});
-                document.fields.push({
-                    name: 'institutionName',
-                    value: object.get('institution').get('name'),
-                    type: 'string'
-                });
-            }
-            if (object.get('course') && object.get('course').get('name') && object.get('yearNumber')) {
-                document.fields.push({name: 'courseId', value: object.get('course').id, type: 'enum'});
-                document.fields.push({name: 'courseName', value: object.get('course').get('name'), type: 'string'});
-                document.fields.push({name: 'yearNumber', value: object.get('yearNumber'), type: 'integer'});
+            var educationCohort = object.get('educationCohort');
+            if (educationCohort && educationCohort.get('institution') && educationCohort.get('studyField')) {
+                document.fields.push(
+                    {
+                        name: 'institutionName',
+                        value: educationCohort.get('institution').get('name'),
+                        type: 'enum'
+                    },
+                    {
+                        name: 'studyFieldName',
+                        value: educationCohort.get('studyField').get('name'),
+                        type: 'string'
+                    },
+                    {
+                        name: 'currentYear',
+                        value: educationCohort.get('currentYear'),
+                        type: 'string'
+                    });
             }
             break;
         case "Test":
@@ -591,7 +606,7 @@ var getSwiftDocumentForObject = function (className, object) {
                 }
             ];
             break;
-        case "Course":
+        case "StudyField":
             if (!object.get('name') || !object.get('name').length)
                 return;
 
@@ -605,40 +620,41 @@ var getSwiftDocumentForObject = function (className, object) {
                     name: 'facebookId',
                     value: object.get('facebookId') ? object.get('facebookId') : "",
                     type: 'string'
+                },
+                {
+                    name: 'pictureUrl',
+                    value: object.get('pictureUrl') ? object.get('pictureUrl') : "",
+                    type: 'string'
                 }
             ];
-            if (object.get('institution')) {
-                document.fields.push({
-                        name: 'institutionFullName',
-                        value: capitaliseFirstLetter(object.get('institution').get('fullName')) ?
-                            object.get('institution').get('fullName') : "",
-                        type: 'enum'
-                    },
-                    {
-                        name: 'institutionFacebookId',
-                        value: object.get('institution').get('facebookId') ?
-                            object.get('institution').get('facebookId') : "",
-                        type: 'string'
-                    },
-                    {
-                        name: 'institutionObjectId',
-                        value: object.get('institution').id,
-                        type: 'enum'
-                    });
-            }
             break;
-        case "University":
-            if (!object.get('fullName') || !object.get('fullName').length)
+        case "EducationalInstitution":
+            if (!object.get('name') || !object.get('name').length)
                 return;
             document.fields = [
                 {
-                    name: 'fullName',
-                    value: capitaliseFirstLetter(object.get('fullName')),
+                    name: 'name',
+                    value: capitaliseFirstLetter(object.get('name')),
+                    type: 'string'
+                },
+                {
+                    name: 'type',
+                    value: object.get('type') ? object.get('type') : "",
                     type: 'string'
                 },
                 {
                     name: 'facebookId',
                     value: object.get('facebookId') ? object.get('facebookId') : "",
+                    type: 'string'
+                },
+                {
+                    name: 'pictureUrl',
+                    value: object.get('pictureUrl') ? object.get('pictureUrl') : "",
+                    type: 'string'
+                },
+                {
+                    name: 'coverImageUrl',
+                    value: object.get('cover') ? object.get('cover').source : "",
                     type: 'string'
                 }
             ];

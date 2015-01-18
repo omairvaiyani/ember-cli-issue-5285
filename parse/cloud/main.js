@@ -473,6 +473,15 @@ var getSwiftUpdateRecordUrl = function (recordType) {
     return "http://api.swiftype.com/api/v1/engines/mycqs/document_types/" + recordType + "/documents/create_or_update.json";
 }
 /**
+ * -----------------------
+ * getSwiftBulkUpdateRecordUrl
+ * -----------------------
+ */
+var getSwiftBulkUpdateRecordUrl = function (recordType) {
+    return "https://api.swiftype.com/api/v1/engines/mycqs/document_types/" + recordType +
+        "/documents/bulk_create_or_update_verbose";
+}
+/**
  * -------------------------
  * getSwiftDocumentForObject
  * -------------------------
@@ -535,18 +544,24 @@ var getSwiftDocumentForObject = function (className, object) {
                     type: 'date'
                 }
             ];
-            if (object.get('institution') && object.get('institution').get('name')) {
-                document.fields.push({name: 'institutionId', value: object.get('institution').id, type: 'enum'});
-                document.fields.push({
-                    name: 'institutionName',
-                    value: object.get('institution').get('name'),
-                    type: 'string'
-                });
-            }
-            if (object.get('course') && object.get('course').get('name') && object.get('yearNumber')) {
-                document.fields.push({name: 'courseId', value: object.get('course').id, type: 'enum'});
-                document.fields.push({name: 'courseName', value: object.get('course').get('name'), type: 'string'});
-                document.fields.push({name: 'yearNumber', value: object.get('yearNumber'), type: 'integer'});
+            var educationCohort = object.get('educationCohort');
+            if (educationCohort && educationCohort.get('institution') && educationCohort.get('studyField')) {
+                document.fields.push(
+                    {
+                        name: 'institutionName',
+                        value: educationCohort.get('institution').get('name'),
+                        type: 'enum'
+                    },
+                    {
+                        name: 'studyFieldName',
+                        value: educationCohort.get('studyField').get('name'),
+                        type: 'string'
+                    },
+                    {
+                        name: 'currentYear',
+                        value: educationCohort.get('currentYear'),
+                        type: 'string'
+                    });
             }
             break;
         case "Test":
@@ -620,7 +635,7 @@ var getSwiftDocumentForObject = function (className, object) {
                 }
             ];
             break;
-        case "Course":
+        case "StudyField":
             if (!object.get('name') || !object.get('name').length)
                 return;
 
@@ -634,40 +649,41 @@ var getSwiftDocumentForObject = function (className, object) {
                     name: 'facebookId',
                     value: object.get('facebookId') ? object.get('facebookId') : "",
                     type: 'string'
+                },
+                {
+                    name: 'pictureUrl',
+                    value: object.get('pictureUrl') ? object.get('pictureUrl') : "",
+                    type: 'string'
                 }
             ];
-            if (object.get('institution')) {
-                document.fields.push({
-                        name: 'institutionFullName',
-                        value: capitaliseFirstLetter(object.get('institution').get('fullName')) ?
-                            object.get('institution').get('fullName') : "",
-                        type: 'enum'
-                    },
-                    {
-                        name: 'institutionFacebookId',
-                        value: object.get('institution').get('facebookId') ?
-                            object.get('institution').get('facebookId') : "",
-                        type: 'string'
-                    },
-                    {
-                        name: 'institutionObjectId',
-                        value: object.get('institution').id,
-                        type: 'enum'
-                    });
-            }
             break;
-        case "University":
-            if (!object.get('fullName') || !object.get('fullName').length)
+        case "EducationalInstitution":
+            if (!object.get('name') || !object.get('name').length)
                 return;
             document.fields = [
                 {
-                    name: 'fullName',
-                    value: capitaliseFirstLetter(object.get('fullName')),
+                    name: 'name',
+                    value: capitaliseFirstLetter(object.get('name')),
+                    type: 'string'
+                },
+                {
+                    name: 'type',
+                    value: object.get('type') ? object.get('type') : "",
                     type: 'string'
                 },
                 {
                     name: 'facebookId',
                     value: object.get('facebookId') ? object.get('facebookId') : "",
+                    type: 'string'
+                },
+                {
+                    name: 'pictureUrl',
+                    value: object.get('pictureUrl') ? object.get('pictureUrl') : "",
+                    type: 'string'
+                },
+                {
+                    name: 'coverImageUrl',
+                    value: object.get('cover') ? object.get('cover').source : "",
                     type: 'string'
                 }
             ];
@@ -875,130 +891,181 @@ Parse.Cloud.job('testQualityScore', function (request, status) {
         status.error("Only updated " + promises.length + " tests before error. " + JSON.stringify(error));
     })
 });
-
+/**
+ *
+ */
+Parse.Cloud.job("transferEducation", function (request, status) {
+    Parse.Cloud.useMasterKey();
+    /*var query = new Parse.Query("CourseList");
+     query.notContainedIn('name', ["Medicine", "Clinical Science"]);
+     query.each(function (course) {
+     var studyField = new Parse.Object("StudyField");
+     studyField.set('name', course.get('name'));
+     return studyField.save();
+     }).then(function () {
+     status.success();
+     }, function (error) {
+     status.error(JSON.stringify(error));
+     });*/
+    var query = new Parse.Query("InstitutionList");
+    query.notEqualTo("transferred", true);
+    query.each(function (institution) {
+        var educationalInstitution = new Parse.Object("EducationalInstitution");
+        educationalInstitution.set('name', institution.get('fullName'));
+        educationalInstitution.set('type', "University");
+        var promises = [];
+        institution.set('transferred', true);
+        promises.push(institution.save());
+        promises.push(educationalInstitution.save());
+        return Parse.Promise.when(promises);
+    }).then(function () {
+        status.success();
+    }, function (error) {
+        status.error(JSON.stringify(error));
+    });
+});
 /**
  * @BackgroundJob - Index Objects for Swiftype
  * Search indexing for Users and Tests.
  * Only indexes/updates objects updated in the last
- * 24hrs.
+ * 25 hours (1 day +- any discrepancies for job run time)
  */
 Parse.Cloud.job("indexObjectsForSwiftype", function (request, status) {
-    var totalCount = 0;
+    var statusObject = {
+        totalUsers: 0,
+        totalTests: 0,
+        totalStudyFields: 0,
+        totalEducationalInstitutions: 0,
+        totalCount: 0,
+    };
 
     var query = new Parse.Query(Parse.User);
     query.exists('name');
     query.exists('slug');
-    query.include('course');
-    query.include('institution');
-    var yesterday = moment().subtract(1, 'day');
-    query.greaterThanOrEqualTo("updatedAt", yesterday._d);
-
-    query.each(function (object) {
-        var document = getSwiftDocumentForObject("_User", object);
-        if (!document)
+    query.include('educationCohort.institution');
+    query.include('educationCohort.studyField');
+    var yesterday = moment().subtract(25, 'hour');
+    query.greaterThanOrEqualTo("updatedAt", yesterday.toDate());
+    query.limit(1000);
+    query.skip(request.params.skip);
+    var documents = [];
+    query.find().then(function (results) {
+     _.each(results, function (object) {
+         var document = getSwiftDocumentForObject("_User", object);
+         if (document)
+             documents.push(document);
+     });
+    }).then(function () {
+        if (!documents.length)
             return;
+        statusObject.totalCount += documents.length;
+        statusObject.totalUsers = documents.length;
         return Parse.Cloud.httpRequest({
             method: 'POST',
-            url: getSwiftUpdateRecordUrl('users'),
+            url: getSwiftBulkUpdateRecordUrl('users'),
             headers: {
                 'Content-Type': 'application/json'
             },
             body: {
                 auth_token: "xBAVD6EFQzt23WJFhp1v",
-                document: document
+                documents: documents
             }
-        }).then(function (success) {
-                totalCount++;
-            },
-            function (error) {
-                console.error("Document error: " + JSON.stringify(document));
-                console.error("Failure to call to swiftype, " + error.text);
-            });
+        });
     }).then(function () {
         query = new Parse.Query('Test');
+        query.exists('author');
+        query.exists('category');
         query.include('author');
         query.include('category');
-        var yesterday = moment().subtract(1, 'day');
-        query.greaterThanOrEqualTo("updatedAt", yesterday._d);
-        return query.each(function (object) {
+        var yesterday = moment().subtract(25, 'hour');
+        query.greaterThanOrEqualTo("updatedAt", yesterday.toDate());
+        query.limit(1000);
+        documents = [];
+        return query.find();
+    }).then(function (results) {
+        _.each(results, function (object) {
             var document = getSwiftDocumentForObject("Test", object);
-            if (!document)
-                return;
-            return Parse.Cloud.httpRequest({
-                method: 'POST',
-                url: getSwiftUpdateRecordUrl('tests'),
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: {
-                    auth_token: "xBAVD6EFQzt23WJFhp1v",
-                    document: document
-                }
-            }).then(function (success) {
-                    totalCount++;
-                },
-                function (error) {
-                    console.error("Document error: " + JSON.stringify(document));
-                    console.error("Failure to call to swiftype, " + error.text);
-                });
+            if (document)
+                documents.push(document);
         });
     }).then(function () {
-        query = new Parse.Query('Course');
-        query.include('institution');
+        if (!documents.length)
+            return;
+        statusObject.totalCount += documents.length;
+        statusObject.totalTests = documents.length;
+        return Parse.Cloud.httpRequest({
+            method: 'POST',
+            url: getSwiftBulkUpdateRecordUrl('tests'),
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: {
+                auth_token: "xBAVD6EFQzt23WJFhp1v",
+                documents: documents
+            }
+        });
+    }).then(function () {
+        query = new Parse.Query('StudyField');
         query.exists('name');
-        var yesterday = moment().subtract(1, 'day');
-        query.greaterThanOrEqualTo("updatedAt", yesterday._d);
-        return query.each(function (object) {
-            var document = getSwiftDocumentForObject("Course", object);
-            if (!document)
-                return;
-            return Parse.Cloud.httpRequest({
-                method: 'POST',
-                url: getSwiftUpdateRecordUrl('courses'),
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: {
-                    auth_token: "xBAVD6EFQzt23WJFhp1v",
-                    document: document
-                }
-            }).then(function (success) {
-                    totalCount++;
-                },
-                function (error) {
-                    console.error("Document error: " + JSON.stringify(document));
-                    console.error("Failure to call to swiftype, " + error.text);
-                });
+        var yesterday = moment().subtract(25, 'hour');
+        query.greaterThanOrEqualTo("updatedAt", yesterday.toDate());
+        documents = [];
+        query.limit(1000);
+        return query.find();
+    }).then(function (results) {
+        _.each(results, function (object) {
+            var document = getSwiftDocumentForObject("StudyField", object);
+            if (document)
+                documents.push(document);
         });
     }).then(function () {
-        query = new Parse.Query('University');
-        query.exists('fullName');
-        var yesterday = moment().subtract(1, 'day');
-        query.greaterThanOrEqualTo("updatedAt", yesterday._d);
-        return query.each(function (object) {
-            var document = getSwiftDocumentForObject("University", object);
-            if (!document)
-                return;
-            return Parse.Cloud.httpRequest({
-                method: 'POST',
-                url: getSwiftUpdateRecordUrl('institutions'),
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: {
-                    auth_token: "xBAVD6EFQzt23WJFhp1v",
-                    document: document
-                }
-            }).then(function (success) {
-                    totalCount++;
-                },
-                function (error) {
-                    console.error("Document error: " + JSON.stringify(document));
-                    console.error("Failure to call to swiftype, " + error.text);
-                });
+        if (!documents.length)
+            return;
+        statusObject.totalCount += documents.length;
+        statusObject.totalStudyFields = documents.length;
+        return Parse.Cloud.httpRequest({
+            method: 'POST',
+            url: getSwiftBulkUpdateRecordUrl('study-fields'),
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: {
+                auth_token: "xBAVD6EFQzt23WJFhp1v",
+                documents: documents
+            }
         });
     }).then(function () {
-        status.success();
+        query = new Parse.Query('EducationalInstitution');
+        var yesterday = moment().subtract(25, 'hour');
+        query.greaterThanOrEqualTo("updatedAt", yesterday.toDate());
+        query.ascending('name');
+        query.limit(1000);
+        documents = [];
+        return query.find();
+    }).then(function (results) {
+        _.each(results, function (object) {
+            var document = getSwiftDocumentForObject("EducationalInstitution", object);
+            if (document)
+                documents.push(document);
+        });
+    }).then(function () {
+        if (!documents.length)
+            return;
+        statusObject.totalCount += documents.length;
+        statusObject.totalEducationalInstitutions = documents.length;
+        return Parse.Cloud.httpRequest({
+            method: 'POST',
+            url: getSwiftBulkUpdateRecordUrl('educational-institutions'),
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: {
+                auth_token: "xBAVD6EFQzt23WJFhp1v",
+                documents: documents
+            }
+        });
+    }).then(function () {
+        status.success(JSON.stringify(statusObject));
     }, function (error) {
         status.error(JSON.stringify(error));
     });
@@ -1179,19 +1246,19 @@ Parse.Cloud.job('cancelExpiredSubscriptions', function (request, status) {
         usernames.push(privateData.get('username'));
         return privateData.save();
     }).then(function () {
-        if(!usernames.length)
+        if (!usernames.length)
             return;
         query = new Parse.Query(Parse.Role);
         query.equalTo('name', "Premium");
         return query.find();
     }).then(function (premium) {
-        if(!premium)
+        if (!premium)
             return;
         query = new Parse.Query(Parse.User);
         query.containedIn("username", usernames);
         return query.find();
     }).then(function (users) {
-        if(!users || !users.length)
+        if (!users || !users.length)
             return;
         premium.getUsers().remove(users);
         return premium.save();
@@ -2170,8 +2237,169 @@ Parse.Cloud.define("updateUserEducation", function (request, response) {
         } else
             response.success({course: group.get('course'), institution: group.get('institution')});
     });
-})
-;
+});
+/**
+ * @CloudFunction Create or Get EducationCohort
+ * Takes educational institution, study field
+ * and current year to find matching cohort
+ * or create a new one. Bonus, add graduation
+ * year to existing cohort if one is provided
+ * here.
+ * @param {String} educationalInstitutionId
+ * @param {String} studyFieldId (Required if University)
+ * @param {String} currentYear (Require if University)
+ * @param {String} graduationYear (optional)
+ * @return {EducationalCohort} educationalCohort
+ */
+Parse.Cloud.define('createOrGetEducationCohort', function (request, response) {
+    var educationalInstitutionId = request.params.educationalInstitutionId,
+        studyFieldId = request.params.studyFieldId,
+        currentYear = request.params.currentYear,
+        graduationYear = request.params.graduationYear;
+
+    if (!educationalInstitutionId)
+        return response.error("Educational Institution Id is needed.");
+
+    var educationalInstitution = new Parse.Object("EducationalInstitution"),
+        studyField = new Parse.Object('StudyField'),
+        promises = [];
+
+    educationalInstitution.id = educationalInstitutionId;
+    studyField.id = studyFieldId;
+    promises.push(educationalInstitution.fetch());
+    if (studyFieldId)
+        promises.push(studyField.fetch());
+    Parse.Promise.when(promises).then(function () {
+        var query = new Parse.Query("EducationCohort");
+        query.equalTo('institution', educationalInstitution);
+        if (studyFieldId)
+            query.equalTo('studyField', studyField);
+        if (currentYear)
+            query.equalTo('currentYear', currentYear);
+        return query.find();
+    }).then(function (results) {
+        Parse.Cloud.useMasterKey(); // Cannot edit existing EducationCohort objects w/o masterkey.
+        var educationCohort = results[0];
+        if (educationCohort) {
+            if (!educationCohort.get('graduationYear') && graduationYear) {
+                educationCohort.set('graduationYear', graduationYear);
+                return educationCohort.save();
+            } else
+                return educationCohort;
+        } else {
+            educationCohort = new Parse.Object("EducationCohort");
+            educationCohort.set('institution', educationalInstitution);
+            if (studyFieldId)
+                educationCohort.set('studyField', studyField);
+            if (currentYear)
+                educationCohort.set('currentYear', currentYear);
+            if (graduationYear)
+                educationCohort.set('graduationYear', graduationYear);
+            var ACL = new Parse.ACL();
+            ACL.setPublicReadAccess(true);
+            educationCohort.setACL(ACL);
+            return educationCohort.save();
+        }
+    }).then(function (educationCohort) {
+        response.success(educationCohort);
+    }, function (error) {
+        response.error(error);
+    });
+});
+/**
+ * @CloudFunction Create or Update EducationalInstitution
+ * EducationalInstitution.name is the key unique factor
+ * Can be added by user input, from facebook
+ * search or updated to include facebookId.
+ * Will return a new or updated studyField.
+ *
+ * @param {String} name
+ * @param {String} type (e.g. University)
+ * @param {String} facebookId (optional)
+ * @return {EducationalInstitution} educationalInstitution
+ */
+Parse.Cloud.define('createOrUpdateEducationalInstitution', function (request, response) {
+    var name = request.params.name,
+        facebookId = request.params.facebookId,
+        type = request.params.type,
+        educationalInstitution;
+
+    if (!name)
+        return response.error("Please send a 'name' for the new EducationalInstitution.");
+
+    name = capitaliseFirstLetter(name);
+    var query = new Parse.Query("EducationalInstitution");
+    query.equalTo('name', name);
+    query.find()
+        .then(function (results) {
+            if (results[0]) {
+                educationalInstitution = results[0];
+                // If existing study field has no facebookId and we have one here, set it
+                if ((!educationalInstitution.get('facebookId') || !educationalInstitution.get('facebookId').length) &&
+                    facebookId) {
+                    educationalInstitution.set('facebookId', facebookId);
+                    return educationalInstitution.save();
+                } else
+                    return educationalInstitution;
+            } else {
+                educationalInstitution = new Parse.Object("EducationalInstitution");
+                educationalInstitution.set('name', name);
+                educationalInstitution.set('type', type);
+                if (facebookId)
+                    educationalInstitution.set('facebookId', facebookId);
+                return educationalInstitution.save();
+            }
+        }).then(function () {
+            response.success(educationalInstitution);
+        }, function (error) {
+            response.error(error);
+        });
+});
+/**
+ * @CloudFunction Create or Update StudyField
+ * StudyField.name is the key unique factor
+ * Can be added by user input, from facebook
+ * search or updated to include facebookId.
+ * Will return a new or updated studyField.
+ *
+ * @param {string} name
+ * @param {string} facebookId (optional)
+ * @return {StudyField} studyField
+ */
+Parse.Cloud.define('createOrUpdateStudyField', function (request, response) {
+    var name = request.params.name,
+        facebookId = request.params.facebookId,
+        studyField;
+
+    if (!name)
+        return response.error("Please send a 'name' for the new StudyField.");
+
+    name = capitaliseFirstLetter(name);
+    var query = new Parse.Query("StudyField");
+    query.equalTo('name', name);
+    query.find()
+        .then(function (results) {
+            if (results[0]) {
+                studyField = results[0];
+                // If existing study field has no facebookId and we have one here, set it
+                if ((!studyField.get('facebookId') || !studyField.get('facebookId').length) && facebookId) {
+                    studyField.set('facebookId', facebookId);
+                    return studyField.save();
+                } else
+                    return studyField;
+            } else {
+                studyField = new Parse.Object("StudyField");
+                studyField.set('name', name);
+                if (facebookId)
+                    studyField.set('facebookId', facebookId);
+                return studyField.save();
+            }
+        }).then(function () {
+            response.success(studyField);
+        }, function (error) {
+            response.error(error);
+        });
+});
 
 Parse.Cloud.define("followUser", function (request, response) {
     if (!request.user) {
@@ -2352,7 +2580,9 @@ Parse.Cloud.define('getInstallationsForUser', function (request, response) {
             response.success(results);
         });
 });
-
+/**
+ * -- Deprecated --
+ */
 Parse.Cloud.define("findTestsForModule", function (request, response) {
     var getQuery = new Parse.Query("Module");
 
@@ -2412,7 +2642,9 @@ Parse.Cloud.define("findTestsForModule", function (request, response) {
         });
     });
 });
-
+/**
+ * -- Deprecated --
+ */
 Parse.Cloud.define("generateTestForModule", function (request, response) {
     var difficulty = request.params.difficulty;
     var totalQuestions = request.params.totalQuestions;
@@ -2550,7 +2782,9 @@ Parse.Cloud.define("generateTestForModule", function (request, response) {
         }
     });
 });
-
+/**
+ * -- Deprecated --
+ */
 Parse.Cloud.define("findTestsForUser", function (request, response) {
 
     var query = new Parse.Query(Parse.User);
@@ -3566,7 +3800,48 @@ Parse.Cloud.define('generateSitemapForTests', function (request, response) {
         response.error(JSON.stringify(error));
     });
 });
+/**
+ * @CloudFunction Generate Slug for Group
+ * @param {String} groupName
+ * @return {String} slug
+ */
+Parse.Cloud.define('generateSlugForGroup', function (request, response) {
+    var groupName = request.params.groupName,
+        initialSlug,
+        slug;
+    if (!groupName || !groupName.length)
+        return response.error('Please send the groupName.');
 
+    Parse.Cloud.useMasterKey(); // To find ALL (even secret) groups, checking for slugs.
+    initialSlug = slugify("Group", groupName);
+    var query = new Parse.Query("Group");
+    query.startsWith('slug', initialSlug);
+    query.count()
+        .then(function (count) {
+            if (!count)
+                slug = initialSlug;
+            else {
+                query = new Parse.Query('Group');
+                initialSlug += (count + 1);
+                query.startsWith('slug', initialSlug);
+                // Double check
+                return query.count()
+                    .then(function (count) {
+                        if (!count)
+                            slug = initialSlug;
+                        else {
+                            initialSlug += (count + 1); // Not fool proof, but should be fine.
+                            slug = initialSlug;
+                        }
+                    });
+            }
+        }).then(function () {
+            response.success(slug);
+        }, function (error) {
+            response.error(error);
+        });
+
+});
 /**
  * @CloudFunction Add members to Group
  * Add unique members to a group,
@@ -3730,6 +4005,8 @@ Parse.Cloud.define('addTestsToGroup', function (request, response) {
     group.id = groupId;
     group.fetch()
         .then(function () {
+            if (group.get('membersCanAddTests'))
+                Parse.Cloud.useMasterKey();
             var query = new Parse.Query("Test");
             query.containedIn('objectId', testIds);
             return query.find();
@@ -3741,8 +4018,6 @@ Parse.Cloud.define('addTestsToGroup', function (request, response) {
             }
             var tests = group.relation('gatheredTests');
             tests.add(testsToAdd);
-            if (group.get('membersCanAddTests'))
-                Parse.Cloud.useMasterKey();
             return group.save();
         }).then(function () {
             var relation = group.relation('gatheredTests'),
@@ -4864,42 +5139,60 @@ Parse.Cloud.afterSave("Group", function (request) {
  * -----------------
  * beforeSave EducationalInstitution
  * -----------------
- * capitalize name
+ * - capitalize name
+ * - Use facebookId to set pictureUrl
+ * and fbObject if user is fb authenticated
  */
 Parse.Cloud.beforeSave("EducationalInstitution", function (request, response) {
     var educationalInstitution = request.object,
         user = request.user;
-
+    // Must have name
     if (!educationalInstitution.get('name') || !educationalInstitution.get('name').length)
         return response.error("Name is required!");
 
+    // Always make sure name is capitalised.
     educationalInstitution.set('name', capitaliseFirstLetter(educationalInstitution.get('name')));
-    if (educationalInstitution.get('facebookId')) {
-        educationalInstitution.set('pictureUrl',
-            "https://res.cloudinary.com/mycqs/image/facebook/c_thumb,e_improve,w_150/" +
-            educationalInstitution.get('facebookId'));
-        if (!educationalInstitution.get('fbObject') && user && user.get('authData') && user.get('authData').facebook) {
-            Parse.Cloud.httpRequest({
-                url: 'https://graph.facebook.com/v2.2/' + educationalInstitution.get('facebookId')
-                + "?access_token=" + user.get('authData').facebook.access_token,
-            }).then(function (httpResponse) {
-                educationalInstitution.set('cover', httpResponse.data.cover);
-                educationalInstitution.set('fbObject', httpResponse.data);
-                return response.success();
-            }, function (error) {
-                console.error(JSON.stringify(error));
-                return response.success();
-            });
-        } else
-            response.success();
-    } else
-        response.success();
+    var query = new Parse.Query("EducationalInstitution");
+    query.equalTo('name', educationalInstitution.get('name'));
+    if (educationalInstitution.id)
+        query.notEqualTo('objectId', educationalInstitution.id);
+    query.find()
+        .then(function (results) {
+            if (results[0]) {
+                return Parse.Promise.error({
+                    message: "Duplicate Educational Institution detected. Use returned object.",
+                    educationalInstitution: results[0]
+                });
+            }
+            if (educationalInstitution.get('facebookId') && (!educationalInstitution.get('pictureUrl')
+                || !educationalInstitution.get('pictureUrl').length)) {
+                educationalInstitution.set('pictureUrl',
+                    "https://res.cloudinary.com/mycqs/image/facebook/c_thumb,e_improve,w_150/" +
+                    educationalInstitution.get('facebookId'));
+                if (!educationalInstitution.get('fbObject') && user && user.get('authData') && user.get('authData').facebook) {
+                    return Parse.Cloud.httpRequest({
+                        url: 'https://graph.facebook.com/v2.2/' + educationalInstitution.get('facebookId')
+                        + "?access_token=" + user.get('authData').facebook.access_token,
+                    }).then(function (httpResponse) {
+                        educationalInstitution.set('fbObject', httpResponse.data);
+                        educationalInstitution.set('cover', httpResponse.data.cover);
+                        return;
+                    });
+                }
+            }
+        }).then(function () {
+            return response.success();
+        }, function (error) {
+            return response.success(error);
+        });
 });
 /**
  * -----------------
  * beforeSave StudyField
  * -----------------
- * capitalize name
+ * - capitalize name
+ * - Use facebookId to set pictureUrl
+ * and fbObject if user is fb authenticated
  */
 Parse.Cloud.beforeSave("StudyField", function (request, response) {
     var studyField = request.object,
@@ -4909,25 +5202,37 @@ Parse.Cloud.beforeSave("StudyField", function (request, response) {
         return response.error("Name is required!");
 
     studyField.set('name', capitaliseFirstLetter(studyField.get('name')));
-    if (studyField.get('facebookId')) {
-        studyField.set('pictureUrl',
-            "https://res.cloudinary.com/mycqs/image/facebook/c_thumb,e_improve,w_150/" +
-            studyField.get('facebookId'));
-        if (!studyField.get('fbObject') && user && user.get('authData') && user.get('authData').facebook) {
-            Parse.Cloud.httpRequest({
-                url: 'https://graph.facebook.com/v2.2/' + studyField.get('facebookId')
-                + "?access_token=" + user.get('authData').facebook.access_token,
-            }).then(function (httpResponse) {
-                studyField.set('fbObject', httpResponse.data);
-                return response.success();
-            }, function (error) {
-                console.error(JSON.stringify(error));
-                return response.success();
-            });
-        } else
-            response.success();
-    } else
-        response.success();
+    var query = new Parse.Query("StudyField");
+    query.equalTo('name', studyField.get('name'));
+    if (studyField.id)
+        query.notEqualTo('objectId', studyField.id);
+    query.find()
+        .then(function (results) {
+            if (results[0]) {
+                return Parse.Promise.error({
+                    message: "Duplicate Study field detected. Use returned object.",
+                    studyField: results[0]
+                });
+            }
+            if (studyField.get('facebookId') && (!studyField.get('pictureUrl') || !studyField.get('pictureUrl').length)) {
+                studyField.set('pictureUrl',
+                    "https://res.cloudinary.com/mycqs/image/facebook/c_thumb,e_improve,w_150/" +
+                    studyField.get('facebookId'));
+                if (!studyField.get('fbObject') && user && user.get('authData') && user.get('authData').facebook) {
+                    return Parse.Cloud.httpRequest({
+                        url: 'https://graph.facebook.com/v2.2/' + studyField.get('facebookId')
+                        + "?access_token=" + user.get('authData').facebook.access_token,
+                    }).then(function (httpResponse) {
+                        studyField.set('fbObject', httpResponse.data);
+                        return;
+                    });
+                }
+            }
+        }).then(function () {
+            return response.success();
+        }, function (error) {
+            return response.success(error);
+        });
 });
 /**
  * -----------------

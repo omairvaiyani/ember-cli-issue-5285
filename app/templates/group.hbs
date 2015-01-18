@@ -6,25 +6,27 @@
                 <section class="row">
                     <div class="col-md-8">
                         <h3>{{name}}</h3>
+
                         <p>
-                            <i class="fa fa-calendar-o margin-right-8"></i>
-                            Year {{yearOrGrade}}
+                            {{#if educationCohort}}
+                                <i class="fa fa-calendar-o margin-right-8"></i>
+                                {{educationCohort.currentYear}}
+                                <i class="fa fa-book margin-right-8 margin-left-16"></i>
+                                <a {{bind-attr href=educationCohort.studyField.fbObject.link}}
+                                        target="_blank">{{educationCohort.studyField.name}}</a>
+                                <i class="fa fa-university margin-right-8 margin-left-16"></i>
+                                <a {{bind-attr href=educationCohort.institution.fbObject.link}}
+                                        target="_blank" class="margin-right-16">{{educationCohort.institution.name}}</a>
+                            {{/if}}
 
-                            <i class="fa fa-book margin-right-8 margin-left-16"></i>
-                            <a {{bind-attr href=course.facebookPageUrl}}
-                                    target="_blank">{{course.name}}</a>
-
-                            <i class="fa fa-university margin-right-8 margin-left-16"></i>
-                            <a {{bind-attr href=institution.facebookPageUrl}}
-                                    target="_blank">{{institution.fullName}}</a>
-
-                            <i class="fa fa-lock margin-right-8 margin-left-16"></i>
+                            <i class="fa fa-lock margin-right-8"></i>
                             <label class="text-capitalize margin-right-16">{{privacy}}</label>
-
-                            <label class="cursor-pointer" {{action 'openModal' 'group/modal/edit-group' 'group.create' model}}>
-                                <i class="fa fa-cog margin-right-8 "></i>
-                                Edit
-                            </label>
+                            {{#if hasModeratorAccess}}
+                                <label class="cursor-pointer" {{action 'openModal' 'group/modal/edit-group' 'group.create' model}}>
+                                    <i class="fa fa-cog margin-right-8 "></i>
+                                    Edit
+                                </label>
+                            {{/if}}
                         </p>
                     </div>
                 </section>
@@ -38,14 +40,17 @@
         <article class="col-md-9 margin-top-16">
             <section class="row">
                 {{!-- Chat area --}}
+                {{!--
+                // When enabling this again, change
+                the next column to 8.
                 <article class="col-md-4">
                     <div class="card margin-top-16">
                         CHAT AREA
                     </div>
                 </article>
-
+                --}}
                 {{!-- List of Tests --}}
-                <article class="col-md-8 col-fix-right">
+                <article class="col-md-12 col-fix-right">
                     <section class="row">
                         <article class="col-md-4 margin-top-16">
                             {{#if canAddTestsToGroup}}
@@ -83,12 +88,20 @@
                                         {{partial 'group/item/test'}}
                                     {{/each}}
                                 {{else}}
-                                    {{list-empty title="This Group has no Tests"
-                                    parentController=this
-                                    action1='createAGroupTest'
-                                    prompt1="Create a Group Test"
-                                    action2='openAddTestsModal'
-                                    prompt2="Add Tests to Group"}}
+                                    {{#if canAddTests}}
+                                        {{list-empty
+                                        title="This Group has no Tests"
+                                        parentController=this
+                                        action1='createAGroupTest'
+                                        prompt1="Create a Group Test"
+                                        action2='openAddTestsModal'
+                                        prompt2="Add Tests to Group"}}
+                                    {{else}}
+                                        {{list-empty
+                                        title="This Group has no Tests"
+                                        parentController=this
+                                        }}
+                                    {{/if}}
                                 {{/if}}
                             {{/with}}
                         </article>

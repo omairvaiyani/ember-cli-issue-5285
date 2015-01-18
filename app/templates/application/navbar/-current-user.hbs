@@ -9,6 +9,11 @@
     <a id="accountDropdown"
        data-toggle="dropdown"><span class="caret"></span></a>
     <ul class="dropdown-menu" role="menu" aria-labelledby="accountDropdown">
+        <li role="presentation">
+            {{#link-to 'dashboard' role="menuitem" tabindex="-1"}}
+                Dashboard
+            {{/link-to}}
+        </li>
         <li role="presentation"><a role="menuitem" tabindex="-1"
             {{action 'logout'}}>Logout</a>
         </li>

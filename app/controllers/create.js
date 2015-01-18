@@ -2,7 +2,7 @@ import Ember from 'ember';
 import CurrentUser from '../mixins/current-user';
 
 export default Ember.ObjectController.extend(CurrentUser, {
-    needs: ['application', 'editQuestion'],
+    needs: ['application', 'editQuestion', 'join'],
 
     isTestDirty: function () {
         if (this.get('isDirty') ||
@@ -85,28 +85,13 @@ export default Ember.ObjectController.extend(CurrentUser, {
     /*
      * Join process
      */
-    joinStep: {
-        create: {
-            active: false,
-            disabled: false,
-            completed: false
-        },
-        join: {
-            active: false,
-            disabled: true,
-            completed: false
-        },
-        personalise: {
-            active: false,
-            disabled: true,
-            completed: false
-        },
-        addQuestions: {
-            active: false,
-            disabled: true,
-            completed: false
-        }
-    },
+    joinController: function () {
+        return this.get('controllers.join');
+    }.property('controllers.join'),
+
+    joinStep: function () {
+        return this.get('joinController.joinStep');
+    }.property('joinController.joinStep'),
 
     inJoinProcess: function () {
         if (!this.get('currentUser')) {
@@ -114,15 +99,17 @@ export default Ember.ObjectController.extend(CurrentUser, {
             return true;
         } else {
             // Logged in but are they in the middle of joining?
-            if (this.get('joinStep.create.active') ||
+            if (!this.get('joinStep.completed') && (
+                this.get('joinStep.create.active') ||
                 this.get('joinStep.join.active') ||
                 this.get('joinStep.personalise.active') ||
-                this.get('joinStep.addQuestions.active'))
+                this.get('joinStep.features.active') ||
+                this.get('joinStep.addQuestions.active'))) {
                 return true;
-            else
+            } else
                 return false;
         }
-    }.property('currentUser', 'joinStep'),
+    }.property('currentUser', 'joinStep.completed'),
 
     actions: {
         removeCategory: function (category) {
@@ -132,7 +119,7 @@ export default Ember.ObjectController.extend(CurrentUser, {
             this.set('childCategory', null);
         },
 
-        checkTest: function () {
+        checkTest: function (callback) {
             if (!this.get('category.content')) {
                 this.send('addNotification', 'warning', 'Category not set!', 'You must set a category!');
                 return;
@@ -140,30 +127,41 @@ export default Ember.ObjectController.extend(CurrentUser, {
                 this.send('addNotification', 'warning', 'Title not set!', 'You must set a title for the test!');
                 return;
             } else if (this.get('inJoinProcess')) {
-                this.send('goToJoinStep', 'join');
-                return;
-            } else {
-                this.set('model.author', this.get('currentUser'));
+                if (this.get('joinStep.create.active')) {
+                    this.send('goToJoinStep', 'join');
+                    return;
+                }
             }
+            this.set('model.author', this.get('currentUser'));
             if (this.get('selectedGroup.id')) {
                 this.set('group', this.get('selectedGroup'));
-                if (this.get('group.privacy') === 'open')
-                    this.set('privacy', 1);
-                else
+                if (this.get('group.privacy') === 'secret')
                     this.set('privacy', 0);
+                else
+                    this.set('privacy', 1);
             }
             this.send('incrementLoadingItems');
-            this.get('model').save()
-                .then(function (test) {
+            var promise = this.get('model').save();
+            if(callback)
+                callback(promise);
+            promise.then(function (test) {
                     this.set('categorySelectionInput', '');
                     this.transitionToRoute('edit.newQuestion', test.get('slug'));
                     this.send('decrementLoadingItems');
                     if (this.get('currentUser.tests'))
                         this.get('currentUser.tests').pushObject(this.get('model'));
+                    if(this.get('inJoinProcess')) {
+                        this.send('addNotification', 'welcome', 'Congratulations!',
+                            'You are now ready to start creating tests on MyCQs!');
+                        setTimeout(function () {
+                            this.get('joinController').set('joinStep.completed', true);
+                        }.bind(this), 2500);
+                    }
                 }.bind(this),
                 function (error) {
                     this.send('decrementLoadingItems');
-                });
+                    console.dir(error);
+                }.bind(this));
         },
 
         saveTest: function () {
@@ -234,50 +232,26 @@ export default Ember.ObjectController.extend(CurrentUser, {
                 this.send('addNotification', 'deleted', length + ' questions deleted!', 'Your test is up to date!');
         },
 
-        goToJoinStep: function (step) {
-            this.set('joinStep.create.active', false);
-            this.set('joinStep.join.active', false);
-            this.set('joinStep.personalise.active', false);
-            this.set('joinStep.addQuestions.active', false);
-            switch (step) {
-                case "create":
+        goToJoinStep: function (step, callback) {
+            if (step === 'create' || step === 'addQuestions') {
+                // create and addQuestions are not handled by the JoinController.
+                this.set('joinStep.create.active', false);
+                this.set('joinStep.join.active', false);
+                this.set('joinStep.personalise.active', false);
+                this.set('joinStep.features.active', false);
+                this.set('joinStep.addQuestions.active', false);
+                if (step === 'create') {
                     this.set('joinStep.create.active', true);
                     this.transitionToRoute('create.index');
-                    break;
-                case "join":
-                    if (this.get('currentUser'))
-                        return this.send('goToJoinStep', "personalise"); // Already joined.
-                    this.set('joinStep.create.completed', true);
-                    this.set('joinStep.join.disabled', false);
-                    this.set('joinStep.join.active', true);
-                    this.transitionToRoute('create.join');
-                    this.controllerFor('application').set('redirectAfterLoginToRoute', 'create.personalise');
-                    this.controllerFor('application').set('redirectAfterLoginToController', 'create');
-                    break;
-                case "personalise":
-                    this.set('joinStep.join.completed', true);
-                    this.set('joinStep.personalise.active', true);
-                    this.set('joinStep.personalise.disabled', false);
-                    this.transitionToRoute('create.personalise');
-                    break;
-            }
+                } else if (step === 'addQuestions') {
+                    this.set('joinStep.features.completed', true);
+                    this.set('joinStep.addQuestions.active', true);
+                    this.set('joinStep.addQuestions.disabled', false);
+                    this.send('checkTest', callback);
+                }
+            } else
+                this.get('joinController').send('goToJoinStep', step); // clears other steps
         },
-
-        /*
-         * Deprecated
-         *
-         * No support for anonymous users on JS SDK
-         * Therefore, force users to sign up/log in before
-         * continuing. Redirect application route to
-         * return the user back to this page and
-         * continue saving the test.
-         */
-        askGuestToSignUp: function () {
-            alert("You have to be logged in to create a test!");
-            this.send('openModal', 'application/modal/login-or-register', 'application');
-            this.get('controllers.application').set('redirectAfterLoginToRoute', 'create');
-        },
-
 
         returnedFromRedirect: function () {
             if (this.get('joinStep.join.active')) {

@@ -80,18 +80,6 @@ export default Ember.Controller.extend(CurrentUser, {
     previousSlide: false,
     nextSlide: true,
     actions: {
-        /*swipeNext: function () {
-         this.set('previousSlide', true);
-         this.get('touchSlider').swipeNext();
-         if (this.get('touchSlider').activeIndex === (this.get('touchSlider').slides.length - 1))
-         this.set('nextSlide', false);
-         },
-         swipePrev: function () {
-         this.set('nextSlide', true);
-         this.get('touchSlider').swipePrev();
-         if (this.get('touchSlider').activeIndex === 0)
-         this.set('previousSlide', false);
-         },*/
         openCheckoutHandler: function (callback, plan) {
             var promise = StripeCheckout.open({
                 key: 'pk_live_ktE3v0jGmY5oXvPXDcf0qnGc',

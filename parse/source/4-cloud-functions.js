@@ -604,8 +604,169 @@ Parse.Cloud.define("updateUserEducation", function (request, response) {
         } else
             response.success({course: group.get('course'), institution: group.get('institution')});
     });
-})
-;
+});
+/**
+ * @CloudFunction Create or Get EducationCohort
+ * Takes educational institution, study field
+ * and current year to find matching cohort
+ * or create a new one. Bonus, add graduation
+ * year to existing cohort if one is provided
+ * here.
+ * @param {String} educationalInstitutionId
+ * @param {String} studyFieldId (Required if University)
+ * @param {String} currentYear (Required if University)
+ * @param {String} graduationYear (optional)
+ * @return {EducationCohort} educationCohort
+ */
+Parse.Cloud.define('createOrGetEducationCohort', function (request, response) {
+    var educationalInstitutionId = request.params.educationalInstitutionId,
+        studyFieldId = request.params.studyFieldId,
+        currentYear = request.params.currentYear,
+        graduationYear = request.params.graduationYear;
+
+    if (!educationalInstitutionId)
+        return response.error("Educational Institution Id is needed.");
+
+    var educationalInstitution = new Parse.Object("EducationalInstitution"),
+        studyField = new Parse.Object('StudyField'),
+        promises = [];
+
+    educationalInstitution.id = educationalInstitutionId;
+    studyField.id = studyFieldId;
+    promises.push(educationalInstitution.fetch());
+    if (studyFieldId)
+        promises.push(studyField.fetch());
+    Parse.Promise.when(promises).then(function () {
+        var query = new Parse.Query("EducationCohort");
+        query.equalTo('institution', educationalInstitution);
+        if (studyFieldId)
+            query.equalTo('studyField', studyField);
+        if (currentYear)
+            query.equalTo('currentYear', currentYear);
+        return query.find();
+    }).then(function (results) {
+        Parse.Cloud.useMasterKey(); // Cannot edit existing EducationCohort objects w/o masterkey.
+        var educationCohort = results[0];
+        if (educationCohort) {
+            if (!educationCohort.get('graduationYear') && graduationYear) {
+                educationCohort.set('graduationYear', graduationYear);
+                return educationCohort.save();
+            } else
+                return educationCohort;
+        } else {
+            educationCohort = new Parse.Object("EducationCohort");
+            educationCohort.set('institution', educationalInstitution);
+            if (studyFieldId)
+                educationCohort.set('studyField', studyField);
+            if (currentYear)
+                educationCohort.set('currentYear', currentYear);
+            if (graduationYear)
+                educationCohort.set('graduationYear', graduationYear);
+            var ACL = new Parse.ACL();
+            ACL.setPublicReadAccess(true);
+            educationCohort.setACL(ACL);
+            return educationCohort.save();
+        }
+    }).then(function (educationCohort) {
+        response.success(educationCohort);
+    }, function (error) {
+        response.error(error);
+    });
+});
+/**
+ * @CloudFunction Create or Update EducationalInstitution
+ * EducationalInstitution.name is the key unique factor
+ * Can be added by user input, from facebook
+ * search or updated to include facebookId.
+ * Will return a new or updated educationalInstitution.
+ *
+ * @param {String} name
+ * @param {String} type (e.g. University)
+ * @param {String} facebookId (optional)
+ * @return {EducationalInstitution} educationalInstitution
+ */
+Parse.Cloud.define('createOrUpdateEducationalInstitution', function (request, response) {
+    var name = request.params.name,
+        facebookId = request.params.facebookId,
+        type = request.params.type,
+        educationalInstitution;
+
+    if (!name)
+        return response.error("Please send a 'name' for the new EducationalInstitution.");
+
+    name = capitaliseFirstLetter(name);
+    var query = new Parse.Query("EducationalInstitution");
+    query.equalTo('name', name);
+    query.find()
+        .then(function (results) {
+            if (results[0]) {
+                educationalInstitution = results[0];
+                // If existing study field has no facebookId and we have one here, set it
+                if ((!educationalInstitution.get('facebookId') || !educationalInstitution.get('facebookId').length) &&
+                    facebookId) {
+                    educationalInstitution.set('facebookId', facebookId);
+                    return educationalInstitution.save();
+                } else
+                    return educationalInstitution;
+            } else {
+                educationalInstitution = new Parse.Object("EducationalInstitution");
+                educationalInstitution.set('name', name);
+                educationalInstitution.set('type', type);
+                if (facebookId)
+                    educationalInstitution.set('facebookId', facebookId);
+                return educationalInstitution.save();
+            }
+        }).then(function () {
+            response.success(educationalInstitution);
+        }, function (error) {
+            response.error(error);
+        });
+});
+/**
+ * @CloudFunction Create or Update StudyField
+ * StudyField.name is the key unique factor
+ * Can be added by user input, from facebook
+ * search or updated to include facebookId.
+ * Will return a new or updated studyField.
+ *
+ * @param {string} name
+ * @param {string} facebookId (optional)
+ * @return {StudyField} studyField
+ */
+Parse.Cloud.define('createOrUpdateStudyField', function (request, response) {
+    var name = request.params.name,
+        facebookId = request.params.facebookId,
+        studyField;
+
+    if (!name)
+        return response.error("Please send a 'name' for the new StudyField.");
+
+    name = capitaliseFirstLetter(name);
+    var query = new Parse.Query("StudyField");
+    query.equalTo('name', name);
+    query.find()
+        .then(function (results) {
+            if (results[0]) {
+                studyField = results[0];
+                // If existing study field has no facebookId and we have one here, set it
+                if ((!studyField.get('facebookId') || !studyField.get('facebookId').length) && facebookId) {
+                    studyField.set('facebookId', facebookId);
+                    return studyField.save();
+                } else
+                    return studyField;
+            } else {
+                studyField = new Parse.Object("StudyField");
+                studyField.set('name', name);
+                if (facebookId)
+                    studyField.set('facebookId', facebookId);
+                return studyField.save();
+            }
+        }).then(function () {
+            response.success(studyField);
+        }, function (error) {
+            response.error(error);
+        });
+});
 
 Parse.Cloud.define("followUser", function (request, response) {
     if (!request.user) {
@@ -786,7 +947,9 @@ Parse.Cloud.define('getInstallationsForUser', function (request, response) {
             response.success(results);
         });
 });
-
+/**
+ * -- Deprecated --
+ */
 Parse.Cloud.define("findTestsForModule", function (request, response) {
     var getQuery = new Parse.Query("Module");
 
@@ -846,7 +1009,9 @@ Parse.Cloud.define("findTestsForModule", function (request, response) {
         });
     });
 });
-
+/**
+ * -- Deprecated --
+ */
 Parse.Cloud.define("generateTestForModule", function (request, response) {
     var difficulty = request.params.difficulty;
     var totalQuestions = request.params.totalQuestions;
@@ -984,7 +1149,9 @@ Parse.Cloud.define("generateTestForModule", function (request, response) {
         }
     });
 });
-
+/**
+ * -- Deprecated --
+ */
 Parse.Cloud.define("findTestsForUser", function (request, response) {
 
     var query = new Parse.Query(Parse.User);
@@ -2000,7 +2167,48 @@ Parse.Cloud.define('generateSitemapForTests', function (request, response) {
         response.error(JSON.stringify(error));
     });
 });
+/**
+ * @CloudFunction Generate Slug for Group
+ * @param {String} groupName
+ * @return {String} slug
+ */
+Parse.Cloud.define('generateSlugForGroup', function (request, response) {
+    var groupName = request.params.groupName,
+        initialSlug,
+        slug;
+    if (!groupName || !groupName.length)
+        return response.error('Please send the groupName.');
 
+    Parse.Cloud.useMasterKey(); // To find ALL (even secret) groups, checking for slugs.
+    initialSlug = slugify("Group", groupName);
+    var query = new Parse.Query("Group");
+    query.startsWith('slug', initialSlug);
+    query.count()
+        .then(function (count) {
+            if (!count)
+                slug = initialSlug;
+            else {
+                query = new Parse.Query('Group');
+                initialSlug += (count + 1);
+                query.startsWith('slug', initialSlug);
+                // Double check
+                return query.count()
+                    .then(function (count) {
+                        if (!count)
+                            slug = initialSlug;
+                        else {
+                            initialSlug += (count + 1); // Not fool proof, but should be fine.
+                            slug = initialSlug;
+                        }
+                    });
+            }
+        }).then(function () {
+            response.success(slug);
+        }, function (error) {
+            response.error(error);
+        });
+
+});
 /**
  * @CloudFunction Add members to Group
  * Add unique members to a group,
@@ -2164,6 +2372,8 @@ Parse.Cloud.define('addTestsToGroup', function (request, response) {
     group.id = groupId;
     group.fetch()
         .then(function () {
+            if (group.get('membersCanAddTests'))
+                Parse.Cloud.useMasterKey();
             var query = new Parse.Query("Test");
             query.containedIn('objectId', testIds);
             return query.find();
@@ -2175,8 +2385,6 @@ Parse.Cloud.define('addTestsToGroup', function (request, response) {
             }
             var tests = group.relation('gatheredTests');
             tests.add(testsToAdd);
-            if (group.get('membersCanAddTests'))
-                Parse.Cloud.useMasterKey();
             return group.save();
         }).then(function () {
             var relation = group.relation('gatheredTests'),

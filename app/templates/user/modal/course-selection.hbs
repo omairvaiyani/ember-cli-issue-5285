@@ -5,150 +5,97 @@
 </div>
 <div class="modal-body">
 
-    <div id="course-selection" class="carousel slide" data-ride="carousel" data-pause="">
+    <div class="container-fluid course-selection">
+        <p class="lead">Enter course information</p>
 
-        <!-- Wrapper for slides -->
-        <div class="carousel-inner">
-            <div class="item active">
-                <div class="container-fluid course-selection">
-                    <p class="lead">Enter course information</p>
-                    <div class="row">
-                        <div class="col-md-12">
-                            <p>School or University</p>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-12">
-                            {{search-suggestions
-                                type='educationalInstitutions'
-                                labelPath='name'
-                                facebookSearch=true
-                                actionOnSelection='educationalInstitutionSelected'
-                                contextController=this
-                                defaultItem=newEducationCohort.institution.fbObject
-                            }}
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-12 margin-top-16">
-                            <p>Course</p>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-12">
-                            {{search-suggestions
-                                type='studyFields'
-                                labelPath='name'
-                                facebookSearch=true
-                                actionOnSelection='studyFieldSelected'
-                                contextController=this
-                                defaultItem=newEducationCohort.studyField.fbObject
-                            }}
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-12 margin-top-16">
-                            <p>Current study year</p>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-12">
-                            {{view 'select'
-                            classNames='form-control'
-                            content=studyYearsToChooseFrom
-                            optionValuePath="content"
-                            optionLabelPath="content"
-                            selection=newEducationCohort.currentYear
-                            }}
-                        </div>
-                    </div>
-                    {{#if newEducationCohort.isDirty}}
-                        <div class="row">
-                            <div class="col-md-12 margin-top-16">
-                                <button class="btn btn-primary" {{action 'saveEducationCohort'}}>
-                                    Save
-                                </button>
-                            </div>
-                        </div>
-                    {{/if}}
-                    <hr>
-                    {{#if facebookEducation.length}}
-                        <p class="lead">Or select one of these</p>
-                        {{#each facebookEducation}}
-                            <div class="row hover-row" {{action 'courseSelected' this}}
-                                 href="#course-selection" role="button"
-                                 data-slide="next">
-                                <div class="col-md-11">
-                                    <p class="margin-top-16">Institution: {{school.name}}</p>
-
-                                    <p>Course: {{concentration.0.name}}</p>
-
-                                    <p class="margin-bottom-16">Graduation year: {{year.name}}</p>
-                                </div>
-                                <div class="col-md-1">
-                                    <a href="#course-selection" role="button"
-                                       data-slide="next">
-                                        <span class="glyphicon glyphicon-chevron-right"></span>
-                                    </a>
-                                </div>
-                            </div>
-                        {{/each}}
-                    {{else}}
-                    {{!--
-                    {{#unless fbid}}
-                        <div class="row">
-                            <div class="col-md-12 text-center">
-                                <button class="btn btn-facebook" {{action 'facebookLink'}}>
-                                    <i class="fa fa-facebook margin-right-16"></i>Get education history
-                                </button>
-                            </div>
-                        </div>
-                    {{/unless}}
-                    --}}
-                    {{/if}}
-                </div>
+        <div class="row">
+            <div class="col-md-12 margin-bottom-8">
+                <p>I am studying at a</p>
             </div>
-
-            <div class="item">
-                <div class="container-fluid">
-                    <a href="#course-selection" role="button"
-                       data-slide="prev">
-                        <span class="glyphicon glyphicon-chevron-left"></span> Go back
-                    </a>
-
-                    <div class="margin-bottom-16"></div>
-                    <p class="lead">Are these details correct?</p>
-
-                    <p class="margin-top-16">Institution: {{selectedCourse.school.name}}</p>
-
-                    <p>Course: {{selectedCourse.concentration.0.name}}</p>
-
-                    <p>Current year:
-                        {{view 'select'
-                        content=courseYearsToChooseFrom
-                        optionValuePath="content"
-                        optionLabelPath="content"
-                        selection=selectedCourse.currentYear}}
-                    </p>
-
-                    <p class="margin-bottom-16">Total length of course (years):
-                        {{view 'select'
-                        content=courseLengthsToChooseFrom
-                        optionValuePath="content"
-                        optionLabelPath="content"
-                        selection=selectedCourse.courseLength}}
-                    </p>
-
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary"
-                        {{action 'saveCourseChanges' selectedCourse true}}>Save changes
-                    </button>
-                </div>
-            </div>
-
         </div>
+        <div class="row">
+            <div class="col-md-12">
+                {{radio-button value='School' checked=studyingAt id="is-studying-at-school"}}
+                <label for="is-studying-at-school">School</label>
+            </div>
+            <div class="col-md-12 margin-bottom-8">
+                {{radio-button value='University' checked=studyingAt id="is-studying-at-university"}}
+                <label for="is-studying-at-university">University</label>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <p>{{studyingAt}}</p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                {{search-suggestions
+                type='educational-institutions'
+                subtype=studyingAt
+                labelPath='name'
+                facebookSearch=true
+                actionOnSelection='educationalInstitutionSelected'
+                contextController=this
+                defaultItem=newEducationCohort.institution.fbObject
+                }}
+            </div>
+        </div>
+        {{#if studyingAtUniversity}}
+            <div class="row">
+                <div class="col-md-12 margin-top-16">
+                    <p>Course</p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    {{search-suggestions
+                    type='study-fields'
+                    labelPath='name'
+                    facebookSearch=true
+                    actionOnSelection='studyFieldSelected'
+                    contextController=this
+                    defaultItem=newEducationCohort.studyField.fbObject
+                    }}
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12 margin-top-16">
+                    <p>Current study year</p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    {{view 'select'
+                    classNames='form-control'
+                    content=studyYearsToChooseFrom
+                    optionValuePath="content"
+                    optionLabelPath="content"
+                    selection=newEducationCohort.currentYear
+                    prompt="Select what year you are in"
+                    }}
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12 margin-top-16">
+                    <p>Graduation year</p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    {{rl-year-picker year=newEducationCohort.graduationYear}}
+                </div>
+            </div>
+        {{/if}}
     </div>
+
+</div>
+<div class="modal-footer">
+    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+    {{#if newEducationCohort.isDirty}}
+        {{async-button action='saveEducationCohort' class='btn btn-success' default='Save Changes'
+        pending="Saving..." rejected="Error! Try again." fulfilled="Saved!" resest=true}}
+    {{/if}}
 </div>
 

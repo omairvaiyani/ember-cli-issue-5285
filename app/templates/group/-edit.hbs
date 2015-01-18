@@ -40,76 +40,73 @@
 <div class="row">
     <div class="col-md-12 margin-bottom-16">
         <label>
-            {{input type="checkbox" checked=isForCourse class="margin-right-8"}}
+            {{input type="checkbox" checked=isForEducationCohort class="margin-right-8"}}
             Is this group for a particular course, class or degree?</label>
     </div>
 </div>
-{{#if isForCourse}}
+{{#if isForEducationCohort}}
     <div class="row">
         <div class="col-md-12">
-            <h5>COURSE</h5>
-        </div>
-    </div>
-    <div class="row">
-        {{!--
-        <div class="col-md-12 margin-bottom-16">
-            {{input type="text" placeholder="E.g. Medicine" classNames="form-control" value=courseName}}
-        </div>
-        --}}
-        <div class="col-md-12 margin-bottom-16">
-            {{#tool-tipster title="Select from course suggestions or type a new one" position='top'}}
-                {{search-suggestions
-                type='courses'
-                labelPath="name"
-                secondaryLabelPath="institutionFullName"
-                defaultItem=course
-                limit=0
-                contextController=this
-                actionOnSelection='courseSelected'
-                }}
-            {{/tool-tipster}}
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-md-12">
-            <h5>Institution</h5>
+            <h5>Institution?</h5>
         </div>
     </div>
     <div class="row">
         <div class="col-md-12 margin-bottom-16">
             {{#tool-tipster title="Select from insitution suggestions or type a new one" position='top'}}
                 {{search-suggestions
-                type='institutions'
-                labelPath="fullName"
-                defaultItem=institution
+                type='educational-institutions'
+                labelPath="name"
+                defaultItem=defaultEducationCohort.institution
                 limit=0
                 contextController=this
-                actionOnSelection='institutionSelected'
+                facebookSearch=true
+                actionOnSelection='educationalInstitutionSelected'
                 }}
             {{/tool-tipster}}
         </div>
     </div>
     <div class="row">
         <div class="col-md-12">
-            <h5>Year or Grade</h5>
+            <h5>Study field</h5>
         </div>
     </div>
     <div class="row">
         <div class="col-md-12 margin-bottom-16">
-            {{input type="text" placeholder="E.g. 2, Foundation, etc." classNames="form-control" value=yearOrGrade}}
+            {{#tool-tipster title="Select from course suggestions or type a new one" position='top'}}
+                {{search-suggestions
+                type='study-fields'
+                labelPath="name"
+                secondaryLabelPath="institutionFullName"
+                defaultItem=defaultEducationCohort.studyField
+                limit=0
+                contextController=this
+                facebookSearch=true
+                actionOnSelection='studyFieldSelected'
+                }}
+            {{/tool-tipster}}
         </div>
     </div>
+    {{#if defaultEducationCohort.studyField}}
+        <div class="row">
+            <div class="col-md-12">
+                <h5>Year</h5>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12 margin-bottom-16">
+                {{view 'select'
+                classNames='form-control'
+                content=studyYearsToChooseFrom
+                optionValuePath="content"
+                optionLabelPath="content"
+                selection=defaultEducationCohort.currentYear
+                prompt="Select what year you are in"
+                actionOnSelection='studyFieldSelected'
+                }}
+            </div>
+        </div>
+    {{/if}}
 {{/if}}
-<div class="row">
-    <div class="col-md-12">
-        <h5>PATH</h5>
-    </div>
-</div>
-<div class="row">
-    <div class="col-md-12 margin-bottom-16">
-        <p>https://mycqs.com/group/{{suggestedSlug}}</p>
-    </div>
-</div>
 {{!--
 {{#if model.id}}
     <!-- Delete test button -->

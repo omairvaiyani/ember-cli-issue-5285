@@ -2,10 +2,13 @@
     <div class="container">
         <h1>Groups</h1>
 
-        <p>Find Groups to share knowledge and discuss tests! {{#link-to 'createGroup'}}Create a new
-            group.{{/link-to}}</p>
+        <p>Find Groups to share knowledge and discuss tests!</p>
     </div>
 </div>
+<div class="container">
+    <h4>{{#link-to 'createGroup'}}Create a new group{{/link-to}}</h4>
+</div>
+
 {{#each group in content}}
     {{partial 'user/item/group-card'}}
 {{/each}}

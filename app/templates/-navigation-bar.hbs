@@ -38,8 +38,12 @@
                     Groups{{/link-to}}{{/link-to}}
                 {{#link-to 'support' tagName='li' title='Support and FAQs'}}{{#link-to 'support' tagName='a'}}
                     Support{{/link-to}}{{/link-to}}
-                {{#link-to 'features' tagName='li' title='Features'}}{{#link-to 'features' tagName='a'}}
-                    Features{{/link-to}}{{/link-to}}
+                {{#if currentUser}}
+                    {{#unless currentUser.isPremium}}
+                        {{#link-to 'features' tagName='li' title='Features'}}{{#link-to 'features' tagName='a'}}
+                            Features{{/link-to}}{{/link-to}}
+                    {{/unless}}
+                {{/if}}
             </ul>
 
             {{!--{{view 'expanding-search'}} --}}

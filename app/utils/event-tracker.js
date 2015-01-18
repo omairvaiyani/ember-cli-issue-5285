@@ -1,6 +1,31 @@
 export default
 {
+    WEBSITE_OPENED: "Website Opened",
+    REGISTERED_WITH_EMAIL: "Did register with email",
+    REGISTERED_WITH_FACEBOOK: "Did register with facebook",
     LOGGED_IN: "Logged in",
+
+    /**
+     * On-boarding
+     * Not used yet
+     */
+    ONBOARDING_CREATE_TEST: "Onboarding: Create Test",
+    ONBOARDING_JOIN: "Onboarding: Join",
+    ONBOARDING_FACEBOOK: "Onboarding: Facebook",
+    ONBOARDING_WITH_EMAIL: "Onboarding: Email",
+    ONBOARDING_PERSONALISE: "Onboarding: Personalise",
+    ONBOARDING_PERSONALISE_SET_PROFILE_PICTURE: "Onboarding: Set Profile Picture",
+    ONBOARDING_PERSONALISE_PROFILE_PICTURE_SKIPPED: "Onboarding: Profile Picture Skipped",
+    ONBOARDING_PERSONALISE_SET_EDUCATION: "Onboarding: Set Education",
+    ONBOARDING_PERSONALISE_EDUCATION_SKIPPED: "Onboarding: Education Skipped",
+    ONBOARDING_PERSONALISE_SET_FOLLOWING: "Onboarding: Set Following",
+    ONBOARDING_PERSONALISE_FOLLOWING_SKIPPED: "Onboarding: Following Skipped",
+    ONBOARDING_SELECT_PACKAGE: "Onboarding: Select Package",
+    ONBOARDING_SELECTED_BASIC_PACKAGE: "Onboarding: Selected Basic Package",
+    ONBOARDING_SELECTED_PREMIUM_PACKAGE: "Onboarding: Selected Premium Package",
+    ONBOARDING_COMPLETED: "Onboarding: Completed",
+    ONBOARDING_CANCELLED: "Onboarding: Cancelled",
+
     TEST_CREATED: "Test created",
     TEST_TAKEN: "Test taken",
 
@@ -46,7 +71,7 @@ export default
      * @param object {Object} (optional) e.g. Test
      */
     recordEvent: function (event, object) {
-        var eventProperties = {};
+        var eventProperties = {source: "Web"};
         if (object) {
             switch (event) {
                 case this.TEST_CREATED:

@@ -12,6 +12,13 @@ Router.map(function () {
     this.route('application');
 
     /*
+     * Join (onboarding)
+     */
+    this.resource('join', {path: "join"}, function () {
+        this.route('personalise');
+        this.route('features');
+    });
+    /*
      * User profiles and profile editing
      */
     this.resource('user', {path: '/:user_slug'}, function () {

@@ -2,6 +2,7 @@ import Ember from 'ember';
 import FormValidation from '../utils/form-validation';
 import ParseHelper from '../utils/parse-helper';
 import Constants from '../utils/constants';
+import EventTracker from '../utils/event-tracker';
 
 export default
     Ember.Route.extend({
@@ -120,7 +121,22 @@ export default
                 });
             },
 
-            signUp: function () {
+            /*
+             * This action allows the user to press
+             * 'enter/return' whilst entering their
+             * form data, and still trigger the
+             * async-button component to display
+             * promise state changes.
+             */
+            submitSignUp: function () {
+                var signUpButton  = Ember.$("#sign-up-button");
+                if(signUpButton[0])
+                    signUpButton.trigger("click");
+                else
+                    this.send('signUp');
+            },
+
+            signUp: function (callback) {
                 var name = this.controllerFor('application').get('newUser.name'),
                     email = this.controllerFor('application').get('newUser.email'),
                     password = this.controllerFor('application').get('newUser.password'),
@@ -145,11 +161,10 @@ export default
                 }
                 if (!errors) {
                     this.send('incrementLoadingItems');
-                    Parse.Cloud.run('preSignUp', {"email": email.trim()}, {
-                        success: function (response) {
+                    var promise = Parse.Cloud.run('preSignUp', {"email": email.trim()})
+                        .then(function (response) {
                             var privateData = response.privateData,
                                 username = response.privateData.get('username');
-                            this.send('closeModal');
                             var data = {
                                     name: name.trim(),
                                     username: username,
@@ -158,30 +173,26 @@ export default
                                     password: password
                                 },
                                 ParseUser = this.store.modelFor('parse-user');
-                            ParseUser.signup(this.store, data).then(
-                                function (userMinimal) {
-                                    userMinimal.set('name', name);
-                                    this.set('applicationController.currentUser', userMinimal);
-                                    this.send('redirectAfterLogin');
-                                    this.send('decrementLoadingItems');
-                                }.bind(this),
-                                function (error) {
-                                    console.log("Error with ParseUser.signup() in: " + "signUpWithEmail");
-                                    console.dir(error);
-                                    this.send('decrementLoadingItems');
-                                }.bind(this)
-                            );
+                            return ParseUser.signup(this.store, data);
+                        }.bind(this));
 
-                        }.bind(this),
+                    if (callback)
+                        callback(promise);
 
-                        error: function (error) {
-                            console.log("Error!");
-                            console.dir(error);
-                            if (error.message == Parse.Error.EMAIL_TAKEN)
-                                this.send('addNotification', 'warning', 'Email Taken', 'This email has already been taken!');
-                            this.send('decrementLoadingItems');
-                        }.bind(this)
-                    });
+                    promise.then(function (user) {
+                        this.send('closeModal');
+                        user.set('name', name);
+                        this.set('applicationController.currentUser', user);
+                        this.send('redirectAfterLogin');
+                        this.send('decrementLoadingItems');
+                        EventTracker.recordEvent(EventTracker.REGISTERED_WITH_EMAIL);
+                    }.bind(this), function (error) {
+                        console.log("Error with ParseUser.signup() in: signUpWithEmail");
+                        console.dir(error);
+                        this.send('decrementLoadingItems');
+                    }.bind(this));
+                } else if (callback) {
+                    callback();
                 }
             },
             login: function () {
@@ -247,7 +258,6 @@ export default
              * - Once 'connected', we call the next method in the chain 'signUpAuthorisedFacebookUser'
              */
             facebookConnect: function () {
-                console.log("FB");
                 FB.login(function (response) {
                     if (response.authResponse) {
                         this.send('signUpAuthorisedFacebookUser', response.authResponse);
@@ -312,6 +322,9 @@ export default
                             success: function () {
                                 ParseUser.signup(this.store, data).then(
                                     function (user) {
+                                        var createdAt = user.get('createdAt');
+                                        if(moment(createdAt).add(2, 'minute').isAfter(new Date()))
+                                            EventTracker.recordEvent(EventTracker.REGISTERED_WITH_FACEBOOK);
                                         this.controllerFor('application').set('currentUser', user);
                                         this.send('decrementLoadingItems');
                                         /*
@@ -419,7 +432,7 @@ export default
             redirectAfterLogin: function () {
                 if (this.get('applicationController.redirectAfterLoginToRoute')) {
                     this.transitionTo(this.get('applicationController.redirectAfterLoginToRoute'));
-                    if(this.get('applicationController.redirectAfterLoginToController'))
+                    if (this.get('applicationController.redirectAfterLoginToController'))
                         this.controllerFor(this.get('applicationController.redirectAfterLoginToController'))
                             .send('returnedFromRedirect');
                     else
@@ -456,7 +469,7 @@ export default
             openModal: function (modalName, controller, model) {
                 var myModal = jQuery('#myModal');
 
-                if(controller === true)
+                if (controller === true)
                     controller = modalName;
 
                 if (model)
@@ -527,7 +540,7 @@ export default
                     });
             },
 
-            bulkFollow: function (users) {
+            bulkFollow: function (users, callback) {
                 var userIdsToFollow = [];
                 if (!this.get('currentUser.following'))
                     this.set('currentUser.following', Ember.A());
@@ -544,16 +557,15 @@ export default
                     }
                 }.bind(this));
 
-                Parse.Cloud.run('bulkFollowUsers',
-                    {
-                        userIdsToFollow: userIdsToFollow
-                    }, {
-                        success: function (response) {
-                        }.bind(this),
-                        error: function (error) {
-                            console.log("There was an error: " + error);
-                        }.bind(this)
-                    });
+                var promise = Parse.Cloud.run('bulkFollowUsers', {
+                    userIdsToFollow: userIdsToFollow
+                });
+                if (callback)
+                    callback(promise);
+                promise.then(function () {
+                }.bind(this), function (error) {
+                    console.dir(error);
+                });
             },
 
             incrementLoadingItems: function () {

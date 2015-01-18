@@ -102,24 +102,35 @@ export default Ember.ObjectController.extend(CurrentUser, {
     /*
      * COURSE SELECTION
      */
+    studyingAt: null,
+    studyingAtUniversity: function () {
+        if (!this.get('studyingAt'))
+            return false;
+
+        return this.get('studyingAt') === 'University';
+    }.property('studyingAt.length'),
+
     newEducationCohort: function () {
-        if (this.get('educationCohort.id'))
+        if (this.get('educationCohort.institution.id')) {
+            this.set('studyingAt', this.get('educationCohort.institution.type'));
             return this.store.createRecord('education-cohort', {
                 institution: this.get('educationCohort.institution'),
                 studyField: this.get('educationCohort.studyField'),
                 currentYear: this.get('educationCohort.currentYear'),
-                graduation: this.get('educationCohort.graduation')
-
+                graduationYear: this.get('educationCohort.graduationYear')
             });
-        else
+        } else {
+            this.set('studyingAt', 'University');
             return this.store.createRecord('education-cohort', {
                 currentYear: "Year 1"
             });
-    }.property('educationCohort.institution.id'),
+        }
+    }.property('educationCohort.institution.id.length'),
 
     studyYearsToChooseFrom: [
         "Foundation Year", "Year 1", "Year 2", "Year 3",
-        "Year 4", "Year 5", "Year 6", "Intercalation Year"
+        "Year 4", "Year 5", "Year 6", "Intercalation Year",
+        "Master's", "Ph.D", "Professional Education"
     ],
     studyLengthsToChooseFrom: [1, 2, 3, 4, 5, 6, 7],
     /*
@@ -149,19 +160,22 @@ export default Ember.ObjectController.extend(CurrentUser, {
     suggestedFollowingAll: Ember.A(), // No limit
 
     mergeSuggestedFollowings: function () {
-        if (this.get('courseSuggestedFollowing.length') || this.get('facebookFriendsOnMyCQs.length')) {
+        if (this.get('currentUser.following') &&
+            (this.get('courseSuggestedFollowing.length') || this.get('facebookFriendsOnMyCQs.length'))) {
             var array = Ember.A();
+            this.get('courseSuggestedFollowing').forEach(function (user) {
+                if(!this.get('currentUser.following').contains(user))
+                    array.pushObject(user);
+            }.bind(this));
             array.addObjects(this.get('courseSuggestedFollowing'));
-            if (array.length && this.get('facebookFriendsOnMyCQs.length')) {
+            if (this.get('facebookFriendsOnMyCQs.length')) {
                 /*
                  * Check for duplicate users
                  */
                 this.get('facebookFriendsOnMyCQs').forEach(function (user) {
-                    if (!array.contains(user))
+                    if (!array.contains(user) && !this.get('currentUser.following').contains(user))
                         array.pushObject(user);
-                });
-            } else if (this.get('facebookFriendsOnMyCQs.length')) {
-                array.addObjects(this.get('facebookFriendsOnMyCQs'));
+                }.bind(this));
             }
             this.get('suggestedFollowing').clear();
             this.get('suggestedFollowing').addObjects(_.shuffle(array).splice(0, 5));
@@ -169,6 +183,25 @@ export default Ember.ObjectController.extend(CurrentUser, {
             this.get('suggestedFollowingAll').addObjects(_.shuffle(array));
         }
     }.observes('courseSuggestedFollowing.length', 'facebookFriendsOnMyCQs.length'),
+
+    throttleMergeSuggestedFollowing: function () {
+        Ember.run.debounce(this, this.mergeSuggestedFollowings, 500);
+    }.observes('currentUser.following.length'),
+
+    shouldShowFollowAllSuggestedFollowing: function () {
+        if (!this.get('suggestedFollowingAll.length')) {
+            return false;
+        } else {
+            var areThereUsersToFollow = false;
+            this.get('suggestedFollowingAll').forEach(function (user) {
+                if (!this.get('currentUser.following').contains(user)) {
+                    areThereUsersToFollow = true;
+                    return areThereUsersToFollow;
+                }
+            }.bind(this));
+            return areThereUsersToFollow;
+        }
+    }.property('suggestedFollowingAll.length', 'currentUser.following.length'),
 
     /*
      * Course suggested following
@@ -178,14 +211,13 @@ export default Ember.ObjectController.extend(CurrentUser, {
     isGettingCourseSuggestedFollowing: false,
 
     getCourseSuggestedFollowing: function () {
-        if (this.get('isGettingCourseSuggestedFollowing') || !this.get('isCurrentUser') ||
-            !this.get('educationCohort.id.length'))
+        if (this.get('isGettingCourseSuggestedFollowing') || !this.get('isCurrentUser')
+            || !this.get('educationCohort.id.length'))
             return;
         this.set('isGettingCourseSuggestedFollowing', true);
         var where = {
             educationCohort: ParseHelper.generatePointer(this.get('educationCohort'), 'EducationCohort')
         };
-        console.dir(where);
         this.store.find('parse-user', {where: JSON.stringify(where)})
             .then(function (results) {
                 this.get('courseSuggestedFollowing').clear();
@@ -352,74 +384,77 @@ export default Ember.ObjectController.extend(CurrentUser, {
             }
         },
 
-        educationalInstitutionSelected: function (fbObject) {
-            var where = {
-                facebookId: fbObject.id
-            };
-            this.store.findQuery('educational-institution', {where: JSON.stringify(where)})
-                .then(function (results) {
-                    var educationInstitution;
-                    if (!results.objectAt(0)) {
-                        educationInstitution = this.store.createRecord('educational-institution', {
-                            name: fbObject.name,
-                            facebookId: fbObject.id,
-                            type: fbObject.category
-                        });
-                        return educationInstitution.save();
-                    } else
-                        return results.objectAt(0);
-                }.bind(this))
-                .then(function (educationalInstitution) {
-                    this.set('newEducationCohort.institution', educationalInstitution);
-                }.bind(this));
+        educationalInstitutionSelected: function (object) {
+            if(!object) {
+                this.set('newEducationCohort.institution', undefined);
+                return;
+            }
+            var facebookId;
+            if (object.recordType === "facebook")
+                facebookId = object.id;
+            else
+                facebookId = object.facebookId;
+            Parse.Cloud.run('createOrUpdateEducationalInstitution', {
+                name: object.name,
+                facebookId: facebookId,
+                type: object.category // from facebook // TODO need non-facebook input
+            }).then(function (educationalInstitutionParse) {
+                return this.store.find('educational-institution', educationalInstitutionParse.id);
+            }.bind(this)).then(function (educationalInstitution) {
+                this.set('newEducationCohort.institution', educationalInstitution);
+            }.bind(this), function (error) {
+                console.dir(error);
+            });
         },
 
-        studyFieldSelected: function (fbObject) {
-            var where = {
-                facebookId: fbObject.id
-            };
-            this.store.findQuery('study-field', {where: JSON.stringify(where)})
-                .then(function (results) {
-                    var studyField;
-                    if (!results.objectAt(0)) {
-                        studyField = this.store.createRecord('study-field', {
-                            name: fbObject.name,
-                            facebookId: fbObject.id
-                        });
-                        return studyField.save();
-                    } else
-                        return results.objectAt(0);
-                }.bind(this))
-                .then(function (studyField) {
-                    this.set('newEducationCohort.studyField', studyField);
-                }.bind(this));
+        studyFieldSelected: function (object) {
+            if(!object) {
+                this.set('newEducationCohort.institution', undefined);
+                return;
+            }
+
+            var facebookId;
+            if (object.recordType === "facebook")
+                facebookId = object.id;
+            else
+                facebookId = object.facebookId;
+            Parse.Cloud.run('createOrUpdateStudyField', {
+                name: object.name,
+                facebookId: facebookId
+            }).then(function (studyFieldParse) {
+                return this.store.find('study-field', studyFieldParse.id);
+            }.bind(this)).then(function (studyField) {
+                this.set('newEducationCohort.studyField', studyField);
+            }.bind(this), function (error) {
+                console.dir(error);
+            });
         },
 
-        saveEducationCohort: function () {
-            var where = {
-                institution: ParseHelper.generatePointer(this.get('newEducationCohort.institution'),
-                    'educational-institution'),
-                studyField: ParseHelper.generatePointer(this.get('newEducationCohort.studyField'),
-                    'study-field'),
-                currentYear: this.get('newEducationCohort.currentYear')
-            };
-            console.dir(where);
-            this.store.findQuery('education-cohort', {where: JSON.stringify(where)})
-                .then(function (results) {
-                    console.dir(results);
-                    if (results.objectAt(0))
-                        return results.objectAt(0);
-                    else {
-                        return this.get('newEducationCohort').save();
-                    }
-                }.bind(this))
-                .then(function (educationCohort) {
-                    this.set('educationCohort', educationCohort);
-                    return this.get('model').save();
-                }.bind(this))
-                .then(function () {
-                    this.send('closeModal');
-                }.bind(this));
+        saveEducationCohort: function (callback) {
+            var promise;
+            if (this.get('studyingAtUniversity')) {
+                promise = Parse.Cloud.run('createOrGetEducationCohort', {
+                    educationalInstitutionId: this.get('newEducationCohort.institution.id'),
+                    studyFieldId: this.get('newEducationCohort.studyField.id'),
+                    currentYear: this.get('newEducationCohort.currentYear'),
+                    graduationYear: this.get('newEducationCohort.graduationYear')
+                });
+            } else {
+                promise = Parse.Cloud.run('createOrGetEducationCohort', {
+                    educationalInstitutionId: this.get('newEducationCohort.institution.id')
+                });
+            }
+            callback(promise);
+
+            promise.then(function (educationCohortParse) {
+                this.send('closeModal');
+                return this.store.find('education-cohort', educationCohortParse.id);
+            }.bind(this)).then(function (educationCohort) {
+                this.set('educationCohort', educationCohort);
+                this.get('model').save();
+            }.bind(this), function (error) {
+                console.dir(error);
+            });
         },
 
         clearAutocompleteList: function () {
@@ -429,6 +464,10 @@ export default Ember.ObjectController.extend(CurrentUser, {
 
         followAllFacebookFriends: function () {
             this.send('bulkFollow', this.get('facebookFriendsOnMyCQs'));
+        },
+
+        followAllSuggestedFollowing: function (callback) {
+            this.send('bulkFollow', this.get('suggestedFollowingAll'), callback);
         },
 
         /*
@@ -460,8 +499,8 @@ export default Ember.ObjectController.extend(CurrentUser, {
      * First time login
      */
     firstTimeLoginMode: function () {
-        if (this.get('isCurrentUser') && !this.get('finishedWelcomeTutorial')) {
-            this.set('finishedWelcomeTutorial', true);
+        /*if (this.get('isCurrentUser') && !this.get('finishedWelcomeTutorial')) {
+            /this.set('finishedWelcomeTutorial', true);
             this.get('model').save();
             this.send('addNotification', 'welcome', 'Welcome to MyCQs!', "This is your new profile page!");
             var confirm = {
@@ -471,7 +510,7 @@ export default Ember.ObjectController.extend(CurrentUser, {
                 negative: "Later"
             };
             this.send('addNotification', 'profile', 'Would you like to personalise it now?', "", confirm);
-        }
+        }*/
     }.observes('isCurrentUser'),
 
     hasBegunEditingProfile: false,

@@ -13,16 +13,27 @@ export default Ember.Component.extend({
             this.set('selectedItem', this.mapItem(this.get('defaultItem')));
         }
     },
+    /**
+     * Needed to send actions back
+     * to the correct controller.
+     * Also, currentUser is needed
+     * to get .fbid for fb search.
+     */
+    contextController: null,
+
+    currentUser: function () {
+        return this.get('contextController.currentUser');
+    }.property('contextController.currentUser.id'),
 
     /**
      * @Property engineKey
-     * Swiftkey engineKey
+     * Swifttype engineKey
      */
     engineKey: "KpTvAqftjz7ZaGG7FPr7",
 
     /**
      * @Property engineUrl
-     * Swiftkey engine url for searching
+     * Swiftype engine url for searching
      * records.
      */
     engineUrl: "https://api.swiftype.com/api/v1/public/engines/suggest.json",
@@ -40,6 +51,14 @@ export default Ember.Component.extend({
      * courses, institutions
      */
     type: null,
+
+    /**
+     * @Property subtype
+     * Record document subtype
+     * E.g. University vs School
+     * in type educational-institutions
+     */
+    subtype: null,
 
     /**
      * @Property inputText
@@ -66,8 +85,11 @@ export default Ember.Component.extend({
     defaultItem: null,
 
     defaultItemDidChange: function () {
-        this.set('selectedItem', this.mapItem(this.get('defaultItem')));
-    }.observes('defaultItem'),
+        if (this.get('defaultItem'))
+            this.set('selectedItem', this.mapItem(this.get('defaultItem')));
+        else
+            this.set('selectedItem', null);
+    }.observes('defaultItem', 'subtype'),
 
     /**
      * @Property dataRecords
@@ -75,6 +97,13 @@ export default Ember.Component.extend({
      * on textInput change through REST API.
      */
     dataRecords: null,
+
+    searchEngine: function () {
+        if (this.get('facebookSearch') && this.get('currentUser.fbid'))
+            return "facebook";
+        else
+            return "swiftype";
+    }.property('facebookSearch', 'currentUser.fbid.length'),
 
     /**
      * @Function getDataForSuggestions
@@ -98,26 +127,32 @@ export default Ember.Component.extend({
             engine_key: this.get('engineKey')
         };
         var preloadInput = this.get('textInput');
-        if (this.get('facebookSearch')) {
+        if (this.get('searchEngine') === 'facebook') {
+            // facebook autocomplete
             FB.api('search', {q: this.get('textInput'), type: "page"},
                 function (response) {
-                    if(this.get('textInput') === preloadInput) {
+                    if (this.get('textInput') === preloadInput) {
                         this.get('dataRecords').clear();
                         this.get('dataRecords').addObjects(this.facebookSearchFilter(response.data));
                         this.set('isLoading', false);
                     }
                 }.bind(this));
         } else {
+            // swiftype autocomplete
             $.getJSON(this.get('engineUrl'), params)
                 .done(function (data) {
-                    //var previousRecords = new Ember.A();
-                    //previousRecords.addObjects(this.get('members'));
-                    //previousRecords.addObjects(this.get('selectedSuggestedMembers'));
-                    //var uniqueSuggestions = AutocompleteHelper.uniqueSuggestions(data.records.users,
-                    //   previousRecords);
-                    if(this.get('textInput') === preloadInput) {
+                    if (this.get('textInput') === preloadInput) {
                         this.get('dataRecords').clear();
-                        this.get('dataRecords').addObjects(data.records[this.get('type')]);
+                        var records = data.records[this.get('type')],
+                            subrecords = [];
+                        if(this.get('subtype')) {
+                            _.each(records, function (record) {
+                                if(record.type === this.get('subtype'))
+                                    subrecords.push(record);
+                            }.bind(this));
+                            this.get('dataRecords').addObjects(subrecords);
+                        } else
+                            this.get('dataRecords').addObjects(records);
                         this.set('isLoading', false);
                     }
                 }.bind(this));
@@ -128,7 +163,7 @@ export default Ember.Component.extend({
      * Rate limit - stop excessive API calls
      */
     throttleSearch: function () {
-        if(this.get('textInput.length'))
+        if (this.get('textInput.length'))
             this.set('isLoading', true);
         Ember.run.debounce(this, this.getDataForSuggestions, 200);
     }.observes("textInput.length"),
@@ -220,6 +255,7 @@ export default Ember.Component.extend({
         object.set('label', label);
         object.set('secondaryLabel', secondaryLabel);
         object.set('imageUrl', imageUrl);
+        item['recordType'] = this.get('searchEngine');
         object.set('record', item);
         object.set('type', this.get('type'));
         return object;
@@ -229,17 +265,22 @@ export default Ember.Component.extend({
         var results = [],
             type = this.get('type');
         _.each(data, function (object) {
-            switch(type) {
-                case "educationalInstitutions":
-                    if(object.category === "University" || object.category === "School")
-                        results.push(object);
+            switch (type) {
+                case "educational-institutions":
+                    if (this.get('subtype')) {
+                        if (object.category === this.get('subtype'))
+                            results.push(object);
+                    } else {
+                        if (object.category === "University" || object.category === "School")
+                            results.push(object);
+                    }
                     break;
-                case "studyFields":
-                    if(object.category === "Interest")
+                case "study-fields":
+                    if (object.category === "Interest" || object.category === "Field of study")
                         results.push(object);
                     break;
             }
-            if(this.get('limit') && data.length === this.get('limit'))
+            if (this.get('limit') && data.length === this.get('limit'))
                 return;
         }.bind(this));
         return results;

@@ -10,7 +10,8 @@
                 {{partial "group/edit"}}
                 <div class="row margin-top-16">
                     <div class="col-md-6">
-                        <button class="btn btn-primary" {{action "createGroup"}}>Create group</button>
+                        {{async-button class="btn btn-primary" action='saveChanges' default='Create Group'
+                        pending='Creating...' fulfilled='Group created!' rejected='Error! Try again.' reset=true}}
                     </div>
                 </div>
             </div>

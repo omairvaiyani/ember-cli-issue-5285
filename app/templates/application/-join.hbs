@@ -16,7 +16,7 @@
         </div>
     {{/if}}
     <div class="col-md-12 margin-bottom-16">
-        {{input type='text' value=newUser.name action='signUp'
+        {{input type='text' value=newUser.name action='submitSignUp'
         placeholder='Please enter your full name' classNames='form-control'
         }}
     </div>
@@ -31,7 +31,7 @@
         </div>
     {{/if}}
     <div class="col-md-12 margin-bottom-16">
-        {{input type='email' value=newUser.email action='signUp'
+        {{input type='email' value=newUser.email action='submitSignUp'
         placeholder='University or college email recommended' classNames='form-control'}}
     </div>
 </div>
@@ -45,7 +45,7 @@
         </div>
     {{/if}}
     <div class="col-md-12 margin-bottom-16">
-        {{input type='password' value=newUser.password action='signUp'
+        {{input type='password' value=newUser.password action='submitSignUp'
         placeholder='Enter a password' classNames='form-control'}}
     </div>
 </div>
@@ -59,16 +59,16 @@
         </div>
     {{/if}}
     <div class="col-md-12 margin-bottom-16">
-        {{input type='password' value=newUser.confirmPassword action='signUp'
+        {{input type='password' value=newUser.confirmPassword action='submitSignUp'
         placeholder='Retype your password just to make sure' classNames='form-control'}}
     </div>
 </div>
 
 <div class="row">
     <div class="col-md-12 text-center margin-bottom-16">
-        <button class="btn btn-primary" {{action 'signUp'}}>
-            Sign me up!
-        </button>
+        {{async-button class='btn btn-primary' action='signUp' default='Sign up!'
+        pending='Signing up...' fulfilled='Signed up!' rejected='Error!' reset=true
+        id="sign-up-button"}}
     </div>
 </div>
 

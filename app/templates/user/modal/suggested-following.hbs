@@ -8,17 +8,17 @@
         {{#if shouldShowFollowAllSuggestedFollowing}}
             <div class='row'>
                 <div class='col-md-12 text-center'>
-                    <button class='btn btn-facebook text-center' {{action 'followAllSuggestedFollowing'}}>
-                        <i class='fa fa-facebook margin-right-16'></i>Follow all users
-                    </button>
+                    {{async-button default="Follow All" action='followAllSuggestedFollowing'
+                    pending='Following...' rejected='Error!' fulfilled='Done!' reset=true
+                    class='btn btn-primary text-center pull-right'}}
                 </div>
             </div>
         {{else}}
-            {{#if suggestFollowingAll.length}}
+            {{#if suggestedFollowingAll.length}}
                 <div class='row'>
                     <div class='col-md-12 text-center'>
-                        <button class='btn btn-facebook text-center' disabled="disabled">
-                            <i class='fa fa-user margin-right-16'></i>Following all suggested users
+                        <button class='btn btn-primary text-center pull-right' disabled="disabled">
+                            Following all suggested users
                         </button>
                     </div>
                 </div>
