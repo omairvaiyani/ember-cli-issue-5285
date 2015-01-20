@@ -938,7 +938,7 @@ hr.user-message-item-separator {
  */
 .guest-page-actions {
     margin-top: 208px;
-    height: 150px;
+    height: 98px;
     overflow: hidden;
 }
 
@@ -946,12 +946,12 @@ hr.user-message-item-separator {
     height: 50px;
     width: 100%;
     font-size: 22px;
-    background-color: rgba(12, 1, 1, 0.35);
+    background-color: rgba(12, 1, 1, 0.65);
     border: 2px solid #3CD0FF;
 }
 
 .guest-page-actions .btn:hover {
-    background-color: rgba(5, 56, 54, 0.35);
+    background-color: rgba(5, 116, 116, 0.65);
     color: #95E5FF;
 }
 

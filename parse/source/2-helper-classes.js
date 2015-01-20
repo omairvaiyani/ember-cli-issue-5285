@@ -412,7 +412,7 @@ function getUserProfileImageUrl(user) {
     if (user.get('profilePicture') && user.get('profilePicture').url())
         return getSecureParseUrl(user.get('profilePicture').url());
     else if (user.get('fbid') && user.get('fbid').length)
-        return "https://res.cloudinary.com/mycqs/image/facebook/c_thumb,e_improve,g_faces:center,w_150/" + user.get('fbid');
+        return "https://graph.facebook.com/"+ user.get('fbid')+"/picture?height=150&type=square";
     else
         return MyCQs.baseCDN + "img/silhouette.png";
 }

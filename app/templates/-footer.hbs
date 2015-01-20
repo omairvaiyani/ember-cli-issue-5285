@@ -23,11 +23,9 @@
                             {{#link-to 'browse' tagName='a'}}Browse{{/link-to}}
                             {{#link-to 'create' tagName='a'}}Create{{/link-to}}
                             {{#link-to 'about' tagName='a'}}About{{/link-to}}
-                            {{#if currentUser}}
-                                {{#unless currentUser.isPremium}}
-                                    {{#link-to 'features' tagName='a'}}Features{{/link-to}}
-                                {{/unless}}
-                            {{/if}}
+                            {{!--
+                            {{#link-to 'features' tagName='a'}}Features{{/link-to}}
+                            --}}
                             <a href='http://blog.mycqs.com' target="_blank">Blog</a>
                         </article>
                     </section>

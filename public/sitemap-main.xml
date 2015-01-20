@@ -6,23 +6,28 @@
         <changefreq>daily</changefreq>
     </url>
     <url>
+        <loc>https://mycqs.com/create</loc>
+        <priority>1</priority>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
         <loc>https://mycqs.com/browse</loc>
         <priority>1</priority>
         <changefreq>daily</changefreq>
     </url>
     <url>
-        <loc>https://mycqs.com/create</loc>
+        <loc>https://mycqs.com/join</loc>
         <priority>1</priority>
-        <changefreq>weekly</changefreq>
+        <changefreq>daily</changefreq>
     </url>
     <url>
-        <loc>https://mycqs.com/about</loc>
+        <loc>https://mycqs.com/groups</loc>
         <priority>1</priority>
-        <changefreq>weekly</changefreq>
+        <changefreq>daily</changefreq>
     </url>
     <url>
         <loc>https://mycqs.com/support</loc>
-        <priority>1</priority>
+        <priority>0.5</priority>
         <changefreq>weekly</changefreq>
     </url>
     <url>

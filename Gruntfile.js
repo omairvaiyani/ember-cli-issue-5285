@@ -37,6 +37,10 @@ module.exports = function (grunt) {
                         src: 'dist/img/*',
                         dest: '/img/'
                     },
+                    {
+                        src: 'dist/img/features/*',
+                        dest: '/img/features/'
+                    }
                 ]
             }
         },

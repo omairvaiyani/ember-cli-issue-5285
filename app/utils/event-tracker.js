@@ -26,8 +26,10 @@ export default
     ONBOARDING_COMPLETED: "Onboarding: Completed",
     ONBOARDING_CANCELLED: "Onboarding: Cancelled",
 
-    TEST_CREATED: "Test created",
-    TEST_TAKEN: "Test taken",
+    CREATED_TEST: "Created Test",
+    STARTED_TEST: "Started Test",
+    COMPLETED_TEST: "Completed Test",
+
 
     /**
      * Track Flow
@@ -63,6 +65,18 @@ export default
             "course": currentUser.get('course.name'),
             "year": currentUser.get('yearNumber')
         });
+        /*
+         * Zzish
+         */
+       /* Zzish.getUser(user.id, user.get('name'));
+        var activityId = Zzish.startActivity(user.id,"Logged In","p6t",function(err,message) {
+            if (err) {
+                console.log("Error" + message);
+            }
+            else {
+                console.log("Activity response",message);
+            }
+        });*/
     },
 
     /**
@@ -74,16 +88,29 @@ export default
         var eventProperties = {source: "Web"};
         if (object) {
             switch (event) {
-                case this.TEST_CREATED:
+                case this.CREATED_TEST:
+                    // object is Test
                     eventProperties = {
                         title: object.get('title'),
-                        category: object.get('category.name')
+                        category: object.get('category.name'),
+                        author: object.get('author.name'),
+                        group: object.get('group.name')
                     };
                     break;
-                case this.TEST_TAKEN:
+                case this.STARTED_TEST:
+                    // object is Attempt
+                    eventProperties = {
+                        title: object.get('title'),
+                        category: object.get('category.name'),
+                        author: object.get('author.name')
+                    };
+                    break;
+                case this.COMPLETED_TEST:
+                    // object is Attempt
                     eventProperties = {
                         title: object.get('test.title'),
                         category: object.get('testCategoryName'),
+                        author: object.get('testAuthorName'),
                         score: object.get('score')
                     };
                     break;

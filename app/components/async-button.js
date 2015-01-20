@@ -34,7 +34,7 @@ export default Ember.Component.extend({
     resetObserver: Ember.observer('textState', 'reset', function () {
         if (this.get('reset') && ['resolved', 'rejected', 'fulfilled'].contains(this.get('textState'))) {
             setTimeout(function () {
-                if(this)
+                if(this && this.get('textState'))
                     this.set('textState', 'default');
             }.bind(this), 1500);
         }

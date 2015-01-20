@@ -38,12 +38,9 @@
                     Groups{{/link-to}}{{/link-to}}
                 {{#link-to 'support' tagName='li' title='Support and FAQs'}}{{#link-to 'support' tagName='a'}}
                     Support{{/link-to}}{{/link-to}}
-                {{#if currentUser}}
-                    {{#unless currentUser.isPremium}}
-                        {{#link-to 'features' tagName='li' title='Features'}}{{#link-to 'features' tagName='a'}}
-                            Features{{/link-to}}{{/link-to}}
-                    {{/unless}}
-                {{/if}}
+                {{!--
+                {{#link-to 'features' tagName='li' title='Features'}}{{#link-to 'features' tagName='a'}}
+                    Features{{/link-to}}{{/link-to}} --}}
             </ul>
 
             {{!--{{view 'expanding-search'}} --}}
@@ -55,8 +52,14 @@
                     {{partial 'application/navbar/current-user'}}
                 {{else}}
                     <li>
-                        <a href='' {{action 'openModal' 'application/modal/login-or-register' 'application'}}>Log in |
-                            Start creating tests</a>
+                        <a href="javascript:void(0)" {{action 'openModal' 'application/modal/login-or-register' 'application'}}>
+                            Log in
+                        </a>
+                    </li>
+                    <li>
+                        {{#link-to 'join'}}
+                            Create an Account
+                        {{/link-to}}
                     </li>
                 {{/if}}
             </ul>

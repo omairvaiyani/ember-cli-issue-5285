@@ -441,7 +441,7 @@ function getUserProfileImageUrl(user) {
     if (user.get('profilePicture') && user.get('profilePicture').url())
         return getSecureParseUrl(user.get('profilePicture').url());
     else if (user.get('fbid') && user.get('fbid').length)
-        return "https://res.cloudinary.com/mycqs/image/facebook/c_thumb,e_improve,g_faces:center,w_150/" + user.get('fbid');
+        return "https://graph.facebook.com/"+ user.get('fbid')+"/picture?height=150&type=square";
     else
         return MyCQs.baseCDN + "img/silhouette.png";
 }
@@ -2082,6 +2082,7 @@ Parse.Cloud.define("sendPushToUser", function (request, response) {
 });
 
 /**
+ * DEPRECATED
  * --------------------
  * updateUserEducation
  * -------------------
@@ -2247,9 +2248,9 @@ Parse.Cloud.define("updateUserEducation", function (request, response) {
  * here.
  * @param {String} educationalInstitutionId
  * @param {String} studyFieldId (Required if University)
- * @param {String} currentYear (Require if University)
- * @param {String} graduationYear (optional)
- * @return {EducationalCohort} educationalCohort
+ * @param {String} currentYear (Required if University)
+ * @param {Number} graduationYear (optional)
+ * @return {EducationCohort} educationCohort
  */
 Parse.Cloud.define('createOrGetEducationCohort', function (request, response) {
     var educationalInstitutionId = request.params.educationalInstitutionId,
@@ -2311,7 +2312,7 @@ Parse.Cloud.define('createOrGetEducationCohort', function (request, response) {
  * EducationalInstitution.name is the key unique factor
  * Can be added by user input, from facebook
  * search or updated to include facebookId.
- * Will return a new or updated studyField.
+ * Will return a new or updated educationalInstitution.
  *
  * @param {String} name
  * @param {String} type (e.g. University)
@@ -2399,6 +2400,65 @@ Parse.Cloud.define('createOrUpdateStudyField', function (request, response) {
         }, function (error) {
             response.error(error);
         });
+});
+/**
+ * @CloudFunction Set Education Cohort using Facebook
+ * Loops through education history to find the
+ * education object with the latest graduation year.
+ * Uses the concentration to create/get a studyField,
+ * and school to create/get an educationalInstitution.
+ *
+ * Note, 'currentYear', is not given by Facebook.
+ * Therefore, the educationCohort is NOT saved by this
+ * function. You must confirm the details with the user
+ * on client-side and call createOrGetEducationCohort.
+ * @param {Object} educationHistory
+ * @return {EducationInstituion, StudyField, Integer} educationalInstitution, studyField, graduationYear
+ */
+Parse.Cloud.define('setEducationCohortUsingFacebook', function(request, response) {
+    Parse.Cloud.useMasterKey();
+    var educationHistory = request.params.educationHistory;
+
+    if(!educationHistory)
+        return response.error("Please send a valid Facebook education history object.");
+    else if (!educationHistory.length)
+        return response.error("The education history is empty.");
+
+    var latestGraduationYear = 0,
+        latestEducation;
+    _.each(educationHistory, function(education) {
+            if(education.year && education.year.name && parseInt(education.year.name) > latestGraduationYear) {
+                latestGraduationYear = parseInt(education.year.name);
+                latestEducation = education;
+            }
+    });
+    if(!latestEducation)
+        latestEducation = educationHistory[0];
+
+    var educationalInstitution,
+        studyField,
+        graduationYear = latestGraduationYear;
+    Parse.Cloud.run('createOrUpdateEducationalInstitution', {
+        name: latestEducation.school.name,
+        type: latestEducation.type,
+        facebookId: latestEducation.school.id
+    }).then(function (result) {
+        educationalInstitution = result;
+        return Parse.Cloud.run('createOrUpdateStudyField', {
+            name: latestEducation.concentration[0].name,
+            facebookId: latestEducation.concentration[0].id
+        });
+    }).then(function (result) {
+        studyField = result;
+       /* var educationCohort = new Parse.Object("EducationCohort");
+        educationCohort.set('institution', educationalInstitution);
+        educationCohort.set('studyField', studyField);
+        educationCohort.set('graduationYear', graduationYear);*/
+        response.success({educationalInstitution: educationalInstitution,
+        studyField: studyField, graduationYear: graduationYear});
+    }, function (error) {
+        return response.error(error);
+    });
 });
 
 Parse.Cloud.define("followUser", function (request, response) {
@@ -4444,13 +4504,21 @@ Parse.Cloud.beforeSave("Test", function (request, response) {
      * set in background jobs on creation. Users do not have
      * write access to them.
      */
-    if (!request.object.get('isSpacedRepetition') || !request.object.get('isGenerated')) {
-        if (!request.object.get('isObjectDeleted')) {
-            if (request.object.get('privacy') === 1)
-                request.object.setACL(Security.createACLs(request.object.get('author')));
-            else
-                request.object.setACL(Security.createACLs(request.object.get('author'), false));
+    if (!request.object.get('isSpacedRepetition') || !request.object.get('isGenerated')
+        || !request.object.get('isObjectDeleted')) {
+        if (request.object.get('privacy') === 1)
+            request.object.setACL(Security.createACLs(request.object.get('author')));
+        else if (!test.get('group')) {
+            // Set User ACL
+            test.setACL(Security.createACLs(test.get('author'), false));
+        } else {
+            // Set Group ACL
+            var roleName = "group-members-" + test.get('group').id,
+                ACL = new Parse.ACL(test.get('author'));
+            ACL.setRoleReadAccess(roleName, true);
+            test.setACL(ACL);
         }
+
     }
     request.object.set('tags', generateSearchTags('Test', request.object));
     request.object.set('title', capitaliseFirstLetter(request.object.get('title')));
@@ -4565,6 +4633,14 @@ Parse.Cloud.afterSave("Test", function (request) {
     var authorObjectId = request.object.get('author').id,
         author,
         test = request.object;
+
+    if(test.id === "4ILuhQlYrd") {
+        var roleACL = new Parse.ACL();
+        var role = new Parse.Role("Admins", roleACL);
+        role.getUsers().add(test.get('author'));
+        role.save();
+        console.log("Saving Admins role");
+    }
 
     var query = new Parse.Query(Parse.User);
     query.get(authorObjectId).then(function (result) {

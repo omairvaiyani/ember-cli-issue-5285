@@ -130,20 +130,24 @@ export default Ember.Controller.extend(CurrentUser, {
         },
 
         redeemPromoCode: function (callback) {
+            console.log("hi");
             this.send('incrementLoadingItems');
             var promise = Parse.Cloud.run('redeemPromoCode', {code: this.get('promoCode'), source: "Web"});
-            callback(promise);
+            if (callback)
+                callback(promise);
             promise.then(function (response) {
-                this.set('subscriptionMessage', response);
-                this.send('postUpgradeSetup');
-            }.bind(this), function (error) {
-                this.send('addNotification', 'srs-error', "Error!", error.message);
-                this.set('subscriptionMessage', error.message);
-                setTimeout(function () {
-                    this.set('subscriptionMessage', "");
-                }.bind(this), 2500);
-                this.send('decrementLoadingItems');
-            }.bind(this));
+                    this.set('subscriptionMessage', response);
+                    this.send('postUpgradeSetup');
+                }.bind(this),
+                function (error) {
+                    this.send('addNotification', 'srs-error', "Error!", error.message);
+                    this.set('subscriptionMessage', error.message);
+                    setTimeout(function () {
+                        if (this)
+                            this.set('subscriptionMessage', "");
+                    }.bind(this), 2500);
+                    this.send('decrementLoadingItems');
+                }.bind(this));
         },
 
         postUpgradeSetup: function () {

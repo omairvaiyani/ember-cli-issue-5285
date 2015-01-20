@@ -509,7 +509,8 @@ EmberParseAdapter.ParseUser = DS.Model.extend({
         if (this.get('profilePicture') && this.get('profilePicture.url')) {
             return this.get('profilePicture.secureUrl');
         } else if (this.get('fbid')) {
-            return "https://res.cloudinary.com/mycqs/image/facebook/c_thumb,e_improve,g_faces:center,w_150/" + this.get('fbid');
+            return "https://graph.facebook.com/"+this.get('fbid')+"/picture?height=150&type=square";
+            //return "https://res.cloudinary.com/mycqs/image/facebook/c_thumb,e_improve,g_faces:center,w_150/" + this.get('fbid');
         } else {
             return "https://d3uzzgmigql815.cloudfront.net/img/silhouette.png";
         }

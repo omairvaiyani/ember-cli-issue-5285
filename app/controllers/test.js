@@ -212,7 +212,7 @@ export default Ember.ObjectController.extend(CurrentUser, {
                 return attempt.save();
             }.bind(this))
                 .then(function () {
-                    EventTracker.recordEvent(EventTracker.TEST_TAKEN, attempt);
+                    EventTracker.recordEvent(EventTracker.COMPLETED_TEST, attempt);
                     if (this.get('currentUser')) {
                         if (this.get('currentUser.attempts'))
                             this.get('currentUser.attempts').insertAt(0, attempt);

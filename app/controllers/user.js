@@ -110,10 +110,16 @@ export default Ember.ObjectController.extend(CurrentUser, {
         return this.get('studyingAt') === 'University';
     }.property('studyingAt.length'),
 
-    newEducationCohort: function () {
+    newEducationCohort: null,
+
+    setNewEducationCohort: function () {
+        var newEducationCohort;
         if (this.get('educationCohort.institution.id')) {
-            this.set('studyingAt', this.get('educationCohort.institution.type'));
-            return this.store.createRecord('education-cohort', {
+            var studyingAt = this.get('educationCohort.institution.type');
+            if (!studyingAt)
+                studyingAt = "University";
+            this.set('studyingAt', studyingAt);
+            newEducationCohort = this.store.createRecord('education-cohort', {
                 institution: this.get('educationCohort.institution'),
                 studyField: this.get('educationCohort.studyField'),
                 currentYear: this.get('educationCohort.currentYear'),
@@ -121,11 +127,12 @@ export default Ember.ObjectController.extend(CurrentUser, {
             });
         } else {
             this.set('studyingAt', 'University');
-            return this.store.createRecord('education-cohort', {
+            newEducationCohort = this.store.createRecord('education-cohort', {
                 currentYear: "Year 1"
             });
         }
-    }.property('educationCohort.institution.id.length'),
+        this.set('newEducationCohort', newEducationCohort);
+    }.observes('educationCohort.institution.id.length'),
 
     studyYearsToChooseFrom: [
         "Foundation Year", "Year 1", "Year 2", "Year 3",
@@ -160,28 +167,28 @@ export default Ember.ObjectController.extend(CurrentUser, {
     suggestedFollowingAll: Ember.A(), // No limit
 
     mergeSuggestedFollowings: function () {
-        if (this.get('currentUser.following') &&
-            (this.get('courseSuggestedFollowing.length') || this.get('facebookFriendsOnMyCQs.length'))) {
-            var array = Ember.A();
-            this.get('courseSuggestedFollowing').forEach(function (user) {
-                if(!this.get('currentUser.following').contains(user))
+        if (!this.get('isCurrentUser') || !this.get('currentUser.following') ||
+            (!this.get('courseSuggestedFollowing.length') && !this.get('facebookFriendsOnMyCQs.length')))
+            return;
+        var array = Ember.A();
+        this.get('courseSuggestedFollowing').forEach(function (user) {
+            if (!this.get('currentUser.following').contains(user))
+                array.pushObject(user);
+        }.bind(this));
+        array.addObjects(this.get('courseSuggestedFollowing'));
+        if (this.get('facebookFriendsOnMyCQs.length')) {
+            /*
+             * Check for duplicate users
+             */
+            this.get('facebookFriendsOnMyCQs').forEach(function (user) {
+                if (!array.contains(user) && !this.get('currentUser.following').contains(user))
                     array.pushObject(user);
             }.bind(this));
-            array.addObjects(this.get('courseSuggestedFollowing'));
-            if (this.get('facebookFriendsOnMyCQs.length')) {
-                /*
-                 * Check for duplicate users
-                 */
-                this.get('facebookFriendsOnMyCQs').forEach(function (user) {
-                    if (!array.contains(user) && !this.get('currentUser.following').contains(user))
-                        array.pushObject(user);
-                }.bind(this));
-            }
-            this.get('suggestedFollowing').clear();
-            this.get('suggestedFollowing').addObjects(_.shuffle(array).splice(0, 5));
-            this.get('suggestedFollowingAll').clear();
-            this.get('suggestedFollowingAll').addObjects(_.shuffle(array));
         }
+        this.get('suggestedFollowing').clear();
+        this.get('suggestedFollowing').addObjects(_.shuffle(array).splice(0, 5));
+        this.get('suggestedFollowingAll').clear();
+        this.get('suggestedFollowingAll').addObjects(_.shuffle(array));
     }.observes('courseSuggestedFollowing.length', 'facebookFriendsOnMyCQs.length'),
 
     throttleMergeSuggestedFollowing: function () {
@@ -385,7 +392,7 @@ export default Ember.ObjectController.extend(CurrentUser, {
         },
 
         educationalInstitutionSelected: function (object) {
-            if(!object) {
+            if (!object) {
                 this.set('newEducationCohort.institution', undefined);
                 return;
             }
@@ -408,7 +415,7 @@ export default Ember.ObjectController.extend(CurrentUser, {
         },
 
         studyFieldSelected: function (object) {
-            if(!object) {
+            if (!object) {
                 this.set('newEducationCohort.institution', undefined);
                 return;
             }
@@ -500,17 +507,17 @@ export default Ember.ObjectController.extend(CurrentUser, {
      */
     firstTimeLoginMode: function () {
         /*if (this.get('isCurrentUser') && !this.get('finishedWelcomeTutorial')) {
-            /this.set('finishedWelcomeTutorial', true);
-            this.get('model').save();
-            this.send('addNotification', 'welcome', 'Welcome to MyCQs!', "This is your new profile page!");
-            var confirm = {
-                controller: this,
-                callbackAction: 'welcomePersonaliseNow',
-                positive: "Personalise now",
-                negative: "Later"
-            };
-            this.send('addNotification', 'profile', 'Would you like to personalise it now?', "", confirm);
-        }*/
+         /this.set('finishedWelcomeTutorial', true);
+         this.get('model').save();
+         this.send('addNotification', 'welcome', 'Welcome to MyCQs!', "This is your new profile page!");
+         var confirm = {
+         controller: this,
+         callbackAction: 'welcomePersonaliseNow',
+         positive: "Personalise now",
+         negative: "Later"
+         };
+         this.send('addNotification', 'profile', 'Would you like to personalise it now?', "", confirm);
+         }*/
     }.observes('isCurrentUser'),
 
     hasBegunEditingProfile: false,

@@ -449,6 +449,7 @@ Parse.Cloud.define("sendPushToUser", function (request, response) {
 });
 
 /**
+ * DEPRECATED
  * --------------------
  * updateUserEducation
  * -------------------
@@ -615,7 +616,7 @@ Parse.Cloud.define("updateUserEducation", function (request, response) {
  * @param {String} educationalInstitutionId
  * @param {String} studyFieldId (Required if University)
  * @param {String} currentYear (Required if University)
- * @param {String} graduationYear (optional)
+ * @param {Number} graduationYear (optional)
  * @return {EducationCohort} educationCohort
  */
 Parse.Cloud.define('createOrGetEducationCohort', function (request, response) {
@@ -766,6 +767,63 @@ Parse.Cloud.define('createOrUpdateStudyField', function (request, response) {
         }, function (error) {
             response.error(error);
         });
+});
+/**
+ * @CloudFunction Set Education Cohort using Facebook
+ * Loops through education history to find the
+ * education object with the latest graduation year.
+ * Uses the concentration to create/get a studyField,
+ * and school to create/get an educationalInstitution.
+ *
+ * Note, 'currentYear', is not given by Facebook.
+ * Therefore, the educationCohort is NOT saved by this
+ * function. You must confirm the details with the user
+ * on client-side and call createOrGetEducationCohort.
+ * @param {Object} educationHistory
+ * @return {EducationInstituion, StudyField, Integer} educationalInstitution, studyField, graduationYear
+ */
+Parse.Cloud.define('setEducationCohortUsingFacebook', function (request, response) {
+    Parse.Cloud.useMasterKey();
+    var educationHistory = request.params.educationHistory;
+
+    if (!educationHistory)
+        return response.error("Please send a valid Facebook education history object.");
+    else if (!educationHistory.length)
+        return response.error("The education history is empty.");
+
+    var latestGraduationYear = 0,
+        latestEducation;
+    _.each(educationHistory, function (education) {
+        if (education.year && education.year.name && parseInt(education.year.name) > latestGraduationYear) {
+            latestGraduationYear = parseInt(education.year.name);
+            latestEducation = education;
+        }
+    });
+    if (!latestEducation)
+        latestEducation = educationHistory[0];
+
+    var educationalInstitution,
+        studyField,
+        graduationYear = latestGraduationYear;
+    Parse.Cloud.run('createOrUpdateEducationalInstitution', {
+        name: latestEducation.school.name,
+        type: latestEducation.type,
+        facebookId: latestEducation.school.id
+    }).then(function (result) {
+        educationalInstitution = result;
+        return Parse.Cloud.run('createOrUpdateStudyField', {
+            name: latestEducation.concentration[0].name,
+            facebookId: latestEducation.concentration[0].id
+        });
+    }).then(function (result) {
+        studyField = result;
+        response.success({
+            educationalInstitution: educationalInstitution,
+            studyField: studyField, graduationYear: graduationYear
+        });
+    }, function (error) {
+        return response.error(error);
+    });
 });
 
 Parse.Cloud.define("followUser", function (request, response) {
@@ -2454,4 +2512,65 @@ Parse.Cloud.define('removeTestsFromGroup', function (request, response) {
         }, function (error) {
             return response.error(JSON.stringify(error));
         });
+});
+
+/**
+ * @CloudFunction Add Professional Questions
+ *
+ */
+Parse.Cloud.define('addProfessionalQuestions', function (request, response) {
+    Parse.Cloud.useMasterKey();
+    var rawQuestions = request.params.questions,
+        Question = Parse.Object.extend("Question"),
+        promises = [];
+
+    var medicalStudyField = new Parse.Object("StudyField");
+    medicalStudyField.id = "fll3AgsHnC";
+    medicalStudyField.fetch().then(function () {
+
+        var targetStudyFields = [];
+        targetStudyFields.push(medicalStudyField);
+
+        _.each(rawQuestions, function (rawQuestion) {
+            var question = new Question();
+            question.set('isProfessional', true);
+            question.set('bank', "medical");
+            question.set('stem', rawQuestion.stem);
+            question.set('feedback', rawQuestion.feedback);
+            question.set('topic', rawQuestion.topic);
+            question.set('subtopic', rawQuestion.subtopic);
+
+            var targetStudyYears = [rawQuestion.target.split(" ")[0]];
+            question.set('targetStudyYears', targetStudyYears);
+            question.set('targetStudyFields', targetStudyFields);
+
+            if (rawQuestion.difficulty === 'difficult')
+                rawQuestion.difficulty = 'hard';
+            question.set('difficulty', rawQuestion.difficulty);
+            if (rawQuestion.disciplineTags)
+                question.set('disciplineTags', rawQuestion.disciplineTags.split(", "));
+
+            var options = [{"isCorrect": true, "phrase": rawQuestion.correctAnswer},
+                {"isCorrect": false, "phrase": rawQuestion.incorrectAnswer1}];
+            if (rawQuestion.incorrectAnswer2)
+                options.push({"isCorrect": false, "phrase": rawQuestion.incorrectAnswer2});
+            if (rawQuestion.incorrectAnswer3)
+                options.push({"isCorrect": false, "phrase": rawQuestion.incorrectAnswer3});
+            if (rawQuestion.incorrectAnswer4)
+                options.push({"isCorrect": false, "phrase": rawQuestion.incorrectAnswer4});
+
+            question.set('options', options);
+
+            var ACL = new Parse.ACL();
+            ACL.setRoleReadAccess('medical-professional', true);
+            question.setACL(ACL);
+
+            promises.push(question.save());
+        });
+        return Parse.Promise.when(promises);
+    }).then(function () {
+        response.success("Added " + promises.length + " questions");
+    }, function (error) {
+        response.error(error);
+    });
 });

@@ -1,19 +1,19 @@
 <div class="mycqs-page-header index-page" id="parallax-image">
-    <div class="container relative-container">
+    <div class="container relative-container text-center">
         <div>
             <img src="img/mycqs-icon-header.png" class="inline-top margin-right-8" height="55px">
             <h1 class="inline-top">MyCQs</h1>
+            <h2 class='margin-top-16' style="max-width:480px;margin:auto;">Create, practice and share multiple-choice question tests.</h2>
         </div>
-
-        <h2 style="max-width:480px;">Create, practice and share multiple-choice question tests.</h2>
     </div>
 
     <div class="soft-white"></div>
 </div>
 <div class="guest-page-actions">
     <div class="container">
+        {{!--
         <div class="row">
-            <div class="col-sm-push-7 col-sm-5 text-center">
+            <div class="col-sm-push-3 col-sm-6 text-center">
                 <div class="search-box">
                     {{input type='text' value=searchTermForTests placeholder='Type here to search for a test' action='searchTests'
                        class='margin-bottom-16'}}
@@ -22,9 +22,17 @@
             </div>
         </div>
         <div class="row">
-            <div class="col-sm-push-7 col-sm-5 create-column text-center margin-bottom-16">
+            <div class="col-sm-push-3 col-sm-6 create-column text-center margin-bottom-16">
                 {{#link-to 'create' tagName='a' classNames='btn btn-info'}}
                     Create an MCQ Test
+                {{/link-to}}
+            </div>
+        </div>
+        --}}
+        <div class="row">
+            <div class="col-sm-push-3 col-sm-6 create-column text-center margin-top-16">
+                {{#link-to 'join' tagName='a' classNames='btn btn-info'}}
+                    Get Started
                 {{/link-to}}
             </div>
         </div>
@@ -97,16 +105,18 @@
     <div class="container">
         <div class="row margin-top-16">
             <div class="col-md-4 col-sm-4 text-center">
-                {{!--{{svg-icon icon='create' margin='auto' height='100' width='100'}}--}}
-                <h3>Create</h3>
+                <img src="img/features/create-web.png" class="margin-top-16" width="100%"/>
+                <h3>{{#link-to 'create'}}Create{{/link-to}}</h3>
                 <p>Write tests in the multiple-choice questions (MCQs) format</p>
             </div>
             <div class="col-md-4 col-sm-4 text-center">
-                <h3>Practice</h3>
+                <img src="img/features/practice-web.png" class="margin-top-16" width="100%"/>
+                <h3>{{#link-to 'browse'}}Practice{{/link-to}}</h3>
                 <p>Take tests and monitor your progress over time</p>
             </div>
             <div class="col-md-4 col-sm-4 text-center">
-                <h3>Share</h3>
+                <img src="img/features/share-web.png" class="margin-top-16" width="100%"/>
+                <h3>{{#link-to 'groups'}}Share{{/link-to}}</h3>
                 <p>Send tests to your colleagues or find tests created by others</p>
             </div>
         </div>

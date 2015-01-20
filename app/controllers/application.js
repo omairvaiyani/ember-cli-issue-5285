@@ -161,9 +161,6 @@ export default
                 adapter.headers['X-Parse-Session-Token'] = currentUser.get('sessionToken');
                 Parse.User.become(currentUser.get('sessionToken'))
                     .then(function (user) {
-                        /*console.log("Connecting to ZZISH");
-                        var zzish = Zzish.getUser(user.id, user.get('name'));
-                        console.dir(zzish);*/
                     }, function (error) {
                         console.dir(error);
                     });
@@ -177,7 +174,7 @@ export default
                      * before saving abruptly.
                      */
                     this.get('currentUser').save();
-                }.bind(this), 2000)
+                }.bind(this), 3000);
             }
             else {
                 if (Parse.User.current())
@@ -209,13 +206,6 @@ export default
                 .then(function () {
                     this.send('decrementLoadingItems');
                 }.bind(this));
-
-
-            /*this.incrementProperty('loadingItems');
-             if (!currentUser.get('latestAttempts')) {
-             this.incrementProperty('decrementLoadingItems');
-             return;
-             }*/
             var where = {
                 "user": ParseHelper.generatePointer(currentUser),
                 "isSRSAttempt": {
@@ -238,9 +228,8 @@ export default
                 .then(function (response) {
                     currentUser.set('isMobileUser', response);
                     currentUser.get('latestAttempts');
-                    EventTracker.profileUser(currentUser);
                 });
-
+            EventTracker.profileUser(currentUser);
         }.observes('currentUser'),
 
         currentUserMessagesDidChange: function () {

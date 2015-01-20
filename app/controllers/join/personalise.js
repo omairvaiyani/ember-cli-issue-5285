@@ -11,6 +11,10 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
 
     initialize: function () {
         this.get('userController').set('model', this.get('currentUser'));
+        if (this.get('currentUser.fbid')) {
+            this.send('setEducationHistoryFromFacebook');
+        }
+        this.set('currentUser.educationCohort', null);
     }.on('init'),
 
     currentStep: 1,
@@ -26,7 +30,7 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
         this.set('imageFile.style', "background-image:url('" +
         this.get('currentUser.profileImageURL') + "');");
         this.set('imageFile.url', this.get('currentUser.profileImageURL'));
-        if(this.get('currentUser.profilePicture') || this.get('currentUser.fbid'))
+        if (this.get('currentUser.profilePicture') || this.get('currentUser.fbid'))
             this.set('imageFile.isDefault', false);
     }.observes('currentUser.profileImageURL.length'),
 
@@ -49,7 +53,6 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
                 this.get('controllers.join').send('goToJoinStep', 'features');
                 return;
             }
-
             this.incrementProperty('currentStep');
             this.set('step1', false);
             this.set('step2', false);
@@ -58,6 +61,9 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
             this.set('step' + this.get('currentStep'), true);
 
             this.set('showGoBack', true);
+            if (this.get('currentStep') === 2) {
+                this.send('confirmFacebookEducationHistory');
+            }
         },
         previousStep: function () {
             this.decrementProperty('currentStep');
@@ -91,6 +97,47 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
                 }.bind(this));
         },
         //step 2
+
+        /*
+         * Called on init if fbid and !educationCohort
+         */
+        setEducationHistoryFromFacebook: function () {
+            var educationalInstitution,
+                studyFieldId,
+                graduationYear;
+
+            Parse.Cloud.run('setEducationCohortUsingFacebook', {educationHistory: this.get('currentUser.education')})
+                .then(function (result) {
+                    studyFieldId = result.studyField.id;
+                    graduationYear = result.graduationYear;
+                    return this.store.findById('educational-institution', result.educationalInstitution.id);
+                }.bind(this)).then(function (result) {
+                    educationalInstitution = result;
+                    return this.store.findById('study-field', studyFieldId);
+                }.bind(this)).then(function (studyField) {
+                    var educationCohort = this.store.createRecord('education-cohort', {
+                        institution: educationalInstitution,
+                        studyField: studyField,
+                        graduationYear: graduationYear
+                    });
+                    this.set('facebookEducationCohort', educationCohort);
+                    if(this.get('hasAskedToConfirmFacebook')) {
+                        // Education Arrived too late, push for confirmation again
+                        this.set('hasAskedToConfirmFacebook', false);
+                        this.send('confirmFacebookEducationHistory');
+                    }
+                }.bind(this), function (error) {
+                    console.dir(error);
+                });
+        },
+        confirmFacebookEducationHistory: function () {
+            if (!this.get('currentUser.fbid') || this.get('hasAskedToConfirmFacebook'))
+                return;
+            this.set('userController.newEducationCohort', this.get('facebookEducationCohort'));
+            this.send('openModal', 'user/modal/course-selection', 'user');
+            this.set('hasAskedToConfirmFacebook', true);
+        },
+
         acceptEducationInfo: function () {
             this.set('currentUser.educationInfoConfirmed', true);
             this.get('currentUser').save();

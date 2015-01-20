@@ -1,5 +1,6 @@
 import Ember from 'ember';
 import CurrentUser from '../mixins/current-user';
+import EventTracker from '../utils/event-tracker';
 
 export default Ember.ObjectController.extend(CurrentUser, {
     needs: ['application', 'editQuestion', 'join'],
@@ -95,6 +96,20 @@ export default Ember.ObjectController.extend(CurrentUser, {
 
     inJoinProcess: function () {
         if (!this.get('currentUser')) {
+            if (!this.get('joinStep.create')) {
+                this.set('joinStep.create', {
+                    active: false,
+                    disabled: false,
+                    completed: false
+                });
+                this.set('joinStep.addQuestions', {
+                    active: false,
+                    disabled: true,
+                    completed: false
+                });
+                this.set('joinStep.join.active', false);
+                this.set('joinStep.join.disabled', true);
+            }
             this.set('joinStep.create.active', true);
             return true;
         } else {
@@ -142,7 +157,7 @@ export default Ember.ObjectController.extend(CurrentUser, {
             }
             this.send('incrementLoadingItems');
             var promise = this.get('model').save();
-            if(callback)
+            if (callback)
                 callback(promise);
             promise.then(function (test) {
                     this.set('categorySelectionInput', '');
@@ -150,13 +165,14 @@ export default Ember.ObjectController.extend(CurrentUser, {
                     this.send('decrementLoadingItems');
                     if (this.get('currentUser.tests'))
                         this.get('currentUser.tests').pushObject(this.get('model'));
-                    if(this.get('inJoinProcess')) {
+                    if (this.get('inJoinProcess')) {
                         this.send('addNotification', 'welcome', 'Congratulations!',
                             'You are now ready to start creating tests on MyCQs!');
                         setTimeout(function () {
                             this.get('joinController').set('joinStep.completed', true);
                         }.bind(this), 2500);
                     }
+                    EventTracker.recordEvent(EventTracker.CREATED_TEST, test);
                 }.bind(this),
                 function (error) {
                     this.send('decrementLoadingItems');
@@ -251,12 +267,6 @@ export default Ember.ObjectController.extend(CurrentUser, {
                 }
             } else
                 this.get('joinController').send('goToJoinStep', step); // clears other steps
-        },
-
-        returnedFromRedirect: function () {
-            if (this.get('joinStep.join.active')) {
-                this.send('goToJoinStep', 'personalise');
-            }
         }
     }
 

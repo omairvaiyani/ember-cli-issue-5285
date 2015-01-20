@@ -5,7 +5,7 @@
 </div>
 
 <hr>
-<h3>Or sign up with your Email</h3>
+<h4 class="text-center">Or sign up with your Email</h4>
 
 <h4>Name</h4>
 
@@ -73,8 +73,17 @@
 </div>
 
 <div class="row">
+    <div class="col-md-12 text-center margin-bottom-16">
+        <span class="linkify" {{action 'openModal' 'application/modal/login-or-register' 'application'}}
+                >I already have an account</span>
+    </div>
+
+</div>
+
+<div class="row">
     <div class="col-md-12 text-center">
-        <p>View our <a href='/privacy-policy' target="_blank">Privacy Policy</a>
+        <p>By clicking 'Sign up!' you accept that you have read (and agree to) our
+            <a href='/privacy-policy' target="_blank">Privacy Policy</a>
             and <a href='/terms' target="_blank">Terms & Conditions</a>.</p>
     </div>
 </div>

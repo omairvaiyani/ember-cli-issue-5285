@@ -3,18 +3,23 @@ import CurrentUser from '../mixins/current-user';
 
 export default Ember.Controller.extend(CurrentUser, {
     needs: ['create'],
+
+    setRedirectPostSignUp: function () {
+        this.controllerFor('application').set('redirectAfterLoginToRoute', 'join.personalise');
+        this.controllerFor('application').set('redirectAfterLoginToController', 'join');
+    }.on('init'),
     /*
      * Join process
      */
     joinStep: {
-        create: {
+        /*create: {
             active: false,
             disabled: false,
             completed: false
-        },
+        },*/
         join: {
             active: false,
-            disabled: true,
+            disabled: false,
             completed: false
         },
         personalise: {
@@ -27,11 +32,11 @@ export default Ember.Controller.extend(CurrentUser, {
             disabled: true,
             completed: false
         },
-        addQuestions: {
+      /*  addQuestions: {
             active: false,
             disabled: true,
             completed: false
-        },
+        },*/
         completed: false
     },
 
@@ -41,8 +46,10 @@ export default Ember.Controller.extend(CurrentUser, {
                 this.get('controllers.create').send('goToJoinStep', step);
                 return;
             }
-            this.set('joinStep.create.active', false);
-            this.set('joinStep.join.active', false);
+            if(this.get('joinStep.create')) {
+                this.set('joinStep.create.active', false);
+                this.set('joinStep.join.active', false);
+            }
             this.set('joinStep.join.active', false);
             this.set('joinStep.personalise.active', false);
             this.set('joinStep.features.active', false);
@@ -54,8 +61,6 @@ export default Ember.Controller.extend(CurrentUser, {
                     this.set('joinStep.join.disabled', false);
                     this.set('joinStep.join.active', true);
                     this.transitionToRoute('join.index');
-                    this.controllerFor('application').set('redirectAfterLoginToRoute', 'create.personalise');
-                    this.controllerFor('application').set('redirectAfterLoginToController', 'create');
                     break;
                 case "personalise":
                     this.set('joinStep.join.completed', true);
@@ -71,6 +76,12 @@ export default Ember.Controller.extend(CurrentUser, {
                     break;
             }
             this.get('controllers.create').notifyPropertyChange('joinStep');
+        },
+
+        returnedFromRedirect: function () {
+            if (this.get('joinStep.join.active')) {
+                this.send('goToJoinStep', 'personalise');
+            }
         }
     }
 });
