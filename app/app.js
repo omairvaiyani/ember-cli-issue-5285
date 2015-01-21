@@ -18,7 +18,6 @@ var App = Ember.Application.extend({
 });
 
 loadInitializers(App, config.modulePrefix);
-EventTracker.recordEvent(EventTracker.WEBSITE_OPENED);
 
 /*
  * zzish set up

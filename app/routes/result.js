@@ -1,7 +1,5 @@
-import
-Ember
-from
-'ember';
+import Ember from 'ember';
+import EventTracker from  '../utils/event-tracker';
 
 export default
 Ember.Route.extend({
@@ -29,5 +27,6 @@ Ember.Route.extend({
                         responses.addObjects(this.controllerFor('test').get('responses'));
                 }.bind(this));
         }
+        EventTracker.recordEvent(EventTracker.VIEWED_RESULTS_PAGE, model);
     }
 });

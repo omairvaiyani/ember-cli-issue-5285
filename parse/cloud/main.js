@@ -2415,24 +2415,24 @@ Parse.Cloud.define('createOrUpdateStudyField', function (request, response) {
  * @param {Object} educationHistory
  * @return {EducationInstituion, StudyField, Integer} educationalInstitution, studyField, graduationYear
  */
-Parse.Cloud.define('setEducationCohortUsingFacebook', function(request, response) {
+Parse.Cloud.define('setEducationCohortUsingFacebook', function (request, response) {
     Parse.Cloud.useMasterKey();
     var educationHistory = request.params.educationHistory;
 
-    if(!educationHistory)
+    if (!educationHistory)
         return response.error("Please send a valid Facebook education history object.");
     else if (!educationHistory.length)
         return response.error("The education history is empty.");
 
     var latestGraduationYear = 0,
         latestEducation;
-    _.each(educationHistory, function(education) {
-            if(education.year && education.year.name && parseInt(education.year.name) > latestGraduationYear) {
-                latestGraduationYear = parseInt(education.year.name);
-                latestEducation = education;
-            }
+    _.each(educationHistory, function (education) {
+        if (education.year && education.year.name && parseInt(education.year.name) > latestGraduationYear) {
+            latestGraduationYear = parseInt(education.year.name);
+            latestEducation = education;
+        }
     });
-    if(!latestEducation)
+    if (!latestEducation)
         latestEducation = educationHistory[0];
 
     var educationalInstitution,
@@ -2444,18 +2444,18 @@ Parse.Cloud.define('setEducationCohortUsingFacebook', function(request, response
         facebookId: latestEducation.school.id
     }).then(function (result) {
         educationalInstitution = result;
+        if(!latestEducation.concentration)
+            return;
         return Parse.Cloud.run('createOrUpdateStudyField', {
             name: latestEducation.concentration[0].name,
             facebookId: latestEducation.concentration[0].id
         });
     }).then(function (result) {
         studyField = result;
-       /* var educationCohort = new Parse.Object("EducationCohort");
-        educationCohort.set('institution', educationalInstitution);
-        educationCohort.set('studyField', studyField);
-        educationCohort.set('graduationYear', graduationYear);*/
-        response.success({educationalInstitution: educationalInstitution,
-        studyField: studyField, graduationYear: graduationYear});
+        response.success({
+            educationalInstitution: educationalInstitution,
+            studyField: studyField, graduationYear: graduationYear
+        });
     }, function (error) {
         return response.error(error);
     });
@@ -4148,7 +4148,67 @@ Parse.Cloud.define('removeTestsFromGroup', function (request, response) {
             return response.error(JSON.stringify(error));
         });
 });
-/*
+
+/**
+ * @CloudFunction Add Professional Questions
+ *
+ */
+Parse.Cloud.define('addProfessionalQuestions', function (request, response) {
+    Parse.Cloud.useMasterKey();
+    var rawQuestions = request.params.questions,
+        Question = Parse.Object.extend("Question"),
+        promises = [];
+
+    var medicalStudyField = new Parse.Object("StudyField");
+    medicalStudyField.id = "fll3AgsHnC";
+    medicalStudyField.fetch().then(function () {
+
+        var targetStudyFields = [];
+        targetStudyFields.push(medicalStudyField);
+
+        _.each(rawQuestions, function (rawQuestion) {
+            var question = new Question();
+            question.set('isProfessional', true);
+            question.set('bank', "medical");
+            question.set('stem', rawQuestion.stem);
+            question.set('feedback', rawQuestion.feedback);
+            question.set('topic', rawQuestion.topic);
+            question.set('subtopic', rawQuestion.subtopic);
+
+            var targetStudyYears = [rawQuestion.target.replace(" Medics", "")];
+            question.set('targetStudyYears', targetStudyYears);
+            question.set('targetStudyFields', targetStudyFields);
+
+            if (rawQuestion.difficulty === 'Difficult')
+                rawQuestion.difficulty = 'hard';
+            question.set('difficulty', rawQuestion.difficulty.toLowerCase());
+            if (rawQuestion.disciplineTags)
+                question.set('disciplineTags', rawQuestion.disciplineTags.split(", "));
+
+            var options = [{"isCorrect": true, "phrase": rawQuestion.correctAnswer},
+                {"isCorrect": false, "phrase": rawQuestion.incorrectAnswer1}];
+            if (rawQuestion.incorrectAnswer2)
+                options.push({"isCorrect": false, "phrase": rawQuestion.incorrectAnswer2});
+            if (rawQuestion.incorrectAnswer3)
+                options.push({"isCorrect": false, "phrase": rawQuestion.incorrectAnswer3});
+            if (rawQuestion.incorrectAnswer4)
+                options.push({"isCorrect": false, "phrase": rawQuestion.incorrectAnswer4});
+
+            question.set('options', options);
+
+            var ACL = new Parse.ACL();
+            ACL.setRoleReadAccess('medical-professional', true);
+            question.setACL(ACL);
+
+            promises.push(question.save());
+        });
+        return Parse.Promise.when(promises);
+    }).then(function () {
+        response.success("Added " + promises.length + " questions");
+    }, function (error) {
+        response.error(error);
+    });
+});/*
  * SAVE LOGIC
  */
 /*

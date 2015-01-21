@@ -26,6 +26,10 @@ export default
     ONBOARDING_COMPLETED: "Onboarding: Completed",
     ONBOARDING_CANCELLED: "Onboarding: Cancelled",
 
+    VIEWED_RESULTS_PAGE: "Viewed Results Page",
+    VIEWED_RESPONSE_STATISTICS: "Viewed Response Statistics",
+    JOIN_TO_VIEW_ALL_RESPONSE_STATISTICS: "Join to View All Response Statistics",
+
     CREATED_TEST: "Created Test",
     STARTED_TEST: "Started Test",
     COMPLETED_TEST: "Completed Test",
@@ -68,15 +72,15 @@ export default
         /*
          * Zzish
          */
-       /* Zzish.getUser(user.id, user.get('name'));
-        var activityId = Zzish.startActivity(user.id,"Logged In","p6t",function(err,message) {
-            if (err) {
-                console.log("Error" + message);
-            }
-            else {
-                console.log("Activity response",message);
-            }
-        });*/
+        /* Zzish.getUser(user.id, user.get('name'));
+         var activityId = Zzish.startActivity(user.id,"Logged In","p6t",function(err,message) {
+         if (err) {
+         console.log("Error" + message);
+         }
+         else {
+         console.log("Activity response",message);
+         }
+         });*/
     },
 
     /**
@@ -98,19 +102,50 @@ export default
                     };
                     break;
                 case this.STARTED_TEST:
-                    // object is Attempt
-                    eventProperties = {
-                        title: object.get('title'),
-                        category: object.get('category.name'),
-                        author: object.get('author.name')
-                    };
+                    // object is Test (Can be Attempt, must avoid)
+                    if (object.parseClassName() === "Test") {
+                        eventProperties = {
+                            title: object.get('title'),
+                            category: object.get('category.name'),
+                            author: object.get('author.name')
+                        };
+                    }
                     break;
                 case this.COMPLETED_TEST:
-                    // object is Attempt
+                    // object is Test (Can be Attempt, must avoid)
                     eventProperties = {
                         title: object.get('test.title'),
                         category: object.get('testCategoryName'),
                         author: object.get('testAuthorName'),
+                        score: object.get('score')
+                    };
+                    break;
+                case this.VIEWED_RESULTS_PAGE:
+                    // object is Attempt
+                    eventProperties = {
+                        title: object.get('test.title'),
+                        category: object.get('testCategoryName'),
+                        author: object.get('test.author.name'),
+                        score: object.get('score'),
+                        user: object.get('user.name')
+                    };
+                    break;
+                case this.VIEWED_RESPONSE_STATISTICS:
+                    // object is Attempt
+                    eventProperties = {
+                        title: object.get('test.title'),
+                        category: object.get('testCategoryName'),
+                        author: object.get('test.author.name'),
+                        score: object.get('score'),
+                        user: object.get('user.name')
+                    };
+                    break;
+                case this.JOIN_TO_VIEW_ALL_RESPONSE_STATISTICS:
+                    // object is Attempt
+                    eventProperties = {
+                        title: object.get('test.title'),
+                        category: object.get('testCategoryName'),
+                        author: object.get('test.author.name'),
                         score: object.get('score')
                     };
                     break;

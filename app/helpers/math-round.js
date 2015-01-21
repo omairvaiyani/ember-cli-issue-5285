@@ -1,15 +1,13 @@
-import
-    Ember
-    from
-        'ember';
+import Ember from 'ember';
 
 export default
     Ember.Handlebars.makeBoundHelper(function (value, downTo) {
         if (!value)
             return 0;
-        else if (!downTo)
+        else if (downTo)
             return Math.round(value);
         else {
+            return Math.round(value); // TODO figure this shit out
             // Currently used to round numbers down to
             // nearest 10, i.e. 68 = 60, 104 = 100
             // Allows for strings such as:

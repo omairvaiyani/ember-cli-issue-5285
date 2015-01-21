@@ -108,12 +108,16 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
 
             Parse.Cloud.run('setEducationCohortUsingFacebook', {educationHistory: this.get('currentUser.education')})
                 .then(function (result) {
-                    studyFieldId = result.studyField.id;
+                    if(result.studyField)
+                        studyFieldId = result.studyField.id;
                     graduationYear = result.graduationYear;
                     return this.store.findById('educational-institution', result.educationalInstitution.id);
                 }.bind(this)).then(function (result) {
                     educationalInstitution = result;
-                    return this.store.findById('study-field', studyFieldId);
+                    if(studyFieldId)
+                        return this.store.findById('study-field', studyFieldId);
+                    else
+                        return;
                 }.bind(this)).then(function (studyField) {
                     var educationCohort = this.store.createRecord('education-cohort', {
                         institution: educationalInstitution,

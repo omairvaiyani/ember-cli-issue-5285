@@ -74,19 +74,66 @@ body {
 .checkbox input[type=checkbox] {
     display:none;
 }
-.checkbox label:before {
-    content: "\2713";
-    border: 2px solid rgba(79, 102, 64, 0.78);
-    border-radius: 12px;
-    color: rgba(195, 196, 193, 0.36);
-    padding: 0px 4px;
-}
-.checkbox input[type=checkbox]:checked + label:before {
-    color: #4f6640;
-    border: 2px solid #4f6640;
-    text-shadow: 1px 1px 1px rgba(0, 0, 0, .2);
+.checkbox {
+    width: 20px;
+    margin: 0px auto;
+    position: relative;
 }
 
+.checkbox label {
+    cursor: pointer;
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    top: 0;
+    border-radius: 4px;
+
+    -webkit-box-shadow: inset 0px 1px 1px white, 0px 1px 3px rgba(0,0,0,0.5);
+    -moz-box-shadow: inset 0px 1px 1px white, 0px 1px 3px rgba(0,0,0,0.5);
+    box-shadow: inset 0px 1px 1px white, 0px 1px 3px rgba(0,0,0,0.5);
+    background: #fcfff4;
+
+    background: -webkit-linear-gradient(top, #fcfff4 0%, #dfe5d7 40%, #b3bead 100%);
+    background: -moz-linear-gradient(top, #fcfff4 0%, #dfe5d7 40%, #b3bead 100%);
+    background: -o-linear-gradient(top, #fcfff4 0%, #dfe5d7 40%, #b3bead 100%);
+    background: -ms-linear-gradient(top, #fcfff4 0%, #dfe5d7 40%, #b3bead 100%);
+    background: linear-gradient(top, #fcfff4 0%, #dfe5d7 40%, #b3bead 100%);
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#fcfff4', endColorstr='#b3bead',GradientType=0 );
+}
+
+.checkbox label:after {
+    -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
+    filter: alpha(opacity=0);
+    opacity: 0;
+    content: '';
+    position: absolute;
+    width: 13px;
+    height: 7px;
+    background: 0 0;
+    top: 5px;
+    left: 4px;
+    border: 3px solid #333;
+    border-top: none;
+    border-right: none;
+
+    -webkit-transform: rotate(-45deg);
+    -moz-transform: rotate(-45deg);
+    -o-transform: rotate(-45deg);
+    -ms-transform: rotate(-45deg);
+    transform: rotate(-45deg);
+}
+
+.checkbox label:hover::after {
+    -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=30)";
+    filter: alpha(opacity=30);
+    opacity: 0.5;
+}
+
+.checkbox input[type=checkbox]:checked + label:after {
+    -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=100)";
+    filter: alpha(opacity=100);
+    opacity: 1;
+}
 .hidden-file-input {
     position: absolute;
     left: -9999em;
@@ -1790,13 +1837,64 @@ hr.user-message-item-separator {
     height: 100%;
     position: absolute;
 }
+.response-card .option {
+    width: calc(100% + 16px);
+    padding-right: 38px;
+}
+
+/* Stop hover/click css */
+.response-card .option:hover,
+.response-card .option:active {
+    background-color: inherit;
+    color: inherit;
+}
+/* Stop hover/click css */
+.response-card .option.is-selected:hover {
+    background-color: #2A98D6;
+    color: white;
+}
 
 .is-correct {
     background-color: #58BE54;
+    color: white;
+}
+.response-card .is-correct:hover {
+    background-color: #58BE54;
+    color: white;
 }
 
-.is-unimportant {
+.response-card .option.is-correct.is-selected {
+    background-color: #2A98D6;
+    color: white;
+}
+
+.response-card .is-unimportant {
     background-color: #97A07D;
+}
+
+.response-card .option-statistics {
+    background-color: rgba(66, 66, 66, 0.62);
+    position:absolute;
+    top: 0px;
+    bottom: 0px;
+    left: 0px;
+    transition-property: width;
+    transition-duration: 0.6s;
+}
+.response-card .option-label {
+    position: absolute;
+}
+.response-card .phrase-over-statistics {
+    position: absolute;
+    margin-left: 24px;
+    margin-right: 38px;
+}
+.response-card .phrase-hidden {
+    visibility: hidden;
+}
+.response-card .option-statistics-label {
+    position: absolute;
+    right: 8px;
 }
 
 .author-info .profile-image {

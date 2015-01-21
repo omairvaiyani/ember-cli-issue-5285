@@ -48,7 +48,6 @@ export default
                 if (!description)
                     description = "This mcq test on has " + model.get('totalQuestions') + " questions! Take it now for free!";
                 this.send('updatePageDescription', description);
-                EventTracker.recordEvent(EventTracker.STARTED_TEST, model);
             }
             model.get('questions').then(function (questions) {
                 /*

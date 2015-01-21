@@ -1,4 +1,4 @@
-<div class="card margin-top-16">
+<div class="card margin-top-16 response-card">
     {{#if response.chosenAnswer}}
         <div {{bind-attr class=":response-indicator :pull-left response.isCorrect:is-correct"}}></div>
     {{else}}
@@ -9,20 +9,57 @@
     </div>
     <div class="row no-margin">
         <div class="col-md-12">
-            {{#if response.chosenAnswer}}
-            <p {{bind-attr class="response.isCorrect:text-color-green:text-color-red"}}
-                    >YOU {{#if response.isCorrect}}CORRECTLY {{/if}}CHOSE:<br>{{response.chosenAnswer}}</p>
+            {{!--
+             {{#if response.chosenAnswer}}
+             <p {{bind-attr class="response.isCorrect:text-color-green:text-color-red"}}
+                     >YOU {{#if response.isCorrect}}CORRECTLY {{/if}}CHOSE:<br>{{response.chosenAnswer}}</p>
 
-            {{else}}
-                <p class="text-color-unimportant">YOU SKIPPED THIS QUESTION</p>
-            {{/if}}
-            {{#unless response.isCorrect}}
-                <p class="text-color-green">CORRECT ANSWER:<br>{{response.correctAnswer}}</p>
+             {{else}}
+                 <p class="text-color-unimportant">YOU SKIPPED THIS QUESTION</p>
+             {{/if}}
+             {{#unless response.isCorrect}}
+                 <p class="text-color-green">CORRECT ANSWER:<br>{{response.correctAnswer}}</p>
 
-            {{/unless}}
+             {{/unless}} --}}
+
+            {{#each option in response.shuffledOptions}}
+                <div class="row">
+                    <div {{bind-attr class=":col-md-12 :option option.isChosen:is-selected
+                    option.isCorrect:is-correct:is-incorrect"}}>
+                        <div class="option-statistics" {{bind-attr style=option.statisticsStyling}}></div>
+                        <span class="option-label margin-right-16">{{alphabetise-index _view.contentIndex}}</span>
+                        <span class="phrase-over-statistics">{{option.phrase}}</span>
+                        <span class="phrase-hidden">{{option.phrase}}</span>
+                        {{#if showResponseStatistics}}
+                            {{#if response.itemIndex}}
+                                {{#if currentUser}}
+                                    <span class="small option-statistics-label">
+                                        {{#tool-tipster title=option.statisticsTitle position=top}}
+                                            {{math-round option.percentageOfTimesChosen}}%
+                                        {{/tool-tipster}}
+                                    </span>
+                                {{else}}
+                                    <span class="option-statistics-label">
+                                        {{#tool-tipster title='Login or Create an account to see these stats! Click the triangle.'
+                                        position='top'}}
+                                            <i class="fa fa-exclamation-triangle linkify"
+                                                {{action 'userWantsToSeeAllResponseStatistics'}}></i>
+                                        {{/tool-tipster}}
+                                    </span>
+                                {{/if}}
+                            {{else}}
+                                <span class="small option-statistics-label">
+                                    {{#tool-tipster title=option.statisticsTitle position=top}}
+                                        {{math-round option.percentageOfTimesChosen}}%
+                                    {{/tool-tipster}}
+                                </span>
+                            {{/if}}
+                        {{/if}}
+                    </div>
+                </div>
+            {{/each}}
             {{#if response.question.feedback}}
-                <p class="">FEEDBACK:<br>{{response.question.feedback}}</p>
-
+                <p class="margin-top-8">FEEDBACK:<br>{{response.question.feedback}}</p>
             {{/if}}
         </div>
     </div>

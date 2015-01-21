@@ -10,6 +10,9 @@ export default Ember.ObjectController.extend(CurrentUser, {
         if (!this.get('preparingTest')) {
             this.set('timeStarted', new Date());
             this.send('prerenderReady');
+            setTimeout(function () {
+                EventTracker.recordEvent(EventTracker.STARTED_TEST, this.get('model'));
+            }.bind(this), 1000);
         }
     }.observes('preparingTest'),
 

@@ -811,6 +811,8 @@ Parse.Cloud.define('setEducationCohortUsingFacebook', function (request, respons
         facebookId: latestEducation.school.id
     }).then(function (result) {
         educationalInstitution = result;
+        if(!latestEducation.concentration)
+            return;
         return Parse.Cloud.run('createOrUpdateStudyField', {
             name: latestEducation.concentration[0].name,
             facebookId: latestEducation.concentration[0].id
@@ -2540,13 +2542,13 @@ Parse.Cloud.define('addProfessionalQuestions', function (request, response) {
             question.set('topic', rawQuestion.topic);
             question.set('subtopic', rawQuestion.subtopic);
 
-            var targetStudyYears = [rawQuestion.target.split(" ")[0]];
+            var targetStudyYears = [rawQuestion.target.replace(" Medics", "")];
             question.set('targetStudyYears', targetStudyYears);
             question.set('targetStudyFields', targetStudyFields);
 
-            if (rawQuestion.difficulty === 'difficult')
+            if (rawQuestion.difficulty === 'Difficult')
                 rawQuestion.difficulty = 'hard';
-            question.set('difficulty', rawQuestion.difficulty);
+            question.set('difficulty', rawQuestion.difficulty.toLowerCase());
             if (rawQuestion.disciplineTags)
                 question.set('disciplineTags', rawQuestion.disciplineTags.split(", "));
 

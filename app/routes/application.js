@@ -77,12 +77,19 @@ export default
 
             /*
              * Set Prerender variable to true
-             * for AJAX HTML snapshort crawling
+             * for AJAX HTML snapshot crawling
              * If not called, page will take 20
              * seconds to load fully.
              */
             prerenderReady: function () {
                 window.prerenderReady = true;
+                setTimeout(function () {
+                    // This avoids recording this event when being crawled by FB.
+                    if(!this.get('hasRecordedEventWebsiteOpened')) {
+                        EventTracker.recordEvent(EventTracker.WEBSITE_OPENED);
+                        this.set('hasRecordedEventWebsiteOpened', true);
+                    }
+                }.bind(this), 1500);
             },
 
             /*
@@ -627,6 +634,7 @@ export default
             },
 
             /**
+             * @DEPRECATED (Use utils/event-tracker.recordEvent)
              * Analytics action for events
              * @param event {String} e.g. Test created
              * @param object {Object} (optional) e.g. Test
@@ -635,27 +643,29 @@ export default
                 /*
                  * Amplitude
                  */
-                if (!object)
-                    amplitude.logEvent(event);
-                else {
-                    var eventData;
-                    switch (event) {
-                        case Constants.TEST_CREATED:
-                            eventData = {
-                                title: object.get('title'),
-                                category: object.get('category.name')
-                            };
-                            break;
-                        case Constants.TEST_TAKEN:
-                            eventData = {
-                                title: object.get('title'),
-                                category: object.get('category.name'),
-                                score: object.get('score')
-                            };
-                            break;
-                    }
-                    amplitude.logEvent(event, eventData);
-                }
+                /*
+                 if (!object)
+                 amplitude.logEvent(event);
+                 else {
+                 var eventData;
+                 switch (event) {
+                 case Constants.TEST_CREATED:
+                 eventData = {
+                 title: object.get('title'),
+                 category: object.get('category.name')
+                 };
+                 break;
+                 case Constants.TEST_TAKEN:
+                 eventData = {
+                 title: object.get('title'),
+                 category: object.get('category.name'),
+                 score: object.get('score')
+                 };
+                 break;
+                 }
+                 amplitude.logEvent(event, eventData);
+                 }
+                 */
             }
 
         }
