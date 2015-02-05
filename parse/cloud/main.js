@@ -947,14 +947,13 @@ Parse.Cloud.job("indexObjectsForSwiftype", function (request, status) {
     var yesterday = moment().subtract(25, 'hour');
     query.greaterThanOrEqualTo("updatedAt", yesterday.toDate());
     query.limit(1000);
-    query.skip(request.params.skip);
     var documents = [];
     query.find().then(function (results) {
-     _.each(results, function (object) {
-         var document = getSwiftDocumentForObject("_User", object);
-         if (document)
-             documents.push(document);
-     });
+        _.each(results, function (object) {
+            var document = getSwiftDocumentForObject("_User", object);
+            if (document)
+                documents.push(document);
+        });
     }).then(function () {
         if (!documents.length)
             return;
@@ -1631,6 +1630,41 @@ Parse.Cloud.job('exportEmailList', function (request, response) {
         response.error(JSON.stringify(error));
     });
 });
+
+Parse.Cloud.job("removeRedundantActions", function (request, status) {
+    Parse.Cloud.useMasterKey(); // Need this to delete objects.
+    var query = new Parse.Query("Action"),
+        redundantActions = 0,
+        promises = [];
+    query.equalTo('type', "testCreated");
+    var promise = Parse.Promise.as();
+    query.each(function (action) {
+            if (!action.get('test')) {
+                redundantActions++;
+                promise = promise.then(function () {
+                    return action.destroy();
+                });
+            } else {
+                promise = promise.then(function () {
+                    var testQuery = new Parse.Query("Test");
+                    testQuery.equalTo('objectId', action.get('test').id);
+                    return testQuery.find().then(function (results) {
+                        // Return a promise that will be resolved when the delete is finished.
+                        if (!results[0] || !results[0].get('privacy') || results[0].get('isObjectDeleted')) {
+                            redundantActions++;
+                            return action.destroy();
+                        }
+                    });
+                });
+            }
+        return promise;
+    }).then(function () {
+        console.log("Calling succcess with deleted actions " + redundantActions);
+        status.success("Deleted " + redundantActions + " redundant actions.");
+    }, function (error) {
+        status.error(error.message);
+    });
+});
 /*
  * SIGN UP LOGIC
  */
@@ -1700,7 +1734,7 @@ Parse.Cloud.define("preLogIn", function (request, response) {
         return;
     }
     var query = new Parse.Query("UserPrivate");
-    query.equalTo('email', email);
+    query.equalTo('email', email.toLowerCase());
     query.find().then(function (result) {
         if (!result[0]) {
             response.error(Parse.Error.EMAIL_NOT_FOUND);
@@ -2045,12 +2079,8 @@ Parse.Cloud.define("sendPushToUser", function (request, response) {
             }
         }
     }
-
     if (!sound)
         sound = 'default';
-
-    console.log("Sound for push is " + sound);
-
     // Send the push.
     // Find devices associated with the recipient user
     var query = new Parse.Query(Parse.User);
@@ -2077,7 +2107,7 @@ Parse.Cloud.define("sendPushToUser", function (request, response) {
         .then(function () {
             response.success("Push was sent successfully.")
         }, function (error) {
-            response.error("Push failed to send with error: " + JSON.stringify(error));
+            response.error(error);
         });
 });
 
@@ -2444,7 +2474,7 @@ Parse.Cloud.define('setEducationCohortUsingFacebook', function (request, respons
         facebookId: latestEducation.school.id
     }).then(function (result) {
         educationalInstitution = result;
-        if(!latestEducation.concentration)
+        if (!latestEducation.concentration)
             return;
         return Parse.Cloud.run('createOrUpdateStudyField', {
             name: latestEducation.concentration[0].name,
@@ -2497,7 +2527,8 @@ Parse.Cloud.define("followUser", function (request, response) {
                     pushType: "newFollower"
                 }
             });
-            if (!mainUser.get('authData') || !userToFollow.get('graphObjectId')) {
+            if (!mainUser.get('authData') || !mainUser.get('authData').facebook
+                || !mainUser.get('authData').facebook.access_token) {
                 return;
             }
             /*
@@ -2508,7 +2539,7 @@ Parse.Cloud.define("followUser", function (request, response) {
                 url: FB.API.url + 'og.follows',
                 params: {
                     access_token: mainUser.get('authData').facebook.access_token,
-                    profile: userToFollow.get('graphObjectId')
+                    profile: MyCQs.baseUrl + userToFollow.get('slug')
                 }
             });
         }).then(
@@ -2522,8 +2553,10 @@ Parse.Cloud.define("followUser", function (request, response) {
                 numberOfFollowers: userToFollow.get('numberOfFollowers')
             });
         },
-        function () {
+        function (error) {
+            console.error(JSON.stringify(error));
             return response.success({
+                graphError: error,
                 numberFollowing: mainUser.get('numberFollowing'),
                 numberOfFollowers: userToFollow.get('numberOfFollowers')
             });
@@ -3914,9 +3947,14 @@ Parse.Cloud.define('addMembersToGroup', function (request, response) {
     var user = request.user,
         groupId = request.params.groupId,
         memberIds = request.params.memberIds,
+        addSelfToGroup = false,
         membersToAdd,
-        promises = [],
-        errorMessage;
+        promises = [];
+
+    if (user && memberIds.length === 1 && memberIds[0] === user.id) {
+        addSelfToGroup = true;
+        Parse.Cloud.useMasterKey();
+    }
 
     var group = new Parse.Object('Group');
     group.id = groupId;
@@ -3928,21 +3966,20 @@ Parse.Cloud.define('addMembersToGroup', function (request, response) {
         }).then(function (results) {
             membersToAdd = results;
             if (!membersToAdd.length)
-                return errorMessage = "User(s) not found!";
+                return Parse.Promise.error("User(s) not found!");
             var members = group.relation('members');
             members.add(membersToAdd);
             var query = new Parse.Query(Parse.Role);
             query.equalTo('name', 'group-members-' + group.id);
             return query.find();
         }).then(function (results) {
-            if (!membersToAdd.length)
-                return;
             var role = results[0];
             if (!role)
-                return errorMessage = "Member roles not defined for group!";
+                return Parse.Promise.error("Member roles not defined for group!");
             role.getUsers().add(membersToAdd);
-            if (group.get('membersCanInvite'))
+            if (group.get('membersCanInvite')) {
                 Parse.Cloud.useMasterKey();
+            }
             promises.push(role.save());
             promises.push(group.save());
             // Add the group to each members respective
@@ -3961,14 +3998,37 @@ Parse.Cloud.define('addMembersToGroup', function (request, response) {
             return query.count();
         }).then(function (count) {
             group.set('numberOfMembers', count);
-            return group.save();
+            if (addSelfToGroup)
+                return group.save();
+            // Adding other people to group, send pushes/messages
+            promises.push(group.save());
+            _.each(membersToAdd, function (member) {
+                var messageText = user.get('name') + " added you to a Group!";
+                promises.push(
+                    Parse.Cloud.run('sendPushToUser', {
+                        message: messageText,
+                        recipientUserId: member.id,
+                        actionName: 'added-to-group',
+                        actionParams: [
+                            {name: "groupId", value: group.id},
+                            {name: "groupName", value: group.get('name')},
+                            {name: "groupSlug", value: group.get('slug')}
+                        ]
+                    }));
+                var message = new Parse.Object("Message");
+                message.set('from', user);
+                message.set('to', member);
+                message.set('message', messageText);
+                message.set('group', group);
+                message.set('isAutomated', false);
+                message.set('type', "added-to-group");
+                promises.push(message.save());
+            });
+            return Parse.Promise.when(promises);
         }).then(function () {
-            if (errorMessage)
-                return response.error(errorMessage);
-            else
-                return response.success();
+            return response.success();
         }, function (error) {
-            return response.error(JSON.stringify(error));
+            return response.error(error);
         });
 });
 /**
@@ -4012,6 +4072,8 @@ Parse.Cloud.define('removeMembersFromGroup', function (request, response) {
             if (!role)
                 return errorMessage = "Member roles not defined for group!";
             role.getUsers().remove(membersToRemove);
+            if (memberIds.length === 1 && memberIds[0] === user.id)
+                Parse.Cloud.useMasterKey();
             promises.push(role.save());
             promises.push(group.save());
             /*
@@ -4207,6 +4269,52 @@ Parse.Cloud.define('addProfessionalQuestions', function (request, response) {
         response.success("Added " + promises.length + " questions");
     }, function (error) {
         response.error(error);
+    });
+});
+/**
+ * @CloudFunction Add/Remove Relation
+ * Parse Data Browser is no good for manually
+ * adding or removing relations. This is a
+ * heterogenous function that can allow us
+ * to perform relational changes via REST api.
+ * // TODO add secret key.
+ * @param {Boolean} removeRelation: default FALSE
+ */
+Parse.Cloud.define("addOrRemoveRelation", function (request, response) {
+    Parse.Cloud.useMasterKey();
+    var parentObjectClass = request.params.parentObjectClass,
+        parentObjectId = request.params.parentObjectId,
+        childObjectClass = request.params.childObjectClass,
+        childObjectId = request.params.childObjectId,
+        relationField = request.params.relationField,
+        removeRelation = request.params.removeRelation,
+        secret = request.params.secret,
+        promises = [];
+
+    if(secret !== "OamSSfv£OASxV34xce222sf");
+
+    var parentObject = new Parse.Object(parentObjectClass);
+    parentObject.id = parentObjectId;
+    promises.push(parentObject.fetch());
+
+    var childObject = new Parse.Object(childObjectClass);
+    childObject.id = childObjectId;
+    promises.push(childObject.fetch());
+
+    Parse.Promise.when(promises).then(function () {
+        var relation = parentObject.relation(relationField);
+        if (removeRelation)
+            relation.remove(childObject);
+        else
+            relation.add(childObject);
+        return parentObject.save();
+    }).then(function () {
+       response.success("Relation added/removed!");
+    }, function (error) {
+        if(error)
+            response.error(JSON.stringify(error));
+        else
+            response.error("Something went wrong!");
     });
 });/*
  * SAVE LOGIC
@@ -4694,14 +4802,6 @@ Parse.Cloud.afterSave("Test", function (request) {
         author,
         test = request.object;
 
-    if(test.id === "4ILuhQlYrd") {
-        var roleACL = new Parse.ACL();
-        var role = new Parse.Role("Admins", roleACL);
-        role.getUsers().add(test.get('author'));
-        role.save();
-        console.log("Saving Admins role");
-    }
-
     var query = new Parse.Query(Parse.User);
     query.get(authorObjectId).then(function (result) {
         author = result;
@@ -4750,6 +4850,8 @@ Parse.Cloud.afterSave("Test", function (request) {
         if (test.existed() || !author.get('shareOnCreateTest') || test.get('isSpacedRepetition') ||
             test.get('isGenerated') || test.get('group'))
             return;
+        if(!author.get('authData') || !author.get('authData').facebook || !author.get('authData').facebook.access_token)
+            return;
         /*
          * Share 'make' test action on graph api
          */
@@ -4758,7 +4860,7 @@ Parse.Cloud.afterSave("Test", function (request) {
             url: FB.API.url + FB.GraphObject.namespace + ':make',
             params: {
                 access_token: author.get('authData').facebook.access_token,
-                test: request.object.get('graphObjectId')
+                test: MyCQs.baseUrl + "test/" + test.get('slug')
             }
         });
     }).then(
@@ -4918,6 +5020,26 @@ Parse.Cloud.afterSave("Attempt", function (request) {
         author = test.get('author');
         return author.fetch();
     }).then(function () {
+        if(user.get('authData') && user.get('authData').facebook && user.get('authData').facebook.access_token) {
+            /*
+             * Share 'take' test action on graph api
+             * async, not step limiting.
+             */
+            Parse.Cloud.httpRequest({
+                method: 'POST',
+                url: FB.API.url + FB.GraphObject.namespace + ':take',
+                params: {
+                    access_token: user.get('authData').facebook.access_token,
+                    test: MyCQs.baseUrl + "test/" + test.get('slug')
+                }
+            }).then(function (httpResponse) {
+                console.log("Take Test Graph action response");
+                console.log(JSON.stringify(httpResponse));
+            }, function (error) {
+                console.error("Error on Take Test Graph action");
+                console.error(JSON.stringify(error));
+            });
+        }
         /*
          * Test numberOfAttempts and averageScore
          */
@@ -5190,6 +5312,9 @@ Parse.Cloud.beforeSave("Group", function (request, response) {
     var group = request.object,
         user = request.user;
 
+    if(!group.get('numberOfMembers'))
+        group.set('numberOfMembers', 0);
+
     if (group.get('areRolesSetUp')) {
         /*
          * Old group, in case privacy is changed..
@@ -5236,7 +5361,9 @@ Parse.Cloud.afterSave("Group", function (request) {
 
     groupAdminsRole = new Parse.Role("group-admins-" + group.id, new Parse.ACL());
     groupModeratorsRole = new Parse.Role("group-moderators-" + group.id, new Parse.ACL());
-    groupMembersRole = new Parse.Role('group-members-' + group.id, new Parse.ACL());
+    var publicReadACL = new Parse.ACL();
+    publicReadACL.setPublicReadAccess(true);
+    groupMembersRole = new Parse.Role('group-members-' + group.id, publicReadACL);
     promises.push(groupAdminsRole.save());
     promises.push(groupModeratorsRole.save());
     promises.push(groupMembersRole.save());

@@ -64,6 +64,10 @@ export default Ember.ObjectController.extend(CurrentUser, {
 
     inPrintView: false,
 
+    testUrl: function () {
+        return "https://mycqs.com/test/"+this.get('slug');
+    }.property('slug.length'),
+
     actions: {
         optionSelected: function (optionIndex) {
             /*

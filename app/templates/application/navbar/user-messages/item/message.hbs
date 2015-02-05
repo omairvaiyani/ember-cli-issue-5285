@@ -13,17 +13,27 @@
                 <p class="time-ago pull-right">{{from-now time=item.createdAt classNames='pull-right'}}</p>
             </div>
         {{/link-to}}
-    {{else}}
-        {{#if item.attempt}}
-            {{#link-to 'test' item.attempt.id tagName='div'}}
-                <img class="circular-image" src="img/srs-icon.png"/>
+    {{/if}}
+    {{#if item.attempt}}
+        {{#link-to 'test' item.attempt.id tagName='div'}}
+            <img class="circular-image" src="img/srs-icon.png"/>
 
-                <div class="message-text">
-                    <p>{{item.messageToDisplay}}</p>
+            <div class="message-text">
+                <p>{{item.messageToDisplay}}</p>
 
-                    <p class="time-ago pull-right">{{from-now time=item.createdAt classNames='pull-right'}}</p>
-                </div>
-            {{/link-to}}
-        {{/if}}
+                <p class="time-ago pull-right">{{from-now time=item.createdAt classNames='pull-right'}}</p>
+            </div>
+        {{/link-to}}
+    {{/if}}
+    {{#if item.group}}
+        {{#link-to 'group' item.group.slug tagName='div'}}
+            {{render 'profile-image' item.from}}
+
+            <div class="message-text">
+                <p>{{item.message}}</p>
+                <p><strong>{{item.group.name}}</strong></p>
+                <p class="time-ago pull-right">{{from-now time=item.createdAt classNames='pull-right'}}</p>
+            </div>
+        {{/link-to}}
     {{/if}}
 </div>

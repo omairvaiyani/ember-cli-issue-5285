@@ -42,7 +42,7 @@
                 {{!-- Chat area --}}
                 {{!--
                 // When enabling this again, change
-                the next column to 8.
+                the next column to 8 and add col-fix-right.
                 <article class="col-md-4">
                     <div class="card margin-top-16">
                         CHAT AREA
@@ -50,7 +50,7 @@
                 </article>
                 --}}
                 {{!-- List of Tests --}}
-                <article class="col-md-12 col-fix-right">
+                <article class="col-md-12 ">
                     <section class="row">
                         <article class="col-md-4 margin-top-16">
                             {{#if canAddTestsToGroup}}
@@ -116,27 +116,50 @@
                 <h4>Creator</h4>
                 {{#link-to 'user' creator.slug}}{{render 'profile-image' creator}}{{/link-to}}
 
-                <h4>Members
-                    {{#if members.length}}
-                        <a href="javascript:void(0)" {{action 'openModal' 'group/modal/members-list' 'group'}}>
-                            <small class="pull-right">view</small>
-                        </a>
-                    {{/if}}
-                </h4>
-
-                <div class="margin-bottom-16">
-                    {{#each member in membersPreview}}
-                        {{#link-to 'user' member.slug class="margin-bottom-8 inline-block"}}
-                            {{render 'profile-image' member}}
+                {{#if moderators.length}}
+                    <h4>{{pluralize-word 'Moderator' moderator.length}}</h4>
+                    {{#each moderator in moderatorsPreview}}
+                        {{#link-to 'user' moderator.slug class="margin-bottom-8 inline-block"}}
+                            {{render 'profile-image' moderator}}
                         {{/link-to}}
                     {{/each}}
-                </div>
+                {{/if}}
+
+                {{#if members.length}}
+                    <h4>{{pluralize-word 'Member' members.length}}
+                        {{#if members.length}}
+                            <a href="javascript:void(0)" {{action 'openModal' 'group/modal/members-list' 'group'}}>
+                                <small class="pull-right">view</small>
+                            </a>
+                        {{/if}}
+                    </h4>
+                    <div class="margin-bottom-16">
+                        {{#each member in membersPreview}}
+                            {{#link-to 'user' member.slug class="margin-bottom-8 inline-block"}}
+                                {{render 'profile-image' member}}
+                            {{/link-to}}
+                        {{/each}}
+                    </div>
+                {{/if}}
+
                 {{#if canAddMembers}}
-                    <a href="javascript:void(0)"
-                        {{action 'openModal' 'group/modal/add-members' 'group'}}>
-                        <i class="fa fa-plus margin-right-8"></i>Add members</a>
+                    <div class="margin-bottom-16 margin-top-16">
+                        <a href="javascript:void(0)"
+                            {{action 'openModal' 'group/modal/add-members' 'group'}}>
+                            <i class="fa fa-plus margin-right-8"></i>Add members</a>
+                    </div>
+                {{/if}}
+                {{#if showJoinGroup}}
+                    {{async-button default="Join Group" action='joinGroup' pending="Joining" fulfilled='Joined!'
+                    rejected='Error!' reset=true class='btn btn-primary'}}
+                {{else}}
+                    {{#if showLeaveGroup}}
+                        {{async-button default="Leave Group" action='leaveGroup' pending="Leaving" fulfilled='Left Group!'
+                        rejected='Error!' reset=true class='btn btn-danger'}}
+                    {{/if}}
                 {{/if}}
             </div>
+            {{partial 'application/social-sharing'}}
         </article>
     </section>
 </div>

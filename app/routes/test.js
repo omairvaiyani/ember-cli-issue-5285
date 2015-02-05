@@ -38,7 +38,6 @@ export default
                 this.transitionTo('notFound');
                 return;
             }
-
             var isSRSTest = false;
             if(model.constructor.typeKey === 'attempt') {
                 isSRSTest = true;
@@ -94,6 +93,9 @@ export default
                  */
                 controller.set('currentQuestionIndex', 0);
                 controller.set('loading', null);
+                this.send('decrementLoadingItems');
+            }.bind(this), function (error) {
+                console.log(error);
                 this.send('decrementLoadingItems');
             }.bind(this));
         },

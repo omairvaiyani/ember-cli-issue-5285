@@ -1,15 +1,7 @@
-import
-DS
-from
-'ember-data';
+import DS from 'ember-data';
+import ParseMixin from '../mixins/ember-parse-mixin';
 
-import
-ParseMixin
-from
-'../mixins/ember-parse-mixin';
-
-export default
-DS.Model.extend(ParseMixin, {
+export default DS.Model.extend(ParseMixin, {
     from: DS.belongsTo('parse-user', {async: true}),
     to: DS.belongsTo('parse-user', {async: true}),
     message: DS.attr('string'),
@@ -17,5 +9,6 @@ DS.Model.extend(ParseMixin, {
     type: DS.attr('string'),
     isAutomated: DS.attr('boolean'),
     test: DS.belongsTo('test', {async: true}),
-    attempt: DS.belongsTo('attempt', {async: true})
+    attempt: DS.belongsTo('attempt', {async: true}),
+    group: DS.belongsTo('group', {async: true})
 });

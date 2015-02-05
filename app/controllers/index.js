@@ -273,6 +273,12 @@ export default
                         this.set('testsAreOrderedByTitle', true);
                         break;
                 }
+            },
+
+            indexLearnMoreScroll: function () {
+                Ember.$('html, body').animate({
+                    scrollTop: $("#learn-more-flag").offset().top + 'px'
+                }, 'slow');
             }
         }
     });

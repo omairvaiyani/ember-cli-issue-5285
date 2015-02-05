@@ -1,47 +1,83 @@
-import
-Ember
-from
-'ember';
+import Ember from 'ember';
+import ParseHelper from '../utils/parse-helper';
 
-export default
-Ember.Route.extend({
-    model: function (params) {
+export default Ember.Route.extend({
+    model: function (params, transition) {
+        if (!this.get('metaTagsSorted'))
+            this.sortOutMetaTags(params, transition);
+
         var where = {
             "slug": params.user_slug
         };
-        return this.store.findQuery('parse-user', {where: JSON.stringify(where)})
-            .then(function (results) {
-                if (results.objectAt(0)) {
-                    return results.objectAt(0);
-                } else {
-                    this.transitionTo('notFound');
-                }
-            }.bind(this));
+        return this.store.findQuery('parse-user', {
+            where: JSON.stringify(where),
+            include: 'educationCohort'
+        }).then(function (results) {
+            if (results.objectAt(0)) {
+                var model = results.objectAt(0);
+                return model;
+            } else {
+                this.transitionTo('notFound');
+            }
+        }.bind(this));
     },
-    setupController: function (controller, model, transition) {
-        controller.set('model', model);
-        var course = model.get('course');
-        var university = model.get('institution');
-        setTimeout(function () {
-            var description = model.get('name') + " ";
-            if (university || course) {
-                description += "studies ";
-                if (course)
-                    description += course.get('name') + " ";
-                if (university)
-                    description += "at "+ university.get('fullName') + " ";
+
+    sortOutMetaTags: function (params, transition) {
+        // Sort out Meta Tags and FB Graph for crawlers
+        // User Parse.Query to utilise .include
+        var query = new Parse.Query(Parse.User);
+        query.include(['educationCohort.studyField', 'educationCohort.institution']);
+        query.equalTo('slug', params.user_slug);
+        query.find().then(function (results) {
+            var parseUser = results[0];
+            if (!parseUser)
+                return;
+            var educationCohort = parseUser.get('educationCohort');
+            // Meta Description
+            var description = parseUser.get('name') + " ";
+            if (educationCohort) {
+                description += " studies "
+                if (educationCohort.get('studyField'))
+                    description += educationCohort.get('studyField').get('name') + " ";
+                if (educationCohort.get('institution'))
+                    description += "at " + educationCohort.get('institution').get('name') + " ";
                 description += "and ";
             }
-            description += "has created " + model.get('numberOfTests') + " tests! ";
-            description += "Follow "+model.get('firstName')+" to take their MCQs or join MyCQs to create your own tests, for free!";
-            this.send('updatePageDescription', description);
-            this.send('prerenderReady');
-        }.bind(this), 2000);
+            description += "has created " + parseUser.get('numberOfTests') + " tests! ";
+            description += "Follow " + parseUser.get('name').split(" ")[0] + " to take their MCQs or" +
+            " join MyCQs to create your own tests, for free!";
+            transition.send('updatePageDescription', description);
+            // FB Open Graph
+            Ember.$('head').append('<meta property="og:type" content="profile"/>');
+            Ember.$('head').append('<meta property="og:url" content="https://mycqs.com' + this.get('router.url') + '" />');
+            Ember.$('head').append('<meta property="og:title" content="' + parseUser.get('name') + '" />');
+            Ember.$('head').append('<meta property="og:image" content="' +
+            ParseHelper.getUserProfileImageUrl(parseUser) + '" />');
+            Ember.$('head').append('<meta property="og:first_name" content="' + parseUser.get('name').split(" ")[0] + '" />');
+            if (parseUser.get('name').split(" ").length > 1)
+                Ember.$('head').append('<meta property="og:last_name" content="' + parseUser.get('name').split(" ")[1] + '" />');
+            if (parseUser.get('fbid'))
+                Ember.$('head').append('<meta property="og:profile_id" content="' + parseUser.get('fbid') + '" />');
+            if (educationCohort) {
+                if (educationCohort.get('studyField'))
+                    Ember.$('head').append('<meta property="og:study_field" content="'
+                    + educationCohort.get('studyField').get('name') + '" />');
+                if (educationCohort.get('institution'))
+                    Ember.$('head').append('<meta property="og:institution" content="'
+                    + educationCohort.get('institution').get('name') + '" />');
+                Ember.$('head').append('<meta property="og:current_year" content="'
+                + educationCohort.get('currentYear') + '" />');
+            }
+            // Ready for crawling
+            transition.send('prerenderReady');
+            this.set('metaTagsSorted', true);
+        }.bind(this));
     },
 
     isTransitionAborted: false,
     previousTransition: null,
     actions: {
+
         /*
          * Automatically fires on transition attempt.
          * If UserController.isEditMode === true

@@ -1,70 +1,116 @@
-<nav class="navbar navbar-main" role="navigation">
-    <div class="container">
-        <!-- Brand and toggle get grouped for better mobile display -->
-        <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse"
-                    data-target="#bs-navbar-collapsing">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            {{#link-to 'index' tagName='a' classNames='navbar-brand navbar-brand-adjust'}}
-                {{#if loadingItems}}
-                    <div class="logo-spinner"></div>
-                {{else}}
-                    <img src="img/mycqs-icon-header.png" height="30px" class="logo-icon"/>
-                {{/if}}
-            {{/link-to}}
-        </div>
+{{#unless inSearchMode}}
+    <nav class="navbar navbar-main" role="navigation">
+        <div class="container">
+            <!-- Brand and toggle get grouped for better mobile display -->
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse"
+                        data-target="#bs-navbar-collapsing">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                {{#link-to 'index' tagName='a' classNames='navbar-brand navbar-brand-adjust'}}
+                    {{#if loadingItems}}
+                        <div class="logo-spinner"></div>
+                        <img src="img/logo-text.png" height="29px" class="logo-icon" style="margin-left:3px;"/>
+                    {{else}}
+                        <img src="img/header.png" height="30px" class="logo-icon"/>
+                    {{/if}}
+                {{/link-to}}
+            </div>
 
-        <!-- Collect the nav links, forms, and other content for toggling -->
-        <div class="collapse navbar-collapse" id="bs-navbar-collapsing">
-            {{!--
-            <ul class="nav navbar-nav">
-                {{#link-to 'index' tagName='li' title='Home'}}{{#link-to 'index' tagName='a' class='nav-icons'}}{{svg-icon icon='home'}}{{/link-to}}{{/link-to}}
-                {{#link-to 'browse' tagName='li' title='Browse tests'}}{{#link-to 'browse' tagName='a' class='nav-icons'}}{{svg-icon icon='browse'}}{{/link-to}}{{/link-to}}
-                {{#link-to 'create' tagName='li' title='Create a test'}}{{#link-to 'create' tagName='a' class='nav-icons'}}{{svg-icon icon='create'}}{{/link-to}}{{/link-to}}
-            </ul>
-            --}}
-            <ul class="nav navbar-nav">
-                {{#link-to 'index' tagName='li' title='Home'}}{{#link-to 'index' tagName='a'}}
-                    Home{{/link-to}}{{/link-to}}
-                {{#link-to 'create' tagName='li' title='MCQ Test Maker'}}{{#link-to 'create' tagName='a'}}
-                    Create{{/link-to}}{{/link-to}}
-                {{#link-to 'browse' tagName='li' title='Browse MCQ tests'}}{{#link-to 'browse' tagName='a'}}
-                    Browse{{/link-to}}{{/link-to}}
-                {{#link-to 'groups' tagName='li' title='Browse Groups'}}{{#link-to 'groups' tagName='a'}}
-                    Groups{{/link-to}}{{/link-to}}
-                {{#link-to 'support' tagName='li' title='Support and FAQs'}}{{#link-to 'support' tagName='a'}}
-                    Support{{/link-to}}{{/link-to}}
-                {{!--
-                {{#link-to 'features' tagName='li' title='Features'}}{{#link-to 'features' tagName='a'}}
-                    Features{{/link-to}}{{/link-to}} --}}
-            </ul>
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            <div class="collapse navbar-collapse" id="bs-navbar-collapsing">
+                <ul class="nav navbar-nav">
+                    {{#link-to 'create' tagName='li' title='MCQ Test Maker'}}{{#link-to 'create' tagName='a'}}
+                        Create{{/link-to}}{{/link-to}}
+                    {{#link-to 'browse' tagName='li' title='Browse MCQ tests'}}{{#link-to 'browse' tagName='a'}}
+                        Tests{{/link-to}}{{/link-to}}
+                    {{#link-to 'groups' tagName='li' title='Browse Groups'}}{{#link-to 'groups' tagName='a'}}
+                        Groups{{/link-to}}{{/link-to}}
 
-            {{!--{{view 'expanding-search'}} --}}
-
-            <ul class="nav navbar-nav navbar-right">
-                {{#if currentUser}}
-                    {{partial 'application/navbar/user-messages'}}
-                    <!-- account actions -->
-                    {{partial 'application/navbar/current-user'}}
-                {{else}}
-                    <li>
-                        <a href="javascript:void(0)" {{action 'openModal' 'application/modal/login-or-register' 'application'}}>
-                            Log in
-                        </a>
+                    <!-- About dropdown menu-->
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+                            About <span class="caret"></span></a>
+                        <ul class="dropdown-menu" role="menu">
+                            {{#link-to 'about.index' tagName='li' title='About us'}}
+                                {{#link-to 'about.index' tagName='a'}}
+                                    Overview
+                                {{/link-to}}
+                            {{/link-to}}
+                            {{#link-to 'about.team' tagName='li' title='MyCQs Team'}}
+                                {{#link-to 'about.team' tagName='a'}}
+                                    Team
+                                {{/link-to}}
+                            {{/link-to}}
+                            <li class="divider"></li>
+                            {{#link-to 'contact' tagName='li' title='Contact us'}}
+                                {{#link-to 'contact' tagName='a'}}
+                                    Contact
+                                {{/link-to}}
+                            {{/link-to}}
+                            {{#link-to 'support' tagName='li' title='Support'}}
+                                {{#link-to 'support' tagName='a'}}
+                                    Support
+                                {{/link-to}}
+                            {{/link-to}}
+                        </ul>
                     </li>
-                    <li>
-                        {{#link-to 'join'}}
-                            Create an Account
-                        {{/link-to}}
-                    </li>
-                {{/if}}
-            </ul>
+                </ul>
+
+
+                <form class="navbar-form inline-block" role="search" {{action 'activateSiteSearch'}}>
+                    <div class="input-group">
+                    <span class="input-group-btn">
+							<button class="btn btn-default" disabled>
+								<span class="fa fa-search">
+									<span class="sr-only">Search...</span>
+								</span>
+                            </button>
+						</span>
+                        <input type="text" class="form-control" placeholder="Search...">
+                    </div>
+                </form>
+
+                <ul class="nav navbar-nav navbar-right">
+                    {{#if currentUser}}
+                        {{partial 'application/navbar/user-messages'}}
+                        <!-- account actions -->
+                        {{partial 'application/navbar/current-user'}}
+                    {{else}}
+                        <li>
+                            <a href="javascript:void(0)" {{action 'openModal' 'application/modal/login-or-register' 'application'}}>
+                                Log in
+                            </a>
+                        </li>
+                        <li>
+                            {{#link-to 'join'}}
+                                Register
+                            {{/link-to}}
+                        </li>
+                    {{/if}}
+                </ul>
+            </div>
+            <!-- /.navbar-collapse -->
         </div>
-        <!-- /.navbar-collapse -->
-    </div>
-    <!-- /.container-fluid -->
-</nav>
+        <!-- /.container-fluid -->
+    </nav>
+{{else}}
+    <nav class="navbar navbar-main navbar-search" role="navigation">
+        <div class="container">
+            <section class="row">
+                <article class="col-xs-12">
+                    <form class="navbar-form inline-block" role="search">
+                        <div class="form-control">
+                            <i class="fa fa-search margin-right-16 inline-block"></i>
+                            {{input type="text" class="inline-block no-border-input"
+                                   placeholder="Search..." id='site-search-input' value=searchInputText}}
+                        </div>
+                    </form>
+                </article>
+            </section>
+        </div>
+    </nav>
+{{/unless}}

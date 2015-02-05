@@ -9,7 +9,17 @@ export default DS.Model.extend({
     admins: DS.hasMany('parse-user', {array: true, async: true, defaultValue: new Ember.A()}),
     moderators: DS.hasMany('parse-user', {array: true, async: true, defaultValue: new Ember.A()}),
     members: new Ember.A(),
+    numberOfMembers: DS.attr('number', {defaultValue: 1}),
     gatheredTests: new Ember.A(),
+    numberOfGatheredTests: DS.attr('number', {defaultValue: 0}),
+    numberOfGroupTests: DS.attr('number', {defaultValue: 0}),
+    numberOfTests: function () {
+        if(!this.get('numberOfGatheredTests'))
+            this.set('numberOfGatheredTests', 0);
+        if(!this.get('numberOfGroupTests'))
+            this.set('numberOfGroupTests', 0);
+        return this.get('numberOfGroupTests') + this.get('numberOfGatheredTests');
+    }.property('numberOfGatheredTests', 'numberOfGroupTests'),
     groupTests: new Ember.A(),
     photo: DS.attr('parse-file'),
     cover: DS.attr('parse-file'),
@@ -31,8 +41,8 @@ export default DS.Model.extend({
     course: DS.belongsTo('course', {async: true}),
     institution: DS.belongsTo('university', {async: true}),
     yearOrGrade: DS.attr('string'),
-    membersCanInvite: DS.attr('boolean'),
-    membersCanAddTests: DS.attr('boolean'),
+    membersCanInvite: DS.attr('boolean', {defaultValue: true}),
+    membersCanAddTests: DS.attr('boolean', {defaultValue: true}),
     getMembers: function (store) {
         var where = {
             "$relatedTo": {

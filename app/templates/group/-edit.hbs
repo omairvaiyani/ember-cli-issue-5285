@@ -38,6 +38,23 @@
     </div>
 </div>
 <div class="row">
+    <div class="col-md-12">
+        <h5>MEMBER PRIVILEGES</h5>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12 margin-bottom-8">
+        {{input type="checkbox" checked=membersCanInvite class="margin-right-8" id='members-can-invite'}}
+        <label for="members-can-invite">Members can invite others</label>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12 margin-bottom-16">
+        {{input type="checkbox" checked=membersCanAddTests class="margin-right-8" id='members-can-add-tests'}}
+        <label for="members-can-add-tests">Members can add tests</label>
+    </div>
+</div>
+<div class="row">
     <div class="col-md-12 margin-bottom-16">
         <label>
             {{input type="checkbox" checked=isForEducationCohort class="margin-right-8"}}

@@ -6,7 +6,6 @@
                 <section class="row">
                     <div class="col-md-8">
                         <h3>{{#link-to 'group' group.slug}}{{group.name}}{{/link-to}}</h3>
-
                         <p>
                             {{#if group.educationCohort}}
                                 <i class="fa fa-calendar-o margin-right-8"></i>
@@ -20,7 +19,7 @@
                             {{/if}}
 
                             <i class="fa fa-group margin-right-8"></i>
-                            <label class="text-capitalize margin-right-16">{{math-helper group.members.length "+" 1}}</label>
+                            <label class="text-capitalize margin-right-16">{{group.numberOfMembers}}</label>
 
                             <i class="fa fa-lock margin-right-8"></i>
                             <label class="text-capitalize margin-right-16">{{group.privacy}}</label>

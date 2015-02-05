@@ -8,9 +8,8 @@ export default Ember.ObjectController.extend(CurrentUser, {
         return this.get('controllers.create');
     }.property('controllers.create'),
     createControllerReady: function () {
-        if(this.get('createController.model') !== null &&
+        if (this.get('createController.model') !== null &&
             this.get('prepareCreateControllerForGroup')) {
-            console.log("Setting group on new test");
             this.get('createController').set('selectedGroup', this.get('model'));
             this.get('createController').set('model.description', "Test for " + this.get('name'));
             this.set('prepareCreateControllerForGroup', false);
@@ -60,15 +59,23 @@ export default Ember.ObjectController.extend(CurrentUser, {
             }
             return isAdminOrMod;
         }
-    }.property('creator.id', 'currentUser.id'),
+    }.property('id.length', 'creator.id', 'currentUser.id'),
 
     canAddMembers: function () {
-        return this.get('hasModeratorAccess') || this.get('membersCanInvite');
-    }.property('hasModeratorAccess', 'membersCanInvite'),
+        if (!this.get('currentUser.groups'))
+            return false;
+
+        return this.get('hasModeratorAccess') || this.get('membersCanInvite') &&
+            this.get('currentUser.groups').contains(this.get('model'));
+    }.property('id.length', 'hasModeratorAccess', 'membersCanInvite', 'currentUser.groups.length'),
 
     canAddTestsToGroup: function () {
-        return this.get('hasModeratorAccess') || this.get('membersCanAddTests');
-    }.property('hasModeratorAccess', 'membersCanAddTests'),
+        if (!this.get('currentUser.groups'))
+            return false;
+
+        return this.get('hasModeratorAccess') || this.get('membersCanAddTests') &&
+            this.get('currentUser.groups').contains(this.get('model'));
+    }.property('id.length', 'hasModeratorAccess', 'membersCanAddTests', 'currentUser.groups.length'),
 
     privacyOptions: [
         {value: "open", label: "Open"},
@@ -83,7 +90,7 @@ export default Ember.ObjectController.extend(CurrentUser, {
          * Get 10 members to preview
          */
         if (!this.get('id') || !this.get('members.length'))
-            return this.set('moreMembersToShow', false);
+            this.set('moreMembersToShow', false);
 
         this.get('membersPreview').clear();
         this.get('membersPreview').addObjects(this.get('members').slice(0, 10));
@@ -116,6 +123,26 @@ export default Ember.ObjectController.extend(CurrentUser, {
     throttleSuggestMemberNameDidChange: function () {
         Ember.run.debounce(this, this.suggestedMemberNameDidChange, 200);
     }.observes("suggestedMemberName.length"),
+
+    showJoinGroup: function () {
+        if(!this.get('currentUser'))
+            return;
+
+        if (this.get('currentUser') && this.get('privacy') === "open") {
+            return !this.get('currentUser.groups').contains(this.get('model'));
+        } else
+            return false;
+    }.property('id.length', 'currentUser.groups.length'),
+
+    showLeaveGroup: function () {
+        if(!this.get('currentUser'))
+            return;
+        if (this.get('currentUser.groups').contains(this.get('model')) &&
+            this.get('creator.id') !== this.get('currentUser.id')) {
+            return true;
+        } else
+            return false;
+    }.property('id.length', 'currentUser.groups.length'),
 
     /* Add Tests */
     suggestedTests: new Ember.A(),
@@ -204,6 +231,36 @@ export default Ember.ObjectController.extend(CurrentUser, {
                     this.send('addNotification', 'warning', 'Member could not be removed!', error.message);
                     this.get('members').insertAt(resetIndex, member);
                 }.bind(this));
+        },
+
+        joinGroup: function (callback) {
+            var promise = Parse.Cloud.run('addMembersToGroup', {
+                groupId: this.get('id'),
+                memberIds: [this.get('currentUser.id')]
+            });
+            callback(promise);
+            promise.then(function () {
+                if (!this.get('members').contains(this.get('currentUser')))
+                    this.get('members').pushObject(this.get('currentUser'));
+                if (!this.get('currentUser.groups').contains(this.get('model')))
+                    this.get('currentUser.groups').pushObject(this.get('model'));
+                this.send('addNotification', 'success', "You have joined this group!");
+            }.bind(this));
+        },
+
+        leaveGroup: function (callback) {
+            var promise = Parse.Cloud.run('removeMembersFromGroup', {
+                groupId: this.get('id'),
+                memberIds: [this.get('currentUser.id')]
+            });
+            callback(promise);
+            promise.then(function () {
+                if (this.get('members').contains(this.get('currentUser')))
+                    this.get('members').removeObject(this.get('currentUser'));
+                if (this.get('currentUser.groups').contains(this.get('model')))
+                    this.get('currentUser.groups').removeObject(this.get('model'));
+                this.send('addNotification', 'delete', "You have left this group!");
+            }.bind(this));
         },
 
         /* Add/Remove Tests */

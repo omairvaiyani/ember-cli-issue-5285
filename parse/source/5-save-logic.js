@@ -484,14 +484,6 @@ Parse.Cloud.afterSave("Test", function (request) {
         author,
         test = request.object;
 
-    if(test.id === "4ILuhQlYrd") {
-        var roleACL = new Parse.ACL();
-        var role = new Parse.Role("Admins", roleACL);
-        role.getUsers().add(test.get('author'));
-        role.save();
-        console.log("Saving Admins role");
-    }
-
     var query = new Parse.Query(Parse.User);
     query.get(authorObjectId).then(function (result) {
         author = result;
@@ -540,6 +532,8 @@ Parse.Cloud.afterSave("Test", function (request) {
         if (test.existed() || !author.get('shareOnCreateTest') || test.get('isSpacedRepetition') ||
             test.get('isGenerated') || test.get('group'))
             return;
+        if(!author.get('authData') || !author.get('authData').facebook || !author.get('authData').facebook.access_token)
+            return;
         /*
          * Share 'make' test action on graph api
          */
@@ -548,7 +542,7 @@ Parse.Cloud.afterSave("Test", function (request) {
             url: FB.API.url + FB.GraphObject.namespace + ':make',
             params: {
                 access_token: author.get('authData').facebook.access_token,
-                test: request.object.get('graphObjectId')
+                test: MyCQs.baseUrl + "test/" + test.get('slug')
             }
         });
     }).then(
@@ -708,6 +702,26 @@ Parse.Cloud.afterSave("Attempt", function (request) {
         author = test.get('author');
         return author.fetch();
     }).then(function () {
+        if(user.get('authData') && user.get('authData').facebook && user.get('authData').facebook.access_token) {
+            /*
+             * Share 'take' test action on graph api
+             * async, not step limiting.
+             */
+            Parse.Cloud.httpRequest({
+                method: 'POST',
+                url: FB.API.url + FB.GraphObject.namespace + ':take',
+                params: {
+                    access_token: user.get('authData').facebook.access_token,
+                    test: MyCQs.baseUrl + "test/" + test.get('slug')
+                }
+            }).then(function (httpResponse) {
+                console.log("Take Test Graph action response");
+                console.log(JSON.stringify(httpResponse));
+            }, function (error) {
+                console.error("Error on Take Test Graph action");
+                console.error(JSON.stringify(error));
+            });
+        }
         /*
          * Test numberOfAttempts and averageScore
          */
@@ -980,6 +994,9 @@ Parse.Cloud.beforeSave("Group", function (request, response) {
     var group = request.object,
         user = request.user;
 
+    if(!group.get('numberOfMembers'))
+        group.set('numberOfMembers', 0);
+
     if (group.get('areRolesSetUp')) {
         /*
          * Old group, in case privacy is changed..
@@ -1026,7 +1043,9 @@ Parse.Cloud.afterSave("Group", function (request) {
 
     groupAdminsRole = new Parse.Role("group-admins-" + group.id, new Parse.ACL());
     groupModeratorsRole = new Parse.Role("group-moderators-" + group.id, new Parse.ACL());
-    groupMembersRole = new Parse.Role('group-members-' + group.id, new Parse.ACL());
+    var publicReadACL = new Parse.ACL();
+    publicReadACL.setPublicReadAccess(true);
+    groupMembersRole = new Parse.Role('group-members-' + group.id, publicReadACL);
     promises.push(groupAdminsRole.save());
     promises.push(groupModeratorsRole.save());
     promises.push(groupMembersRole.save());

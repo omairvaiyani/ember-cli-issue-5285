@@ -98,6 +98,7 @@
             {{#if test.author}}
                 {{render 'user/-author-info' test}}
             {{/if}}
+            {{partial 'application/social-sharing'}}
             {{#if categoryTests.length}}
                 <div class="card margin-top-16">
                     <h4 class="margin-bottom-16">Recent {{test.category.name}} tests</h4>
@@ -111,5 +112,4 @@
             {{/if}}
         </div>
     </div>
-
 </div>

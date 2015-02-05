@@ -16,7 +16,7 @@ export default
         currentPathDidChange: function () {
             var path = this.get('currentPath'),
                 title = "",
-                defaultTitle = "MyCQs - A social learning network";
+                defaultTitle = "MyCQs: Create & find Multiple Choice Question (MCQ) tests online!";
 
             if (!path)
                 return;
@@ -41,8 +41,8 @@ export default
                     var user = this.get('controllers.user');
                     title += user.get('name') + "'s following";
                     break;
-                case "create":
-                    title += "Create - Test Maker";
+                case "create.index":
+                    title += "Create - Make MCQ Tests and Quizzes";
                     break;
                 case "edit":
                     title += "Test editor";
@@ -62,6 +62,7 @@ export default
                     /*
                      * Handled in TestRoute.
                      */
+                    window.scrollTo(0, 0);
                     return;
                 case "result":
                     title += "Results";
@@ -74,6 +75,18 @@ export default
                     break;
                 case "presskit":
                     title += "Press Information";
+                    break;
+                case "groups":
+                    title += "Groups - MCQ Tests for Classes";
+                    break;
+                case "group": case "group.index":
+                    /*
+                     * Handled in GroupRoute.
+                     */
+                    window.scrollTo(0, 0);
+                    return;
+                case "join.index":
+                    title += "Join - Create an Account";
                     break;
                 default:
                     title += defaultTitle;
@@ -89,7 +102,9 @@ export default
         /*
          * Search in Navbar
          */
-        searchData: {
+        searchInputText: "",
+
+        /*searchData: {
             groups: Ember.A(),
             totalRecords: 0
         },
@@ -132,7 +147,7 @@ export default
             );
         }.observes('searchInput.length'),
 
-        isExpandingSearchReady: false,
+        isExpandingSearchReady: false,*/
 
         loadingItems: 0,
 
@@ -202,6 +217,9 @@ export default
             }.bind(this))
                 .then(function () {
                     return EmberParseAdapter.ParseUser.getMessages(this.store, currentUser);
+                }.bind(this))
+                .then(function () {
+                    return this.get('currentUser').getGroups(this.store);
                 }.bind(this))
                 .then(function () {
                     this.send('decrementLoadingItems');

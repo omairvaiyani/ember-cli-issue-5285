@@ -27,6 +27,10 @@ body {
     background-color: rgb(237, 241, 242);
 }
 
+*:focus {
+    outline: none;
+}
+
 /* COMPONENTS */
 .card {
     position: relative;
@@ -621,7 +625,24 @@ input[type="range"]::-webkit-slider-thumb {
 .navbar-brand-adjust {
     margin-top: -6px;
 }
-
+/*
+ * Navbar search current
+ */
+.navbar-search {
+    background-color: #4f6640;
+    color: white;
+}
+.navbar-search .navbar-form,
+.navbar-search .navbar-form .form-control{
+    width: 100%;
+}
+.navbar-search .navbar-form .form-control input {
+    background: transparent;
+    width: calc(100% - 34px);
+}
+/*
+ * / End of Navbar Search current
+ */
 .sb-search {
     position: relative;
     width: 0%;
@@ -816,8 +837,8 @@ input[type="search"].sb-search-input {
 }
 
 .user-message-item .profile-image {
-    width: 30px;
-    height: 30px;
+    width: 50px;
+    height: 50px;
 }
 
 .user-message-item .message-text {
@@ -984,8 +1005,8 @@ hr.user-message-item-separator {
  * the main parallax image
  */
 .guest-page-actions {
-    margin-top: 208px;
-    height: 98px;
+    margin-top: 204px;
+    height: 200px;
     overflow: hidden;
 }
 
@@ -995,6 +1016,7 @@ hr.user-message-item-separator {
     font-size: 22px;
     background-color: rgba(12, 1, 1, 0.65);
     border: 2px solid #3CD0FF;
+    margin-top: 114px;
 }
 
 .guest-page-actions .btn:hover {
@@ -1951,8 +1973,35 @@ hr.user-message-item-separator {
     margin-top: -20px;
 }
 
-/* TEMPLATE - GROUP */
-
+/* TEMPLATE - ABOUT */
+.about-profile img {
+    width:100%;
+}
+.member-info {
+    background-color:#4f6640;
+    color:white;
+    padding:22px;
+    padding-bottom: 30px;
+}
+.member-info a {
+    color:white;
+}
+.member-info a:hover {
+    color:white;
+}
+.member-social {
+    background: #EFEFEF;
+    padding: 22px;
+    padding-bottom: 30px;
+}
+.member-social ul {
+    padding:0px;
+}
+.member-social ul > li {
+    display: inline-block;
+    list-style-image: none;
+    font-size: 32px;
+}
 
 /* TEMPLATE - FOOTER */
 /*

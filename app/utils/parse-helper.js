@@ -55,6 +55,29 @@ export default {
         }.bind(this));
     },
 
-    stopWords: ["the", "in", "and", "test", "mcqs", "of", "a", "an"]
+    stopWords: ["the", "in", "and", "test", "mcqs", "of", "a", "an"],
+
+    /**
+     * @param {Parse.User} user
+     */
+    getUserProfileImageUrl: function (user) {
+        if(!user)
+            return "https://d3uzzgmigql815.cloudfront.net/img/silhouette.png";
+
+        if (user.get('profilePicture')) {
+            return this.getSecureParseUrl(user.get('profilePicture').get('url'));
+        } else if (user.get('fbid')) {
+            return "https://graph.facebook.com/"+user.get('fbid')+"/picture?height=250&type=square";
+        } else {
+            return "https://d3uzzgmigql815.cloudfront.net/img/silhouette.png";
+        }
+    },
+
+    getSecureParseUrl: function (url) {
+        if(url)
+            return url._url.replace("http://", "https://s3.amazonaws.com/");
+        else
+            return "";
+    }
 
 }

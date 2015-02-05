@@ -164,7 +164,7 @@ export default Ember.ObjectController.extend(CurrentUser, {
             } else {
                 this.set('educationCohort', null);
             }
-            Promise.all(promises).then(function () {
+            promise = Promise.all(promises).then(function () {
                 if (!this.get('id')) {
                     isNewGroup = true;
                     this.set('creator', this.get('currentUser'));

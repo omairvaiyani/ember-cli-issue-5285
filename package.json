@@ -41,6 +41,7 @@
   },
   "dependencies": {
     "ember-cli-async-button": "^0.3.1",
+    "ember-social": "0.0.9",
     "grunt-autobots": "0.0.6",
     "grunt-cdn": "^0.6.1",
     "grunt-redis": "^0.1.1",

@@ -197,14 +197,13 @@ Parse.Cloud.job("indexObjectsForSwiftype", function (request, status) {
     var yesterday = moment().subtract(25, 'hour');
     query.greaterThanOrEqualTo("updatedAt", yesterday.toDate());
     query.limit(1000);
-    query.skip(request.params.skip);
     var documents = [];
     query.find().then(function (results) {
-     _.each(results, function (object) {
-         var document = getSwiftDocumentForObject("_User", object);
-         if (document)
-             documents.push(document);
-     });
+        _.each(results, function (object) {
+            var document = getSwiftDocumentForObject("_User", object);
+            if (document)
+                documents.push(document);
+        });
     }).then(function () {
         if (!documents.length)
             return;
@@ -879,5 +878,40 @@ Parse.Cloud.job('exportEmailList', function (request, response) {
         response.success("Mailing list size " + promises.length);
     }, function (error) {
         response.error(JSON.stringify(error));
+    });
+});
+
+Parse.Cloud.job("removeRedundantActions", function (request, status) {
+    Parse.Cloud.useMasterKey(); // Need this to delete objects.
+    var query = new Parse.Query("Action"),
+        redundantActions = 0,
+        promises = [];
+    query.equalTo('type', "testCreated");
+    var promise = Parse.Promise.as();
+    query.each(function (action) {
+            if (!action.get('test')) {
+                redundantActions++;
+                promise = promise.then(function () {
+                    return action.destroy();
+                });
+            } else {
+                promise = promise.then(function () {
+                    var testQuery = new Parse.Query("Test");
+                    testQuery.equalTo('objectId', action.get('test').id);
+                    return testQuery.find().then(function (results) {
+                        // Return a promise that will be resolved when the delete is finished.
+                        if (!results[0] || !results[0].get('privacy') || results[0].get('isObjectDeleted')) {
+                            redundantActions++;
+                            return action.destroy();
+                        }
+                    });
+                });
+            }
+        return promise;
+    }).then(function () {
+        console.log("Calling succcess with deleted actions " + redundantActions);
+        status.success("Deleted " + redundantActions + " redundant actions.");
+    }, function (error) {
+        status.error(error.message);
     });
 });

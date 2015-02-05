@@ -85,7 +85,7 @@ export default
                 window.prerenderReady = true;
                 setTimeout(function () {
                     // This avoids recording this event when being crawled by FB.
-                    if(!this.get('hasRecordedEventWebsiteOpened')) {
+                    if (!this.get('hasRecordedEventWebsiteOpened')) {
                         EventTracker.recordEvent(EventTracker.WEBSITE_OPENED);
                         this.set('hasRecordedEventWebsiteOpened', true);
                     }
@@ -106,7 +106,9 @@ export default
                     this.set('pageTitle', title + " - MyCQs");
                 else
                     this.set('pageTitle', title);
-                this.send('closeModal');
+                if (window.prerenderReady) {
+                    this.send('closeModal');
+                }
             },
 
             /*
@@ -136,8 +138,8 @@ export default
              * promise state changes.
              */
             submitSignUp: function () {
-                var signUpButton  = Ember.$("#sign-up-button");
-                if(signUpButton[0])
+                var signUpButton = Ember.$("#sign-up-button");
+                if (signUpButton[0])
                     signUpButton.trigger("click");
                 else
                     this.send('signUp');
@@ -330,7 +332,7 @@ export default
                                 ParseUser.signup(this.store, data).then(
                                     function (user) {
                                         var createdAt = user.get('createdAt');
-                                        if(moment(createdAt).add(2, 'minute').isAfter(new Date()))
+                                        if (moment(createdAt).add(2, 'minute').isAfter(new Date()))
                                             EventTracker.recordEvent(EventTracker.REGISTERED_WITH_FACEBOOK);
                                         this.controllerFor('application').set('currentUser', user);
                                         this.send('decrementLoadingItems');
@@ -631,6 +633,14 @@ export default
                     closed: false
                 });
                 this.get('applicationController.notifications').pushObject(notification);
+            },
+
+            activateSiteSearch: function () {
+                this.transitionTo('search');
+                this.controllerFor('application').set('inSearchMode', true);
+                setTimeout(function () {
+                    Ember.$('#site-search-input').focus();
+                }, 500);
             },
 
             /**

@@ -225,6 +225,7 @@ export default
 
         seoPageHeader: function () {
             var pageTitle;
+            
             pageTitle = this.get('name') + " MCQs";
             this.send('updatePageTitle', pageTitle);
             return pageTitle;

@@ -12,6 +12,11 @@ Router.map(function () {
     this.route('application');
 
     /*
+     * Site Search
+     */
+    this.resource('search');
+
+    /*
      * Join (onboarding)
      */
     this.resource('join', {path: "join"}, function () {
@@ -65,7 +70,9 @@ Router.map(function () {
     /*
      * Static pages
      */
-    this.route('about');
+    this.route('about', function () {
+        this.route('team');
+    });
     this.route('support', {path: 'support'});
     this.route('privacyPolicy', {path: 'privacy-policy'});
     this.route('terms', {path: 'terms'});
