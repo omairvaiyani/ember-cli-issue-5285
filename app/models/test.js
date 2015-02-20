@@ -27,7 +27,6 @@ export default DS.Model.extend(ParseMixin, {
     cumulativeScore: DS.attr('number'),
     numberOfUniqueAttempts: DS.attr('number'),
     uniqueAverageScore: DS.attr('number', {defaultValue:0}),
-    module: DS.belongsTo('module'),
     tags: DS.attr(),
     slug: DS.attr('string'),
     isObjectDeleted: DS.attr('boolean'),

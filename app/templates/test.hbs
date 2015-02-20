@@ -39,7 +39,7 @@
                     {{#unless loading}}
                         <div class="card take-test">
                             <h3>
-                                {{#unless isSRSTest}}
+                                {{#unless isGeneratedAttempt}}
                                     {{#link-to 'testInfo' slug}}{{title}}{{/link-to}}
                                     <small>{{#link-to 'category' category.slug}}{{category.name}}{{/link-to}}</small>
                                 {{else}}
@@ -139,7 +139,7 @@
             </section>
             <section class="row">
                 <article class="col-md-12 margin-top-16">
-                    {{#unless isSRSTest}}
+                    {{#unless isGeneratedAttempt}}
                         <section class="row">
                             <article class="col-sm-7">
                                 {{facebook-facepile}}
@@ -153,9 +153,10 @@
                         </section>
                         <section class="row">
                             <article class="col-sm-12 margin-top-16">
-                                <div class="fb-comments" {{bind-attr data-href=testUrl}}
+                                {{!-- <div class="fb-comments" {{bind-attr data-href=testUrl}}
                                      data-numposts="5" data-colorscheme="light" data-width="100%"
-                                     data-order-by="reverse_time"></div>
+                                     data-order-by="reverse_time"></div> --}}
+                                        <div class="addthis_recommended_horizontal"></div>
                             </article>
                         </section>
                     {{/unless}}
@@ -163,7 +164,7 @@
             </section>
         </article>
 
-        {{#unless isSRSTest}}
+        {{#unless isGeneratedAttempt}}
             <article class="col-md-3 col-fix-right">
                 <section class="row">
                     <article class="col-md-12 col-sm-6 col-xs-12 margin-bottom-16">

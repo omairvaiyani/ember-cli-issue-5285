@@ -18,7 +18,7 @@
                     <p>Your score</p>
                     {{progress-bar progress=score}}
                 </div>
-                {{#if currentUser.privateData.spacedRepetitionActivated}}
+                {{#if currentUser.privateData.isPremium}}
                     <div class="col-md-6">
                         {{#unless addingOrRemovingQuestionsToSRS}}
                             {{#if areQuestionsAddedToSRS}}

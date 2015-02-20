@@ -15,12 +15,17 @@
  * -- Lower the better (more repeats), below 50% for now
  * - Unique average scores (MAX 15)
  * -- Optimal is 55-85%
+ * - Number of Tests by Author
+ * -- 1 point per 4 Test
  */
 Parse.Cloud.job('testQualityScore', function (request, status) {
     Parse.Cloud.useMasterKey();
     var query = new Parse.Query('Test'),
         promises = [];
     query.include('questions');
+    query.include('author');
+    query.exists('author');
+    query.greaterThanOrEqualTo('updatedAt', moment().subtract(1, 'month').toDate());
     query.each(function (test) {
         var previousScore = test.get('quality'),
             score = 0;
@@ -116,6 +121,13 @@ Parse.Cloud.job('testQualityScore', function (request, status) {
         else if (uniqueAverageScore > 84)
             score += 10;
 
+        // Number of Tests by Author (1 point per 4 tests)
+        if (test.get('author') && test.get('author').get('privateData')) {
+            var numberOfTestsByAuthor = test.get('author').get('numberOfTests');
+            if (numberOfTestsByAuthor) {
+                score += Math.round((numberOfTestsByAuthor / 4));
+            }
+        }
         if (score !== previousScore) {
             test.set('quality', score);
             /*
@@ -125,7 +137,7 @@ Parse.Cloud.job('testQualityScore', function (request, status) {
              * before progress.. our request limit is easily
              * reached. Therefore, we're using this bottlenecking
              * method.
-             * Empty p
+             * Empty promise
              */
             promises.push({});
             return test.save();
@@ -552,7 +564,7 @@ Parse.Cloud.job('spacedRepetitionRunLoop', function (request, status) {
         .then(function (config) {
             srIntensityLevels = config.get("spacedRepetitionIntensityLevels");
             query = new Parse.Query('UserPrivate');
-            query.equalTo('spacedRepetitionActivated', true);
+            query.equalTo('isPremium', true);
             return query.find();
         })
         .then(function (results) {
@@ -889,24 +901,24 @@ Parse.Cloud.job("removeRedundantActions", function (request, status) {
     query.equalTo('type', "testCreated");
     var promise = Parse.Promise.as();
     query.each(function (action) {
-            if (!action.get('test')) {
-                redundantActions++;
-                promise = promise.then(function () {
-                    return action.destroy();
+        if (!action.get('test')) {
+            redundantActions++;
+            promise = promise.then(function () {
+                return action.destroy();
+            });
+        } else {
+            promise = promise.then(function () {
+                var testQuery = new Parse.Query("Test");
+                testQuery.equalTo('objectId', action.get('test').id);
+                return testQuery.find().then(function (results) {
+                    // Return a promise that will be resolved when the delete is finished.
+                    if (!results[0] || !results[0].get('privacy') || results[0].get('isObjectDeleted')) {
+                        redundantActions++;
+                        return action.destroy();
+                    }
                 });
-            } else {
-                promise = promise.then(function () {
-                    var testQuery = new Parse.Query("Test");
-                    testQuery.equalTo('objectId', action.get('test').id);
-                    return testQuery.find().then(function (results) {
-                        // Return a promise that will be resolved when the delete is finished.
-                        if (!results[0] || !results[0].get('privacy') || results[0].get('isObjectDeleted')) {
-                            redundantActions++;
-                            return action.destroy();
-                        }
-                    });
-                });
-            }
+            });
+        }
         return promise;
     }).then(function () {
         console.log("Calling succcess with deleted actions " + redundantActions);

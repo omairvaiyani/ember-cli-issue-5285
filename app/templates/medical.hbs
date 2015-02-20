@@ -1,0 +1,86 @@
+<div class="mycqs-page-header">
+    <div class="container">
+        <h2>Medical Question Bank</h2>
+
+        <p>Thousands of verified, professionally written Medical MCQs tailored for you!</p>
+    </div>
+</div>
+<div class="container">
+    <section class="row professional-bank-filter-background professional-bank-filter-list">
+        <h4 class="margin-bottom-8">Add questions in categories by clicking <i class="fa fa-plus-circle"></i>, or
+            click the category title to view subcategories.</h4>
+        {{partial 'medical/breadcrumb-navigation'}}
+        <div class="inner-list inline-block">
+            <div class="container-fluid">
+                <section class="row">
+                    <article class="col-md-12 col-fix-middle">
+                        {{#unless loading}}
+                            {{#unless selectedDiscipline}}
+                                {{#each discipline in disciplines}}
+                                    {{render 'medical/-level-card' discipline}}
+                                {{/each}}
+                            {{/unless}}
+                            {{#if selectedDiscipline}}
+                                {{#unless selectedSpecialty}}
+                                    {{#each specialty in specialties}}
+                                        {{render 'medical/-level-card' specialty}}
+                                    {{/each}}
+                                {{/unless}}
+                            {{/if}}
+                            {{#if selectedSpecialty}}
+                                {{#unless selectedFocus}}
+                                    {{#each focus in focusList}}
+                                        {{render 'medical/-level-card' focus}}
+                                    {{/each}}
+                                {{/unless}}
+                            {{/if}}
+                            {{#if selectedFocus}}
+                                {{#unless selectedTopic}}
+                                    {{#each topic in topics}}
+                                        {{render 'medical/-level-card' topic}}
+                                    {{/each}}
+                                {{/unless}}
+                            {{/if}}
+                            {{#if selectedTopic}}
+                                {{#unless selectedSecondaryTopic}}
+                                    {{#each secondaryTopic in secondaryTopics}}
+                                        {{render 'medical/-level-card' secondaryTopic}}
+                                    {{/each}}
+                                {{/unless}}
+                            {{/if}}
+                        {{else}}
+                            <article class="col-xs-12 text-center">
+                                <img src="img/loading-bar.gif" alt="Loading..."/>
+                            </article>
+                        {{/unless}}
+                    </article>
+                </section>
+            </div>
+            <div class="added-categories">
+                {{#each addedLevel in addedLevels}}
+                    <div class="added-category margin-right-8 inline-block margin-bottom-8"
+                        {{action 'addLevelInType' addedLevel}}>
+                        {{addedLevel.title}}
+                        <i class="fa fa-close"></i>
+                    </div>
+                {{/each}}
+            </div>
+
+            <div class="professional-bank-generate text-center">
+                {{#if totalQuestions}}
+                    <h4>Out of {{totalQuestions}} {{pluralize-word 'question' totalQuestions}},
+                        I would like to take {{input type='number' value=maxQuestions class='form-control'}}
+                        {{#if enoughQuestionsForDifficultySelection}}
+                            questions of&nbsp;
+                            {{view 'select' content=difficultyLevels value=difficulty class='form-control'}}&nbsp;
+                            difficulty
+                        {{/if}}: {{async-button default='Generate Test' pending='Generating...'
+                        fulfilled='Preparing...' rejected='Error!' reset='true' action='generateTest'
+                        class='btn btn-success'}}</h4>
+                {{else}}
+                    <h4>Add categories to generate a medical mcq test</h4>
+                {{/if}}
+            </div>
+        </div>
+    </section>
+</div>

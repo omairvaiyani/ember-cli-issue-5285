@@ -14,6 +14,8 @@ export default
         location: DS.attr('string'),
         isProcessed: DS.attr('boolean'),
         isSRSAttempt: DS.attr('boolean'),
+        isProfessional: DS.attr('boolean'),
+        questionBank: DS.attr('string'),
         parseClassName: function () {
             return "Attempt";
         },

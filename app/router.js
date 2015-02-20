@@ -90,8 +90,14 @@ Router.map(function () {
     /*
      * Premium dashboard. e.g. SRS
      */
-    this.resource('dashboard');
+    this.resource('dashboard', function () {
+        this.route('admin');
+    });
 
+    /*
+     * Medical / Professional Question Bank
+     */
+    this.route('medical');
 
     /*
      * Transition to model not found or

@@ -25,8 +25,8 @@ export default
                     if (results.objectAt(0)) {
                         return results.objectAt(0);
                     } else {
-                        var srsAttemptId = params.test_slug;
-                        return this.store.findById('attempt', srsAttemptId);
+                        var generatedAttemptId = params.test_slug;
+                        return this.store.findById('attempt', generatedAttemptId);
                     }
                 }.bind(this));
         },
@@ -38,9 +38,9 @@ export default
                 this.transitionTo('notFound');
                 return;
             }
-            var isSRSTest = false;
+            var isGeneratedAttempt = false;
             if(model.constructor.typeKey === 'attempt') {
-                isSRSTest = true;
+                isGeneratedAttempt = true;
             } else {
                 this.send('updatePageTitle', model.get('title'));
                 var description = model.get('description');
@@ -59,7 +59,7 @@ export default
                 this.send('incrementLoadingItems');
 
                 controller.set('model', model);
-                controller.set('isSRSTest', isSRSTest);
+                controller.set('isGeneratedAttempt', isGeneratedAttempt);
                 /*
                  * Create a new property which holds
                  * a shuffled array of questions

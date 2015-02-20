@@ -79,6 +79,12 @@ app.all('/scripts/*', function (req, res) {
     res.end();
 });
 
+
+app.all('/blog*', function (req, res) {
+    res.sendFile(__dirname + "/blog.html");
+});
+
+
 app.get("*", function (req, res) {
     if (req.headers.host.match(/^www/) !== null || !req.secure) {
         res.redirect(301, 'https://' + req.headers.host.replace(/^www\./, '') + req.url);

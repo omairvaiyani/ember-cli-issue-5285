@@ -14,6 +14,12 @@ export default
          * - Send preliminary title to ApplicationRoute.updateTitle()
          */
         currentPathDidChange: function () {
+            if (window.prerenderReady) {
+                this.send('closeModal');
+                if(this.get('currentPath') !== 'search')
+                    this.send('deactivateSiteSearch');
+            }
+
             var path = this.get('currentPath'),
                 title = "",
                 defaultTitle = "MyCQs: Create & find Multiple Choice Question (MCQ) tests online!";

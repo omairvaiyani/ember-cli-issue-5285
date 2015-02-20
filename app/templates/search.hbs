@@ -1,3 +1,37 @@
-{{#each test in tests}}
-
-{{/each}}
+<div class='container'>
+    <section class="row">
+        {{#if isLoading}}
+            <article class="col-xs-s col-xs-push-5 text-center">
+                <img src="img/loading-bar.gif" alt="Loading..."/>
+            </article>
+        {{else}}
+            {{#if inputText.length}}
+                {{#if noSearchResults}}
+                    <article class="col-xs-12">
+                        {{list-empty title='No search results'}}
+                    </article>
+                {{/if}}
+            {{else}}
+                <article class="col-xs-12">
+                    {{list-empty title='Type to search for Tests, Users or Groups on MyCQs' icon='fa-search'}}
+                </article>
+            {{/if}}
+            {{#if tests.length}}
+                <article class="col-sm-6">
+                    <h4>Tests</h4>
+                    {{#each tests}}
+                        {{partial 'search/item/test-card'}}
+                    {{/each}}
+                </article>
+            {{/if}}
+            {{#if users.length}}
+                <article class="col-sm-6 col-fix-right">
+                    <h4>Users</h4>
+                    {{#each users}}
+                        {{partial 'search/item/user-card'}}
+                    {{/each}}
+                </article>
+            {{/if}}
+        {{/if}}
+    </section>
+</div>

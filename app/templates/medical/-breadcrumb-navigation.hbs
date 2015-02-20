@@ -1,0 +1,65 @@
+<ol class="breadcrumb margin-right-16 margin-bottom-8">
+    {{#unless selectedDiscipline}}
+        <li class="active">All Categories</li>
+    {{else}}
+        <li>
+            <span class="linkify" {{action 'selectLevelInType' 'Back' null}}>
+                <i class="fa fa-arrow-circle-o-left margin-right-8"></i>Back</span>
+        </li>
+        <li>
+            <span class="linkify" {{action 'selectLevelInType' 'Discipline' selectedDiscipline}}>All Categories</span>
+        </li>
+    {{/unless}}
+
+    {{#if selectedDiscipline}}
+        {{#unless selectedSpecialty}}
+            <li class="active">{{selectedDiscipline}}</li>
+        {{else}}
+            <li>
+                <span class="linkify"
+                    {{action 'selectLevelInType' 'Specialty' selectedSpecialty}}
+                        >{{selectedDiscipline}}</span>
+            </li>
+        {{/unless}}
+    {{/if}}
+
+    {{#if selectedSpecialty}}
+        {{#unless selectedFocus}}
+            <li class="active">{{selectedSpecialty}}</li>
+        {{else}}
+            <li>
+                <span class="linkify"
+                    {{action 'selectLevelInType' 'Focus' selectedFocus}}>{{selectedSpecialty}}</span>
+            </li>
+        {{/unless}}
+    {{/if}}
+
+    {{#if selectedFocus}}
+        {{#unless selectedTopic}}
+            <li class="active">{{selectedFocus}}</li>
+        {{else}}
+            <li>
+                <span class="linkify"
+                    {{action 'selectLevelInType' 'Topic' selectedTopic}}
+                        >{{selectedFocus}}</span>
+            </li>
+        {{/unless}}
+    {{/if}}
+
+    {{#if selectedTopic}}
+        {{#unless selectedSecondaryTopic}}
+            <li class="active">{{selectedTopic}}</li>
+        {{else}}
+            <li>
+                <span class="linkify"
+                    {{action 'selectLevelInType' 'SecondaryTopic' selectedSecondaryTopic}}
+                        >{{selectedTopic}}</span>
+            </li>
+        {{/unless}}
+    {{/if}}
+
+
+    {{#if selectedSecondaryTopic}}
+        <li class="active">{{selectedTopic}}</li>
+    {{/if}}
+</ol>

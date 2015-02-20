@@ -30,14 +30,19 @@
     <meta name="msapplication-config" content="/img/favicon/browserconfig.xml">
     <!-- Required for AJAX crawling -->
     <meta name="fragment" content="!">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=0">
 
     {{content-for 'head'}}
 
-    <link rel="stylesheet" href="style/touch-slider.css">
+    <!-- <link rel="stylesheet" href="style/touch-slider.css"> -->
+    <!-- <link rel="stylesheet" href="style/razorflow.min.css"> -->
     <link rel="stylesheet" href="assets/vendor.css">
     <link rel="stylesheet" href="assets/mycqs-web.css">
     <link rel="stylesheet" href="style/social.css">
+
+    <!-- Go to www.addthis.com/dashboard to customize your tools -->
+    <script type="text/javascript" src="https://s7.addthis.com/js/300/addthis_widget.js#pubid=ra-54d949656c333bb3"
+            async="async"></script>
 
     <script type="text/javascript">
         // Google Analytics SDK
@@ -149,6 +154,9 @@
 <script src="http://www.zzish.co.uk/dist/zzish.js"></script> -->
 
 <script src="assets/vendor.js"></script>
+
+<!-- RazorFlow Dashboard -->
+<!-- <script type="text/javascript" src="js/razorflow.min.js"></script> -->
 <script src="assets/mycqs-web.js"></script>
 
 <script>
@@ -179,7 +187,8 @@
 <!-- Load Aviary/Feather code -->
 <script type="text/javascript" src="https://dme0ih8comzn4.cloudfront.net/js/feather.js"></script>
 <!-- Load Stripe.js code -->
-<script src="https://checkout.stripe.com/v2/checkout.js"></script>
+<script type="text/javascript" src="https://checkout.stripe.com/v2/checkout.js"></script>
+<!-- Load Stripe.js code -->
 <!-- App injection -->
 <div id="body-wrap"></div>
 <script>

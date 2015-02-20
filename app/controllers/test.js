@@ -144,7 +144,7 @@ export default Ember.ObjectController.extend(CurrentUser, {
             this.send('closeModal');
             this.set('loading', 'Marking test...');
             var attempt;
-            if (!this.get('isSRSTest')) {
+            if (!this.get('isGeneratedAttempt')) {
                 attempt = this.store.createRecord('attempt', {
                     test: this.get('model')
                 });

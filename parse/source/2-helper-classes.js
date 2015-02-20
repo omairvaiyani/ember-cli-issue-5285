@@ -325,7 +325,9 @@ var generateSearchTags = function (className, object) {
     var words = "";
     switch (className) {
         case 'Test':
-            words += object.get('title') + object.get('description');
+            words += object.get('title');
+            if(object.get('description'))
+                words += object.get('description');
             break;
         case 'InstitutionList':
             words += object.get('fullName');

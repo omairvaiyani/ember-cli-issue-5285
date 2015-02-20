@@ -105,12 +105,6 @@ export default Ember.Controller.extend(CurrentUser, {
      * waste of time.
      */
     getDataForSuggestions: function () {
-        if (!this.get('dataRecords'))
-            this.set('dataRecords', new Ember.A());
-
-        if (!this.get('inputText.length'))
-            return this.get('dataRecords').clear();
-
         this.set('isLoading', true);
         var params = {
             q: this.get('inputText').toLowerCase(),
@@ -121,18 +115,15 @@ export default Ember.Controller.extend(CurrentUser, {
         $.getJSON(this.get('engineUrl'), params)
             .done(function (data) {
                 if (this.get('inputText') === preloadInput) {
-                    this.get('dataRecords').clear();
                     var records = data.records;
-                    var tests = records.tests,
-                        testPointers;
-                    _.each(tests, function (test) {
-                       testPointers.push(ParseHelper.generatePointerFromIdAndClass(test.external_id, "Test"));
-                    });
-                    var where = {
-                        "objectId": {
-                            "$in": testPointers
-                        }
-                    }
+                    if(!data.record_count)
+                        this.set('noSearchResults', true);
+                    else
+                        this.set('noSearchResults', false);
+                    //var tests = this.swiftypeToEmberRecords(records.tests, 'test');
+                    //this.set('tests', tests);
+                    this.set('tests', records.tests);
+                    this.set('users', records.users);
                     this.set('isLoading', false);
                 }
             }.bind(this));
@@ -238,6 +229,64 @@ export default Ember.Controller.extend(CurrentUser, {
         object.set('record', item);
         object.set('type', this.get('type'));
         return object;
+    },
+
+    swiftypeToEmberRecords: function (records, className) {
+        var emberArray = new Ember.A();
+        _.each(records, function (record) {
+            emberArray.pushObject(this.swiftypeToEmberRecord(record, className));
+        }.bind(this));
+        return emberArray;
+    },
+
+    swiftypeToEmberRecord: function (record, className) {
+        var emberObject = this.store.createRecord(className);
+        emberObject.set('id', record.external_id);
+        switch (className) {
+            case "parse-user":
+                emberObject.set('name', record.name);
+                emberObject.set('pictureUrl', record.pictureUrl);
+                break;
+            case "test":
+                emberObject.set('title', record.title);
+                emberObject.set('description', record.description);
+                emberObject.set('slug', record.slug);
+                emberObject.set('totalQuestions', record.numberOfQuestions);
+                emberObject.set('authorPictureUrl', record.authorImageUrl);
+                var authorRecord = {
+                    external_id: record.authorId,
+                    name: record.authorName,
+                    pictureUrl: record.authorImageUrl
+                };
+                emberObject.set('author', this.swiftypeToEmberRecord(authorRecord, 'parse-user'));
+                var categoryRecord = {
+                    external_id: record.categoryId,
+                    name: record.categoryName
+                };
+                emberObject.set('category', this.swiftypeToEmberRecord(categoryRecord, 'category'));
+                /*authorId: "K7El0VwkzF"
+                 authorImageUrl: "https://res.cloudinary.com/mycqs/image/facebook/c_thumb,e_improve,g_faces:center,w_150/1420263670"
+                 authorName: "James Gupta"
+                 categoryId: "WupHDqUSaQ"
+                 categoryName: "Haematology"
+                 createdAt: "2014-09-29T04:49:04Z"
+                 description: "General haematology questions based on Leeds LSM course"
+                 external_id: "UglAFsE2ZA"
+                 highlight: {title: "<em>LSM</em>: Haematology", slug: "jgupta-<em>lsm</em>-haematology",…}
+                 description: "General haematology questions based on Leeds <em>LSM</em> course"
+                 slug: "jgupta-<em>lsm</em>-haematology"
+                 title: "<em>LSM</em>: Haematology"
+                 id: "54b2ed9514cc8a90c7000492"
+                 numberOfQuestions: 30
+                 slug: "jgupta-lsm-haematology"
+                 sort: null
+                 title: "LSM: Haematology"*/
+                break;
+            case "category":
+                emberObject.set('name', record.name);
+                break;
+        }
+        return emberObject;
     },
 
     /*   facebookSearchFilter: function (data) {

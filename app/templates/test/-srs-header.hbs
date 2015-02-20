@@ -1,2 +1,8 @@
-Spaced Repetition Test
-<small>Intensity level: {{currentUser.spacedRepetitionIntensity}}</small>
+{{#if isSRSAttempt}}
+    Spaced Repetition Test
+    <small>Intensity level: {{currentUser.spacedRepetitionIntensity}}</small>
+{{else}}
+    {{#if isProfessional}}
+        Generated {{questionBank}} test
+    {{/if}}
+{{/if}}

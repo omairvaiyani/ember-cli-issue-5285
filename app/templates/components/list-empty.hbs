@@ -1,9 +1,14 @@
 <div class="card margin-top-16 text-center">
-     <h4><i class="fa fa-file-o margin-right-16"></i>{{title}}</h4>
-    <hr>
-    <p>
-        {{#if action1}}<a href="javascript:void(0)" {{action 'promptAction' 'action1'}}>{{prompt1}}</a>{{/if}}
-        {{#if action2}} - <a href="javascript:void(0)" {{action 'promptAction' 'action2'}}>{{prompt2}}</a>{{/if}}
-    </p>
-
+    {{#if icon}}
+        <h4><i {{bind-attr class=":fa :margin-right-16 icon"}}></i>{{title}}</h4>
+    {{else}}
+        <h4><i class="fa fa-file-o margin-right-16"></i>{{title}}</h4>
+    {{/if}}
+    {{#if action1}}
+        <hr>
+        <p>
+            <a href="javascript:void(0)" {{action 'promptAction' 'action1'}}>{{prompt1}}</a>
+            {{#if action2}} - <a href="javascript:void(0)" {{action 'promptAction' 'action2'}}>{{prompt2}}</a>{{/if}}
+        </p>
+    {{/if}}
 </div>
