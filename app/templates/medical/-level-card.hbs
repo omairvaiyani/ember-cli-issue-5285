@@ -4,12 +4,12 @@
             {{#if levels.length}}
                 <p class="inline-block linkify" {{action 'selectLevelInType' levelType title}}>
                     {{#tool-tipster title='View subcategories'}}
-                        {{title}}
+                        {{title}} <small>{{numberOfQuestions}} mcqs</small>
                     {{/tool-tipster}}
                 </p>
             {{else}}
                 <p class="inline-block">
-                    {{title}}
+                    {{title}} <small>{{numberOfQuestions}} mcqs</small>
                 </p>
             {{/if}}
             <span class="inline-block text-center"

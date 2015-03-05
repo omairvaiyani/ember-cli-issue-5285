@@ -1,9 +1,10 @@
 import Ember from 'ember';
 import CurrentUser from '../mixins/current-user';
 import AutocompleteHelper from '../utils/autocomplete-helper';
+import EventTracker from '../utils/event-tracker';
 
 export default Ember.ObjectController.extend(CurrentUser, {
-    needs: ['create'],
+    needs: ['create', 'medical'],
     createController: function () {
         return this.get('controllers.create');
     }.property('controllers.create'),
@@ -125,7 +126,7 @@ export default Ember.ObjectController.extend(CurrentUser, {
     }.observes("suggestedMemberName.length"),
 
     showJoinGroup: function () {
-        if(!this.get('currentUser'))
+        if (!this.get('currentUser'))
             return;
 
         if (this.get('currentUser') && this.get('privacy') === "open") {
@@ -135,7 +136,7 @@ export default Ember.ObjectController.extend(CurrentUser, {
     }.property('id.length', 'currentUser.groups.length'),
 
     showLeaveGroup: function () {
-        if(!this.get('currentUser'))
+        if (!this.get('currentUser'))
             return;
         if (this.get('currentUser.groups').contains(this.get('model')) &&
             this.get('creator.id') !== this.get('currentUser.id')) {
@@ -171,6 +172,13 @@ export default Ember.ObjectController.extend(CurrentUser, {
     throttleSuggestTestTitleDidChange: function () {
         Ember.run.debounce(this, this.suggestedTestTitleDidChange, 200);
     }.observes("suggestedTestTitle.length"),
+
+    isProfessionalBankAvailable: function () {
+        var studyFieldName = this.get('educationCohort.studyField.name');
+        if(!studyFieldName)
+            return false;
+        return studyFieldName.toLowerCase().indexOf("med");
+    }.property('educationCohort.studyField.name'),
 
     actions: {
         /* Add/Remove Members */
@@ -356,6 +364,11 @@ export default Ember.ObjectController.extend(CurrentUser, {
                     else
                         this.get('gatheredTests').insertAt(resetIndex, test);
                 }.bind(this));
+        },
+
+        sendUserToGenerateTest: function () {
+            this.get('controllers.medical').set('generateForGroup', this.get('model'));
+            this.transitionToRoute('medical');
         }
     }
 });

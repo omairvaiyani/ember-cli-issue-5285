@@ -1,15 +1,7 @@
-import
-DS
-from
-'ember-data';
+import DS from 'ember-data';
+import ParseMixin from '../mixins/ember-parse-mixin';
 
-import
-ParseMixin
-from
-'../mixins/ember-parse-mixin';
-
-export default
-DS.Model.extend(ParseMixin, {
+export default DS.Model.extend(ParseMixin, {
     user: DS.belongsTo('parse-user', {async: true}),
     type: DS.attr('string'),
     test: DS.belongsTo('test', {async: true}),
@@ -30,8 +22,8 @@ DS.Model.extend(ParseMixin, {
         if (this.getIncludedProperty('test', 'title'))
             return this.getIncludedProperty('test', 'title');
         else {
-            if(!this.get('_data.test.id'))
-                return''
+            if (!this.get('_data.test.id'))
+                return ''
             this.store.findById('test', this.get('_data.test.id'))
                 .then(function (test) {
                     this.set('testTitle', test.get('title'));
@@ -43,7 +35,7 @@ DS.Model.extend(ParseMixin, {
     }.property(),
     testCategoryName: function () {
         var value = this.getIncludedProperty('category', 'name', 'test');
-        if(value)
+        if (value)
             return value;
         else {
             this.store.findById('category', this.getIncludedProperty('category', 'id', 'test'))

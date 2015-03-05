@@ -25,8 +25,25 @@
                 <ul class="nav navbar-nav">
                     {{#link-to 'create' tagName='li' title='MCQ Test Maker'}}{{#link-to 'create' tagName='a'}}
                         Create{{/link-to}}{{/link-to}}
-                    {{#link-to 'browse' tagName='li' title='Browse MCQ tests'}}{{#link-to 'browse' tagName='a'}}
-                        Tests{{/link-to}}{{/link-to}}
+                    <!-- About dropdown menu-->
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+                            Tests <span class="caret"></span></a>
+                        <ul class="dropdown-menu" role="menu">
+                            {{#link-to 'browse' tagName='li' title='Browse MCQ tests'}}
+                                {{#link-to 'browse' tagName='a'}}
+                                Browse categories
+                                {{/link-to}}
+                            {{/link-to}}
+                            <li class="divider"></li>
+                            {{#link-to 'medical' tagName='li' title='Medical question bank'}}
+                                {{#link-to 'medical' tagName='a'}}
+                                    Medical Question Bank
+                                {{/link-to}}
+                            {{/link-to}}
+                        </ul>
+                    </li>
+
                     {{#link-to 'groups' tagName='li' title='Browse Groups'}}{{#link-to 'groups' tagName='a'}}
                         Groups{{/link-to}}{{/link-to}}
 

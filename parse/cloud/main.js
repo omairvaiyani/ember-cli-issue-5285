@@ -4003,6 +4003,11 @@ Parse.Cloud.define('addMembersToGroup', function (request, response) {
             _.each(membersToAdd, function (member) {
                 var memberGroups = member.relation('groups');
                 memberGroups.add(group);
+                if (group.id === "0aJRBiR9FU") {
+                    if (!member.get('zzishClasses'))
+                        member.set('zzishClasses', []);
+                    member.get('zzishClasses').push("je3t4");
+                }
                 promises.push(member.save());
             });
             return Parse.Promise.when(promises);
@@ -4258,7 +4263,6 @@ Parse.Cloud.define('addProfessionalQuestions', function (request, response) {
         _.each(rawQuestions, function (rawQuestion, index) {
             var question = new Question();
             if (_.contains(currentProfessionalQuestionUIDs, rawQuestion["UID"])) {
-                //return; // TODO Remove this to allow updates
                 question = _.find(currentProfessionalQuestions, function (currentProfessionalQuestion) {
                     return currentProfessionalQuestion.get('professionalUID') === rawQuestion["UID"];
                 });
@@ -4266,46 +4270,48 @@ Parse.Cloud.define('addProfessionalQuestions', function (request, response) {
             } else {
                 question.set('professionalUID', rawQuestion["UID"]);
             }
+            if (question.get('level1'))
+                return; // TODO remove this to allow updates
             question.set('isProfessional', true);
             question.set('bank', "medical");
             // Level 1
-            if(rawQuestion["Level 1"])
-                question.set("level1", rawQuestion["Level 1"].trim().replace("�","'"));
+            if (rawQuestion["Level 1"])
+                question.set("level1", rawQuestion["Level 1"].trim().replace("�", "'"));
             else
                 question.set("level1", undefined);
             // Level 2
-            if(rawQuestion["Level 2"] && rawQuestion["Level 2"].trim() !== "-")
-                question.set("level2", rawQuestion["Level 2"].trim().replace("�","'"));
+            if (rawQuestion["Level 2"] && rawQuestion["Level 2"].trim() !== "-")
+                question.set("level2", rawQuestion["Level 2"].trim().replace("�", "'"));
             else
                 question.set("level2", undefined);
             // Level 3
-            if(rawQuestion["Level 3"] && rawQuestion["Level 3"].trim() !== "-")
-                question.set("level3", rawQuestion["Level 3"].trim().replace("�","'"));
+            if (rawQuestion["Level 3"] && rawQuestion["Level 3"].trim() !== "-")
+                question.set("level3", rawQuestion["Level 3"].trim().replace("�", "'"));
             else
                 question.set("level3", undefined);
             // Discipline
             if (rawQuestion["Discipline"] && rawQuestion["Discipline"].trim() !== "-")
-                question.set('discipline', rawQuestion["Discipline"].trim().replace("�","'"));
+                question.set('discipline', rawQuestion["Discipline"].trim().replace("�", "'"));
             else
                 question.set("discipline", undefined);
             // Specialty
             if (rawQuestion["Speciality"] && rawQuestion["Speciality"].trim() !== "-")
-                question.set('specialty', rawQuestion["Speciality"].trim().replace("�","'"));
+                question.set('specialty', rawQuestion["Speciality"].trim().replace("�", "'"));
             else
                 question.set("specialty", undefined);
             // Focus
             if (rawQuestion["Focus"] && rawQuestion["Focus"].trim() !== "-")
-                question.set('focus', rawQuestion["Focus"].trim().replace("�","'"));
+                question.set('focus', rawQuestion["Focus"].trim().replace("�", "'"));
             else
                 question.set("focus", undefined);
             // Topic
             if (rawQuestion["Topic"] && rawQuestion["Topic"].trim() !== "-")
-                question.set('topic', rawQuestion["Topic"].trim().replace("�","'"));
+                question.set('topic', rawQuestion["Topic"].trim().replace("�", "'"));
             else
                 question.set("topic", undefined);
             // SecondaryTopic
             if (rawQuestion["Secondary Topic"] && rawQuestion["Secondary Topic"].trim() !== "-")
-                question.set('secondaryTopic', rawQuestion["Secondary Topic"].trim().replace("�","'"));
+                question.set('secondaryTopic', rawQuestion["Secondary Topic"].trim().replace("�", "'"));
             else
                 question.set("secondaryTopic", undefined);
             // Core Tags
@@ -4320,17 +4326,17 @@ Parse.Cloud.define('addProfessionalQuestions', function (request, response) {
                 question.set('extraTags', []);
             // Normal/Abnormal Medical
             if (rawQuestion["Normal/Abnormal"] && rawQuestion["Normal/Abnormal"] !== "n/a")
-                question.set('medicalPerspective', rawQuestion["Normal/Abnormal"].trim().replace("�","'"));
+                question.set('medicalPerspective', rawQuestion["Normal/Abnormal"].trim().replace("�", "'"));
             else
                 question.set('medicalPerspective', undefined);
             // Locality
             if (rawQuestion["Locality"])
-                question.set('locality', rawQuestion["Locality"].trim().replace("�","'"));
+                question.set('locality', rawQuestion["Locality"].trim().replace("�", "'"));
             else
                 question.set('locality', undefined);
             // Module Tags
             if (rawQuestion["LDS"])
-                question.set('moduleTags', ["LDS:" + rawQuestion["LDS"].trim().replace("�","'")]);
+                question.set('moduleTags', ["LDS:" + rawQuestion["LDS"].trim().replace("�", "'")]);
             else
                 question.set('moduleTags', []);
 
@@ -4346,22 +4352,22 @@ Parse.Cloud.define('addProfessionalQuestions', function (request, response) {
 
             if (!rawQuestion["Stem"])
                 return errors.push("Question has no Stem, UID " + rawQuestion["UID"]);
-            question.set('stem', rawQuestion["Stem"].trim().replace("�","'"));
+            question.set('stem', rawQuestion["Stem"].trim().replace("�", "'"));
 
             if (!rawQuestion["Correct Answer"] || !rawQuestion["Incorrect 1"])
                 return errors.push("Question has no Correct Answer or Incorrect 1, UID " + rawQuestion["UID"]);
-            var options = [{"isCorrect": true, "phrase": rawQuestion["Correct Answer"].trim().replace("�","'")},
-                {"isCorrect": false, "phrase": rawQuestion["Incorrect 1"].trim().replace("�","'")}];
+            var options = [{"isCorrect": true, "phrase": rawQuestion["Correct Answer"].trim().replace("�", "'")},
+                {"isCorrect": false, "phrase": rawQuestion["Incorrect 1"].trim().replace("�", "'")}];
             if (rawQuestion["Incorrect 2"])
-                options.push({"isCorrect": false, "phrase": rawQuestion["Incorrect 2"].trim().replace("�","'")});
+                options.push({"isCorrect": false, "phrase": rawQuestion["Incorrect 2"].trim().replace("�", "'")});
             if (rawQuestion["Incorrect 3"])
-                options.push({"isCorrect": false, "phrase": rawQuestion["Incorrect 3"].trim().replace("�","'")});
+                options.push({"isCorrect": false, "phrase": rawQuestion["Incorrect 3"].trim().replace("�", "'")});
             if (rawQuestion["Incorrect 4"])
-                options.push({"isCorrect": false, "phrase": rawQuestion["Incorrect 4"].trim().replace("�","'")});
+                options.push({"isCorrect": false, "phrase": rawQuestion["Incorrect 4"].trim().replace("�", "'")});
             question.set('options', options);
 
             if (rawQuestion["Explanation"])
-                question.set('feedback', rawQuestion["Explanation"].trim().replace("�","'"));
+                question.set('feedback', rawQuestion["Explanation"].trim().replace("�", "'"));
 
             var ACL = new Parse.ACL();
             ACL.setRoleReadAccess('medical-professional', true);
@@ -4397,74 +4403,64 @@ Parse.Cloud.define("getProfessionalBankTopicList", function (request, response) 
     query.equalTo("isProfessional", true);
     query.equalTo("bank", bank);
 
-    /*if (selectedDiscipline)
-     query.equalTo('discipline', selectedDiscipline);
-     if (selectedSpecialty)
-     query.equalTo('specialty', selectedSpecialty);
-     if (selectedFocus)
-     query.equalTo('focus', selectedFocus);
-     if (selectedTopic)
-     query.equalTo('topic', selectedTopic);
-     if (selectedSecondaryTopic)
-     query.equalTo('secondaryTopic', selectedSecondaryTopic);*/
-
     query.find().then(function (questions) {
-        var levels = [];
+        var levels = [],
+            totalQuestions = questions.length;
 
         _.each(questions, function (question) {
-            var discipline,
-                specialty,
-                focus,
-                topic,
-                secondaryTopic;
+            var level1,
+                level2,
+                level3;
+            // Question has level1
+            if (question.get('level1')) {
+                // Create new level if one does not exist
+                if (!(level1 = _.find(levels, function (level) {
+                        return level.title === question.get('level1');
+                    }))) {
+                    level1 = {
+                        title: question.get('level1'), levels: [], numberOfQuestions: 0, numberOfLevels: 0,
+                        levelType: "1"
+                    };
+                    levels.push(level1);
+                }
+                // Increment question count for level
+                level1.numberOfQuestions++;
+            }
 
-            if (question.get("discipline") && !(discipline = _.find(levels, function (level) {
-                    return level.title === question.get('discipline');
-                }))) {
-                discipline = {title: question.get('discipline'), levels: [], questions: 1, levelType: "discipline"};
-                levels.push(discipline);
-            } else if (discipline)
-                discipline.questions++;
-            if (question.get("specialty") && !(specialty = _.find(discipline.levels, function (level) {
-                    return level.title === question.get('specialty');
-                }))) {
-                specialty = {title: question.get('specialty'), levels: [], questions: 1, levelType: "specialty"};
-                discipline.levels.push(specialty);
-            } else if (specialty)
-                specialty.questions++;
-            if (question.get("focus") && !(focus = _.find(specialty.levels, function (level) {
-                    return level.title === question.get('focus');
-                }))) {
-                focus = {title: question.get('focus'), levels: [], questions: 1, levelType: "focus"};
-                specialty.levels.push(focus);
-            } else if (focus)
-                focus.questions++;
-            if (question.get("topic") && !(topic = _.find(focus.levels, function (level) {
-                    return level.title === question.get('topic');
-                }))) {
-                topic = {title: question.get('topic'), levels: [], questions: 1, levelType: "topic"};
-                focus.levels.push(topic);
-            } else if (topic)
-                topic.questions++;
-            if (question.get("secondaryTopic") && question.get('topic') && !(secondaryTopic = _.find(topic.levels, function (level) {
-                    return level.title === question.get('secondaryTopic');
-                }))) {
-                secondaryTopic = {title: question.get('topic'), levels: [], questions: 1, levelType: "secondaryTopic"};
-                topic.levels.push(secondaryTopic);
+            // Question has level2, needs level1
+            if (level1 && question.get('level2')) {
+                // Create new level if one does not exist
+                if (!(level2 = _.find(level1.levels, function (level) {
+                        return level.title === question.get('level2');
+                    }))) {
+                    level2 = {
+                        title: question.get('level2'), levels: [], numberOfQuestions: 0, numberOfLevels: 0,
+                        levelType: "2"
+                    };
+                    level1.levels.push(level2);
+                }
+                // Increment question count for level2
+                level2.numberOfQuestions++;
+                // Increment level count for level1
+                level1.numberOfLevels++;
             }
-            // Some secondaryTopics only have discpline. No other levels set.
-            /*
-            if (question.get('secondaryTopic') && !(secondaryTopic = _.find(discipline.levels, function (level) {
-                    return level.title === question.get('secondaryTopic');
-                }))) {
-                secondaryTopic = {
-                    title: question.get('secondaryTopic'), levels: [], questions: 1,
-                    levelType: "secondaryTopic"
-                };
-                discipline.levels.push(secondaryTopic);
+
+            // Question has level3, needs level2
+            if (level2 && question.get('level3')) {
+                // Create new level if one does not exist
+                if (!(level3 = _.find(level2.levels, function (level) {
+                        return level.title === question.get('level3');
+                    }))) {
+                    level3 = {title: question.get('level3'), numberOfQuestions: 0, levelType: "3"};
+                    level2.levels.push(level3);
+                }
+                // Increment question count for level3
+                level3.numberOfQuestions++;
+                // Increment level count for level2
+                level2.numberOfLevels++
             }
-            if (secondaryTopic)
-                secondaryTopic.questions++;*/
+
+
         });
         return response.success({
             levels: levels,
@@ -4488,7 +4484,8 @@ Parse.Cloud.define('generateQuestionsFromBank', function (request, response) {
         difficulty = request.params.difficulty,
         maxQuestions = request.params.maxQuestions,
         queries = [];
-    if(!request.user)
+
+    if (!request.user)
         return response.error("You must be logged in as an admin.");
 
     if (!bank)
@@ -4499,9 +4496,9 @@ Parse.Cloud.define('generateQuestionsFromBank', function (request, response) {
         query.equalTo('isProfessional', true);
         query.equalTo('bank', bank);
         // TODO do this after query to mix up difficulties
-        if (difficulty)
+        if (difficulty && difficulty.toLowerCase() !== "any")
             query.equalTo('difficulty', difficulty.toLowerCase());
-        query.equalTo(level.type, level.value);
+        query.equalTo("level" + level.type, level.value);
         queries.push(query);
     });
 
@@ -4529,7 +4526,44 @@ Parse.Cloud.define('generateQuestionsFromBank', function (request, response) {
         response.error(error);
     });
 });
+Parse.Cloud.define('grantAccessToQuestionBank', function (request, response) {
+    Parse.Cloud.useMasterKey();
+    var passkey = request.params.passkey,
+        user = request.user;
 
+    if (!user || !user.get('privateData'))
+        return response.error("You must be logged in!");
+
+    /*if (!passkey)
+        return response.error("You must provide a passkey!");*/
+
+    var acceptedKeys = ["leeds-medics-2015"],
+        keyIsValid = false;
+
+    _.each(acceptedKeys, function (acceptedKey) {
+        if (acceptedKey === passkey)
+            keyIsValid = true;
+    });
+    /* // Not closing the beta for now
+    if (!keyIsValid)
+        return response.error("Invalid passkey!");*/
+
+    var roleQuery = new Parse.Query(Parse.Role);
+    roleQuery.equalTo('name', 'medical-professional');
+    roleQuery.find().then(function (results) {
+        var medicalRole = results[0];
+        medicalRole.getUsers().add(user);
+        var promises = [user.get('privateData').fetch(), medicalRole.save()];
+        return Parse.Promise.when(promises);
+    }).then(function () {
+        user.get('privateData').set('hasAccessToBetaQuestionGenerator', true);
+        return user.get('privateData').save();
+    }).then(function () {
+        response.success("Granted!");
+    }, function (error) {
+        response.error(error);
+    });
+});
 /**
  * @CloudFunction Add/Remove Relation
  * Parse Data Browser is no good for manually
@@ -4617,7 +4651,8 @@ Parse.Cloud.define('adminDashboardAnalytics', function (request, response) {
     }, function (error) {
         response.error(error);
     });
-});/*
+});
+/*
  * SAVE LOGIC
  */
 /*

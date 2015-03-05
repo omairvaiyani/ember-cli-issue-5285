@@ -13,6 +13,7 @@ export default
         isLatest: DS.attr('boolean'),
         location: DS.attr('string'),
         isProcessed: DS.attr('boolean'),
+        isGenerated: DS.attr('boolean'),
         isSRSAttempt: DS.attr('boolean'),
         isProfessional: DS.attr('boolean'),
         questionBank: DS.attr('string'),

@@ -11,7 +11,7 @@ export default Ember.ObjectController.extend(CurrentUser, {
             this.set('timeStarted', new Date());
             this.send('prerenderReady');
             setTimeout(function () {
-                EventTracker.recordEvent(EventTracker.STARTED_TEST, this.get('model'));
+                EventTracker.recordEvent(EventTracker.STARTED_TEST, this.get('model'), this.get('currentUser'));
             }.bind(this), 1000);
         }
     }.observes('preparingTest'),
@@ -65,7 +65,7 @@ export default Ember.ObjectController.extend(CurrentUser, {
     inPrintView: false,
 
     testUrl: function () {
-        return "https://mycqs.com/test/"+this.get('slug');
+        return "https://mycqs.com/test/" + this.get('slug');
     }.property('slug.length'),
 
     actions: {
@@ -179,7 +179,20 @@ export default Ember.ObjectController.extend(CurrentUser, {
                 if (chosenAnswer === correctAnswer) {
                     isCorrect = true;
                     score++;
+                    if (this.get('currentUser.zzishActivityId:' + EventTracker.STARTED_TEST)) {
+                        Zzish.logAction(this.get('currentUser.zzishActivityId:' + EventTracker.STARTED_TEST),
+                            question.get('stem'), 1);
+                    }
                 }
+                if (this.get('currentUser.zzishActivityId:' + EventTracker.STARTED_TEST)) {
+                    var biScore = 0;
+                    if (isCorrect)
+                        biScore = 1;
+                    Zzish.logAction(this.get('currentUser.zzishActivityId:' + EventTracker.STARTED_TEST),
+                        question.get('stem'), chosenAnswer, biScore);
+                }
+
+
                 var response = this.store.createRecord('response', {
                     chosenAnswer: chosenAnswer,
                     correctAnswer: correctAnswer,
@@ -219,7 +232,7 @@ export default Ember.ObjectController.extend(CurrentUser, {
                 return attempt.save();
             }.bind(this))
                 .then(function () {
-                    EventTracker.recordEvent(EventTracker.COMPLETED_TEST, attempt);
+                    EventTracker.recordEvent(EventTracker.COMPLETED_TEST, attempt, this.get('currentUser'));
                     if (this.get('currentUser')) {
                         if (this.get('currentUser.attempts'))
                             this.get('currentUser.attempts').insertAt(0, attempt);
@@ -231,6 +244,15 @@ export default Ember.ObjectController.extend(CurrentUser, {
                             attempt: attempt,
                             value: score
                         });
+                        if (this.get('currentUser.zzishActivityId:' + EventTracker.STARTED_TEST)) {
+                            var passed = score > 50;
+                            if (passed)
+                                passed = "Passed";
+                            else
+                                passed = "Failed";
+                            Zzish.logAction(this.get('currentUser.zzishActivityId:' + EventTracker.STARTED_TEST),
+                                "Finished test", passed, score);
+                        }
                     }
                 }.bind(this));
 
@@ -244,7 +266,7 @@ export default Ember.ObjectController.extend(CurrentUser, {
 
         readyToPrint: function () {
             var mywindow = window.open('', this.get('title'), 'height=400,width=600');
-            mywindow.document.write('<html><head><title>'+this.get('title')+'</title>');
+            mywindow.document.write('<html><head><title>' + this.get('title') + '</title>');
             /*optional stylesheet*/ //mywindow.document.write('<link rel="stylesheet" href="main.css" type="text/css" />');
             mywindow.document.write('</head><body >');
             mywindow.document.write($('#printView').html());
@@ -254,6 +276,26 @@ export default Ember.ObjectController.extend(CurrentUser, {
             mywindow.close();
 
             return true;
+        },
+
+        saveProfessionalTest: function (callback) {
+            var test = this.store.createRecord('test');
+            test.set('author', this.get('currentUser'));
+            test.set('isProfessional', true);
+            test.set('title', this.get('testTitle'));
+            test.set('group', this.get('selectedGroup'));
+            if (!test.get('group.id.length'))
+                test.set('privacy', 0);
+            else
+                test.set('privacy', 1);
+            test.set('isGenerated', true);
+            test.get('questions').addObjects(this.get('questions'));
+            var promise = test.save();
+            callback(promise);
+            promise.then(function () {
+                this.set('test', test); // So we can tell this attempt has been saved as a test
+                this.get('model').save();
+            }.bind(this));
         }
     }
 

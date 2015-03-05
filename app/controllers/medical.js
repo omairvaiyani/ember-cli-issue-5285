@@ -1,118 +1,63 @@
 import Ember from 'ember';
 import CurrentUser from '../mixins/current-user';
+import EventTracker from '../utils/event-tracker';
 
 export default Ember.Controller.extend(CurrentUser, {
+    needs: ['test'],
+
     init: function () {
-        this.updateTopicList();
+        this.updateLevelsList();
     },
 
-    levelTypes: [
-        "Discipline",
-        "Specialty",
-        "Focus",
-        "Topic",
-        "SecondaryTopic"
-    ],
+    showGenerator: function () {
+        return this.get('currentUser.privateData.hasAccessToBetaQuestionGenerator');
+    }.property('currentUser.privateData.hasAccessToBetaQuestionGenerator'),
 
-    levelTypesCamelised: [
-        "discipline",
-        "specialty",
-        "focus",
-        "topic",
-        "secondaryTopic"
-    ],
+    verifyingUser: function () {
+        console.log(this.get('currentUser.privateData.isFulfilled'));
+        return !this.get('currentUser.privateData.isFulfilled');
+    }.property("currentUser.privateData.isFulfilled"),
 
-    disciplines: new Ember.A(),
+    levelTypes: ["1", "2", "3"],
 
-    specialties: function () {
-        var specialties = new Ember.A();
-        if (!this.get('selectedDiscipline'))
-            return specialties;
+    levels: new Ember.A(),
+
+    level2: function () {
+        var level2 = new Ember.A();
+        if (!this.get('selectedLevel1'))
+            return level2;
         else
-            specialties.addObjects(_.find(this.get('disciplines'), function (discipline) {
-                return discipline.title === this.get('selectedDiscipline');
+            level2.addObjects(_.find(this.get('levels'), function (level) {
+                return level.title === this.get('selectedLevel1');
             }.bind(this)).levels);
-        return _.sortBy(specialties, 'title');
-    }.property('selectedDiscipline'),
+        return _.sortBy(level2, 'title');
+    }.property('selectedLevel1'),
 
-    focusList: function () {
-        var focusList = new Ember.A();
-        if (!this.get('selectedSpecialty'))
-            return focusList;
+    level3: function () {
+        var level3 = new Ember.A();
+        if (!this.get('selectedLevel2'))
+            return level3;
         else
-            return focusList.addObjects(_.find(this.get('specialties'), function (specialty) {
-                return specialty.title === this.get('selectedSpecialty');
+            level3.addObjects(_.find(this.get('level2'), function (level) {
+                return level.title === this.get('selectedLevel2');
             }.bind(this)).levels);
-    }.property('selectedSpecialty'),
+        return _.sortBy(level3, 'title');
+    }.property('selectedLevel2'),
 
-
-    topics: function () {
-        var topics = new Ember.A();
-        if (!this.get('selectedFocus'))
-            return topics;
-        else
-            return topics.addObjects(_.find(this.get('focusList'), function (focus) {
-                return focus.title === this.get('selectedFocus');
-            }.bind(this)).levels);
-    }.property('selectedFocus'),
-
-    secondaryTopics: function () {
-        var secondaryTopics = new Ember.A();
-        if (!this.get('selectedFocus'))
-            return secondaryTopics;
-        else
-            return secondaryTopics.addObjects(_.find(this.get('topics'), function (topic) {
-                return topic.title === this.get('selectedTopic');
-            }.bind(this)).levels);
-    }.property('selectedTopic'),
-
-    updateTopicList: function () {
-        if (this.get('disciplines.length'))
+    updateLevelsList: function () {
+        if (this.get('levels.length'))
             return;
-        /* var params = {};
-         if (this.get('selectedDiscipline'))
-         params.selectedDiscipline = this.get('selectedDiscipline');
-         if (this.get('selectedSpecialty'))
-         params.selectedSpecialty = this.get('selectedSpecialty');
-         if (this.get('selectedFocus'))
-         params.selectedFocus = this.get('selectedFocus');
-         if (this.get('selectedTopic'))
-         params.selectedTopic = this.get('selectedTopic');
-         if (this.get('selectedSecondaryTopic'))
-         params.selectedSecondaryTopic = this.get('selectedSecondaryTopic');*/
 
         this.set('loading', true);
         Parse.Cloud.run('getProfessionalBankTopicList', {}).then(function (result) {
-            this.get('disciplines').clear();
-            this.set('disciplines', result.levels);
-            /*var disciplineList = [],
-             specialtyList = [],
-             focusList = [],
-             topicList = [],
-             secondaryTopicList = [];
-             this.set('specialties', result.specialtyList);
-             this.set('focusList', result.focusList);
-             this.set('topics', result.topicList);
-             this.set('secondaryTopics', result.secondaryTopicList);
-             ;*/
+            this.get('levels').clear();
+            this.get('levels').addObjects(result.levels);
             this.set('loading', false);
         }.bind(this), function (error) {
             this.set('loading', false);
             console.error(error);
         }.bind(this));
     },
-
-    /* throttleUpdateTopicList: function () {
-     Ember.run.debounce(this, this.updateTopicList, 50);
-     }.observes('selectedDiscipline', 'selectedSpecialty', 'selectedFocus',
-     'selectedTopic', 'selectedSecondaryTopic'),*/
-
-    /* totalQuestionsBubbleSize: function () {
-     var size = (this.get('totalQuestions')) + 100;
-     if (size > 200)
-     size = 200;
-     return "height:" + size + "px;width:" + size + "px;top:calc(50% - " + (size / 2) + "px);";
-     }.property('totalQuestions'),*/
 
     maxQuestions: 10,
 
@@ -147,53 +92,46 @@ export default Ember.Controller.extend(CurrentUser, {
     totalQuestions: function () {
         var totalQuestions = 0;
         this.get('addedLevels').forEach(function (level) {
-            totalQuestions += level.questions;
+            totalQuestions += level.numberOfQuestions;
         });
         return totalQuestions;
     }.property('addedLevels.length'),
 
+
     actions: {
-        selectLevelInType: function (levelTypeCamelised, level) {
-            if (levelTypeCamelised === "Back") {
+        selectLevelInType: function (levelType, level) {
+            if (levelType === "Back") {
                 var lowestLevelType;
                 _.each(this.get('levelTypes'), function (levelType) {
-                    if (this.get('selected' + levelType))
+                    if (this.get('selectedLevel' + levelType))
                         lowestLevelType = levelType;
                 }.bind(this));
-                this.send('selectLevelInType', lowestLevelType, this.get('selected' + lowestLevelType));
+                this.send('selectLevelInType', lowestLevelType, this.get('selectedLevel' + lowestLevelType));
                 return;
             }
-            var levelType = levelTypeCamelised.capitalize();
-            if (this.get('selected' + levelType) === level) {
-                this.set('selected' + levelType, null);
+            if (this.get('selectedLevel' + levelType) === level) {
+                this.set('selectedLevel' + levelType, null);
                 switch (levelType) {
-                    case "Discipline":
+                    case "1":
                         _.each(this.get('levelTypes'), function (levelType) {
-                            this.set('selected' + levelType, null);
+                            this.set('selectedLevel' + levelType, null);
                         }.bind(this));
                         break;
-                    case "Specialty":
+                    case "2":
                         _.each(this.get('levelTypes'), function (levelType) {
-                            if (levelType !== "Discipline")
-                                this.set('selected' + levelType, null);
+                            if (levelType !== "1")
+                                this.set('selectedLevel' + levelType, null);
                         }.bind(this));
                         break;
-                    case "Focus":
+                    case "3":
                         _.each(this.get('levelTypes'), function (levelType) {
-                            if (levelType !== "Discipline" && levelType !== "Specialty")
-                                this.set('selected' + levelType, null);
-                        }.bind(this));
-                        break;
-                    case "Topic":
-                        _.each(this.get('levelTypes'), function (levelType) {
-                            if (levelType !== "Discipline" && levelType !== "Specialty" &&
-                                levelType !== "Focus")
-                                this.set('selected' + levelType, null);
+                            if (levelType !== "3" && levelType !== "2")
+                                this.set('selectedLevel' + levelType, null);
                         }.bind(this));
                         break;
                 }
             } else
-                this.set('selected' + levelType, level);
+                this.set('selectedLevel' + levelType, level);
         },
 
         addLevelInType: function (level) {
@@ -204,6 +142,7 @@ export default Ember.Controller.extend(CurrentUser, {
                 this.get('addedLevels').removeObject(level);
                 Ember.set(level, 'isAdded', false);
             }
+            this.set('maxQuestions', this.get('totalQuestions'));
         },
 
         generateTest: function (callback) {
@@ -219,19 +158,62 @@ export default Ember.Controller.extend(CurrentUser, {
                     value: level.title
                 });
             }.bind(this));
+
             var promise = Parse.Cloud.run('generateQuestionsFromBank', {
-                maxQuestions: this.get('maxQuestions'),
                 levels: levels,
-                difficulty: difficulty
-            });
-            callback(promise);
-            promise.then(function (generatedAttempt) {
-                    this.transitionToRoute('test', generatedAttempt.id);
+                maxQuestions: this.get('maxQuestions'),
+                difficulty: this.get('difficulty')
+            }).then(function (generatedAttempt) {
+                    var eventObject = {
+                        numberOfQuestions: generatedAttempt.get('questions').length,
+                        levels: []
+                    };
+                    _.each(this.get('addedLevels'), function (level) {
+                        eventObject.levels.push("level", level.levelType + ":" + level.title);
+                    });
+                    EventTracker.recordEvent(EventTracker.GENERATED_MEDICAL_TEST, eventObject);
+
+                    var attempt;
+                    if (!this.get('generateForGroup'))
+                        this.transitionToRoute('test', generatedAttempt.id);
+                    else
+                        return this.store.findById('attempt', generatedAttempt.id)
+                            .then(function (result) {
+                                attempt = result;
+                                var test = this.store.createRecord('test');
+                                test.set('group', this.get('generateForGroup'));
+                                test.set('title', 'Test for ' + test.get('group.name'));
+                                test.set('author', this.get('currentUser'));
+                                test.set('isProfessional', true);
+                                test.set('isGenerated', true);
+                                test.get('questions').addObjects(attempt.get('questions'));
+                                return test.save();
+                            }.bind(this)).then(function (test) {
+                                this.transitionToRoute('test', test.get('slug'));
+                                this.set('generateForGroup', null);
+                            }.bind(this));
+
                 }.bind(this),
                 function (error) {
                     console.dir(error);
                     this.send('addNotification', 'warning', "Error!", error.message);
                 }.bind(this));
+            callback(promise);
+        },
+
+        verifyBetaPasskey: function (callback) {
+            var promise = Parse.Cloud.run('grantAccessToQuestionBank', {passkey: this.get('betaPasskey')});
+            callback(promise);
+            promise.then(function () {
+                this.send('addNotification', 'welcome', "Access granted!", "You can now generate medical tests.");
+                this.get('currentUser.privateData.content').reload();
+            }.bind(this), function (error) {
+                this.send('addNotification', 'alert', "Error!", error.message);
+            }.bind(this));
+        },
+
+        verifyBetaPasskeyEnter: function () {
+            Ember.$("#verify-beta-passkey").click();
         }
     }
 });

@@ -1979,14 +1979,15 @@ hr.user-message-item-separator {
 }
 
 /* TEMPLATE - ABOUT */
-.about-profile img {
+.about-profile .img-responsive {
     width:100%;
+    height: 200px;
+    background-size: cover !important;
 }
 .member-info {
     background-color:#4f6640;
     color:white;
-    padding:22px;
-    padding-bottom: 30px;
+    padding: 10px 0px 10px;
 }
 .member-info a {
     color:white;
@@ -1996,8 +1997,7 @@ hr.user-message-item-separator {
 }
 .member-social {
     background: #EFEFEF;
-    padding: 22px;
-    padding-bottom: 30px;
+    padding: 10px 0px 0px;
 }
 .member-social ul {
     padding:0px;

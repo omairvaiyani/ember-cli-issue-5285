@@ -52,7 +52,7 @@
                 {{!-- List of Tests --}}
                 <article class="col-md-12 ">
                     <section class="row">
-                        <article class="col-md-4 margin-top-16">
+                        <article class="col-md-6 margin-top-16">
                             {{#if canAddTestsToGroup}}
                                 {{#tool-tipster title="Create a Group Test" position="top" class="inline-block"}}
                                     <a href="javascript:void(0)" class="margin-right-16"
@@ -68,9 +68,18 @@
                                         Add
                                     </a>
                                 {{/tool-tipster}}
+                                {{#if isProfessionalBankAvailable}}
+                                    {{#tool-tipster title="Generate a test for this group"
+                                    position="top" class="inline-block"}}
+                                        <span class="linkify margin-right-16" {{action 'sendUserToGenerateTest'}}>
+                                             <i class="fa fa-th-large"></i>
+                                            Generate Test
+                                        </span>
+                                    {{/tool-tipster}}
+                                {{/if}}
                             {{/if}}
                         </article>
-                        <article class="col-md-8 margin-top-16">
+                        <article class="col-md-6 margin-top-16">
                             <div class="pull-right">
                                 {{view 'select' value=showAllTests class="margin-right-16"
                                 content=testsToShow optionValuePath='content.value' optionLabelPath='content.label'}}
@@ -159,7 +168,6 @@
                     {{/if}}
                 {{/if}}
             </div>
-            {{partial 'application/social-sharing'}}
         </article>
     </section>
 </div>

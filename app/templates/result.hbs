@@ -4,13 +4,13 @@
         <hr>
         <div class="row margin-bottom-16">
             <div class="col-md-12">
-                <h4>You scored <span style="font-size:x-large;">{{math-round score}}% </span>
-                    in {{#link-to 'testInfo' test.slug tagName='a'}}{{test.title}}{{/link-to}}.
+                <h4>You scored <span style="font-size:x-large;">{{math-round score}}%</span>{{#if test}}
+                    &nbsp;in {{#link-to 'testInfo' test.slug tagName='a'}}{{test.title}}{{/link-to}}{{/if}}.
                     <small class="pull-right text-center">Test taken {{from-now time=createdAt}}</small>
                 </h4>
             </div>
         </div>
-        {{#unless isSRSAttempt}}
+        {{#unless isGenerated}}
             <div class="row margin-bottom-16">
                 <div class="col-md-6">
                     <p>Community average</p>
@@ -61,17 +61,24 @@
         </div>
     </div>
     <div clas="row">
-        <article class="col-xs-9 margin-top-16">
+        <article class="col-xs-3 margin-top-16">
+            {{#if test.group.name.length}}
+                {{#link-to 'group' test.group.slug}}<i class="fa fa-arrow-circle-o-left margin-right-8"></i>
+                    Go to {{test.group.name}}{{/link-to}}
+            {{/if}}
+            {{#if isProfessional}}
+                {{#link-to 'medical'}}<i class="fa fa-arrow-circle-o-left margin-right-8"></i>
+                    Generate another test{{/link-to}}
+            {{/if}}
+        </article>
+        <article class="col-xs-6 margin-top-16">
             <div class="pull-right">
-                <div class="inline-top margin-right-8" style="color:crimson;">
-                    NEW FEATURE!
-                </div>
                 <div class="checkbox inline-top margin-right-8">
                     {{input type='checkbox' checked=showResponseStatistics id='show-response-statistics'}}
                     <label for="show-response-statistics"></label>
                 </div>
                 <div class="inline-block">
-                    <label for="show-response-statistics">Show Statistics</label>
+                    <label for="show-response-statistics">Show how others answered this test</label>
                 </div>
             </div>
         </article>

@@ -1,31 +1,21 @@
-import
-Ember
-from
-'ember';
+import Ember from 'ember';
+import CurrentUser from '../../../mixins/current-user';
+import EachItem from '../../../mixins/each-item';
 
-import
-CurrentUser
-from
-'../../../mixins/current-user';
-
-import
-EachItem
-from
-'../../../mixins/each-item';
-
-export default
-Ember.ObjectController.extend(CurrentUser, EachItem, {
+export default Ember.ObjectController.extend(CurrentUser, EachItem, {
     latestAttempt: function () {
         if (!this.get('isCurrentUsersTest'))
             return;
 
         var latestAttempt;
-        this.get('currentUser.latestAttempts').forEach(function (attempt) {
+        // TODO come up with alternative.. this is doing like 100 api calls
+        // every time the website loads
+        /*this.get('currentUser.latestAttempts').forEach(function (attempt) {
             if (attempt.get('_data.test.id') === this.get('model.id')) {
                 latestAttempt = attempt;
                 return;
             }
-        }.bind(this));
+        }.bind(this));*/
 
         return latestAttempt;
     }.property('isCurrentUsersTest'),

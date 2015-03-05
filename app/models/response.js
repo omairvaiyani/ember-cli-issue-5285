@@ -1,15 +1,7 @@
-import
-DS
-from
-'ember-data';
+import DS from 'ember-data';
+import ParseMixin from '../mixins/ember-parse-mixin';
 
-import
-ParseMixin
-from
-'../mixins/ember-parse-mixin';
-
-export default
-DS.Model.extend(ParseMixin, {
+export default DS.Model.extend(ParseMixin, {
     //attempt: DS.belongsTo('attempt', {async: true}),
     question: DS.belongsTo('question', {async: true}),
     user: DS.belongsTo('parse-user', {async: true}),
@@ -17,7 +9,7 @@ DS.Model.extend(ParseMixin, {
     chosenAnswer: DS.attr('string'),
     correctAnswer: DS.attr('string'),
     isCorrect: DS.attr('boolean'),
-    parseClassName: function() {
+    parseClassName: function () {
         return "Response";
     }
 });

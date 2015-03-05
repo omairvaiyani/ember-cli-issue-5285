@@ -22,7 +22,7 @@ loadInitializers(App, config.modulePrefix);
 /*
  * zzish set up
  */
-//Zzish.init("427f628d-a6d8-453a-b9a7-d54e3d8be0d3");
+Zzish.init("lOBKJskSfI1S6DPzEOB5FzNMk3ca");
 
 /*
  * addThis

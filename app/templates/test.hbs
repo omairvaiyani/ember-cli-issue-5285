@@ -2,33 +2,39 @@
     <section class="row">
         <article class="col-md-12">
             <ol class="breadcrumb">
-                {{#link-to 'browse' tagName='li'}}{{#link-to 'browse'}}Browse{{/link-to}}{{/link-to}}
-                {{#if category.parentCategorySlug}}
-                    {{#link-to 'category' category.parentCategorySlug tagName='li'}}
-                        {{#link-to 'category' category.parentCategorySlug}}
-                            {{category.parentCategoryName}}
+                {{#unless isGenerated}}
+                    {{#link-to 'browse' tagName='li'}}{{#link-to 'browse'}}Browse{{/link-to}}{{/link-to}}
+                    {{#if category.parentCategorySlug}}
+                        {{#link-to 'category' category.parentCategorySlug tagName='li'}}
+                            {{#link-to 'category' category.parentCategorySlug}}
+                                {{category.parentCategoryName}}
+                            {{/link-to}}
+                        {{/link-to}}
+                        {{#link-to 'subcategory' category.parentCategorySlug category.slug tagName='li'}}
+                            {{#link-to 'subcategory' category.parentCategorySlug category.slug}}
+                                {{category.name}}
+                            {{/link-to}}
+                        {{/link-to}}
+                    {{else}}
+                        {{#link-to 'category' category.slug tagName='li'}}
+                            {{#link-to 'category' category.slug}}
+                                {{category.name}}
+                            {{/link-to}}
+                        {{/link-to}}
+                    {{/if}}
+                    {{#link-to 'testInfo' slug tagName='li'}}
+                        {{#link-to 'testInfo' slug}}
+                            {{title}}
                         {{/link-to}}
                     {{/link-to}}
-                    {{#link-to 'subcategory' category.parentCategorySlug category.slug tagName='li'}}
-                        {{#link-to 'subcategory' category.parentCategorySlug category.slug}}
-                            {{category.name}}
-                        {{/link-to}}
+                    {{#link-to 'test' slug tagName='li'}}
+                        Take test
                     {{/link-to}}
-                {{else}}
-                    {{#link-to 'category' category.slug tagName='li'}}
-                        {{#link-to 'category' category.slug}}
-                            {{category.name}}
-                        {{/link-to}}
-                    {{/link-to}}
+                {{/unless}}
+                {{#if isProfessional}}
+                    {{#link-to 'medical'}}<i class="fa fa-arrow-circle-o-left margin-right-8"></i>
+                        Return to Medical Test Generator{{/link-to}}
                 {{/if}}
-                {{#link-to 'testInfo' slug tagName='li'}}
-                    {{#link-to 'testInfo' slug}}
-                        {{title}}
-                    {{/link-to}}
-                {{/link-to}}
-                {{#link-to 'test' slug tagName='li'}}
-                    Take test
-                {{/link-to}}
             </ol>
         </article>
     </section>
@@ -137,51 +143,78 @@
                     {{/unless}}
                 </article>
             </section>
-            <section class="row">
-                <article class="col-md-12 margin-top-16">
-                    {{#unless isGeneratedAttempt}}
-                        <section class="row">
-                            <article class="col-sm-7">
-                                {{facebook-facepile}}
-                            </article>
-                            <article class="col-sm-5">
-                                <div class="pull-right">
-                                    {{twitter-share}}
-                                    {{facebook-like}}
-                                </div>
-                            </article>
-                        </section>
-                        <section class="row">
-                            <article class="col-sm-12 margin-top-16">
-                                {{!-- <div class="fb-comments" {{bind-attr data-href=testUrl}}
-                                     data-numposts="5" data-colorscheme="light" data-width="100%"
-                                     data-order-by="reverse_time"></div> --}}
-                                        <div class="addthis_recommended_horizontal"></div>
-                            </article>
-                        </section>
-                    {{/unless}}
-                </article>
-            </section>
         </article>
 
-        {{#unless isGeneratedAttempt}}
-            <article class="col-md-3 col-fix-right">
-                <section class="row">
-                    <article class="col-md-12 col-sm-6 col-xs-12 margin-bottom-16">
-                        {{partial 'user/author-info'}}
-                    </article>
-                    <article class="col-md-12 col-sm-6 col-xs-12">
-                        <div class="card">
-                            <p class="text-center"><strong>Take this test from your iPhone or iPad.</strong></p>
-                            <a href="https://itunes.apple.com/gb/app/mycqs-multiple-choice-questions/id921380709?mt=8"
-                               target="_blank">
-                                <img src="/img/appstore.png"
-                                     style="width:100%;"/>
-                            </a>
-                        </div>
-                    </article>
-                </section>
-            </article>
-        {{/unless}}
+        <article class="col-md-3 col-fix-right">
+            <section class="row">
+                {{#unless isGeneratedAttempt}}
+                    {{#if isProfessional}}
+                        <article class="col-md-12 col-sm-6 col-xs-12 margin-bottom-16">
+                            <div class="card">
+                                <h4>Generated Test</h4>
+                                <p>{{#link-to 'user' author}}
+                                    {{render 'profile-image' author}}{{/link-to}}
+                                    {{#link-to 'user' author}}{{author.name}}{{/link-to}}</p>
+                                {{#if group.name}}
+                                    <h5>Group:</h5>
+                                    {{#link-to 'group' group.slug}}
+                                        {{group.name}}
+                                    {{/link-to}}
+                                {{/if}}
+                            </div>
+                        </article>
+                    {{else}}
+                        <article class="col-md-12 col-sm-6 col-xs-12 margin-bottom-16">
+                            {{partial 'user/author-info'}}
+                        </article>
+                        <article class="col-md-12 col-sm-6 col-xs-12">
+                            <div class="card">
+                                <p class="text-center"><strong>Take this test from your iPhone or iPad.</strong></p>
+                                <a href="https://itunes.apple.com/gb/app/mycqs-multiple-choice-questions/id921380709?mt=8"
+                                   target="_blank">
+                                    <img src="/img/appstore.png"
+                                         style="width:100%;"/>
+                                </a>
+                            </div>
+                        </article>
+                    {{/if}}
+                {{else}}
+                    {{#if isProfessional}}
+                        {{#unless test.id.length}}
+                            <article class="col-md-12 col-sm-6 col-xs-12 margin-bottom-16">
+                                <div class="card">
+                                    <h4>Save this Test</h4>
+                                    {{input type='text' placeholder='Give this test a title' value=testTitle
+                                    class='form-control margin-bottom-8'}}
+                                    {{view 'select' content=currentUser.groups optionLabelPath='content.name'
+                                    prompt='Add Test to Group' class='form-control margin-bottom-8'
+                                    value=selectedGroup}}
+                                    {{async-button action='saveProfessionalTest' default='Save' pending='Saving...'
+                                    class='btn btn-success' fulfilled='Test saved!'}}
+                                </div>
+                            </article>
+                        {{else}}
+                            <article class="col-md-12 col-sm-6 col-xs-12 margin-bottom-16">
+                                <div class="card">
+                                    <h4>Generated Test</h4>
+                                    {{#link-to 'testInfo' test.slug}} {{test.title}} {{/link-to}}
+                                    {{#if test.privacy}}<br><small> Use this link to share the test</small>{{/if}}
+                                    <hr>
+                                    <p>{{#link-to 'user' test.author}}
+                                        {{render 'profile-image' test.author}}{{/link-to}}
+                                        {{#link-to 'user' test.author}}{{test.author.name}}{{/link-to}}</p>
+                                    {{#if test.group.name}}
+                                        <h5>Group:</h5>
+                                        {{#link-to 'group' test.group.slug}}
+                                            {{test.group.name}}
+                                        {{/link-to}}
+                                    {{/if}}
+                                </div>
+                            </article>
+                        {{/unless}}
+                    {{/if}}
+                {{/unless}}
+            </section>
+        </article>
     </section>
 </div>

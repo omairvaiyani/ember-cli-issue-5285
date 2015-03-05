@@ -34,6 +34,10 @@ export default
     STARTED_TEST: "Started Test",
     COMPLETED_TEST: "Completed Test",
 
+    GENERATED_MEDICAL_TEST: "Generated Medical Test",
+
+    JOINED_GROUP: "Joined Group",
+
 
     /**
      * Track Flow
@@ -72,23 +76,16 @@ export default
         /*
          * Zzish
          */
-        /* Zzish.getUser(user.id, user.get('name'));
-         var activityId = Zzish.startActivity(user.id,"Logged In","p6t",function(err,message) {
-         if (err) {
-         console.log("Error" + message);
-         }
-         else {
-         console.log("Activity response",message);
-         }
-         });*/
+        Zzish.getUser(currentUser.id, currentUser.get('name'));
     },
 
     /**
      * Analytics action for events
      * @param event {String} e.g. Test created
      * @param object {Object} (optional) e.g. Test
+     * @param currentUser (optional)
      */
-    recordEvent: function (event, object) {
+    recordEvent: function (event, object, currentUser) {
         var eventProperties = {source: "Web"};
         if (object) {
             switch (event) {
@@ -109,6 +106,14 @@ export default
                             category: object.get('category.name'),
                             author: object.get('author.name')
                         };
+                        if(currentUser.get('zzishClasses.length')) {
+                            var activityId = Zzish.startActivity(currentUser.id, "Taking a test",
+                                currentUser.get('zzishClasses')[0], function (response) {
+                                    console.dir(response);
+                                });
+                            // For local use to stop activity
+                            currentUser.set('zzishActivityId:'+this.STARTED_TEST, activityId);
+                        }
                     }
                     break;
                 case this.COMPLETED_TEST:
@@ -119,6 +124,11 @@ export default
                         author: object.get('testAuthorName'),
                         score: object.get('score')
                     };
+                    if(currentUser.get('zzishClasses.length')) {
+                        Zzish.stopActivity(currentUser.get('zzishActivityId:'+this.STARTED_TEST), {
+                            score: object.get('score')
+                        });
+                    }
                     break;
                 case this.VIEWED_RESULTS_PAGE:
                     // object is Attempt
@@ -148,6 +158,10 @@ export default
                         author: object.get('test.author.name'),
                         score: object.get('score')
                     };
+                    break;
+                case this.GENERATED_MEDICAL_TEST:
+                    // object is basic javascript event params
+                    eventProperties = object;
                     break;
             }
         }

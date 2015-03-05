@@ -588,7 +588,8 @@ EmberParseAdapter.ParseUser = DS.Model.extend({
      * Education
      */
     educationCohort: DS.belongsTo('education-cohort', {async: true}),
-    educationInfoConfirmed: DS.attr('boolean')
+    educationInfoConfirmed: DS.attr('boolean'),
+    zzishClasses: DS.attr()
 });
 
 EmberParseAdapter.ParseUser.reopenClass({

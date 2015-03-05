@@ -21,5 +21,11 @@ export default DS.Model.extend(ParseMixin, {
     premiumSignupSource: DS.attr('string'),
     premiumLastPurchase: DS.attr('string'),
     premiumCancelled: DS.attr('boolean'),
-    premiumMonthTrialRedeemed: DS.attr('boolean')
+    premiumMonthTrialRedeemed: DS.attr('boolean'),
+
+
+    /*
+     * Temporary
+     */
+    hasAccessToBetaQuestionGenerator: DS.attr('boolean')
 });

@@ -1,21 +1,11 @@
-import
-DS
-from
-'ember-data';
-
-import
-ParseHelper
-from
-'../utils/parse-helper';
-
+import DS from 'ember-data';
+import ParseHelper from '../utils/parse-helper';
 import EmberParseAdapter from '../adapters/parse';
 
-export default
-{
+export default {
     name: 'parse-user-reopen',
     after: 'parse-adapter',
-    initialize :
-    function () {
+    initialize: function () {
         EmberParseAdapter.ParseUser.reopenClass({
             /*
              * If sessionToken is found on localStorage,
@@ -29,7 +19,7 @@ export default
                 var adapter = store.adapterFor(model);
                 adapter.headers['X-Parse-Session-Token'] = sessionToken;
                 var serializer = store.serializerFor(model);
-                return adapter.ajax(adapter.buildURL("users/me"), "GET", {data: {} }).then(
+                return adapter.ajax(adapter.buildURL("users/me"), "GET", {data: {}}).then(
                     function (response) {
                         serializer.normalize(model, response);
                         var record = store.push(model, response);
@@ -49,9 +39,9 @@ export default
                     }
                 };
                 return store.findQuery('parse-user', {where: JSON.stringify(where)})
-                    .then(function(following) {
-                       object.set('following', following);
-                       return following;
+                    .then(function (following) {
+                        object.set('following', following);
+                        return following;
                     });
             },
 
@@ -63,7 +53,7 @@ export default
                     }
                 };
                 return store.findQuery('parse-user', {where: JSON.stringify(where)})
-                    .then(function(followers) {
+                    .then(function (followers) {
                         object.set('followers', followers);
                         return followers;
                     });
@@ -74,8 +64,8 @@ export default
                     "to": ParseHelper.generatePointer(object)
                 };
                 return store.findQuery('message', {where: JSON.stringify(where), order: '-createdAt', limit: 10})
-                    .then(function(messages) {
-                       object.set('messages', messages);
+                    .then(function (messages) {
+                        object.set('messages', messages);
                     });
             }
 

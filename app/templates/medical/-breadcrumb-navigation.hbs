@@ -1,5 +1,5 @@
 <ol class="breadcrumb margin-right-16 margin-bottom-8">
-    {{#unless selectedDiscipline}}
+    {{#unless selectedLevel1}}
         <li class="active">All Categories</li>
     {{else}}
         <li>
@@ -7,59 +7,35 @@
                 <i class="fa fa-arrow-circle-o-left margin-right-8"></i>Back</span>
         </li>
         <li>
-            <span class="linkify" {{action 'selectLevelInType' 'Discipline' selectedDiscipline}}>All Categories</span>
+            <span class="linkify" {{action 'selectLevelInType' '1' selectedLevel1}}>All Categories</span>
         </li>
     {{/unless}}
 
-    {{#if selectedDiscipline}}
-        {{#unless selectedSpecialty}}
-            <li class="active">{{selectedDiscipline}}</li>
+    {{#if selectedLevel1}}
+        {{#unless selectedLevel2}}
+            <li class="active">{{selectedLevel1}}</li>
         {{else}}
             <li>
                 <span class="linkify"
-                    {{action 'selectLevelInType' 'Specialty' selectedSpecialty}}
-                        >{{selectedDiscipline}}</span>
+                    {{action 'selectLevelInType' '2' selectedLevel2}}
+                        >{{selectedLevel1}}</span>
             </li>
         {{/unless}}
     {{/if}}
 
-    {{#if selectedSpecialty}}
-        {{#unless selectedFocus}}
-            <li class="active">{{selectedSpecialty}}</li>
+    {{#if selectedLevel2}}
+        {{#unless selectedLevel3}}
+            <li class="active">{{selectedLevel2}}</li>
         {{else}}
             <li>
                 <span class="linkify"
-                    {{action 'selectLevelInType' 'Focus' selectedFocus}}>{{selectedSpecialty}}</span>
-            </li>
-        {{/unless}}
-    {{/if}}
-
-    {{#if selectedFocus}}
-        {{#unless selectedTopic}}
-            <li class="active">{{selectedFocus}}</li>
-        {{else}}
-            <li>
-                <span class="linkify"
-                    {{action 'selectLevelInType' 'Topic' selectedTopic}}
-                        >{{selectedFocus}}</span>
-            </li>
-        {{/unless}}
-    {{/if}}
-
-    {{#if selectedTopic}}
-        {{#unless selectedSecondaryTopic}}
-            <li class="active">{{selectedTopic}}</li>
-        {{else}}
-            <li>
-                <span class="linkify"
-                    {{action 'selectLevelInType' 'SecondaryTopic' selectedSecondaryTopic}}
-                        >{{selectedTopic}}</span>
+                    {{action 'selectLevelInType' '3' selectedLevel3}}>{{selectedLevel2}}</span>
             </li>
         {{/unless}}
     {{/if}}
 
 
-    {{#if selectedSecondaryTopic}}
-        <li class="active">{{selectedTopic}}</li>
+    {{#if selectedLevel3}}
+        <li class="active">{{selectedLevel3}}</li>
     {{/if}}
 </ol>
