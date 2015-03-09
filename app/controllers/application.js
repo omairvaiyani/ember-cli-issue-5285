@@ -175,53 +175,50 @@ export default Ember.Controller.extend({
             this.send('decrementLoadingItems');
             return;
         }
-        this.send('incrementLoadingItems');
-        var currentUser = this.get('currentUser');
-        EmberParseAdapter.ParseUser.getFollowing(this.store, currentUser).then(function () {
-            return EmberParseAdapter.ParseUser.getFollowers(this.store, currentUser);
-        }.bind(this))
-            .then(function () {
-                // TODO check if messages are resulting in further api calls for related objects
-                // If so, don't do this unless Parse.Query.count results in new messages
-                // Just load messages if user presses on messages.
-                return EmberParseAdapter.ParseUser.getMessages(this.store, currentUser);
-            }.bind(this))
-            .then(function () {
-                return this.get('currentUser').getGroups(this.store);
-            }.bind(this))
-            .then(function () {
-                this.send('decrementLoadingItems');
-            }.bind(this));
-        // TODO do we really need user's attempts?
-        // Fetching latest attempts later anyways
-        var where = {
-            "user": ParseHelper.generatePointer(currentUser),
-            "isSRSAttempt": {
-                "$ne": true
+        Ember.$.ajax({
+            url: "https://api.parse.com/1/functions/initialiseWebsiteForUser",
+            method: "POST",
+            headers: {
+                "X-Parse-Application-Id": "DjQgBjzLml5feb1a34s25g7op7Zqgwqk8eWbOotT",
+                "X-Parse-REST-API-Key": "xN4I6AYSdW2P8iufiEOEP1EcbiZtdqyjyFBsfOrh",
+                "X-Parse-Session-Token": this.get('currentUser.sessionToken')
+
             }
-        };
-        this.store.findQuery('attempt', {
-            where: JSON.stringify(where),
-            order: '-createdAt',
-            include: 'test.category,user',
-            limit: 15
-        }).then(function (attempts) {
-            currentUser.set('attempts', attempts);
-            this.send('decrementLoadingItems');
-            /*
-             * Is mobile user?
-             */
-            // TODO do we really need this every time?
-            // We should set this on their _User row
-            return Parse.Cloud.run('isMobileUser', {userId: currentUser.get('id')});
-        }.bind(this))
-            .then(function (response) {
-                currentUser.set('isMobileUser', response);
-                // TODO must be better way to get latestAttempts,
-                // It's doing too many api calls, most returning 404s
-                //currentUser.get('latestAttempts');
-            });
-        EventTracker.profileUser(currentUser);
+        }).then(function (response) {
+            console.dir(response);
+            // Categories
+            ParseHelper.extractRawPayload(this.store, 'category', response, 'categories');
+            // Tests
+            var tests = ParseHelper.extractRawPayload(this.store, 'test', response, 'tests');
+            if(this.get('currentUser.tests')) {
+                this.get('currentUser.tests').clear();
+                this.get('currentUser.tests').addObjects(tests);
+            } else
+                this.set('currentUser.tests', tests);
+
+            var followers = ParseHelper.extractRawPayload(this.store, 'parse-user',
+                response, 'followers');
+            this.get('currentUser').set('followers', followers);
+
+            var following = ParseHelper.extractRawPayload(this.store, 'parse-user',
+                response, 'following');
+            this.get('currentUser').set('following', following);
+
+            var messages = ParseHelper.extractRawPayload(this.store, 'message',
+                response, 'messages');
+            this.get('currentUser').set('messages', messages);
+
+            var groups = ParseHelper.extractRawPayload(this.store, 'group',
+                response, 'groups');
+            this.get('currentUser').set('groups', groups);
+
+            var attempts = ParseHelper.extractRawPayload(this.store, 'attempt',
+                response, 'attempts');
+            this.get('currentUser').set('attempts', attempts);
+
+            this.set('currentUser.isMobileUser', response.result.isMobileUser);
+        }.bind(this));
+        EventTracker.profileUser(this.get('currentUser'));
     }.observes('currentUser'),
 
     currentUserMessagesDidChange: function () {

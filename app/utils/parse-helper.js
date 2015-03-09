@@ -78,6 +78,17 @@ export default {
             return url._url.replace("http://", "https://s3.amazonaws.com/");
         else
             return "";
+    },
+
+    extractRawPayload: function (store, type, rawPayload, key) {
+        var serializer = store.serializerFor(type),
+            payload = rawPayload.result[key];
+        _.each(payload, function (object) {
+            object["id"] = object.objectId;
+        });
+        var serializedObjects = serializer.extractArray(store,
+            store.modelFor(type), {results: payload});
+        return store.pushMany(store.modelFor(type), serializedObjects);
     }
 
 }

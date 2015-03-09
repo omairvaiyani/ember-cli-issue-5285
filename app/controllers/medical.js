@@ -10,11 +10,16 @@ export default Ember.Controller.extend(CurrentUser, {
     },
 
     showGenerator: function () {
-        return this.get('currentUser.privateData.hasAccessToBetaQuestionGenerator');
+        return true;
+        //return this.get('currentUser.privateData.hasAccessToBetaQuestionGenerator');
     }.property('currentUser.privateData.hasAccessToBetaQuestionGenerator'),
 
+    // TODO not using this anymore
     verifyingUser: function () {
-        console.log(this.get('currentUser.privateData.isFulfilled'));
+        if (this.get('currentUser') && this.get('currentUser.privateData.isFulfilled') &&
+            !this.get('currentUser.privateData.hasAccessToBetaQuestionGenerator')) {
+            this.send('verifyBetaPasskey')
+        }
         return !this.get('currentUser.privateData.isFulfilled');
     }.property("currentUser.privateData.isFulfilled"),
 

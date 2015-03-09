@@ -32,12 +32,10 @@ export default Ember.Controller.extend(CurrentUser, {
         numberOfAttempts: '...'
     },
 
-    // TODO check if this is running ONLY when needed
     getStats: function () {
         var currentPath = this.get('controllers.application.currentPath');
         if (currentPath !== 'index' || this.get('currentUser'))
             return;
-
         this.store.find('count').then(function (results) {
             results.forEach(function (count) {
                 switch (count.get('type')) {
@@ -59,20 +57,20 @@ export default Ember.Controller.extend(CurrentUser, {
 
     }.observes('currentUser', 'controllers.application.currentPath'),
 
-    // TODO is this code deprecated
-    autocompleteTests: [],
-    getAutocompleteTests: function () {
-        var where = {
-            tags: {
-                "$all": ParseHelper.generateSearchTags(this.get('searchTermForTests'))
-            }
-        };
-        this.store.findQuery('test', {where: JSON.stringify(where)})
-            .then(function (tests) {
-                this.get('autocompleteTests').clear();
-                this.get('autocompleteTests').addObjects(tests);
-            }.bind(this));
-    }.observes('searchTermForTests.length'),
+    // @Deprecated
+    /* autocompleteTests: [],
+     getAutocompleteTests: function () {
+     var where = {
+     tags: {
+     "$all": ParseHelper.generateSearchTags(this.get('searchTermForTests'))
+     }
+     };
+     this.store.findQuery('test', {where: JSON.stringify(where)})
+     .then(function (tests) {
+     this.get('autocompleteTests').clear();
+     this.get('autocompleteTests').addObjects(tests);
+     }.bind(this));
+     }.observes('searchTermForTests.length'),*/
 
     /*
      * HOME MODE
@@ -130,33 +128,31 @@ export default Ember.Controller.extend(CurrentUser, {
 
 
     readyToGetTests: false,
-    // TODO should this be in ApplicationController.initializeCurrentUser
-    // If so, might be optimisable, merge queries or something
-    getCurrentUsersTests: function () {
-        if (!this.get('currentUser'))
-            return;
+    // @Deprecated
+    /*getCurrentUsersTests: function () {
+     if (!this.get('currentUser'))
+     return;
 
-        if (!this.get('currentUser.tests'))
-            this.set('currentUser.tests', Em.A());
+     if (!this.get('currentUser.tests'))
+     this.set('currentUser.tests', Em.A());
 
-        var where = {
-            author: ParseHelper.generatePointer(this.get('currentUser')),
-            isObjectDeleted: {
-                "$ne": true // undefined !== false, hence using not equal to True.
-            },
-            isSpacedRepetition: {
-                "$ne": true
-            }
-        };
-        // TODO will removing include speed up query, seeing as RESTAdapater doesn't use it
-        this.store.findQuery('test', {where: JSON.stringify(where), order: 'title', include: 'category,author'})
-            .then(function (tests) {
-                this.get('currentUser.tests').clear();
-                this.get('currentUser.tests').addObjects(tests);
-            }.bind(this));
-    }.observes('initialized', 'currentUser.id'),
+     var where = {
+     author: ParseHelper.generatePointer(this.get('currentUser')),
+     isObjectDeleted: {
+     "$ne": true // undefined !== false, hence using not equal to True.
+     },
+     isSpacedRepetition: {
+     "$ne": true
+     }
+     };
+     this.store.findQuery('test', {where: JSON.stringify(where), order: 'title', include: 'category,author'})
+     .then(function (tests) {
+     this.get('currentUser.tests').clear();
+     this.get('currentUser.tests').addObjects(tests);
+     }.bind(this));
+     }.observes('initialized', 'currentUser.id'),*/
 
-    followingActions: [],
+    followingActions: new Ember.A(),
     // TODO do we need this all the time or better to load
     // when user visits home page
     getFollowingActions: function () {
@@ -172,11 +168,9 @@ export default Ember.Controller.extend(CurrentUser, {
             },
             type: {"$nin": ["questionAnswered", "attemptStarted"]}
         };
-        // TODO will removing include speed up query
         this.store.findQuery('action', {
             where: JSON.stringify(query),
             order: "-createdAt",
-            include: "user,test.category.parent",
             limit: 15
         }).then(function (actions) {
             actions.forEach(function (action) {
@@ -192,25 +186,25 @@ export default Ember.Controller.extend(CurrentUser, {
                         break;
                 }
             }.bind(this));
+            console.log("found "+actions.get('length')+ " actions");
             this.get('followingActions').addObjects(actions);
         }.bind(this));
     }.observes('initialized', 'currentUser.following.length'),
 
-    // TODO are we not doing this in ApplicationController.initializeCurrentUser
-    // If so, are queries duplicating?
-    getGroups: function () {
-        if (this.get('currentUser.groups.length'))
-            return;
-        return this.get('currentUser').getGroups(this.store);
-        var where = {
-            creator: ParseHelper.generatePointer(this.get('currentUser', "_User"))
-        };
-        this.store.findQuery("group", {where: JSON.stringify(where)})
-            .then(function (groups) {
-                this.get('currentUser.groups').clear();
-                this.get('currentUser.groups').addObjects(groups);
-            }.bind(this));
-    }.observes('homeIsGroups'),
+    // @Deprecated
+    /*getGroups: function () {
+     if (this.get('currentUser.groups.length'))
+     return;
+     return this.get('currentUser').getGroups(this.store);
+     var where = {
+     creator: ParseHelper.generatePointer(this.get('currentUser', "_User"))
+     };
+     this.store.findQuery("group", {where: JSON.stringify(where)})
+     .then(function (groups) {
+     this.get('currentUser.groups').clear();
+     this.get('currentUser.groups').addObjects(groups);
+     }.bind(this));
+     }.observes('homeIsGroups'),*/
 
     /**
      * @Observes Set the Generated SRS test

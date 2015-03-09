@@ -2653,7 +2653,9 @@ Parse.Cloud.define('isMobileUser', function (request, response) {
     if (request.user)
         query.equalTo('user', request.user);
     else if (request.params.userId) {
-        query.equalTo('user', request.params.id);
+        var user = new Parse.User();
+        user.id = request.params.userId;
+        query.equalTo('user', user);
     } else {
         return response.error("User or UserId not set.");
     }
@@ -2663,6 +2665,8 @@ Parse.Cloud.define('isMobileUser', function (request, response) {
                 response.success(true);
             else
                 response.success(false);
+        }, function (error) {
+            return response.error(error);
         });
 });
 /**
@@ -4535,7 +4539,7 @@ Parse.Cloud.define('grantAccessToQuestionBank', function (request, response) {
         return response.error("You must be logged in!");
 
     /*if (!passkey)
-        return response.error("You must provide a passkey!");*/
+     return response.error("You must provide a passkey!");*/
 
     var acceptedKeys = ["leeds-medics-2015"],
         keyIsValid = false;
@@ -4545,8 +4549,8 @@ Parse.Cloud.define('grantAccessToQuestionBank', function (request, response) {
             keyIsValid = true;
     });
     /* // Not closing the beta for now
-    if (!keyIsValid)
-        return response.error("Invalid passkey!");*/
+     if (!keyIsValid)
+     return response.error("Invalid passkey!");*/
 
     var roleQuery = new Parse.Query(Parse.Role);
     roleQuery.equalTo('name', 'medical-professional');
@@ -4652,7 +4656,102 @@ Parse.Cloud.define('adminDashboardAnalytics', function (request, response) {
         response.error(error);
     });
 });
-/*
+
+/**
+ * @CloudFunction Initialise Website for User
+ *
+ * This minimises time spent for the website's initial load
+ * by sending all required objects on load. Useful for both
+ * guests and currentUsers.
+ * - Send Parse.Config
+ * - Send all categories
+ * If currentUser
+ * - User's tests
+ * - Is mobile user // TODO save this to user instead of always querying.
+ * - New messages
+ * - Followers
+ * - Following
+ */
+Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
+    var user = request.user,
+        config,
+        categories,
+        tests,
+        latestAttempts,
+        messages,
+        followers,
+        following,
+        groups,
+        attempts,
+        isMobileUser,
+        promises = [];
+
+    promises.push(config = Parse.Config.get());
+    promises.push(categories = new Parse.Query("Category").include("parent").find());
+    if (user) {
+        var testsQuery = new Parse.Query("Test");
+        testsQuery.equalTo('author', user);
+        testsQuery.notEqualTo('isObjectDeleted', true);
+        testsQuery.notEqualTo('isSpacedRepetition', true);
+        testsQuery.ascending('title');
+        promises.push(tests = testsQuery.find());
+
+        var messagesQuery = new Parse.Query("Message");
+        messagesQuery.equalTo('to', user);
+        messagesQuery.descending("createdAt");
+        messagesQuery.limit(5);
+        promises.push(messages = messagesQuery.find());
+
+        var attemptsQuery = new Parse.Query("Attempt");
+        attemptsQuery.equalTo('user', user);
+        attemptsQuery.descending("createdAt");
+        attemptsQuery.equalTo('isProcessed', true);
+        attemptsQuery.exists('test');
+        attemptsQuery.include('test');
+        attemptsQuery.limit(50);
+        promises.push(attempts = attemptsQuery.find());
+
+        var followersQuery = user.relation("followers").query();
+        promises.push(followers = followersQuery.find());
+
+        var followingQuery = user.relation("following").query();
+        promises.push(following = followingQuery.find());
+
+        var groupsQuery = user.relation("groups").query();
+        promises.push(groups = groupsQuery.find());
+
+        promises.push(isMobileUser = Parse.Cloud.run('isMobileUser', {userId: user.id}));
+    }
+    Parse.Promise.when(promises).then(function () {
+        var result = {
+            config: config,
+            categories: categories["_result"][0]
+        };
+        if (tests)
+            result.tests = tests["_result"][0];
+        if (messages)
+            result.messages = messages["_result"][0];
+        if (followers)
+            result.followers = followers["_result"][0];
+        if (following)
+            result.following = following["_result"][0];
+        if (groups)
+            result.groups = groups["_result"][0];
+        if (attempts) {
+            result.attempts = [];
+            _.each(attempts["_result"][0], function (attempt) {
+                if (attempt.get('test') && attempt.get('test').id && result.attempts.length < 15)
+                    result.attempts.push(attempt);
+            });
+        }
+        if (isMobileUser)
+            result.isMobileUser = isMobileUser["_result"][0];
+
+        return response.success(result);
+    }, function (error) {
+        return response.error(error);
+    });
+});/*
  * SAVE LOGIC
  */
 /*
