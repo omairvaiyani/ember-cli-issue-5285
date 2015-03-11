@@ -927,3 +927,36 @@ Parse.Cloud.job("removeRedundantActions", function (request, status) {
         status.error(error.message);
     });
 });
+
+/**
+ * --------------
+ * setIsMobileUser
+ * --------------
+ * We used to do a cloud function
+ * to check if a user is mobile or not,
+ * now, let's set it on the user to avoid
+ * repeating this query.
+ */
+Parse.Cloud.job('setIsMobileUser', function (request, status) {
+    Parse.Cloud.useMasterKey();
+    var query = new Parse.Query(Parse.Installation),
+        notDone = 0,
+        actual = 0;
+    query.exists('user');
+    query.include('user.privateData');
+    query.count().then(function (result) {
+    }).then(function () {
+        return query.each(function (install) {
+            var user = install.get('user');
+            if (user && user.get('privateData') && !user.get('privateData').get('isMobileUser')) {
+                actual++;
+                user.get('privateData').set('isMobileUser', true);
+                return user.get('privateData').save();
+            }
+        });
+    }).then(function () {
+        status.success("Saved "+actual+" installs with user.");
+    }, function (error) {
+        status.error(JSON.stringify(error));
+    });
+});

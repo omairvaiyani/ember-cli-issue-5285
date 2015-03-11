@@ -22,7 +22,7 @@ export default DS.Model.extend(ParseMixin, {
     premiumLastPurchase: DS.attr('string'),
     premiumCancelled: DS.attr('boolean'),
     premiumMonthTrialRedeemed: DS.attr('boolean'),
-
+    isMobileUser: DS.attr('boolean'),
 
     /*
      * Temporary

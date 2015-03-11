@@ -185,7 +185,6 @@ export default Ember.Controller.extend({
 
             }
         }).then(function (response) {
-            console.dir(response);
             // Categories
             ParseHelper.extractRawPayload(this.store, 'category', response, 'categories');
             // Tests
@@ -216,7 +215,14 @@ export default Ember.Controller.extend({
                 response, 'attempts');
             this.get('currentUser').set('attempts', attempts);
 
-            this.set('currentUser.isMobileUser', response.result.isMobileUser);
+            /*
+             * isMobileUSer
+             * Actual value on privateData to stop user's from changing it manually.
+             * But easier to stick it on the currentUser in memory for simpler
+             * coding. No longer need CloudFunction for this but this is a good place
+             * to set this.
+             */
+            this.set('currentUser.isMobileUser', this.get('currentUser.privateData.isMobileUser'));
         }.bind(this));
         EventTracker.profileUser(this.get('currentUser'));
     }.observes('currentUser'),

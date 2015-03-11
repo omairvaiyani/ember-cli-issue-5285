@@ -32,8 +32,8 @@ marginSecondary = 8px
   font-style normal
 
 body
-  font-family: "Muli-Light", "Helvetica Neue", Helvetica, Arial, sans-serif
-  background-color: colorBackground
+  font-family "Muli-Light", "Helvetica Neue", Helvetica, Arial, sans-serif
+  background-color colorBackground
 
 *:focus
   outline none
@@ -59,64 +59,39 @@ body
 .is-active
   color white
   background-color colorPrimary1 !important
+  
+.btn-facebook
+  width 80%
+  padding 8px
+  font-size large
 
+.btn-facebook:hover, .btn-facebook:focus
+  color white
 
-.ic-autocomplete-input {
-  width: 100%;
-}
+.checkbox input[type=checkbox] 
+  display none
 
-.ic-autocomplete-toggle {
-  display: none;
-}
+.checkbox 
+  width 20px
+  margin 0 auto
+  position relative
 
-.btn-facebook {
-  width: 80%;
-  padding: 8px;
-  font-size: large;
-}
-
-.btn-facebook:hover, .btn-facebook:focus {
-  color: white;
-}
-
-@media (max-width: 300px) {
-  .freewall {
-    margin: 5px;
-  }
-}
-
-.checkbox input[type=checkbox] {
-  display: none;
-}
-
-.checkbox {
-  width: 20px;
-  margin: 0px auto;
-  position: relative;
-}
-
-.checkbox label {
-  cursor: pointer;
-  position: absolute;
-  width: 20px;
-  height: 20px;
-  top: 0;
-  border-radius: 4px;
-
+.checkbox label
+  cursor pointer
+  position absolute
+  width 20px
+  height 20px
+  top 0
+  border-radius 4px
   -webkit-box-shadow: inset 0px 1px 1px white, 0px 1px 3px rgba(0, 0, 0, 0.5);
   -moz-box-shadow: inset 0px 1px 1px white, 0px 1px 3px rgba(0, 0, 0, 0.5);
   box-shadow: inset 0px 1px 1px white, 0px 1px 3px rgba(0, 0, 0, 0.5);
   background: #fcfff4;
-
   background: -webkit-linear-gradient(top, #fcfff4 0%, #dfe5d7 40%, #b3bead 100%);
   background: -moz-linear-gradient(top, #fcfff4 0%, #dfe5d7 40%, #b3bead 100%);
   background: -o-linear-gradient(top, #fcfff4 0%, #dfe5d7 40%, #b3bead 100%);
   background: -ms-linear-gradient(top, #fcfff4 0%, #dfe5d7 40%, #b3bead 100%);
   background: linear-gradient(top, #fcfff4 0%, #dfe5d7 40%, #b3bead 100%);
-  filter: progid: DXImageTransform . Microsoft . gradient(startColorstr = '#fcfff4', endColorstr = '#b3bead', GradientType = 0
-
-);
-}
 
 .checkbox label:after {
   -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
@@ -155,11 +130,6 @@ body
 .hidden-file-input {
   position: absolute;
   left: -9999em;
-}
-
-@media (min-width: 768px) {
-  .my-tab {
-  }
 }
 
 .my-tab {
@@ -335,13 +305,13 @@ input[type="range"]::-webkit-slider-thumb {
 .svg-icons rect, .svg-icons polygon, .svg-icons circle,
 .svg-icons line, .svg-icons g, .svg-icons path, .svg-icons ellipse,
 .svg-icons polyline {
-  stroke: #4f6640;
+  stroke: colorPrimary1;
 }
 
 .svg-icons rect, .svg-icons polygon, .svg-icons circle,
 .svg-icons line, .svg-icons g, .svg-icons path, .svg-icons ellipse,
 .svg-icons polyline {
-  stroke: #4f6640;
+  stroke: colorPrimary1;
 }
 
 .svg-icon-white rect, .svg-icon-white polygon, .svg-icon-white circle,
@@ -606,12 +576,12 @@ input[type="range"]::-webkit-slider-thumb {
   background-color: white;
   border-radius: 0px;
   border: 0px;
-  border-bottom: 2px solid #4f6640;
-  color: #4f6640;
+  border-bottom: 2px solid colorPrimary1;
+  color: colorPrimary1;
 }
 
 .navbar-main .navbar-brand {
-  color: #4f6640;
+  color: colorPrimary1;
 }
 
 .navbar-brand .logo-spinner {
@@ -630,7 +600,7 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 .navbar-main .navbar-nav > li > a {
-  color: #4f6640;
+  color: colorPrimary1;
 }
 
 .navbar-main .navbar-nav > .active > a {
@@ -643,7 +613,7 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 .navbar-main .navbar-toggle .icon-bar {
-  background-color: #4f6640;
+  background-color: colorPrimary1;
 }
 
 .navbar-brand-adjust {
@@ -654,7 +624,7 @@ input[type="range"]::-webkit-slider-thumb {
  * Navbar search current
  */
 .navbar-search {
-  background-color: #4f6640;
+  background-color: colorPrimary1;
   color: white;
 }
 
@@ -699,7 +669,7 @@ input[type="range"]::-webkit-slider-thumb {
   padding: 3px 37px 0px 6px;
   font-family: inherit;
   font-size: 16px;
-  color: #4f6640;
+  color: colorPrimary1;
 }
 
 input[type="search"].sb-search-input {
@@ -903,14 +873,14 @@ hr.user-message-item-separator {
   margin-bottom: 16px;
   font-size: 20px;
   margin-top: -20px;
-  background: #4f6640; /* Old browsers */
-  background: -moz-linear-gradient(top, #4f6640 1%, #3a5b2a 100%); /* FF3.6+ */
-  background: -webkit-gradient(linear, left top, left bottom, color-stop(1%, #4f6640), color-stop(100%, #3a5b2a)); /* Chrome,Safari4+ */
-  background: -webkit-linear-gradient(top, #4f6640 1%, #3a5b2a 100%); /* Chrome10+,Safari5.1+ */
-  background: -o-linear-gradient(top, #4f6640 1%, #3a5b2a 100%); /* Opera 11.10+ */
-  background: -ms-linear-gradient(top, #4f6640 1%, #3a5b2a 100%); /* IE10+ */
-  background: linear-gradient(to bottom, #4f6640 1%, #3a5b2a 100%); /* W3C */
-  filter: progid: DXImageTransform . Microsoft . gradient(startColorstr = '#4f6640', endColorstr = '#3a5b2a', GradientType = 0
+  background: colorPrimary1; /* Old browsers */
+  background: -moz-linear-gradient(top, colorPrimary1 1%, #3a5b2a 100%); /* FF3.6+ */
+  background: -webkit-gradient(linear, left top, left bottom, color-stop(1%, colorPrimary1), color-stop(100%, #3a5b2a)); /* Chrome,Safari4+ */
+  background: -webkit-linear-gradient(top, colorPrimary1 1%, #3a5b2a 100%); /* Chrome10+,Safari5.1+ */
+  background: -o-linear-gradient(top, colorPrimary1 1%, #3a5b2a 100%); /* Opera 11.10+ */
+  background: -ms-linear-gradient(top, colorPrimary1 1%, #3a5b2a 100%); /* IE10+ */
+  background: linear-gradient(to bottom, colorPrimary1 1%, #3a5b2a 100%); /* W3C */
+  filter: progid: DXImageTransform . Microsoft . gradient(startColorstr = 'colorPrimary1', endColorstr = '#3a5b2a', GradientType = 0
 
 );
 /* IE6-9 */
@@ -1603,7 +1573,7 @@ hr.user-message-item-separator {
   background-color: inherit;
   color: black;
   box-shadow: none;
-  border-bottom: 3px solid #4f6640;
+  border-bottom: 3px solid colorPrimary1;
   margin-bottom: -2px;
 }
 
@@ -2058,7 +2028,7 @@ hr.user-message-item-separator {
 }
 
 .member-info {
-  background-color: #4f6640;
+  background-color: colorPrimary1;
   color: white;
   padding: 10px 0px 10px;
 }
@@ -2292,7 +2262,7 @@ body {
 }
 
 .footer .card {
-  background-color: #4f6640;
+  background-color: colorPrimary1;
 }
 
 .footer .card p, .footer .card a, .footer .card i {
@@ -2768,7 +2738,7 @@ none;
   content: ' ';
   width: 14px;
   height: 14px;
-  background: #4f6640;
+  background: colorPrimary1;
   border-radius: 50px;
   position: absolute;
   top: 8px;

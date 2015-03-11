@@ -186,7 +186,6 @@ export default Ember.Controller.extend(CurrentUser, {
                         break;
                 }
             }.bind(this));
-            console.log("found "+actions.get('length')+ " actions");
             this.get('followingActions').addObjects(actions);
         }.bind(this));
     }.observes('initialized', 'currentUser.following.length'),

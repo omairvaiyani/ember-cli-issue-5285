@@ -1679,6 +1679,39 @@ Parse.Cloud.job("removeRedundantActions", function (request, status) {
         status.error(error.message);
     });
 });
+
+/**
+ * --------------
+ * setIsMobileUser
+ * --------------
+ * We used to do a cloud function
+ * to check if a user is mobile or not,
+ * now, let's set it on the user to avoid
+ * repeating this query.
+ */
+Parse.Cloud.job('setIsMobileUser', function (request, status) {
+    Parse.Cloud.useMasterKey();
+    var query = new Parse.Query(Parse.Installation),
+        notDone = 0,
+        actual = 0;
+    query.exists('user');
+    query.include('user.privateData');
+    query.count().then(function (result) {
+    }).then(function () {
+        return query.each(function (install) {
+            var user = install.get('user');
+            if (user && user.get('privateData') && !user.get('privateData').get('isMobileUser')) {
+                actual++;
+                user.get('privateData').set('isMobileUser', true);
+                return user.get('privateData').save();
+            }
+        });
+    }).then(function () {
+        status.success("Saved "+actual+" installs with user.");
+    }, function (error) {
+        status.error(JSON.stringify(error));
+    });
+});
 /*
  * SIGN UP LOGIC
  */
@@ -2646,7 +2679,6 @@ Parse.Cloud.define('bulkFollowUsers', function (request, response) {
  * Hence, this function will return true
  * or false for clients.
  */
-
 Parse.Cloud.define('isMobileUser', function (request, response) {
     Parse.Cloud.useMasterKey();
     var query = new Parse.Query(Parse.Installation);
@@ -4667,10 +4699,11 @@ Parse.Cloud.define('adminDashboardAnalytics', function (request, response) {
  * - Send all categories
  * If currentUser
  * - User's tests
- * - Is mobile user // TODO save this to user instead of always querying.
  * - New messages
  * - Followers
  * - Following
+ * - Groups
+ * - Recent attempts
  */
 Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
     var user = request.user,
@@ -4683,7 +4716,7 @@ Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
         following,
         groups,
         attempts,
-        isMobileUser,
+        activities,
         promises = [];
 
     promises.push(config = Parse.Config.get());
@@ -4719,8 +4752,6 @@ Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
 
         var groupsQuery = user.relation("groups").query();
         promises.push(groups = groupsQuery.find());
-
-        promises.push(isMobileUser = Parse.Cloud.run('isMobileUser', {userId: user.id}));
     }
     Parse.Promise.when(promises).then(function () {
         var result = {
@@ -4744,9 +4775,6 @@ Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
                     result.attempts.push(attempt);
             });
         }
-        if (isMobileUser)
-            result.isMobileUser = isMobileUser["_result"][0];
-
         return response.success(result);
     }, function (error) {
         return response.error(error);
