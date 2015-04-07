@@ -1,15 +1,7 @@
-import
-Ember
-from
-'ember';
+import Ember from 'ember';
+import CurrentUser from '../mixins/current-user';
 
-import
-CurrentUser
-from
-'../mixins/current-user';
-
-export default
-Ember.ObjectController.extend(CurrentUser, {
+export default Ember.ObjectController.extend(CurrentUser, {
     isCurrentUser: function () {
         if (!this.get('currentUser'))
             return true;

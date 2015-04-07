@@ -7,11 +7,6 @@ var Router = Ember.Router.extend({
 
 Router.map(function () {
     /*
-     * Home page
-     */
-    this.route('application');
-
-    /*
      * Site Search
      */
     this.resource('search');

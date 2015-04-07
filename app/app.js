@@ -31,7 +31,8 @@ window.addthis_reload = function () {
     if (!window.addthis) {
         // Load addThis, if it hasn't already been loaded.
         window['addthis_config'] = { 'data_track_addressbar' : false };
-        $('body').append('<script type="text/javascript" src="https://s7.addthis.com/js/300/addthis_widget.js#pubid=ra-54d949656c333bb3"></script>');
+        $('body').append('<script type="text/javascript" ' +
+        'src="https://s7.addthis.com/js/300/addthis_widget.js#pubid=ra-54d949656c333bb3"></script>');
     } else {
         // Already loaded? Then re-attach it to the newly rendered set of social icons.
         // And reset share url/title, so they don't carry-over from the previous page.

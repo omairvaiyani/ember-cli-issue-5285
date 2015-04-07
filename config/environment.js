@@ -2,7 +2,7 @@
 
 module.exports = function (environment) {
     var ENV = {
-        modulePrefix: 'mycqs-web',
+        modulePrefix: 'synap-web',
         environment: environment,
         baseURL: '/',
         locationType: 'auto',
