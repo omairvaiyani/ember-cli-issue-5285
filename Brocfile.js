@@ -10,8 +10,8 @@ var app = new EmberApp({
 
     fingerprint: {
         exclude: ['fonts/'],
-        //prepend: 'https://assets.mycqs.com/' // SSL not set!
-        prepend: 'https://d3uzzgmigql815.cloudfront.net/' // SSL certified.
+        //prepend: 'https://assets.synap.com/' // SSL not set!
+        prepend: 'https://s3-eu-west-1.amazonaws.com/synap-dev-assets/' // SSL certified.
     }
 });
 

@@ -2,7 +2,7 @@
     "AWS": {
         "AccessKeyId": "AKIAJIQ6YM3TP4HQ2Y7A",
         "SecretKey": "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",
-        "bucket": "mycqs-assets"
+        "bucket": "synap-dev-assets"
     },
 
     "REDISTOGO": {
@@ -12,6 +12,6 @@
     },
 
     "CDN": {
-        "cloudfront": "https://assets.mycqs.com"
+        "cloudfront": "https://s3-eu-west-1.amazonaws.com/synap-dev-assets/"
     }
 }
