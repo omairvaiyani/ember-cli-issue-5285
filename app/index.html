@@ -116,8 +116,11 @@
     })(document, window.mixpanel || []);
     mixpanel.init("e246417d11beff0d10fcae900bd02c75");</script>
     <!-- end Mixpanel -->
+    {{content-for 'head-footer'}}
 </head>
+
 <body>
+{{content-for 'body'}}
 <div id="fb-root"></div>
 
 <script type="text/javascript">
@@ -148,8 +151,6 @@
     })(window, document);
     amplitude.init("0b84efdda59409fdfe6353e1efba9491");
 </script>
-
-{{content-for 'body'}}
 
 <!-- zzish -->
 <script src="https://www.zzish.com/dist/zzish.js"></script>
@@ -202,5 +203,6 @@
         });
     });
 </script>
+{{content-for 'body-footer'}}
 </body>
 </html>

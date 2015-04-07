@@ -48,7 +48,7 @@ module.exports = function (grunt) {
             options: {
                 prefix: timestamp + ':',
                 currentDeployKey: timestamp + ":index.html",
-                manifestKey: 'currentDeploy',
+                manifestKey: 'currentDeploySynap',
                 host: '<%= gOptions.REDISTOGO.host %>',
                 port: '<%= gOptions.REDISTOGO.port %>',
                 connectionOptions: {
