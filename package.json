@@ -13,7 +13,7 @@
   },
   "repository": "https://github.com/stefanpenner/ember-cli",
   "engines": {
-    "node": ">= 0.10.0"
+    "node": ">= 0.12.0"
   },
   "author": "",
   "license": "MIT",
@@ -25,6 +25,7 @@
     "ember-cli-ic-ajax": "0.1.1",
     "ember-cli-inject-live-reload": "^1.3.0",
     "ember-cli-qunit": "0.1.0",
+    "ember-cli-stylus": "^1.0.4",
     "ember-cli-tooltipster": "0.0.3",
     "ember-data": "1.0.0-beta.11+canary.2997e47034",
     "ember-export-application-global": "^1.0.0",
@@ -32,9 +33,8 @@
     "ember-radio-buttons": "^2.1.0",
     "ember-rl-year-picker": "0.0.13",
     "express": "^4.8.5",
-    "glob": "^4.0.5",
+    "glob": "^4.4.2",
     "grunt": "^0.4.5",
-    "grunt-autobots": "0.0.6",
     "grunt-hashres": "^0.4.1",
     "grunt-s3": "^0.2.0-alpha.3",
     "stripe": "^2.9.0"
