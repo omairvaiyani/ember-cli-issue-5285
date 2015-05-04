@@ -21,12 +21,12 @@ loadInitializers(App, config.modulePrefix);
 
 /*
  * zzish set up
- */
+ *//*
 Zzish.init("lOBKJskSfI1S6DPzEOB5FzNMk3ca");
 
-/*
+*//*
  * addThis
- */
+ *//*
 window.addthis_reload = function () {
     if (!window.addthis) {
         // Load addThis, if it hasn't already been loaded.
@@ -40,6 +40,6 @@ window.addthis_reload = function () {
         window['addthis_share'].title = window.document.title;
         window.addthis.toolbox('.addthis_toolbox');
     }
-}
+};*/
 
 export default App;

@@ -50,5 +50,8 @@
     "grunt-cdn": "^0.6.1",
     "grunt-redis": "MyLabs/grunt-redis",
     "grunt-shell": "^1.1.1"
+  },
+  "dependencies": {
+    "phantomjs": "^1.9.16"
   }
 }

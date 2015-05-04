@@ -42,8 +42,8 @@
     <link rel="stylesheet" href="style/social.css">
 
     <!-- Go to www.addthis.com/dashboard to customize your tools -->
-    <script type="text/javascript" src="https://s7.addthis.com/js/300/addthis_widget.js#pubid=ra-54d949656c333bb3"
-            async="async"></script>
+    <!-- <script type="text/javascript" src="https://s7.addthis.com/js/300/addthis_widget.js#pubid=ra-54d949656c333bb3"
+            async="async"></script> -->
 
     <script type="text/javascript">
         // Google Analytics SDK
@@ -152,32 +152,32 @@
     amplitude.init("0b84efdda59409fdfe6353e1efba9491");
 </script>
 
-<!-- zzish -->
-<script src="https://www.zzish.com/dist/zzish.js"></script>
-
 <script src="assets/vendor.js"></script>
 <script src="assets/synap-web.js"></script>
 
 <script>
     // Initialize Parse
-    Parse.initialize("DjQgBjzLml5feb1a34s25g7op7Zqgwqk8eWbOotT", "3gLHMYHWB2QFrv4MOSgi4xA6MnAowdMw9UMw3NJM");
+    // Need Parse JS for Facebook Connect. Bit annoying to have keys here hard-cored.
+    Parse.initialize("yUHivsy47OB5vVimMTV3s0Hc91a0vrM2JPM3aWst", "YWipkMx0KTb3U6DYdPHXtfGy2QRVQA6xfSY3QKTr");
     // Init FB
-    window.fbAsyncInit = function() {
+    window.fbAsyncInit = function () {
         Parse.FacebookUtils.init({ // this line replaces FB.init({
-            appId      : '394753023893264', // Facebook App ID
-            status     : true,  // check Facebook Login status
-            cookie     : true,  // enable cookies to allow Parse to access the session
-            xfbml      : true,  // initialize Facebook social plugins on the page
-            version    : 'v2.2' // point to the latest Facebook Graph API version
+            appId: '394753023893264', // Facebook App ID
+            status: true,  // check Facebook Login status
+            cookie: true,  // enable cookies to allow Parse to access the session
+            xfbml: true,  // initialize Facebook social plugins on the page
+            version: 'v2.3' // point to the latest Facebook Graph API version
         });
-
-        // Run code after the Facebook SDK is loaded.
     };
+    // Run code after the Facebook SDK is loaded.
     // Facebook SDK
-    (function(d, s, id){
+    (function (d, s, id) {
         var js, fjs = d.getElementsByTagName(s)[0];
-        if (d.getElementById(id)) {return;}
-        js = d.createElement(s); js.id = id;
+        if (d.getElementById(id)) {
+            return;
+        }
+        js = d.createElement(s);
+        js.id = id;
         js.src = "//connect.facebook.net/en_US/sdk.js";
         fjs.parentNode.insertBefore(js, fjs);
     }(document, 'script', 'facebook-jssdk'));

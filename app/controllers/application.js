@@ -3,6 +3,7 @@ import ParseHelper from '../utils/parse-helper';
 import EmberParseAdapter from '../adapters/parse';
 import ExpandingSearch from '../utils/expanding-search';
 import EventTracker from '../utils/event-tracker';
+import config from './../config/environment';
 
 export default Ember.Controller.extend({
     needs: ['index', 'user', 'test', 'category'],
@@ -139,27 +140,18 @@ export default Ember.Controller.extend({
         var currentUser = this.get('currentUser');
 
         if (currentUser) {
+            localStorage.sessionToken = currentUser.get('sessionToken');
             var adapter = this.store.adapterFor(currentUser);
             adapter.headers['X-Parse-Session-Token'] = currentUser.get('sessionToken');
-            Parse.User.become(currentUser.get('sessionToken'))
+            /*Parse.User.become(currentUser.get('sessionToken'))
                 .then(function (user) {
                 }, function (error) {
                     console.dir(error);
-                });
-            localStorage.sessionToken = currentUser.get('sessionToken');
-            setTimeout(function () {
-                /*
-                 * This updates the user with privateData
-                 * and facebook friends list every time
-                 * the user logs in. The time out allows
-                 * the adapter to fully prepare the data
-                 * before saving abruptly.
-                 */
-                //this.get('currentUser').save();
-            }.bind(this), 20000);
+                });*/
         } else {
-            if (Parse.User.current())
-                Parse.User.logOut();
+            // TODO Logout with REST API
+            /*if (Parse.User.current())
+                Parse.User.logOut();*/
             localStorage.clear();
         }
     }.observes('currentUser'),
@@ -175,12 +167,13 @@ export default Ember.Controller.extend({
             this.send('decrementLoadingItems');
             return;
         }
+        return; // TODO work on this later
         Ember.$.ajax({
             url: "https://api.parse.com/1/functions/initialiseWebsiteForUser",
             method: "POST",
             headers: {
-                "X-Parse-Application-Id": "DjQgBjzLml5feb1a34s25g7op7Zqgwqk8eWbOotT",
-                "X-Parse-REST-API-Key": "xN4I6AYSdW2P8iufiEOEP1EcbiZtdqyjyFBsfOrh",
+                "X-Parse-Application-Id": config.parseId,
+                "X-Parse-REST-API-Key": config.restKey,
                 "X-Parse-Session-Token": this.get('currentUser.sessionToken')
 
             }

@@ -6,6 +6,7 @@ export default {
     name: 'parse-user-reopen',
     after: 'parse-adapter',
     initialize: function () {
+        return;
         EmberParseAdapter.ParseUser.reopenClass({
             /*
              * If sessionToken is found on localStorage,

@@ -142,64 +142,43 @@ export default Ember.Route.extend({
         },
 
         signUp: function (callback) {
-            var name = this.controllerFor('application').get('newUser.name'),
-                email = this.controllerFor('application').get('newUser.email'),
-                password = this.controllerFor('application').get('newUser.password'),
-                confirmPassword = this.controllerFor('application').get('newUser.confirmPassword'),
+            var applicationController = this.get('applicationController');
+            var name = applicationController.get('newUser.name'),
+                email = applicationController.get('newUser.email'),
+                password = applicationController.get('newUser.password'),
+                confirmPassword = applicationController.get('newUser.confirmPassword'),
                 errors = false;
 
             if (!FormValidation.name(name.trim())) {
-                this.controllerFor('application').set('signUpValidationErrors.name', true);
+                applicationController.set('signUpValidationErrors.name', true);
                 errors = true;
             }
             if (!FormValidation.email(email.trim())) {
-                this.controllerFor('application').set('signUpValidationErrors.email', true);
+                applicationController.set('signUpValidationErrors.email', true);
                 errors = true;
             }
             if (!FormValidation.password(password)) {
-                this.controllerFor('application').set('signUpValidationErrors.password', true);
+                applicationController.set('signUpValidationErrors.password', true);
                 errors = true;
             }
             if (!FormValidation.confirmPassword(password, confirmPassword)) {
-                this.controllerFor('application').set('signUpValidationErrors.confirmPassword', true);
+                applicationController.set('signUpValidationErrors.confirmPassword', true);
                 errors = true;
             }
             if (!errors) {
-                this.send('incrementLoadingItems');
-                var promise = Parse.Cloud.run('preSignUp', {"email": email.trim()})
-                    .then(function (response) {
-                        var privateData = response.privateData,
-                            username = response.privateData.get('username');
-                        var data = {
-                                name: name.trim(),
-                                username: username,
-                                signUpSource: 'Web',
-                                privateData: ParseHelper.generatePointerFromNativeParse(privateData),
-                                password: password
-                            },
-                            ParseUser = this.store.modelFor('parse-user');
-                        return ParseUser.signup(this.store, data);
-                    }.bind(this));
-
-                if (callback)
-                    callback(promise);
-
-                promise.then(function (user) {
-                    this.send('closeModal');
-                    user.set('name', name);
-                    this.set('applicationController.currentUser', user);
-                    this.send('redirectAfterLogin');
-                    this.send('decrementLoadingItems');
-                    EventTracker.recordEvent(EventTracker.REGISTERED_WITH_EMAIL);
-                }.bind(this), function (error) {
-                    console.log("Error with ParseUser.signup() in: signUpWithEmail");
-                    console.dir(error);
-                    this.send('decrementLoadingItems');
-                }.bind(this));
+                var data = {
+                    name: name.trim(),
+                    username: email.trim(),
+                    email: email.trim(),
+                    signUpSource: 'Web',
+                    password: password
+                };
+                this.send('registerUser', data, callback);
             } else if (callback) {
                 callback();
             }
         },
+
         login: function () {
             this.send('incrementLoadingItems');
 
@@ -255,6 +234,7 @@ export default Ember.Route.extend({
             });
 
         },
+
         /**
          * Facebook Connect:
          * - getLoginStatus checks if the fb user is already connected with our app
@@ -301,98 +281,56 @@ export default Ember.Route.extend({
                 for (var i = 0; i < fbFriendsData.length; i++) {
                     fbFriendsArray.push(fbFriendsData[i].id);
                 }
-                var email = response.email;
-
-                var ParseUser = this.store.modelFor('parse-user'),
-                    data = {
-                        username: response.id,
-                        name: response.name,
-                        fbid: response.id,
-                        gender: response.gender,
-                        education: response.education,
-                        coverImageURL: response.cover.source,
-                        facebookFriends: fbFriendsArray,
-                        signUpSource: "Web",
-                        authData: {
-                            facebook: {
-                                access_token: authResponse.accessToken,
-                                id: authResponse.userID,
-                                expiration_date: (new Date(2032, 2, 2))
-                                //expiration_date: authResponse.expiresIn
-                            }
+                var data = {
+                    username: response.email,
+                    email: response.email,
+                    name: response.name,
+                    fbid: response.id,
+                    gender: response.gender,
+                    fbEducation: response.education,
+                    fbCoverPicture: response.cover,
+                    fbFriends: fbFriendsArray,
+                    signUpSource: "Web",
+                    authData: {
+                        facebook: {
+                            access_token: authResponse.accessToken,
+                            id: authResponse.userID,
+                            expiration_date: (new Date(2032, 2, 2))
                         }
-                    };
-                Parse.Cloud.run('preFacebookConnect', {authResponse: authResponse},
-                    {
-                        success: function () {
-                            ParseUser.signup(this.store, data).then(
-                                function (user) {
-                                    var createdAt = user.get('createdAt');
-                                    if (moment(createdAt).add(2, 'minute').isAfter(new Date()))
-                                        EventTracker.recordEvent(EventTracker.REGISTERED_WITH_FACEBOOK);
-                                    this.controllerFor('application').set('currentUser', user);
-                                    this.send('decrementLoadingItems');
-                                    /*
-                                     * Update FB Friends list every time
-                                     */
-                                    user.set('facebookFriends', fbFriendsArray);
-                                    if (!user.get('slug.length')) {
-                                        var sessionToken = user.get('sessionToken');
-                                        /*
-                                         * New user's dont have all
-                                         * info set. Must do second
-                                         * query to find fresh
-                                         * and avoid Ember caching.
-                                         * Also, must reset sessionToken!
-                                         */
-                                        this.send('incrementLoadingItems');
-                                        var where = {
-                                            objectId: user.get('id')
-                                        };
-                                        this.store.findQuery('parse-user', {where: JSON.stringify(where)})
-                                            .then(function (results) {
-                                                user = results.objectAt(0);
-                                                if (!user.get('privateData.id')) {
-                                                    var privateData = this.store.createRecord('user-private', {
-                                                        email: email,
-                                                        username: user.get('username')
-                                                    });
-                                                    privateData.save()
-                                                        .then(function () {
-                                                            user.set('privateData', privateData);
-                                                        }, function (error) {
-                                                            console.dir(error);
-                                                        });
-                                                } else if (user.get('privateData') && !user.get('privateData.email')) {
-                                                    user.get('privateData').set('email', email);
-                                                    user.get('privateData').save();
-                                                }
-                                                user.set('sessionToken', sessionToken);
-                                                this.controllerFor('application').set('currentUser', user);
-                                                this.send('redirectAfterLogin');
-                                                this.send('decrementLoadingItems');
-                                            }.bind(this));
-                                    } else {
-                                        this.send('redirectAfterLogin');
-                                    }
-                                }.bind(this),
-                                function (error) {
-                                    this.send('decrementLoadingItems');
-                                    console.log("Error with ParseUser.signup() in: " + "signUpAuthorisedFacebookUser");
-                                    console.dir(error);
-                                }.bind(this)
-                            );
-
-                        }.bind(this),
-                        error: function (error) {
-                            if (this.get('applicationController').get('loadingItems'))
-                                this.get('applicationController').decrementProperty('loadingItems');
-                            console.log('signUpAuthorisedFacebookUser error: ' + this.get('applicationController').get('loadingItems'));
-                            console.log(JSON.stringify(error));
-                        }
-                    });
-
+                    }
+                };
+                this.send('registerUser', data);
             }.bind(this));
+
+        },
+
+        /**
+         * @Function Register User
+         * Brings together the Facebook and Email
+         * sign up flows.
+         * @param {Object} data
+         * @param {Function} callback
+         */
+        registerUser: function (data, callback) {
+            var ParseUser = this.store.modelFor('parse-user'),
+                timeZone = jstz().timezone_name;
+
+            data.timeZone = timeZone;
+
+            var promise = ParseUser.signup(this.store, data).then(function (user) {
+                    this.get('applicationController').set('currentUser', user);
+                    this.send('decrementLoadingItems');
+                    this.send('redirectAfterLogin');
+                    this.send('decrementLoadingItems');
+                }.bind(this),
+                function (error) {
+                    this.send('decrementLoadingItems');
+                    console.log("Error with ParseUser.signup() in: " + "signUpAuthorisedFacebookUser");
+                    console.dir(error);
+                }.bind(this));
+
+            if (callback)
+                callback(promise);
         },
 
         logout: function () {
@@ -401,7 +339,7 @@ export default Ember.Route.extend({
         },
 
         forgotPassword: function () {
-            var controller = this.controllerFor('application'),
+            var controller = this.get('applicationController'),
                 email = controller.get('loginUser.email');
 
             if (!email) {
@@ -457,7 +395,8 @@ export default Ember.Route.extend({
 
             } else
                 this.transitionTo('index');
-        },
+        }
+        ,
 
         /**
          * Open Modal
@@ -488,7 +427,8 @@ export default Ember.Route.extend({
             });
 
             return myModal.modal('show');
-        },
+        }
+        ,
 
         closeModal: function () {
             $('#myModal').modal('hide');
@@ -496,7 +436,8 @@ export default Ember.Route.extend({
                 outlet: 'modal',
                 parentView: 'application'
             });
-        },
+        }
+        ,
 
         followUser: function (user) {
             var currentUser = this.get('currentUser');
@@ -521,7 +462,8 @@ export default Ember.Route.extend({
                         currentUser.get('following').removeObject(user);
                     }.bind(this)
                 });
-        },
+        }
+        ,
 
         unfollowUser: function (user) {
             var currentUser = this.get('currentUser');
@@ -543,7 +485,8 @@ export default Ember.Route.extend({
                         currentUser.get('following').pushObject(user);
                     }.bind(this)
                 });
-        },
+        }
+        ,
 
         bulkFollow: function (users, callback) {
             var userIdsToFollow = [];
@@ -571,17 +514,20 @@ export default Ember.Route.extend({
             }.bind(this), function (error) {
                 console.dir(error);
             });
-        },
+        }
+        ,
 
         incrementLoadingItems: function () {
             if (this.get('applicationController'))
                 this.get('applicationController').incrementProperty('loadingItems');
-        },
+        }
+        ,
 
         decrementLoadingItems: function () {
             if (this.get('applicationController.loadingItems'))
                 this.get('applicationController').decrementProperty('loadingItems');
-        },
+        }
+        ,
 
         sendPush: function (controller, type, sendObject) {
             switch (type) {
@@ -610,7 +556,8 @@ export default Ember.Route.extend({
                         });
                     break;
             }
-        },
+        }
+        ,
 
         /**
          * Action handler for creating a new notification.
@@ -629,7 +576,8 @@ export default Ember.Route.extend({
                 closed: false
             });
             this.get('applicationController.notifications').pushObject(notification);
-        },
+        }
+        ,
 
         activateSiteSearch: function () {
             this.set('preSearchRoute', this.get('applicationController.currentPath'));
@@ -638,17 +586,19 @@ export default Ember.Route.extend({
             setTimeout(function () {
                 Ember.$('#site-search-input').focus();
             }, 500);
-        },
+        }
+        ,
 
         deactivateSiteSearch: function () {
-            if(this.get('applicationController.currentPath') === 'search') {
+            if (this.get('applicationController.currentPath') === 'search') {
                 if (this.get('preSearchRoute'))
                     this.transitionTo(this.get('preSearchRoute'));
                 else
                     this.transitionTo('index');
             }
             this.controllerFor('application').set('inSearchMode', false);
-        },
+        }
+        ,
 
         /**
          * @DEPRECATED (Use utils/event-tracker.recordEvent)
@@ -685,5 +635,7 @@ export default Ember.Route.extend({
              */
         }
 
+
     }
-});
+})
+    ;

@@ -19,6 +19,14 @@ module.exports = function (environment) {
         },
         googleMap: {
             key: 'AIzaSyANfra0HUx4jAl73-RKvOzJl36vWwq0T5U'
+        },
+        // Currently synap-dev
+        // Also hard-coded in index.html, change that too!
+        parse: {
+            appId: "yUHivsy47OB5vVimMTV3s0Hc91a0vrM2JPM3aWst",
+            restKey: "YWipkMx0KTb3U6DYdPHXtfGy2QRVQA6xfSY3QKTr",
+            jsKey: "J4oAZA2qRHiCA324x0kQyEXiXuRXZPMA01wLN1xK"
+
         }
     };
 

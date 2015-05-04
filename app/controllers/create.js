@@ -2,7 +2,7 @@ import Ember from 'ember';
 import CurrentUser from '../mixins/current-user';
 import EventTracker from '../utils/event-tracker';
 
-export default Ember.ObjectController.extend(CurrentUser, {
+export default Ember.Controller.extend(CurrentUser, {
     needs: ['application', 'editQuestion', 'join'],
 
     isTestDirty: function () {
@@ -37,11 +37,11 @@ export default Ember.ObjectController.extend(CurrentUser, {
 
     childOrParentCategorySelected: function () {
         if (this.get('childCategory'))
-            this.set('category', this.get('childCategory'));
+            this.set('model.category', this.get('childCategory'));
         else if (this.get('parentCategory') && !this.get('parentCategory.hasChildren'))
-            this.set('category', this.get('parentCategory'));
+            this.set('model.category', this.get('parentCategory'));
         else
-            this.set('category', null);
+            this.set('model.category', null);
     }.observes('parentCategory', 'childCategory'),
 
     /*
@@ -80,7 +80,8 @@ export default Ember.ObjectController.extend(CurrentUser, {
 
     getGroups: function () {
         if (this.get('currentUser'))
-            this.get('currentUser').getGroups(this.store);
+        /*this.get('currentUser').getGroups(this.store);*/
+            return [];
     }.on('init'),
 
     /*
@@ -128,29 +129,34 @@ export default Ember.ObjectController.extend(CurrentUser, {
 
     actions: {
         removeCategory: function (category) {
-            this.set('category', null);
+            this.set('model.category', null);
             if (category.get('level') === 1)
                 this.set('parentCategory', null);
             this.set('childCategory', null);
         },
 
         checkTest: function (callback) {
-            if (!this.get('category.content')) {
+            var error = false;
+            if (!this.get('model.category.content')) {
                 this.send('addNotification', 'warning', 'Category not set!', 'You must set a category!');
-                return;
-            } else if (!this.get('title.length')) {
+                error = true;
+            } else if (!this.get('model.title.length')) {
                 this.send('addNotification', 'warning', 'Title not set!', 'You must set a title for the test!');
-                return;
+                error = true;
             } else if (this.get('inJoinProcess')) {
                 if (this.get('joinStep.create.active')) {
                     this.send('goToJoinStep', 'join');
-                    return;
+                    error = true;
                 }
             }
+            this.set('checkTestError', error);
+            if(error)
+                return;
+
             this.set('model.author', this.get('currentUser'));
             if (this.get('selectedGroup.id')) {
-                this.set('group', this.get('selectedGroup'));
-                if (this.get('group.privacy') === 'secret')
+                this.set('model.group', this.get('selectedGroup'));
+                if (this.get('model.group.privacy') === 'secret')
                     this.set('privacy', 0);
                 else
                     this.set('privacy', 1);
@@ -181,12 +187,12 @@ export default Ember.ObjectController.extend(CurrentUser, {
         },
 
         saveTest: function () {
-            if (!this.get('category.content')) {
+            if (!this.get('model.category.content')) {
                 console.log("No category set!");
                 return;
             }
             this.send('incrementLoadingItems');
-            var questions = this.get('questions.content.content');
+            var questions = this.get('model.questions.content.content');
             for (var i = 0; i < questions.length; i++) {
                 var question = questions[i];
                 if (question.get('isDirty')) {
@@ -194,11 +200,11 @@ export default Ember.ObjectController.extend(CurrentUser, {
                     question.save();
                 }
             }
-            this.set('title', this.get('title').capitalize());
+            this.set('model.title', this.get('model.title').capitalize());
             this.get('model').save().then(
                 function () {
                     this.send('decrementLoadingItems');
-                    this.send('addNotification', 'saved', this.get('title'), 'All changes saved!');
+                    this.send('addNotification', 'saved', this.get('model.title'), 'All changes saved!');
                 }.bind(this),
 
                 function (error) {
@@ -269,111 +275,5 @@ export default Ember.ObjectController.extend(CurrentUser, {
                 this.get('joinController').send('goToJoinStep', step); // clears other steps
         }
     }
-
-    /*
-     * DEPRECATED
-     * - Category input and creation hooks
-     * - Tag inputboly
-     */
-    /*categorySelectionInput: "",
-     categorySelectionList: function () {
-     var categories = this.get('categories');
-     if (categories && this.get('categorySelectionInput')) {
-     var searchInputLowercase = this.get('categorySelectionInput').toLowerCase();
-     return categories.filter(function (category) {
-     return category.get('name').toLowerCase().indexOf(searchInputLowercase) != -1;
-     });
-     } else {
-     return [];
-     }
-     }.property('categorySelectionInput'),
-     newCategoryParentSelectionList: function () {
-     var categories = this.get('categories');
-     if (categories && this.get('newCategoryParentInput')) {
-     var searchInputLowercase = this.get('newCategoryParentInput').toLowerCase();
-     return categories.filter(function (category) {
-     return category.get('name').toLowerCase().indexOf(searchInputLowercase) != -1;
-     });
-     } else {
-     return [];
-     }
-     }.property('newCategoryParentInput'),
-     actions: {
-     categorySelected: function (category) {
-     /*
-     * Setting a category results in the categorySelection template
-     * element being hidden
-     */ /*
-     this.set('category', category);
-     this.set('categorySelectionInput', category.get('name'));
-
-     },
-     newCategoryParentSelected: function (category) {
-     console.dir(category);
-     this.set('newCategoryParentInput', category.get('name'));
-     this.set('newCategoryParent', category);
-     },
-     categorySelectionInputChanged: function () {
-     /*
-     * This is called when the user clicks on an already selected
-     * category tag, thereby removing it from selection.
-     * Setting a category to null results in the categorySelection
-     * template element being shown
-     */ /*
-     this.set('category', null);
-     },
-     removeCategory: function (shouldRemoveText) {
-     */ /*
-     * Allow users to either:
-     * - Remove category tag completely (shouldRemoveText = true)
-     * - Remove category tag but keep the text (shouldRemoveText = false)
-     * categorySelectionInput is set to "" due to the DOM element reset
-     */
-    /*
-     if (shouldRemoveText) {
-     this.set('categorySelectionInput', "");
-     } else {
-     this.set('categorySelectionInput', this.get('category.name'));
-     }
-     this.set('category', null);
-     },
-     removeNewCategoryParent: function (shouldRemoveText) {
-     if (shouldRemoveText) {
-     this.set('newCategoryParentInput', "");
-     } else {
-     this.set('newCategoryParentInput', this.get('newCategoryParent.name'));
-     }
-     this.set('category', null);
-     },
-     createNewCategory: function () {
-     console.log("Create new category!");
-     var level = this.get('newCategoryParent') ? (this.get('newCategoryParent.level') + 1) : 1;
-     var newCategory = this.get('store').createRecord('category', {
-     name: this.get('categorySelectionInput').capitalize(),
-     parent: this.get('newCategoryParent'),
-     level: level
-     });
-     var controller = this;
-     newCategory.save().then(function (category) {
-     controller.set('category', category);
-     controller.set('newCategoryParentInput', '');
-     controller.set('newCategoryParent', null);
-     controller.send('closeModal');
-     });
-
-     }
-     }
-     tagsStringified: "",
-     stringifyTags: function () {
-     var tagsStringified = "";
-     for (var i = 0; i < this.get('tags.length'); i++) {
-     tagsStringified += this.get('tags.' + i) + ", ";
-     }
-     if (tagsStringified)
-     this.set('tagsStringified', tagsStringified.slice('0', -2));
-     else
-     this.set('tagsStringified', tagsStringified);
-     }.observes('content.objectId'),*/
-
 
 });

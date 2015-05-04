@@ -1,5 +1,7 @@
 import DS from 'ember-data';
 import ParseHelper from '../utils/parse-helper';
+import ParseUser from '../models/parse-user';
+
 var EmberParseAdapter = {};
 EmberParseAdapter.Transforms = {};
 
@@ -19,7 +21,8 @@ EmberParseAdapter.Serializer = DS.RESTSerializer.extend({
     extractSingle: function (store, primaryType, payload, recordId) {
         var namespacedPayload = {};
         namespacedPayload[primaryType.typeKey] = payload; // this.normalize(primaryType, payload);
-        return this._super(store, primaryType, namespacedPayload, recordId);
+        var extractedSingle = this._super(store, primaryType, namespacedPayload, recordId);
+        return extractedSingle;
     },
 
     typeForRoot: function (key) {
@@ -98,13 +101,9 @@ EmberParseAdapter.Serializer = DS.RESTSerializer.extend({
                         hash[key].forEach(function (item, index, items) {
                             // When items are pointers we just need the id
                             // This occurs when request was made without the include query param.
-                            /*
-                             * Modified by Omair:
-                             * - check if item exists
-                             */
-                            if (item && item.__type === "Pointer") {
+                            if (item.__type === "Pointer") {
                                 items[index] = item.objectId;
-                            } else if (item) {
+                            } else {
                                 // When items are objects we need to clean them and add them to the store.
                                 // This occurs when request was made with the include query param.
                                 delete item.__type;
@@ -130,7 +129,7 @@ EmberParseAdapter.Serializer = DS.RESTSerializer.extend({
         Ember.merge(hash, this.serialize(record, options));
     },
 
-    serializeAttribute: function (record, json, key, attribute) {
+    serializeAttribute: function (record, json, key, attributes) {
         // These are Parse reserved properties and we won't send them.
         if (key === 'createdAt' ||
             key === 'updatedAt' ||
@@ -138,34 +137,21 @@ EmberParseAdapter.Serializer = DS.RESTSerializer.extend({
             key === 'sessionToken') {
             delete json[key];
         } else {
-            this._super(record, json, key, attribute);
+            this._super(record, json, key, attributes);
+            //this._super(record._createSnapshot(), json, key, attributes);
         }
     },
-    serializeBelongsTo: function (record, json, relationship) {
-        var key = relationship.key;
-        var belongsTo = record.get(key);
-        if (belongsTo) {
-            /*
-             * Modified by Omair
-             * Sometimes .belongsTo was invalid
-             * Instead, record._relationships[key].inverseRecord
-             * was pointing to the object. Bizarre, but a
-             * workaround.
-             */
-            if (!belongsTo.constructor || !belongsTo.get('content')) {
-                if (!record._relationships[key])
-                    belongsTo = record.get(key).get('content');
-                else
-                    belongsTo = record._relationships[key].inverseRecord;
-                if (!belongsTo)
-                    return;
-            } else
-                belongsTo = belongsTo.get('content');
 
+    serializeBelongsTo: function (snapshot, json, relationship) {
+        var key = relationship.key;
+        // modified snapshot.get() to use snapshot.belongsTo()
+        var belongsTo = snapshot.belongsTo(key);
+        if (belongsTo) {
+            // Modified belongsTo.id and belongsTo.typeKey
             json[key] = {
                 "__type": "Pointer",
-                "className": this.parseClassName(belongsTo.constructor.typeKey),
-                "objectId": belongsTo.get('id')
+                "className": this.parseClassName(belongsTo.typeKey),
+                "objectId": belongsTo.id
             };
         }
     },
@@ -181,18 +167,12 @@ EmberParseAdapter.Serializer = DS.RESTSerializer.extend({
         }
     },
 
-    /*
-     * Modified by Omair:
-     * - Changed json[key] to an array to match Parse REST API
-     */
     serializeHasMany: function (record, json, relationship) {
         var key = relationship.key;
-        var hasMany = record.get(key);
+        var hasMany = record.hasMany(key);
         var options = relationship.options;
         if (hasMany && hasMany.get('length') > 0) {
 
-            // json[key] = { "objects": [] };
-            // OMAIR edit, "objects" is not what Parse REST api expects
             json[key] = [];
 
             if (options.relation) {
@@ -204,24 +184,11 @@ EmberParseAdapter.Serializer = DS.RESTSerializer.extend({
             }
 
             hasMany.forEach(function (child) {
-                /*
-                 * Old code
-
-                 json[key].objects.push({
-                 "__type": "Pointer",
-                 "className": child.parseClassName(),
-                 "objectId": child.get('id')
-                 });
-                 *
-                 */
-                /*
-                 * Modified by Omair:
-                 * - User json[key] directly, instead of through the objects param
-                 */
+                var parseClassName = child.typeKey;
                 json[key].push({
                     "__type": "Pointer",
-                    "className": child.parseClassName(),
-                    "objectId": child.get('id')
+                    "className": Ember.String.capitalize(Ember.String.camelize(parseClassName)),
+                    "objectId": child.id
                 });
             });
 
@@ -336,7 +303,7 @@ EmberParseAdapter.Adapter = DS.RESTAdapter.extend({
         var sendDeletes = false;
         var serializer = store.serializerFor(type.typeKey);
         serializer.serializeIntoHash(data, type, record);
-        var id = record.get('id');
+        var id = record.id;
         var adapter = this;
 
         type.eachRelationship(function (key, relationship) {
@@ -392,22 +359,14 @@ EmberParseAdapter.Adapter = DS.RESTAdapter.extend({
      * Implementation of a hasMany that provides a Relation query for Parse
      * objects.
      */
-    findHasMany: function (store, record, relatedInfo) {
-        /*
-         * Modified by Omair
-         * record.typeKey is sometimes undefined
-         * but record.constructor.typeKey fixes
-         * this issue.
-         */
-        if (!record.typeKey)
-            record.typeKey = record.constructor.typeKey;
+    indHasMany: function (store, record, relatedInfo) {
         var query = {
             where: {
                 "$relatedTo": {
                     "object": {
                         "__type": "Pointer",
                         "className": this.parseClassName(record.typeKey),
-                        "objectId": record.get('id')
+                        "objectId": record.id
                     },
                     key: relatedInfo.key
                 }
@@ -442,18 +401,11 @@ EmberParseAdapter.Adapter = DS.RESTAdapter.extend({
         return this._super(store, type, query);
     },
 
-    /*
-     * Added by Omair:
-     * - Overriding 'findMany' from ember-data
-     * - Using the correct Parse REST format for fetching multiple records by id
-     */
-    findMany: function (store, type, ids) {
-        var where = JSON.stringify({
-            "objectId": {
-                "$in": ids
-            }
-        });
-        return this.ajax(this.buildURL(type.typeKey), 'GET', {data: {"where": where}});
+    find: function (store, type, recordId, snapshot) {
+        if (type.typeKey === 'staff' || type.typeKey === 'doctor') {
+            return ParseHelper.getLimitedProfile(this, type.typeKey, recordId);
+        }
+        return this._super(store, type, recordId, snapshot);
     },
 
     sessionToken: Ember.computed('headers.X-Parse-Session-Token', function (key, value) {
@@ -464,190 +416,6 @@ EmberParseAdapter.Adapter = DS.RESTAdapter.extend({
             return value;
         }
     })
-});
-
-/**
- * Parse User object implementation
- * @type {DS.ParseModel}
- */
-EmberParseAdapter.ParseUser = DS.Model.extend({
-    username: DS.attr('string'),
-    //password: DS.attr('string'),
-    email: DS.attr('string'),
-    emailVerified: DS.attr('boolean'),
-    sessionToken: DS.attr('string'),
-
-    createdAt: DS.attr('date'),
-    updatedAt: DS.attr('date'),
-    /*
-     * Modified by Omair:
-     * - Added MyCQs ParseUser attributes
-     * - Extending or reopeningClass does
-     * not seem to be working for now
-     */
-    name: DS.attr('string'),
-    firstName: function () {
-        if (this.get('name.length') && this.get('name').split(' ')[1])
-            return this.get('name').split(' ').slice(0, -1).join(' ');
-        else
-            return this.get('name');
-    }.property('name.length'),
-    lastName: function () {
-        if (this.get('name.length') && this.get('name').split(' ')[1])
-            return this.get('name').split(' ')[this.get('name').split(' ').length - 1];
-        else
-            return "";
-    }.property('name.length'),
-    fbid: DS.attr('string'),
-    gender: DS.attr('string'),
-    education: DS.attr(),
-    course: DS.belongsTo('course', {async: true}),
-    institution: DS.belongsTo('university', {async: true}),
-    yearNumber: DS.attr('number'),
-    profilePicture: DS.attr('parse-file'),
-    profileImageURL: function () {
-        if (this.get('profilePicture') && this.get('profilePicture.url')) {
-            return this.get('profilePicture.secureUrl');
-        } else if (this.get('fbid')) {
-            return "https://graph.facebook.com/"+this.get('fbid')+"/picture?height=250&type=square";
-            //return "https://res.cloudinary.com/mycqs/image/facebook/c_thumb,e_improve,g_faces:center,250/" + this.get('fbid');
-        } else {
-            return "https://d3uzzgmigql815.cloudfront.net/img/silhouette.png";
-        }
-    }.property('fbid', 'profilePicture'),
-
-    coverImage: DS.attr('parse-file'),
-    coverImageOffsetY: 50,
-    coverImageURL: function () {
-        if (this.get('coverImage') && this.get('coverImage.url')) {
-            return this.get('coverImage.secureUrl');
-        } else if (this.get('fbid')) {
-            this.getFbCoverImage();
-            return "";
-        } else {
-            return 'https://d3uzzgmigql815.cloudfront.net/img/coffee-revise.jpg';
-        }
-    }.property('fbid', 'coverImage'),
-    getFbCoverImage: function () {
-        $.getJSON("https://graph.facebook.com/" + this.get('fbid') + "?fields=cover")
-            .then(function (data) {
-                if (data) {
-                    var cover = data.cover;
-                    if (cover) {
-                        if (cover.offset_y)
-                            this.set('coverImageOffsetY', cover.offset_y);
-                        this.set('coverImageURL', cover.source);
-                    }
-                }
-            }.bind(this));
-    },
-
-    numberOfTests: DS.attr('number'),
-    numberOfQuestions: DS.attr('number'),
-    numberOfAttempts: DS.attr('number'),
-    averageScore: DS.attr('number', {defaultValue: 0}),
-    uniqueNumberOfAttempts: DS.attr('number', {defaultValue: 0}),
-    uniqueAverageScore: DS.attr('number', {defaultValue: 0}),
-    communityNumberOfAttempts: DS.attr('number', {defaultValue: 0}),
-    communityAverageScore: DS.attr('number', {defaultValue: 0}),
-    communityUniqueNumberOfAttempts: DS.attr('number', {defaultValue: 0}),
-    communityUniqueAverageScore: DS.attr('number', {defaultValue: 0}),
-    facebookFriends: DS.attr(),
-    numberFollowing: DS.attr('number', {defaultValue: 0}),
-    numberOfFollowers: DS.attr('number', {defaultValue: 0}),
-    latestAttempts: DS.hasMany('attempt', {async: true, array: true}),
-    slug: DS.attr('string'),
-    finishedWelcomeTutorial: DS.attr('boolean'),
-
-    timeZone: DS.attr('string'),
-    privateData: DS.belongsTo('user-private', {async: true}),
-    spacedRepetitionNotificationByEmail: DS.attr('boolean'),
-    spacedRepetitionNotificationByPush: DS.attr('boolean'),
-    spacedRepetitionMaxQuestions: DS.attr('number'),
-    spacedRepetitionIntensity: DS.attr('number'),
-    spacedRepetitionNextDue: DS.attr('parse-date'),
-    latestSRSAttempt: DS.belongsTo('attempt', {async: true}),
-
-    groups: new Ember.A(),
-    getGroups: function (store) {
-        var where = {
-            "$relatedTo": {
-                "object": ParseHelper.generatePointer(this, "_User"),
-                "key": "groups"
-            }
-        };
-        return store.findQuery('group', {where: JSON.stringify(where)})
-            .then(function(groups) {
-                this.get('groups').clear();
-                this.get('groups').addObjects(groups);
-                return groups;
-            }.bind(this));
-    },
-
-    /*
-     * Education
-     */
-    educationCohort: DS.belongsTo('education-cohort', {async: true}),
-    educationInfoConfirmed: DS.attr('boolean'),
-    zzishClasses: DS.attr()
-});
-
-EmberParseAdapter.ParseUser.reopenClass({
-
-    requestPasswordReset: function (email) {
-        var adapter = this.get('store').adapterFor(this);
-        var data = {email: email};
-        return adapter.ajax(adapter.buildURL("requestPasswordReset"), "POST", {data: data})['catch'](
-            function (response) {
-                return Ember.RSVP.reject(response.responseJSON);
-            }
-        );
-    },
-
-    login: function (store, data) {
-        if (Ember.isEmpty(this.typeKey)) {
-            throw new Error('Parse login must be called on a model fetched via store.modelFor');
-        }
-        var model = this;
-        var adapter = store.adapterFor(model);
-        var serializer = store.serializerFor(model);
-        return adapter.ajax(adapter.buildURL("login"), "GET", {data: data}).then(
-            function (response) {
-                serializer.normalize(model, response);
-                var record = store.push(model, response);
-                return record;
-            },
-            function (response) {
-                return Ember.RSVP.reject(response.responseJSON);
-            }
-        );
-    },
-
-    /*
-     * Modified by Omair:
-     * - Changed adapter.buildURL() to send "signup" as the param
-     * - This is intercepted by pathForType, which is also modified by Omair
-     */
-    signup: function (store, data) {
-        if (Ember.isEmpty(this.typeKey)) {
-            throw new Error('Parse signup must be called on a model fetched via store.modelFor');
-        }
-        var model = this;
-        var adapter = store.adapterFor(model);
-        var serializer = store.serializerFor(model);
-        return adapter.ajax(adapter.buildURL("signup"), "POST", {data: data}).then(
-            function (response) {
-                serializer.normalize(model, response);
-                response.email = response.email || data.email;
-                response.username = response.username || data.username;
-                var record = store.push(model, response);
-                return record;
-            },
-            function (response) {
-                return Ember.RSVP.reject(response.responseJSON);
-            }
-        );
-    }
 });
 
 EmberParseAdapter.GeoPoint = Ember.Object.extend({
@@ -826,7 +594,7 @@ EmberParseAdapter.Transforms.Date = DS.Transform.extend({
 EmberParseAdapter.setupContainer = function (container) {
     container.register('adapter:-parse', EmberParseAdapter.Adapter);
     container.register('serializer:-parse', EmberParseAdapter.Serializer);
-    container.register('model:parse-user', EmberParseAdapter.ParseUser);
+    container.register('model:parse-user', ParseUser);
     container.register('transform:parse-geo-point', EmberParseAdapter.Transforms.GeoPoint);
     container.register('transform:parse-file', EmberParseAdapter.Transforms.File);
     container.register('transform:parse-date', EmberParseAdapter.Transforms.Date);

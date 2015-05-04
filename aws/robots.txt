@@ -1,7 +1,0 @@
-# mycqs.com
-
-User-agent: *
-Disallow:
-
-Sitemap: http://assets.mycqs.com/sitemap.xml
-

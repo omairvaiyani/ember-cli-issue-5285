@@ -1,13 +1,10 @@
-import
-StringHelper
-from
-'../utils/string-helper';
+import StringHelper from '../utils/string-helper';
 
 export default {
-    generatePointer: function(object, className) {
-        if(!className)
+    generatePointer: function (object, className) {
+        if (!className)
             className = object.constructor.typeKey;
-        if(className === "parseUser")
+        if (className === "parseUser")
             className = "_User";
         return {
             "__type": "Pointer",
@@ -15,10 +12,10 @@ export default {
             "objectId": object.get('id')
         }
     },
-    generatePointerFromIdAndClass: function(objectId, className) {
-        if(!objectId || !className)
+    generatePointerFromIdAndClass: function (objectId, className) {
+        if (!objectId || !className)
             return;
-        if(className === "parseUser")
+        if (className === "parseUser")
             className = "_User";
         return {
             "__type": "Pointer",
@@ -26,21 +23,21 @@ export default {
             "objectId": objectId
         }
     },
-    generatePointers: function(array) {
+    generatePointers: function (array) {
         var pointers = [];
-        array.forEach(function(object) {
+        array.forEach(function (object) {
             pointers.push(this.generatePointer(object));
         }.bind(this));
         return pointers;
     },
 
-    generatePointerFromNativeParse: function(object) {
+    generatePointerFromNativeParse: function (object) {
         var className = object.className,
             id = object.id;
 
-        if(!id)
+        if (!id)
             id = object.get('id');
-        if(!id)
+        if (!id)
             id = object.getObjectId();
         return {
             "__type": "Pointer",
@@ -61,20 +58,20 @@ export default {
      * @param {Parse.User} user
      */
     getUserProfileImageUrl: function (user) {
-        if(!user)
+        if (!user)
             return "https://d3uzzgmigql815.cloudfront.net/img/silhouette.png";
 
         if (user.get('profilePicture')) {
             return this.getSecureParseUrl(user.get('profilePicture').get('url'));
         } else if (user.get('fbid')) {
-            return "https://graph.facebook.com/"+user.get('fbid')+"/picture?height=250&type=square";
+            return "https://graph.facebook.com/" + user.get('fbid') + "/picture?height=250&type=square";
         } else {
             return "https://d3uzzgmigql815.cloudfront.net/img/silhouette.png";
         }
     },
 
     getSecureParseUrl: function (url) {
-        if(url)
+        if (url)
             return url._url.replace("http://", "https://s3.amazonaws.com/");
         else
             return "";
@@ -89,6 +86,19 @@ export default {
         var serializedObjects = serializer.extractArray(store,
             store.modelFor(type), {results: payload});
         return store.pushMany(store.modelFor(type), serializedObjects);
+    },
+
+    cloudFunction: function (context, functionName, params) {
+        var adapter = context.store.adapterFor('application');
+        return new Ember.RSVP.Promise(function (resolve, reject) {
+            adapter.ajax("https://api.parse.com/1/functions/" + functionName, "POST", {data: params}).then(
+                function (response) {
+                    resolve(response.result);
+                },
+                function (reason) {
+                    reject(reason.responseJSON);
+                });
+        });
     }
 
 }

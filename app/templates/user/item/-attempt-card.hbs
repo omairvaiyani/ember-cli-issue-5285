@@ -1,26 +1,26 @@
 <div class="row">
     <div class="col-md-12">
         <div class="card test-info-card margin-top-16">
-            {{#link-to 'user' attempt.userSlug tagName="a" class="inline-block"}}{{render 'profile-image'
-            attempt.userProfileImageUrl}}{{/link-to}}
+            {{#link-to 'user' attempt.user.slug tagName="a" class="inline-block"}}{{render 'profile-image'
+            attempt.user.profileImageURL}}{{/link-to}}
 
             <div class="test-details inline-block">
                 <h4>
-                    {{#link-to 'testInfo' attempt.testSlug tagName='a'}}
-                        {{attempt.testTitle}}
+                    {{#link-to 'testInfo' attempt.test.slug tagName='a'}}
+                        {{attempt.test.title}}
                     {{/link-to}}
                 </h4>
                 <small class="moments-ago pull-right">
                     {{from-now time=attempt.createdAt}}
                 </small>
                 <p>
-                    {{#link-to 'category' attempt.testCategorySlug tagName='a'}}
-                        {{#if attempt.test.category.parentCategorySlug}}
-                            {{#link-to 'subcategory' attempt.test.category.parentCategorySlug attempt.testCategorySlug}}
-                                {{attempt.testCategoryName}}
+                    {{#link-to 'category' attempt.test.category.slug tagName='a'}}
+                        {{#if attempt.test.category.parent.slug}}
+                            {{#link-to 'subcategory' attempt.test.category.parent.slug attempt.test.category.slug}}
+                                {{attempt.test.category.name}}
                             {{/link-to}}
                         {{else}}
-                            {{#link-to 'category' attempt.testCategorySlug}}{{attempt.testCategoryName}}{{/link-to}}
+                            {{#link-to 'category' attempt.test.category.slug}}{{attempt.test.category.name}}{{/link-to}}
                         {{/if}}
                     {{/link-to}}
                 </p>
@@ -37,7 +37,7 @@
                                     {{/link-to}}</div>
                             </div>
                             <div class="col-md-5">
-                                <div class="text-center">Community Avg. {{math-round attempt.testAverageScore 2}}%
+                                <div class="text-center">Community Avg. {{math-round attempt.test.averageScore 2}}%
                                 </div>
                             </div>
                         </div>

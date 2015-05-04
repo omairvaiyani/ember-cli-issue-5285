@@ -5,7 +5,7 @@
 </div>
 <div class="row">
     <div class="col-md-12 margin-bottom-16">
-        {{input type="text" placeholder="Enter a title for your test" classNames="form-control" value=title}}
+        {{input type="text" placeholder="Enter a title for your test" classNames="form-control" value=model.title}}
     </div>
 </div>
 <div class="row">
@@ -13,7 +13,7 @@
         <h5>CATEGORY</h5>
     </div>
 </div>
-{{#unless category}}
+{{#unless model.category}}
     <div class="row">
         <div class="col-md-12 margin-bottom-16">
             {{view 'select'
@@ -39,9 +39,9 @@
         </div>
     {{/if}}
 {{else}}
-    {{#if category.parent}}
-        <div {{action 'removeCategory' category.parent}} class="tag category-edit">{{category.parent.name}}</div>{{/if}}
-    <div {{action 'removeCategory' category}} class="tag category-edit">{{category.name}}</div>
+    {{#if model.category.parent}}
+        <div {{action 'removeCategory' model.category.parent}} class="tag category-edit">{{model.category.parent.name}}</div>{{/if}}
+    <div {{action 'removeCategory' model.category}} class="tag category-edit">{{model.category.name}}</div>
 {{/unless}}
 <div class="row">
     <div class="col-md-12">
@@ -50,7 +50,7 @@
 </div>
 <div class="row">
     <div class="col-md-12 margin-bottom-16">
-        {{textarea placeholder="Enter a brief description of your test" classNames="form-control" value=description}}
+        {{textarea placeholder="Enter a brief description of your test" classNames="form-control" value=model.description}}
     </div>
 </div>
 
@@ -88,7 +88,7 @@
     </div>
     <div class="row">
         <div class="col-md-12">
-            {{#if privacy}}
+            {{#if model.privacy}}
                 <p>This test is visible to everyone.</p>
             {{else}}
                 <p>Only you can see this test.</p>
@@ -99,7 +99,7 @@
     <div class="row">
         <div class="col-md-12">
             <i class="fa fa-lock margin-right-8"></i>
-            <label class='text-capitalize'>{{group.privacy}}</label>
+            <label class='text-capitalize'>{{model.group.privacy}}</label>
         </div>
     </div>
 {{/unless}}

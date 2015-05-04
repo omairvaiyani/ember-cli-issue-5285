@@ -2,11 +2,11 @@ import Ember from 'ember';
 import CurrentUser from '../mixins/current-user';
 
 export default Ember.Controller.extend(CurrentUser, {
-    needs: ['create'],
+    needs: ['application','create'],
 
     setRedirectPostSignUp: function () {
-        this.controllerFor('application').set('redirectAfterLoginToRoute', 'join.personalise');
-        this.controllerFor('application').set('redirectAfterLoginToController', 'join');
+        this.get('controllers.application').set('redirectAfterLoginToRoute', 'join.personalise');
+        this.get('controllers.application').set('redirectAfterLoginToController', 'join');
     }.on('init'),
     /*
      * Join process

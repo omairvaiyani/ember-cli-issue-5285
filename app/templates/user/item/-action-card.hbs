@@ -1,24 +1,24 @@
 <div class="row">
     <div class="col-md-12">
         <div class="card action-card margin-top-16">
-            {{#link-to 'user' userAction.userSlug
-            tagName='a'}}{{render 'profile-image' userAction.userProfileImageUrl}}{{/link-to}}
+            {{#link-to 'user' userAction.user.slug
+            tagName='a'}}{{render 'profile-image' userAction.user.profileImageURL}}{{/link-to}}
 
             <div class="action-title">
-                <p>{{#link-to 'user' userAction.userSlug}}
-                    {{userAction.userName}}{{/link-to}}
+                <p>{{#link-to 'user' userAction.user.slug}}
+                    {{userAction.user.name}}{{/link-to}}
                     {{userAction.title}}</p>
                 <p>
-                    {{#if userAction.testTitle}}
-                        {{#link-to 'testInfo' userAction.testSlug}}{{userAction.testTitle}}{{/link-to}}
+                    {{#if userAction.test.title}}
+                        {{#link-to 'testInfo' userAction.test.slug}}{{userAction.test.title}}{{/link-to}}
                         <small> in </small>
-                        {{#if userAction.test.category.parentCategorySlug}}
-                            {{#link-to 'subcategory' userAction.test.category.parentCategorySlug userAction.testCategorySlug}}
-                                {{userAction.testCategoryName}}
+                        {{#if userAction.test.category.parent.category.lug}}
+                            {{#link-to 'subcategory' userAction.test.category.parent.category.slug userAction.test.category.slug}}
+                                {{userAction.test.category.name}}
                             {{/link-to}}
                         {{else}}
-                            {{#link-to 'category' userAction.testCategorySlug}}
-                                {{userAction.testCategoryName}}
+                            {{#link-to 'category' userAction.test.category.slug}}
+                                {{userAction.test.category.name}}
                             {{/link-to}}
                         {{/if}}
                     {{/if}}

@@ -30,11 +30,11 @@ export default Ember.Mixin.create({
 
     applicationController: function() {
         var applicationController = this.get('controllers.application');
-        if(!applicationController)
-            applicationController = this.controllerFor('application');
+        /*if(!applicationController)
+            applicationController = this.controllerFor('application');*/
 
         return applicationController;
-    }.property(),
+    }.property('controllers.application'),
 
     currentUser: function() {
         return this.get('applicationController.currentUser');

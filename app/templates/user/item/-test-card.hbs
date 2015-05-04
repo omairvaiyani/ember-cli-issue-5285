@@ -1,7 +1,7 @@
 <div class="row">
     <div class="col-md-12">
         <div class="card test-info-card margin-top-16">
-            {{#link-to 'user' authorSlug tagName="a"  class='inline-block'}}{{render 'profile-image' authorProfileImageUrl}}{{/link-to}}
+            {{#link-to 'user' author.slug tagName="a"  class='inline-block'}}{{render 'profile-image' author.profileImageURL}}{{/link-to}}
 
             <div class="test-details inline-block">
                 <h4>
@@ -12,12 +12,12 @@
                 </h4>
 
                 <p class="margin-bottom-8">
-                    {{#if category.parentCategorySlug}}
+                    {{#if category.parent.slug}}
                         <small>
-                            {{#link-to 'category' category.parentCategorySlug}}{{category.parentCategoryName}}{{/link-to}}
+                            {{#link-to 'category' category.parent.slug}}{{category.parent.name}}{{/link-to}}
                         </small>
                         /
-                        {{#link-to 'subcategory' category.parentCategorySlug category.slug}}{{category.name}}{{/link-to}}
+                        {{#link-to 'subcategory' category.parent.slug category.slug}}{{category.name}}{{/link-to}}
                     {{else}}
                         {{#link-to 'category' category.slug}}{{category.name}}{{/link-to}}
                     {{/if}}

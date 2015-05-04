@@ -76,5 +76,9 @@ app.import({
  * CSS TOGGLE SWITCH
  */
 app.import('bower_components/css-toggle-switch/dist/toggle-switch.css');
+/*
+ * JS TIMEZONE DETECT
+ */
+app.import('bower_components/jstz/jstz.js');
 
 module.exports = app.toTree();

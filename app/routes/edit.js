@@ -19,11 +19,9 @@ Ember.Route.extend(CurrentUser, {
                             return model;
                         else {
                             this.transitionTo('notFound');
-                            return;
                         }
                     } else {
                         this.transitionTo('notFound');
-                        return;
                     }
                 }.bind(this));
     }
