@@ -20,6 +20,7 @@
     "css-toggle-switch": "~2.1.6",
     "numeral": "~1.5.3",
     "moment-timezone": "~0.2.5",
-    "tooltipster": "~3.3.0"
+    "tooltipster": "~3.3.0",
+    "jstz": "https://bitbucket.org/pellepim/jstimezonedetect"
   }
 }
