@@ -103,14 +103,13 @@ Router.map(function () {
     this.route('fourOhFour', {path: '*path'});
 });
 
-Router.reopen({
+/*Router.reopen({
     notifyGoogleAnalytics: function () {
         return ga('send', 'pageview', {
             'page': this.get('url'),
             'title': window.document.title
         });
     }.on('didTransition')
-});
+});*/
 
-export default
-    Router;
+export default Router;

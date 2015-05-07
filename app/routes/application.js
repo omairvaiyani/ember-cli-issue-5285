@@ -22,7 +22,7 @@ export default Ember.Route.extend({
         if (!this.get('applicationController.currentUser'))
             return;
         var currentUser = this.get('applicationController.currentUser');
-        amplitude.setUserId(currentUser.get('id'));
+        //amplitude.setUserId(currentUser.get('id'));
         var userProperties = {};
         userProperties.name = currentUser.get('name');
         userProperties.slug = currentUser.get('slug');
@@ -32,7 +32,7 @@ export default Ember.Route.extend({
         userProperties.fbid = currentUser.get('fbid');
         userProperties.numberOfTests = currentUser.get('numberOfTests');
         userProperties.numberOfAttempts = currentUser.get('numberOfAttempts');
-        amplitude.setUserProperties(userProperties);
+        //amplitude.setUserProperties(userProperties);
     }.observes('applicationController.currentUser.id'),
 
     setupController: function (controller, model) {
@@ -248,8 +248,8 @@ export default Ember.Route.extend({
                     this.send('signUpAuthorisedFacebookUser', response.authResponse);
                 }
             }.bind(this), {
-                scope: 'public_profile, user_friends, friends_about_me, user_about_me, ' +
-                'email, user_location, user_education_history, friends_education_history'
+                scope: 'public_profile, user_friends, user_about_me, ' +
+                'email, user_location, user_education_history'
             });
 
         },

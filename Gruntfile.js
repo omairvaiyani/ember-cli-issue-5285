@@ -91,29 +91,28 @@ module.exports = function (grunt) {
             },
             prod: {
                 command: 'ember build --environment=production'
+            },
+            parse: {
+                command: [
+                    'cd parse',
+                    'cat source/* > cloud/main.js',
+                    'parse deploy'
+                ].join('&&')
             }
         }
     });
-    /*
-     * NOTE!
-     *
-     * After npm install,
-     * go into node_modules/grunt-redis/tasks/redis.js
-     * Add the following lines around line 57.
-     *
-     * promises.push(Q.ninvoke(client, "set", "currentDeploy", key).then(function(){
-     * grunt.log.debug("Key updated " + key);
-     * }));
-     */
-
     grunt.loadNpmTasks('grunt-s3');
     grunt.loadNpmTasks('grunt-hashres');
     grunt.loadNpmTasks('grunt-redis');
     grunt.loadNpmTasks('grunt-cdn');
     grunt.loadNpmTasks('grunt-shell');
     target = grunt.option('prod') || grunt.option('p') ? 'prod' : 'dev';
+    if(grunt.option('parse'))
+        target = 'parse';
     if (target === 'prod') {
         return grunt.registerTask('default', ["shell:" + target, 's3', "redis:" + target]);
+    } else if (target === 'parse') {
+        return grunt.registerTask('default', ["shell:parse"]);
     } else {
         return grunt.registerTask('default', ["shell:" + target]);
     }

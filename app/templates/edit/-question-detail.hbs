@@ -9,7 +9,7 @@
             <div class="col-md-12">
                 <div {{bind-attr class="validity.stem.errors.length:has-error validity.stem.warnings.length:has-warning"}}>
                     {{textarea placeholder="Type your question or statement here" classNames="form-control"
-                    rows="3" value=stem}}
+                    rows="3" value=model.stem}}
                 </div>
             </div>
         </div>
@@ -53,8 +53,8 @@
         <h5><strong>OPTIONS</strong></h5>
     </div>
 </div>
-{{#each option in options itemController='edit.question.item.option'}}
-    {{#unless option.itemIndex}}
+{{#each model.options itemController='edit.question.item.option' as |option|}}
+    {{#if option.model.isCorrect}}
         <div class="row">
             <div class="col-md-12">
                 <h5>CORRECT ANSWER</h5>
@@ -66,7 +66,7 @@
                 <div {{bind-attr class="option.validityOption.errors.length:has-error
                             option.validityOption.warnings.length:has-warning"}}>
                     {{textarea placeholder="Type the single correct answers here"
-                    classNames="form-control" value=option.phrase}}
+                    classNames="form-control" value=option.model.phrase}}
                 </div>
             </div>
         </div>
@@ -89,12 +89,12 @@
                 <div {{bind-attr class="option.validityOption.errors.length:has-error
                             option.validityOption.warnings.length:has-warning"}}>
                     {{textarea placeholder="Type one of the incorrect answers here"
-                    classNames="form-control" value=option.phrase}}
+                    classNames="form-control" value=option.model.phrase}}
                 </div>
             </div>
         </div>
         {{render "edit/question/views/input-validation-message" option.validityOption}}
-    {{/unless}}
+    {{/if}}
 {{/each}}
 <div class="row">
     <div class="col-md-12">
@@ -106,6 +106,6 @@
 <div class="row margin-bottom-16">
     <div class="col-md-12">
         {{textarea placeholder="Give some feedback or an explanation for test takers."
-        classNames="form-control" value=feedback}}
+        classNames="form-control" value=model.feedback}}
     </div>
 </div>

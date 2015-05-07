@@ -6,8 +6,8 @@ export default DS.Model.extend(ParseMixin, {
     question: DS.belongsTo('question', {async: true}),
     user: DS.belongsTo('parse-user', {async: true}),
     test: DS.belongsTo('test', {async: true}),
-    chosenAnswer: DS.attr('string'),
-    correctAnswer: DS.attr('string'),
+    chosenOptions: DS.attr(),
+    correctOptions: DS.attr(),
     isCorrect: DS.attr('boolean'),
     parseClassName: function () {
         return "Response";

@@ -53,7 +53,7 @@ Parse.Cloud.afterSave(Parse.User, function (request) {
  * @beforeSave Test
  *
  * New test:
- * - Set default parameters
+ * - Set default parameters + ACL
  * - Generate slug (async)
  *
  */
@@ -67,6 +67,84 @@ Parse.Cloud.beforeSave(Test, function (request, response) {
 
         if(!test.isGenerated() && test.title() && user)
             promises.push(test.generateSlug(user));
+    }
+
+    if (!promises.length)
+        return response.success();
+
+    Parse.Promise.when(promises).then(function () {
+        response.success();
+    }, function (error) {
+        response.error(error);
+    });
+});
+
+/**
+ * @beforeSave Question
+ *
+ * New Question:
+ * - Set default parameters + ACL
+ *
+ */
+Parse.Cloud.beforeSave(Question, function (request, response) {
+    var question = request.object,
+        user = request.user,
+        promises = [];
+
+    if (question.isNew()) {
+        question.setDefaults(user);
+    }
+
+    if (!promises.length)
+        return response.success();
+
+    Parse.Promise.when(promises).then(function () {
+        response.success();
+    }, function (error) {
+        response.error(error);
+    });
+});
+
+/**
+ * @beforeSave Attempt
+ *
+ * New Attempt:
+ * - Set default parameters + ACL
+ *
+ */
+Parse.Cloud.beforeSave(Attempt, function (request, response) {
+    var attempt = request.object,
+        user = request.user,
+        promises = [];
+
+    if (attempt.isNew()) {
+        attempt.setDefaults();
+    }
+
+    if (!promises.length)
+        return response.success();
+
+    Parse.Promise.when(promises).then(function () {
+        response.success();
+    }, function (error) {
+        response.error(error);
+    });
+});
+
+/**
+ * @beforeSave Response
+ *
+ * New Response:
+ * - Set default parameters + ACL
+ *
+ */
+Parse.Cloud.beforeSave(Response, function (request, response) {
+    var responseObject = request.object,
+        user = request.user,
+        promises = [];
+
+    if (responseObject.isNew()) {
+        responseObject.setDefaults();
     }
 
     if (!promises.length)

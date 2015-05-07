@@ -167,21 +167,20 @@ export default Ember.Controller.extend({
             this.send('decrementLoadingItems');
             return;
         }
-        return; // TODO work on this later
         Ember.$.ajax({
             url: "https://api.parse.com/1/functions/initialiseWebsiteForUser",
             method: "POST",
             headers: {
-                "X-Parse-Application-Id": config.parseId,
-                "X-Parse-REST-API-Key": config.restKey,
+                "X-Parse-Application-Id": config.parse.appId,
+                "X-Parse-REST-API-Key": config.parse.restKey,
                 "X-Parse-Session-Token": this.get('currentUser.sessionToken')
 
             }
         }).then(function (response) {
             // Categories
-            ParseHelper.extractRawPayload(this.store, 'category', response, 'categories');
+            ParseHelper.extractRawCategories(this.store, response);
             // Tests
-            var tests = ParseHelper.extractRawPayload(this.store, 'test', response, 'tests');
+            /*var tests = ParseHelper.extractRawPayload(this.store, 'test', response, 'tests');
             if(this.get('currentUser.tests')) {
                 this.get('currentUser.tests').clear();
                 this.get('currentUser.tests').addObjects(tests);
@@ -206,7 +205,7 @@ export default Ember.Controller.extend({
 
             var attempts = ParseHelper.extractRawPayload(this.store, 'attempt',
                 response, 'attempts');
-            this.get('currentUser').set('attempts', attempts);
+            this.get('currentUser').set('attempts', attempts);*/
 
             /*
              * isMobileUSer
@@ -215,9 +214,9 @@ export default Ember.Controller.extend({
              * coding. No longer need CloudFunction for this but this is a good place
              * to set this.
              */
-            this.set('currentUser.isMobileUser', this.get('currentUser.privateData.isMobileUser'));
+            //this.set('currentUser.isMobileUser', this.get('currentUser.privateData.isMobileUser'));
         }.bind(this));
-        EventTracker.profileUser(this.get('currentUser'));
+        //EventTracker.profileUser(this.get('currentUser'));
     }.observes('currentUser'),
 
     currentUserMessagesDidChange: function () {

@@ -1,15 +1,7 @@
-import
-Ember
-from
-'ember';
+import Ember from 'ember';
+import EachItem from '../../../mixins/each-item';
 
-import
-EachItem
-from
-'../../../mixins/each-item';
-
-export default
-Ember.ObjectController.extend(EachItem, {
+export default Ember.Controller.extend(EachItem, {
     needs: ['create', 'views/action-bar'],
 
     isChecked: false,
@@ -24,14 +16,14 @@ Ember.ObjectController.extend(EachItem, {
     }.observes('isChecked'),
 
     isCurrent: function () {
-        if(!this.get('parentController.controllers.editQuestion.model')) {
+        if (!this.get('parentController.controllers.editQuestion.model')) {
             return false;
         } else {
             return this.get('parentController.controllers.editQuestion.model') === this.get('model');
         }
     }.property('model.id', 'parentController.controllers.editQuestion.model'),
 
-    array: function() {
+    array: function () {
         return this.get('parentController.questions');
     }.property('parentController.questions.length')
 });

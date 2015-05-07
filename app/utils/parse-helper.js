@@ -79,13 +79,51 @@ export default {
 
     extractRawPayload: function (store, type, rawPayload, key) {
         var serializer = store.serializerFor(type),
-            payload = rawPayload.result[key];
+            payload = rawPayload.result[key],
+            originalPayload = $.extend(true, [], payload);
+
         _.each(payload, function (object) {
             object["id"] = object.objectId;
         });
+
+
         var serializedObjects = serializer.extractArray(store,
             store.modelFor(type), {results: payload});
-        return store.pushMany(store.modelFor(type), serializedObjects);
+        var loadedRecords = store.pushMany(store.modelFor(type), serializedObjects);
+
+        var relationships = [];
+        store.modelFor(type).eachRelationship(function (key, relationship) {
+            relationships.push(relationship);
+        });
+
+        if (relationships.length) {
+            // TODO replace hardcoded relationshipkey 'parent' with dynamic relationship.key
+            loadedRecords.forEach(function (record, index) {
+                if (!originalPayload[index].parent)
+                    return;
+                var serialisedRelationship = serializer.extractSingle(store,
+                    store.modelFor(type), originalPayload[index].parent, originalPayload[index].parent.id);
+                var loadedRelationship = store.pushMany(store.modelFor(type), [serialisedRelationship]);
+                record.set('parent', loadedRelationship[0]);
+            });
+        }
+        return loadedRecords;
+    },
+
+    extractRawCategories: function (store, rawPayload) {
+        var loadedRecords = this.extractRawPayload(store, 'category', rawPayload, 'categories'),
+            originalPayload = $.extend(true, [], rawPayload.result['categories']),
+            serializer = store.serializerFor('category');
+
+        loadedRecords.forEach(function (record, index) {
+            if (!originalPayload[index].parent)
+                return;
+            var serialisedRelationship = serializer.extractSingle(store,
+                store.modelFor('category'), originalPayload[index].parent, originalPayload[index].parent.id);
+            var loadedRelationship = store.pushMany(store.modelFor('category'), [serialisedRelationship]);
+            record.set('parent', loadedRelationship[0]);
+        });
+        return loadedRecords;
     },
 
     cloudFunction: function (context, functionName, params) {

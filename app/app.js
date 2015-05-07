@@ -18,7 +18,9 @@ var App = Ember.Application.extend({
 });
 
 loadInitializers(App, config.modulePrefix);
-
+// This disables deprecation warnings
+Ember.deprecate = function(){};
+Ember.warn = function(i){};
 /*
  * zzish set up
  *//*

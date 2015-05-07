@@ -6,17 +6,14 @@ export default Ember.Controller.extend(CurrentUser, {
     needs: ['application', 'editQuestion', 'join'],
 
     isTestDirty: function () {
-        if (this.get('isDirty') ||
+        return this.get('isDirty') ||
             this.get('controllers.editQuestion.content.isDirty') ||
-            this.get('controllers.editQuestion.content.areOptionsDirty'))
-            return true;
-        else
-            return false;
+            this.get('controllers.editQuestion.content.areOptionsDirty');
     }.property('isDirty', 'controllers.editQuestion.content.isDirty',
         'controllers.editQuestion.content.areOptionsDirty'),
 
     categories: function () {
-        return this.store.find('category');
+        return this.store.all('category');
     }.property(),
 
     parentCategory: null,
@@ -31,8 +28,9 @@ export default Ember.Controller.extend(CurrentUser, {
     childCategories: function () {
         if (!this.get('parentCategory'))
             return [];
-        else
-            return this.get('categories').filterProperty('_data.parent', this.get('parentCategory')).sortBy('name');
+        else {
+            return this.get('categories').filterProperty('parent.id', this.get('parentCategory.id')).sortBy('name');
+        }
     }.property('parentCategory.name'),
 
     childOrParentCategorySelected: function () {
@@ -150,7 +148,7 @@ export default Ember.Controller.extend(CurrentUser, {
                 }
             }
             this.set('checkTestError', error);
-            if(error)
+            if (error)
                 return;
 
             this.set('model.author', this.get('currentUser'));
@@ -234,11 +232,12 @@ export default Ember.Controller.extend(CurrentUser, {
             this.toggleProperty('showQuestionListCheckBoxes');
         },
 
+        // @deprecated
         deleteObjectsInActionBar: function (objects) {
             /*
              * Delete questions from test.
              * We are not DELETING the questions
-             * permenantly. They will remain on
+             * permanently. They will remain on
              * the server unlinked to this test.
              * Save the test with the updated
              * 'questions' array
@@ -252,6 +251,20 @@ export default Ember.Controller.extend(CurrentUser, {
                 this.send('addNotification', 'deleted', 'Question deleted!', 'Your test is up to date!');
             else
                 this.send('addNotification', 'deleted', length + ' questions deleted!', 'Your test is up to date!');
+        },
+
+        /**
+         * @Action Delete Question
+         * - Only un-linking question from test
+         * - Not actually deleting question from
+         * server
+         * @param {DS.Model} question
+         */
+        deleteQuestion: function (question) {
+            this.get('model.questions').removeObject(question);
+            this.get('model').save();
+            this.transitionToRoute('edit.index');
+            this.send('addNotification', 'deleted', 'Question deleted!', 'Your test is up to date!');
         },
 
         goToJoinStep: function (step, callback) {

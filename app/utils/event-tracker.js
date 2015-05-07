@@ -86,6 +86,7 @@ export default
      * @param currentUser (optional)
      */
     recordEvent: function (event, object, currentUser) {
+        return; // Disabled for now
         var eventProperties = {source: "Web"};
         if (object) {
             switch (event) {
@@ -100,7 +101,7 @@ export default
                     break;
                 case this.STARTED_TEST:
                     // object is Test (Can be Attempt, must avoid)
-                    if (object.parseClassName() === "Test") {
+                    if (object.constructor.typekey === "test") {
                         eventProperties = {
                             title: object.get('title'),
                             category: object.get('category.name'),

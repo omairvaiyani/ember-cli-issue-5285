@@ -7,7 +7,7 @@ import EmberParseAdapter from '../adapters/parse';
  * - edit.newQuestion
  * - editQuestion
  */
-export default Ember.ObjectController.extend({
+export default Ember.Controller.extend({
     needs: ['application', 'create'],
 
     featherEditor: null,
@@ -70,14 +70,14 @@ export default Ember.ObjectController.extend({
         },
         stem: {
             errors: [],
-            warnings: [],
+            warnings: []
         },
         options: [
             {errors: [], warnings: []},
             {errors: [], warnings: []},
             {errors: [], warnings: []},
             {errors: [], warnings: []},
-            {errors: [], warnings: []},
+            {errors: [], warnings: []}
         ]
     },
     isQuestionValid: function () {
@@ -137,17 +137,6 @@ export default Ember.ObjectController.extend({
             this.set('validity.stem.warnings', []);
         }
     }.observes('stem'),
-    tagsStringified: "",
-    stringifyTags: function () {
-        var tagsStringified = "";
-        for (var i = 0; i < this.get('tags.length'); i++) {
-            tagsStringified += this.get('tags.' + i) + ", ";
-        }
-        if (tagsStringified)
-            this.set('tagsStringified', tagsStringified.slice('0', -2));
-        else
-            this.set('tagsStringified', tagsStringified);
-    }.observes('content.objectId'),
 
     actions: {
         clearValidity: function () {
@@ -190,28 +179,9 @@ export default Ember.ObjectController.extend({
             this.set('validity.options.' + index + '.warnings', []);
             this.set('validity.question.hasErrors', false);
             this.set('validity.question.hasWarnings', false);
-            /*   this.set('controllers.create.isDirty', true);
-             switch (options.length) {
-             case 2:
-             if (options[0].phrase && options[1].phrase)
-             this.set('canAddMoreOptions', true);
-             break;
-             case 3:
-             if (options[0].phrase && options[1].phrase && options[2].phrase)
-             this.set('canAddMoreOptions', true);
-             else
-             this.set('canAddMoreOptions', false);
-             break;
-             case 4:
-             if (options[0].phrase && options[1].phrase && options[2].phrase && options[3].phrase)
-             this.set('canAddMoreOptions', true);
-             else
-             this.set('canAddMoreOptions', false);
-             break;
-             }*/
         },
         addOption: function () {
-            var options = this.get('options');
+            var options = this.get('model.options');
             options.pushObject(App.Option.create({
                 phrase: "",
                 isTrue: false

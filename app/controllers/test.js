@@ -179,26 +179,29 @@ export default Ember.ObjectController.extend(CurrentUser, {
                 if (chosenAnswer === correctAnswer) {
                     isCorrect = true;
                     score++;
+                    /*
                     if (this.get('currentUser.zzishActivityId:' + EventTracker.STARTED_TEST)) {
                         Zzish.logAction(this.get('currentUser.zzishActivityId:' + EventTracker.STARTED_TEST),
                             question.get('stem'), 1);
-                    }
+                    }*/
                 }
+                /*
                 if (this.get('currentUser.zzishActivityId:' + EventTracker.STARTED_TEST)) {
                     var biScore = 0;
                     if (isCorrect)
                         biScore = 1;
                     Zzish.logAction(this.get('currentUser.zzishActivityId:' + EventTracker.STARTED_TEST),
                         question.get('stem'), chosenAnswer, biScore);
-                }
+                }*/
 
-
+                // Storing options in array as we may have
+                // multiple correct options in the future
                 var response = this.store.createRecord('response', {
-                    chosenAnswer: chosenAnswer,
-                    correctAnswer: correctAnswer,
+                    chosenOptions: [chosenAnswer],
+                    correctOptions: [correctAnswer],
                     question: question,
                     isCorrect: isCorrect,
-                    test: attempt.get('test.content')
+                    test: attempt.get('test')
                 });
                 if (this.get('currentUser'))
                     response.set('user', this.get('currentUser'));
@@ -240,11 +243,11 @@ export default Ember.ObjectController.extend(CurrentUser, {
                         this.store.createRecord('action', {
                             user: this.get('currentUser'),
                             type: 'attemptFinished',
-                            test: attempt.get('test.content'),
+                            test: attempt.get('test'),
                             attempt: attempt,
                             value: score
                         });
-                        if (this.get('currentUser.zzishActivityId:' + EventTracker.STARTED_TEST)) {
+                        /*if (this.get('currentUser.zzishActivityId:' + EventTracker.STARTED_TEST)) {
                             var passed = score > 50;
                             if (passed)
                                 passed = "Passed";
@@ -252,7 +255,7 @@ export default Ember.ObjectController.extend(CurrentUser, {
                                 passed = "Failed";
                             Zzish.logAction(this.get('currentUser.zzishActivityId:' + EventTracker.STARTED_TEST),
                                 "Finished test", passed, score);
-                        }
+                        }*/
                     }
                 }.bind(this));
 
