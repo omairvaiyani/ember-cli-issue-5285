@@ -179,15 +179,16 @@ export default Ember.Controller.extend({
         }).then(function (response) {
             // Categories
             ParseHelper.extractRawCategories(this.store, response);
+
             // Tests
-            /*var tests = ParseHelper.extractRawPayload(this.store, 'test', response, 'tests');
+            var tests = ParseHelper.extractRawPayload(this.store, 'test', response, 'tests');
             if(this.get('currentUser.tests')) {
                 this.get('currentUser.tests').clear();
                 this.get('currentUser.tests').addObjects(tests);
             } else
                 this.set('currentUser.tests', tests);
 
-            var followers = ParseHelper.extractRawPayload(this.store, 'parse-user',
+            /* var followers = ParseHelper.extractRawPayload(this.store, 'parse-user',
                 response, 'followers');
             this.get('currentUser').set('followers', followers);
 

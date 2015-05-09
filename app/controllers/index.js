@@ -57,21 +57,6 @@ export default Ember.Controller.extend(CurrentUser, {
 
     }.observes('currentUser', 'controllers.application.currentPath'),
 
-    // @Deprecated
-    /* autocompleteTests: [],
-     getAutocompleteTests: function () {
-     var where = {
-     tags: {
-     "$all": ParseHelper.generateSearchTags(this.get('searchTermForTests'))
-     }
-     };
-     this.store.findQuery('test', {where: JSON.stringify(where)})
-     .then(function (tests) {
-     this.get('autocompleteTests').clear();
-     this.get('autocompleteTests').addObjects(tests);
-     }.bind(this));
-     }.observes('searchTermForTests.length'),*/
-
     /*
      * HOME MODE
      */
@@ -87,10 +72,16 @@ export default Ember.Controller.extend(CurrentUser, {
 
     tests: [],
 
+    myTests: function () {
+        return new Ember.A();
+    }.property(),
+
     testsAreOrderedByTitle: true,
     testsOrderedByTitle: function () {
         if (!this.get('currentUser.tests'))
             return [];
+        this.get('myTests').clear();
+        this.get('myTests').addObjects(this.get('currentUser.tests')).sortBy('title');
         return this.get('currentUser.tests').sortBy('title');
     }.property('currentUser.tests.length'),
 
@@ -103,7 +94,6 @@ export default Ember.Controller.extend(CurrentUser, {
             sortProperties: ['createdAt'],
             sortAscending: false
         });
-        return this.get('currentUser.tests').sortBy('createdAt');
     }.property('currentUser.tests.length'),
 
     testsAreOrderedByCategory: false,
@@ -127,33 +117,9 @@ export default Ember.Controller.extend(CurrentUser, {
     }.property('testsOrderedByTitle.length'),
 
 
-    readyToGetTests: false,
-    // @Deprecated
-    /*getCurrentUsersTests: function () {
-     if (!this.get('currentUser'))
-     return;
+    // Deprecated: Get activities in ApplicationController
+    /*followingActions: new Ember.A(),
 
-     if (!this.get('currentUser.tests'))
-     this.set('currentUser.tests', Em.A());
-
-     var where = {
-     author: ParseHelper.generatePointer(this.get('currentUser')),
-     isObjectDeleted: {
-     "$ne": true // undefined !== false, hence using not equal to True.
-     },
-     isSpacedRepetition: {
-     "$ne": true
-     }
-     };
-     this.store.findQuery('test', {where: JSON.stringify(where), order: 'title', include: 'category,author'})
-     .then(function (tests) {
-     this.get('currentUser.tests').clear();
-     this.get('currentUser.tests').addObjects(tests);
-     }.bind(this));
-     }.observes('initialized', 'currentUser.id'),*/
-
-    followingActions: new Ember.A(),
-    // TODO do we need this all the time or better to load
     // when user visits home page
     getFollowingActions: function () {
         this.get('followingActions').clear();
@@ -188,22 +154,7 @@ export default Ember.Controller.extend(CurrentUser, {
             }.bind(this));
             this.get('followingActions').addObjects(actions);
         }.bind(this));
-    }.observes('initialized', 'currentUser.following.length'),
-
-    // @Deprecated
-    /*getGroups: function () {
-     if (this.get('currentUser.groups.length'))
-     return;
-     return this.get('currentUser').getGroups(this.store);
-     var where = {
-     creator: ParseHelper.generatePointer(this.get('currentUser', "_User"))
-     };
-     this.store.findQuery("group", {where: JSON.stringify(where)})
-     .then(function (groups) {
-     this.get('currentUser.groups').clear();
-     this.get('currentUser.groups').addObjects(groups);
-     }.bind(this));
-     }.observes('homeIsGroups'),*/
+    }.observes('initialized', 'currentUser.following.length'),*/
 
     /**
      * @Observes Set the Generated SRS test

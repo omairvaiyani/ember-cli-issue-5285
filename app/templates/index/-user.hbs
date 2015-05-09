@@ -5,88 +5,38 @@
                 <div class="card home-overview">
                     {{#link-to 'user' currentUser.slug}}{{render 'profile-image' currentUser}}{{/link-to}}
                     {{#link-to 'user' currentUser.slug}}<h4 class="name">{{currentUser.name}}</h4>{{/link-to}}
-                    <hr>
-                    <h4>Overview</h4>
-
-                    <p>Tests created:
-                        <small class="pull-right">{{currentUser.numberOfTests}}</small>
-                    </p>
-                    <p>Questions created:
-                        <small class="pull-right">{{currentUser.numberOfQuestions}}</small>
-                    </p>
-                    <p>Test attempts:
-                        <small class="pull-right">{{currentUser.numberOfAttempts}}</small>
-                    </p>
-                    <p>Average score:
-                        <small class="pull-right">{{currentUser.averageScore}}%</small>
-                    </p>
-                    <p>First time attempts:
-                        <small class="pull-right">{{currentUser.uniqueNumberOfAttempts}}</small>
-                    </p>
-                    <p class="margin-bottom-16">First time average:
-                        <small class="pull-right">{{currentUser.uniqueAverageScore}}%</small>
-                    </p>
-
-                    <p><strong>Community stats on your tests</strong></p>
-
-                    <p>Test attempts:
-                        <small class="pull-right">{{currentUser.communityNumberOfAttempts}}</small>
-                    </p>
-                    <p>Average score:
-                        <small class="pull-right">{{currentUser.communityAverageScore}}%</small>
-                    </p>
-
-                    <p>First time attempts:
-                        <small class="pull-right">{{currentUser.communityUniqueNumberOfAttempts}}</small>
-                    </p>
-                    <p>First time average:
-                        <small class="pull-right">{{currentUser.communityUniqueAverageScore}}%</small>
-                    </p>
-                </div>
-            </article>
-        </section>
-        <section class="row">
-            <article class="col-md-12">
-                <div class="card margin-top-16">
-                    <h4>Spaced Repetition Service</h4>
-
-                    {{#if currentUser.privateData.isPremium}}
-                        {{#link-to 'dashboard' tagName='a' class='margin-bottom-16'}}
-                            Go to the Premium Dashboard
-                        {{/link-to}}
-
-                        <h5>Overview:</h5>
-
-                        {{#unless currentUser.latestSRSAttempt.isProcessed}}
-                            <p>Your spaced repetition test is ready to take!</p>
-
-                            <p>We have prepared {{currentUser.latestSRSAttempt.totalQuestions}} questions
-                                for you. {{#link-to 'test' currentUser.latestSRSAttempt}}Take now!{{/link-to}}</p>
-                        {{else}}
-                            <p>You scored {{currentUser.latestSRSAttempt.score}}% for the
-                                {{currentUser.latestSRSAttempt.totalQuestions}} questions we
-                                sent to you earlier.</p>
-
-                            <p>
-                                {{#link-to 'result' currentUser.latestSRSAttempt}}See your
-                                    answers{{/link-to}} or
-                                {{#link-to 'test' currentUser.latestSRSAttempt.id}}Repeat the test{{/link-to}}.</p>
-                            {{from-now time=currentUser.latestSRSAttempt.updatedAt showIcon=true}}
-                        {{/unless}}
-                        <hr>
-
-                        {{from-now time=currentUser.spacedRepetitionNextDue showIcon=true prefix="Next due "}}
-                    {{else}}
-                        {{#link-to 'features'}}Learn about MyCQs Premium{{/link-to}}
-                    {{/if}}
                 </div>
             </article>
         </section>
     </div>
     <div class="col-md-9 col-fix-right">
 
+        <div role="tabpanel">
+
+            <!-- Nav tabs -->
+            <ul class="nav nav-tabs" role="tablist">
+                <li role="presentation" class="active"><a href="#activities" aria-controls="activities" role="tab" data-toggle="tab">Activities</a></li>
+                <li role="presentation"><a href="#my-tests" aria-controls="my-tests" role="tab" data-toggle="tab">My Tests</a></li>
+                <li role="presentation"><a href="#my-progress" aria-controls="my-progress" role="tab" data-toggle="tab">My Progress</a></li>
+            </ul>
+
+            <!-- Tab panes -->
+            <div class="tab-content">
+                <div role="tabpanel" class="tab-pane active" id="activities">1</div>
+                <div role="tabpanel" class="tab-pane" id="my-tests">{{partial 'index/user/my-tests'}}</div>
+                <div role="tabpanel" class="tab-pane" id="my-progress">3</div>
+            </div>
+
+        </div>
+
+        {{!--
         <div class="row">
-            <div class="col-md-12">
+            <div class="col-md-6">
+                <ul class="nav nav-tabs">
+                    <li role="presentation" class="active"><a href="#">Activities</a></li>
+                    <li role="presentation"><a href="#">My Tests</a></li>
+                    <li role="presentation"><a href="#">My Progress</a></li>
+                </ul>
                 <div class="card home-navigation">
                     <button {{bind-attr class='homeIsActivities:current'}}
                         {{action 'changeHomeNavigation' 'activities'}}>Activities
@@ -95,10 +45,7 @@
                         {{action 'changeHomeNavigation' 'tests'}}>My Tests
                     </button>
                     <button {{bind-attr class='homeIsAttempts:current'}}
-                        {{action 'changeHomeNavigation' 'attempts'}}>Attempts
-                    </button>
-                    <button {{bind-attr class='homeIsGroups:current'}}
-                        {{action 'changeHomeNavigation' 'groups'}}>Groups
+                        {{action 'changeHomeNavigation' 'attempts'}}>My Progress
                     </button>
                     {{#if homeIsTests}}
                         <!-- Order selection -->
@@ -162,6 +109,7 @@
                 </div>
             </div>
         </div>
+        --}}
     </div>
 </div>
 <div class="margin-bottom-16"></div>
