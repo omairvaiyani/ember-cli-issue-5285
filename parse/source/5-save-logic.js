@@ -48,7 +48,6 @@ Parse.Cloud.afterSave(Parse.User, function (request) {
     }
 });
 
-
 /**
  * @beforeSave Test
  *
@@ -60,13 +59,16 @@ Parse.Cloud.afterSave(Parse.User, function (request) {
 Parse.Cloud.beforeSave(Test, function (request, response) {
     var test = request.object,
         user = request.user,
+        userEvent,
         promises = [];
 
     if (test.isNew()) {
         test.setDefaults();
 
-        if(!test.isGenerated() && test.title() && user)
+        if (!test.isGenerated() && test.title() && user && !test.slug()) {
             promises.push(test.generateSlug(user));
+        }
+
     }
 
     if (!promises.length)

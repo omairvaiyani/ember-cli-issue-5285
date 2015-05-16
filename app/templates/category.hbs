@@ -68,13 +68,6 @@
                                     {{/link-to}}
                                 </li>
                             {{else}}
-                            {{!--<p>{{{input type="checkbox" checked=category.isChecked}}
-                                {{#link-to 'category' this.slug
-                                (query-params categoryFilter=category.slug page=1)}}
-                                    {{category.name}}
-                                {{/link-to}}
-                                <small>({{category.totalTests}})</small>
-                            </p>--}}
                                 {{#link-to 'subcategory' category.parentCategorySlug category.slug tagName='li'}}
                                     {{#link-to 'subcategory' category.parentCategorySlug category.slug tagName='a'}}
                                         {{category.name}}
@@ -133,8 +126,8 @@
                     </div>
                 </div>
             </div>
-            {{#each testsOnPage itemController='browse.item.test'}}
-                {{partial 'browse/test-card'}}
+            {{#each testsOnPage as |test|}}
+                {{test-card test=test parentController=this}}
             {{/each}}
         </div>
     </div>

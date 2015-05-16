@@ -43,10 +43,71 @@ Parse.Object.prototype.verifySlug = function () {
             return this;
     }.bind(this));
 };
+/**
+ * @Function Generate Pointer
+ * @param {string} className
+ * @param {string} objectId
+ * @returns {{__type: string, className: {string}, objectId: {string}}
+ */
+Parse.Object.generatePointer = function (className, objectId) {
+    return {"__type": "Pointer", "className": className, "objectId": objectId};
+};
+/**
+ * @Function Create from JSON
+ * Convert payloads to parse objects.
+ * Ambiguous to any class.
+ * Can take single object or array of
+ * objects. NOTE: the payload must
+ * contain className!
+ * @param {Object} payload
+ * @param {string} className
+ * @returns {*}
+ */
+Parse.Object.createFromJSON = function (payload, className) {
+    var isSingleObject = false,
+        parseObjects = [];
+    if (payload.constructor !== Array) {
+        payload = [payload];
+        isSingleObject = true;
+    }
+    _.each(payload, function (object, index) {
+        console.log("Loop 1 - index " + index + " object " + JSON.stringify(object));
+        var parseObject = new Parse.Object(className);
+        _.each(_.pairs(object), function (pair) {
+            var key = pair[0], value = pair[1];
+            if (_.contains(parseObject.getPointerFields(), key))
+                parseObject["set" + key.capitalizeFirstLetter()](value);
+            else
+                parseObject.set(key, value);
+        });
+        parseObjects.push(parseObject);
+    });
+    if (isSingleObject)
+        return parseObjects[0];
+    else
+        return parseObjects;
+};
+/**
+ * @Function Fetch If Needed
+ * Checks if object is a pointer
+ * or fetched already. Returns
+ * a promise that either resolves
+ * straightaway or actually fetches
+ * the pointer.
+ * @returns {Parse.Promise<Parse.Object>}
+ */
+Parse.Object.prototype.fetchIfNeeded = function () {
+    // This is a good, but not foolproof, way to check
+    // if the object is fetched or not.
+    if (!this.createdAt)
+        return this.fetch();
+    else
+        return Parse.Promise.as(this);
+};
 /****
- * -----------
+ * ----------
  * Parse.User
- * -----------
+ * ----------
  * Added functions to the Parse.User Class
  **/
 /**
@@ -103,6 +164,270 @@ Parse.User.prototype.generateSlug = function () {
 
     return this.verifySlug();
 };
+/**
+ * @Function Check Level Up
+ * @return {Parse.Promise<boolean>} didLevelUp
+ */
+Parse.User.prototype.checkLevelUp = function () {
+    var currentLevel = this.level(),
+        promise;
+
+    // User has no level set: this shouldn't happen
+    // *once* we set Level 1 by default on sign up.
+    if (!currentLevel) {
+        var query = new Parse.Query(Level);
+        query.equalTo('number', 1);
+        promise = query.find().then(function (result) {
+            this.set('level', result[0]);
+            return this.save();
+        }.bind(this)).then(function () {
+            return Parse.Promise.as(true);
+        });
+    } else {
+        // User has a level set, fetch and check
+        // if the user should level up
+        promise = currentLevel.fetchIfNeeded().then(function (a) {
+            console.log("Returned promise from fetch "+JSON.stringify(a));
+            console.log("currentLevel "+JSON.stringify(currentLevel));
+            console.log("Points to level up "+(currentLevel.pointsRequired() + currentLevel.pointsToLevelUp()));
+            console.log("Therefore return as: "+this.points() < (currentLevel.pointsRequired() + currentLevel.pointsToLevelUp()));
+            if (this.points() < (currentLevel.pointsRequired() + currentLevel.pointsToLevelUp()))
+                return Parse.Promise.as(false);
+            else {
+                return Level.getNextLevel(currentLevel).then(function (nextLevel) {
+                    this.set('level', nextLevel);
+                    return this.save();
+                }.bind(this)).then(function () {
+                    return Parse.Promise.as(true);
+                });
+            }
+        }.bind(this));
+    }
+    return promise;
+};
+/**
+ * @Property name
+ * @returns {string}
+ */
+Parse.User.prototype.name = function () {
+    return this.get('name');
+};
+/**
+ * @Property createdTests
+ * @returns {Parse.Relation}
+ */
+Parse.User.prototype.createdTests = function () {
+    return this.relation('createdTests');
+};
+/**
+ * @Property userEvents
+ * @returns {Parse.Relation}
+ */
+Parse.User.prototype.userEvents = function () {
+    return this.relation('userEvents');
+};
+/**
+ * @Property level
+ * @returns {Level}
+ */
+Parse.User.prototype.level = function () {
+    return this.get('level');
+};
+/**
+ * @Property points
+ * @returns {integer}
+ */
+Parse.User.prototype.points = function () {
+    return this.get('points');
+};
+
+/****
+ * ---------
+ * UserEvent
+ * ---------
+ *
+ **/
+var UserEvent = Parse.Object.extend("UserEvent", {
+    /**
+     * @Property type
+     * @returns {string}
+     */
+    type: function () {
+        return this.get('type');
+    },
+
+    /**
+     * @Property pointsTransacted
+     * @returns {string}
+     */
+    pointsTransacted: function () {
+        return this.get('pointsTransacted');
+    },
+
+    /**
+     * @Property objects
+     * Ambiguous Parse pointers
+     * @returns {Array}
+     */
+    objects: function () {
+        return this.get('objects');
+    },
+
+    /**
+     * @Property objectTypes
+     * Class names for the objects
+     * @returns {Array}
+     */
+    objectTypes: function () {
+        return this.get('objectTypes');
+    },
+
+    /**
+     * @Function Assign Points
+     * Async method to assign points
+     * to a given userEvent based on
+     * the Parse.Config parameters.
+     * @returns {Parse.Promise<UserEvent>}
+     */
+    assignPoints: function () {
+        return Parse.Config.get().then(function (config) {
+            var pointsToAssign = _.find(config.get('userEvents'), function (userEvent) {
+                return userEvent.type === this.type();
+            }.bind(this));
+            this.set('pointsTransacted', pointsToAssign.reward);
+            return Parse.Promise.as(this);
+        }.bind(this));
+    },
+
+    /**
+     * @Function Set Defaults
+     * ACL
+     * {user: read}
+     *
+     * @param {Parse.User} user
+     * @returns {UserEvent}
+     */
+    setDefaults: function (user) {
+        if (user) {
+            var ACL = new Parse.ACL();
+            ACL.setReadAccess(user, true);
+            this.setACL(ACL);
+        }
+        return this;
+    }
+}, {
+    CREATED_TEST: "createdTest",
+
+    /**
+     * @Deprecated
+     * @Function Created Test
+     * Sets the userEvent type,
+     * objects, objectTypes and
+     * finally, the pointsTransacted
+     * by calling the async method,
+     * assignPoints.
+     *
+     * @param {Test} test
+     * @param {Parse.User} user
+     * @returns {Parse.Promise<UserEvent>}
+     */
+    createdTest: function (test, user) {
+        var userEvent = new UserEvent();
+        userEvent.set('type', UserEvent.CREATED_TEST);
+        userEvent.set('objects', [test]);
+        userEvent.set('objectTypes', [test.className]);
+        userEvent.setDefaults(user);
+        return userEvent.assignPoints().then(function () {
+            return userEvent.save();
+        }).then(function () {
+            // Increment user.points
+            user.increment('points', userEvent.pointsTransacted());
+            // Add userEvent to user.userEvents relation
+            var userEvents = user.userEvents();
+            userEvents.add(userEvent);
+            return user.save();
+        }).then(function () {
+            return Parse.Promise.as(userEvent);
+        });
+    },
+
+    /**
+     * @Function New Event
+     *
+     * Sets the event type, objects,
+     * assigns points (async) and
+     * finally adds the event to
+     * the user.userEvents relation.
+     *
+     * Note: assignPoints() is a function
+     * to determine how many points the
+     * event is worth based on Parse.Config.
+     * After this function is called, we can
+     * increment the user points in this
+     * method.
+     *
+     * @param {string} eventType
+     * @param {*} objects
+     * @param {Parse.User} user
+     * @returns {Parse.Promise} userEvent
+     */
+    newEvent: function (eventType, objects, user) {
+        var userEvent = new UserEvent();
+        userEvent.set('type', eventType);
+        if (objects.constructor !== Array)
+            objects = [objects];
+        userEvent.set('objects', objects);
+        var objectTypes = _.map(objects, function (object) {
+            return object.className;
+        });
+        userEvent.set('objectTypes', objectTypes);
+        userEvent.setDefaults(user);
+
+        return userEvent.assignPoints().then(function () {
+            return userEvent.save();
+        }).then(function () {
+            user.increment('points', userEvent.pointsTransacted());
+            var userEvents = user.userEvents();
+            userEvents.add(userEvent);
+            return user.save();
+        }).then(function () {
+            return Parse.Promise.as(userEvent);
+        });
+    }
+});
+
+/****
+ * --------
+ * Category
+ * --------
+ *
+ **/
+var Category = Parse.Object.extend("Category", {
+    /**
+     * @Property parent
+     * @returns {Category}
+     */
+    parent: function () {
+        return this.get('parent');
+    },
+
+    /**
+     * @Property name
+     * @returns {string}
+     */
+    name: function () {
+        return this.get('name');
+    },
+
+    /**
+     * @Property hasChildren
+     * @returns {boolean}
+     */
+    hasChildren: function () {
+        return this.get('hasChildren');
+    }
+}, {});
+
 /****
  * ----
  * Test
@@ -110,6 +435,19 @@ Parse.User.prototype.generateSlug = function () {
  *
  **/
 var Test = Parse.Object.extend("Test", {
+    /**
+     * @Function Get Pointer Fields
+     * Allows ambiguous functions
+     * to create instances from payload
+     * data and differentiate between
+     * direct fields and embedded
+     * fields. Use case:
+     * Parse.Object.createFromJSON.
+     * @returns {string[]}
+     */
+    getPointerFields: function () {
+        return ['author', 'category'];
+    },
     /**
      * @Property title
      * @returns {string}
@@ -127,11 +465,45 @@ var Test = Parse.Object.extend("Test", {
     },
 
     /**
-     * @Property privacy
-     * @returns {integer}
+     * @Function Set Author
+     * @param {Parse.User} author
+     * @returns {Test}
      */
-    privacy: function () {
-        return this.get('privacy');
+    setAuthor: function (author) {
+        if (typeof author === 'string') {
+            this.set('author', Parse.Object.generatePointer("_User", author));
+        } else
+            this.set('author', author);
+        return this;
+    },
+
+    /**
+     * @Property category
+     * @returns {Category}
+     */
+    category: function () {
+        return this.get('category');
+    },
+
+    /**
+     * @Function Set Category
+     * @param {Category} category
+     * @returns {Test}
+     */
+    setCategory: function (category) {
+        if (typeof category === 'string') {
+            this.set('category', Parse.Object.generatePointer("Category", category));
+        } else
+            this.set('category', category);
+        return this;
+    },
+
+    /**
+     * @Property isPublic
+     * @returns {boolean}
+     */
+    isPublic: function () {
+        return this.get('isPublic');
     },
 
     /**
@@ -143,13 +515,29 @@ var Test = Parse.Object.extend("Test", {
     },
 
     /**
+     * @Property questions
+     * @return {Parse.Collection}
+     */
+    questions: function () {
+        return this.get('questions');
+    },
+
+    /**
+     * @Property slug
+     * @return {string}
+     */
+    slug: function () {
+        return this.get('slug');
+    },
+
+    /**
      * @Function Set Defaults
      * Adds 0, booleans and empty arrays to
      * default properties. This reduces
      * errors further down the line.
      *
      * ACL
-     * If privacy === 1
+     * If isPublic
      * {author: read/write, public: read}
      * else
      * {author: read/write}
@@ -165,13 +553,20 @@ var Test = Parse.Object.extend("Test", {
             this.set(prop, 0);
         }.bind(this));
 
+        var boolProps = ["isGenerated", "isObjectDeleted",
+            "isProfessional", "isSpacedRepetition"];
+
+        _.each(boolProps, function (prop) {
+            if (!this.get(prop))
+                this.set(prop, false);
+        }.bind(this));
+
         if (!this.get('questions'))
             this.set('questions', []);
 
         if (this.author()) {
             var ACL = new Parse.ACL(this.author());
-            if (this.privacy() === 1)
-                ACL.setPublicReadAccess(true);
+            ACL.setPublicReadAccess(this.isPublic());
             this.setACL(ACL);
         }
 
@@ -257,13 +652,35 @@ var Question = Parse.Object.extend("Question", {
         return this.get('numberOfCorrectResponses');
     },
 
+
+    /**
+     * @Property options
+     * @returns {Array}
+     */
+    options: function () {
+        return this.get('options');
+    },
+
+    /**
+     * @Property isPublic
+     * @returns {boolean}
+     */
+    isPublic: function () {
+        return this.get('isPublic');
+    },
+
     /**
      * @Function Set Defaults
      * Adds 0, booleans and empty arrays to
      * default properties. This reduces
      * errors further down the line.
      *
-     * ACL
+     * ACL publicReadAccess depends
+     * on the Test that this question
+     * belongs to. Therefore, Question.isPublic
+     * should correlated to and be changed
+     * whenever Test.isPublic changes.
+     *
      * {user: read/write, public: read}
      * @param {Parse.User} user
      * @returns {Question}
@@ -277,8 +694,7 @@ var Question = Parse.Object.extend("Question", {
 
         if (user) {
             var ACL = new Parse.ACL(user);
-            // TODO A way to check test.privacy
-            ACL.setPublicReadAccess(true);
+            ACL.setPublicReadAccess(this.isPublic());
             this.setACL(ACL);
         }
 
@@ -299,8 +715,8 @@ var Question = Parse.Object.extend("Question", {
         var rawTags = this.stem(),
             tags;
 
-        if(this.feedback())
-           rawTags += " " + this.feedback();
+        if (this.feedback())
+            rawTags += " " + this.feedback();
 
         tags = rawTags.removeStopWords().toLowerCase().split(" ");
 
@@ -389,7 +805,7 @@ var Attempt = Parse.Object.extend("Attempt", {
         this.set('timeTaken', timeTaken);
 
         var ACL = new Parse.ACL();
-        if(this.user()) {
+        if (this.user()) {
             ACL.setReadAccess(this.user(), true);
         } else {
             ACL.setPublicReadAccess(true);
@@ -401,9 +817,9 @@ var Attempt = Parse.Object.extend("Attempt", {
 }, {});
 
 /****
- * -------
+ * --------
  * Response
- * -------
+ * --------
  *
  **/
 var Response = Parse.Object.extend("Response", {
@@ -466,7 +882,7 @@ var Response = Parse.Object.extend("Response", {
      */
     setDefaults: function () {
         var ACL = new Parse.ACL();
-        if(this.user()) {
+        if (this.user()) {
             ACL.setReadAccess(this.user(), true);
         } else {
             ACL.setPublicReadAccess(true);
@@ -475,7 +891,62 @@ var Response = Parse.Object.extend("Response", {
 
         return this;
     }
-}, {});// Concat source to main.js with 'cat source/*.js > cloud/main.js'
+}, {});
+
+/****
+ * -----
+ * Level
+ * -----
+ *
+ **/
+var Level = Parse.Object.extend("Level", {
+    /**
+     * @Property number
+     * @returns {integer}
+     */
+    number: function () {
+        return this.get('number');
+    },
+
+    /**
+     * @Property title
+     * @returns {string}
+     */
+    title: function () {
+        return this.get('title');
+    },
+
+    /**
+     * @Property pointsRequired
+     * @returns {number}
+     */
+    pointsRequired: function () {
+        return this.get('pointsRequired');
+    },
+
+
+    /**
+     * @Property pointsToLevelUp
+     * @returns {number}
+     */
+    pointsToLevelUp: function () {
+        return this.get('pointsToLevelUp');
+    }
+}, {
+    /**
+     * @Function Get Next Level
+     * Fetches the next level up.
+     * @param {Level} level
+     * @return {Parse.Promise<Level>}
+     */
+    getNextLevel: function (level) {
+        var query = new Parse.Query(Level);
+        query.equalTo('number', (level.number() + 1));
+        return query.find().then(function (result) {
+            return Parse.Promise.as(result[0]);
+        });
+    }
+});// Concat source to main.js with 'cat source/*.js > cloud/main.js'
 
 var _ = require("underscore"),
     moment = require('cloud/moment-timezone-with-data.js'),
@@ -504,7 +975,13 @@ var FB = {
 };/*
  * HELPER CLASSES
  */
-
+/**
+ * @Function Capitalize
+ * @returns {string}
+ */
+String.prototype.capitalizeFirstLetter = function() {
+    return this.charAt(0).toUpperCase() + this.slice(1);
+}
 /**
  * @Function Slugify
  * Lower cases, replaces spaces with -
@@ -605,7 +1082,6 @@ Parse.Cloud.afterSave(Parse.User, function (request) {
     }
 });
 
-
 /**
  * @beforeSave Test
  *
@@ -617,13 +1093,16 @@ Parse.Cloud.afterSave(Parse.User, function (request) {
 Parse.Cloud.beforeSave(Test, function (request, response) {
     var test = request.object,
         user = request.user,
+        userEvent,
         promises = [];
 
     if (test.isNew()) {
         test.setDefaults();
 
-        if(!test.isGenerated() && test.title() && user)
+        if (!test.isGenerated() && test.title() && user && !test.slug()) {
             promises.push(test.generateSlug(user));
+        }
+
     }
 
     if (!promises.length)
@@ -725,7 +1204,8 @@ Parse.Cloud.beforeSave(Response, function (request, response) {
  * - Send Parse.Config
  * - Send all categories
  * If currentUser
- * - User's tests
+ * - Created tests
+ * - Saved tests
  * - New messages
  * - Followers
  * - Following
@@ -736,67 +1216,261 @@ Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
     var user = request.user,
         config,
         categories,
-        tests,
+        createdTests,
+        savedTests,
         promises = [];
+
+    // Needed to fetch savedTest authors
+    Parse.Cloud.useMasterKey();
 
     promises.push(config = Parse.Config.get());
     promises.push(categories = new Parse.Query("Category").include("parent").find());
-    /*if (user) {
-        var testsQuery = new Parse.Query("Test");
-        testsQuery.equalTo('author', user);
-        testsQuery.notEqualTo('isObjectDeleted', true);
-        testsQuery.notEqualTo('isSpacedRepetition', true);
-        testsQuery.ascending('title');
-        promises.push(tests = testsQuery.find());
 
-        var messagesQuery = new Parse.Query("Message");
-        messagesQuery.equalTo('to', user);
-        messagesQuery.descending("createdAt");
-        messagesQuery.limit(5);
-        promises.push(messages = messagesQuery.find());
+    if (user) {
+        var createdTestsQuery = new Parse.Query(Test);
+        createdTestsQuery.equalTo('author', user);
+        createdTestsQuery.notEqualTo('isObjectDeleted', true);
+        createdTestsQuery.notEqualTo('isSpacedRepetition', true);
+        createdTestsQuery.ascending('title');
+        createdTestsQuery.include('questions');
+        createdTestsQuery.limit(1000);
+        promises.push(createdTests = createdTestsQuery.find());
 
-        var attemptsQuery = new Parse.Query("Attempt");
-        attemptsQuery.equalTo('user', user);
-        attemptsQuery.descending("createdAt");
-        attemptsQuery.equalTo('isProcessed', true);
-        attemptsQuery.exists('test');
-        attemptsQuery.include('test');
-        attemptsQuery.limit(50);
-        promises.push(attempts = attemptsQuery.find());
+        var savedTestsRelation = user.relation('savedTests'),
+            savedTestsQuery = savedTestsRelation.query();
 
-        var followersQuery = user.relation("followers").query();
-        promises.push(followers = followersQuery.find());
+        savedTestsQuery.notEqualTo('isObjectDeleted', true);
+        savedTestsQuery.notEqualTo('isSpacedRepetition', true);
+        savedTestsQuery.ascending('title');
+        savedTestsQuery.include('questions');
+        savedTestsQuery.include('author');
+        savedTestsQuery.limit(1000);
+        promises.push(savedTests = savedTestsQuery.find());
 
-        var followingQuery = user.relation("following").query();
-        promises.push(following = followingQuery.find());
+        /* var messagesQuery = new Parse.Query("Message");
+         messagesQuery.equalTo('to', user);
+         messagesQuery.descending("createdAt");
+         messagesQuery.limit(5);
+         promises.push(messages = messagesQuery.find());
 
-        var groupsQuery = user.relation("groups").query();
-        promises.push(groups = groupsQuery.find());
-    }*/
+         var attemptsQuery = new Parse.Query("Attempt");
+         attemptsQuery.equalTo('user', user);
+         attemptsQuery.descending("createdAt");
+         attemptsQuery.equalTo('isProcessed', true);
+         attemptsQuery.exists('test');
+         attemptsQuery.include('test');
+         attemptsQuery.limit(50);
+         promises.push(attempts = attemptsQuery.find());
+
+         var followersQuery = user.relation("followers").query();
+         promises.push(followers = followersQuery.find());
+
+         var followingQuery = user.relation("following").query();
+         promises.push(following = followingQuery.find());
+
+         var groupsQuery = user.relation("groups").query();
+         promises.push(groups = groupsQuery.find());*/
+    }
     Parse.Promise.when(promises).then(function () {
         var result = {
             config: config,
             categories: categories["_result"][0]
         };
-        /*if (tests)
-            result.tests = tests["_result"][0];
-        if (messages)
-            result.messages = messages["_result"][0];
-        if (followers)
-            result.followers = followers["_result"][0];
-        if (following)
-            result.following = following["_result"][0];
-        if (groups)
-            result.groups = groups["_result"][0];
-        if (attempts) {
-            result.attempts = [];
-            _.each(attempts["_result"][0], function (attempt) {
-                if (attempt.get('test') && attempt.get('test').id && result.attempts.length < 15)
-                    result.attempts.push(attempt);
-            });
-        }*/
+        if (createdTests)
+            result.createdTests = createdTests["_result"][0];
+
+        if (savedTests)
+            result.savedTests = savedTests["_result"][0];
+
+        /*if (messages)
+         result.messages = messages["_result"][0];
+         if (followers)
+         result.followers = followers["_result"][0];
+         if (following)
+         result.following = following["_result"][0];
+         if (groups)
+         result.groups = groups["_result"][0];
+         if (attempts) {
+         result.attempts = [];
+         _.each(attempts["_result"][0], function (attempt) {
+         if (attempt.get('test') && attempt.get('test').id && result.attempts.length < 15)
+         result.attempts.push(attempt);
+         });
+         }*/
         return response.success(result);
     }, function (error) {
         return response.error(error);
+    });
+});
+
+/**
+ * @CloudFunction Create New Test
+ * Parse.Cloud.beforeSave does not
+ * allow custom response parameters.
+ * We need to respond with userEvents
+ * or badges: therefore, this custom
+ * function saves the test
+ * @param {Test} test
+ * @return {UserEvent} userEvent
+ */
+Parse.Cloud.define('createNewTest', function (request, response) {
+    var user = request.user,
+        testPayload = request.params.test,
+        test = Parse.Object.createFromJSON(testPayload, "Test"),
+        userEvent;
+
+    test.save().then(function () {
+        // Creates a new userEvent and increments the users points.
+        return UserEvent.newEvent(UserEvent.CREATED_TEST, test, user);
+    }).then(function (result) {
+        userEvent = result;
+        return user.checkLevelUp();
+    }).then(function (didLevelUp) {
+        console.log("Did level up "+didLevelUp);
+        return response.success({userEvent: userEvent, test: test, didLevelUp: didLevelUp});
+    }, function (error) {
+        response.error(error);
+    });
+});
+/*
+ *//**
+ * @CloudFunction Save Objects
+ * Parse.Cloud.beforeSave does not
+ * allow custom response parameters.
+ * We need to respond with userEvents
+ * or badges: therefore, this custom
+ * function saves objects and returns
+ * the objects and userEvent(s) and
+ * badge(s).
+ * @param {Array} objects
+ * @return {UserEvent} userEvent
+ *//*
+ Parse.Cloud.define('saveObjects', function (request, response) {
+ var JSONObjects = request.params.objects,
+ user = request.user,
+ objects = Parse.Object.createFromJSON(JSONObjects);
+ test.save().then(function () {
+ return UserEvent.createdTest(test, user);
+ }).then(function (userEvent) {
+ return response.success({userEvent: userEvent, test: test});
+ }, function (error) {
+ response.error(error);
+ });
+ });*/
+
+/**
+ * @CloudFunction Add or Remove Relation
+ *
+ * A one-size-fits all function, more useful
+ * with the website. Use case examples:
+ * - Adding or Removing Saved Tests to Users
+ *
+ * @param {string} parentObjectClass
+ * @param {string} parentObjectId
+ * @param {string} relationKey
+ * @param {boolean} isTaskToAdd
+ * @param {string} childObjectClass
+ * @param {Array} childObjectIds
+ * @return success/error
+ */
+Parse.Cloud.define('addOrRemoveRelation', function (request, response) {
+    var user = request.user,
+        parentObjectClass = request.params.parentObjectClass,
+        parentObjectId = request.params.parentObjectId,
+        parentObject = new Parse.Object(parentObjectClass),
+        relationKey = request.params.relationKey,
+        isTaskToAdd = request.params.isTaskToAdd,
+        childObjectClass = request.params.childObjectClass,
+        childObjectIds = request.params.childObjectIds,
+        childObjects,
+        promises = [];
+
+    parentObject.id = parentObjectId;
+    promises.push(parentObject.fetch());
+
+    var query = new Parse.Query(childObjectClass);
+    query.containedIn('objectId', childObjectIds);
+    promises.push(childObjects = query.find());
+
+    Parse.Promise.when(promises).then(function () {
+        var relation = parentObject.relation(relationKey);
+        childObjects = childObjects._result["0"];
+        if (!childObjects.length)
+            return Parse.Promise.error("No Child Objects for the given objectIds in Class found.");
+        if (isTaskToAdd)
+            relation.add(childObjects);
+        else
+            relation.remove(childObjects);
+        return parentObject.save();
+    }).then(function () {
+        response.success("Relation updated.");
+    }, function (error) {
+        response.error({error: error});
+    });
+
+});
+
+Parse.Cloud.define('mapOldTestsToNew', function (request, response) {
+    var author = new Parse.User(),
+        oldTests = request.params.tests.results,
+        tests = [],
+        promises = [];
+
+    if (request.params.key !== "Xquulpwz1!")
+        return response.error("Unauthorized request!");
+
+    Parse.Cloud.useMasterKey();
+
+    author.id = request.params.authorId;
+
+    author.fetch().then(function () {
+        _.each(oldTests, function (oldTest) {
+            if (oldTest.isGenerated || !oldTest.category || oldTest.isObjectDeleted)
+                return;
+
+            var test = new Test();
+            test.set('slug', oldTest.slug);
+            test.set('title', oldTest.title);
+            test.set('author', author);
+            test.set('description', oldTest.description);
+            test.set('averageScore', oldTest.averageScore);
+            test.set('averageUniqueScore', oldTest.uniqueAverageScore);
+            test.set('numberOfAttempts', oldTest.numberOfAttempts);
+            test.set('numberOfUniqueAttempts', oldTest.uniqueNumberOfAttempts);
+            test.set('quality', oldTest.quality);
+            test.set('isPublic', !!oldTest.privacy);
+            test.set('category', oldTest.category);
+
+            var questions = [];
+            _.each(oldTest.questions, function (oldQuestion) {
+                var question = new Question();
+                question.set('stem', oldQuestion.stem());
+                question.set('feedback', oldQuestion.feedback());
+                question.set('numberOfResponses', oldQuestion.get('numberOfTimesTaken'));
+                question.set('numberOfCorrectResponses', oldQuestion.get('numberAnsweredCorrectly'));
+                question.set('options', oldQuestion.options());
+                question.set('isPublic', test.isPublic());
+                // setDefaults is normally called beforeSave
+                // but requires the user - not present when called
+                // from CC. Therefore, call now with the author.
+                question.setDefaults(author);
+                questions.push(question);
+            });
+            var promise = Parse.Object.saveAll(questions).then(function () {
+                test.set('questions', questions);
+                tests.push(test);
+                return test.save();
+            });
+            return promises.push(promise);
+        });
+        return Parse.Promise.when(promises);
+    }).then(function () {
+        var createdTests = author.createdTests();
+        createdTests.add(tests);
+        return author.save();
+    }).then(function () {
+        response.success("Added " + tests.length + " tests for " + author.name());
+    }, function (error) {
+        response.error(error);
     });
 });

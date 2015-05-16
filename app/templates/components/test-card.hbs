@@ -1,0 +1,60 @@
+<div class="row">
+    <div class="col-md-12">
+
+        <div class="card test-info-card margin-top-16">
+            <div class="left inline-top">
+                <h4>
+                    <a href="javascript:void(0)"
+                        {{action 'openModal' 'browse/modal/test-info' 'browse.modal.testInfo' test}}>
+                        {{test.title}}
+                    </a>
+                </h4>
+
+                <p class="margin-bottom-8">
+                    {{#if test.category.parent.slug}}
+                        {{#link-to 'category' test.category.parent.slug}}{{test.category.parent.name}}{{/link-to}}
+                        /
+                        {{#link-to 'subcategory' test.category.parent.slug category.slug}}{{test.category.name}}{{/link-to}}
+                    {{else}}
+                        {{#link-to 'category' test.category.slug}}{{test.category.name}}{{/link-to}}
+                    {{/if}}
+                </p>
+
+                <p class="margin-bottom-8">{{test.description}}</p>
+
+            </div>
+
+            <div class="right inline-top">
+                <div class="author">{{profile-picture user=test.author}}</div>
+                {{#link-to 'test' test.slug tagName='button' class="btn btn-primary"}}Take Test{{/link-to}}
+                <div class="btn-group">
+                    <button type="button" class="btn btn-default btn-flat dropdown-toggle" data-toggle="dropdown"
+                            aria-expanded="false">
+                        <i class="mdi-navigation-more-vert"></i>
+                    </button>
+                    <ul class="dropdown-menu" role="menu">
+                        {{#if showEdit}}
+                            {{#link-to 'edit' test.slug tagName='li'}}{{#link-to 'edit' test.slug}}
+                                Edit{{/link-to}}{{/link-to}}
+                        {{/if}}
+                        {{#if showSave}}
+                            <li><a href="javascript:void(0)" {{action 'saveTest'}}>Save</a></li>
+                        {{/if}}
+                        {{#if showShare}}
+                            <li><a href="javascript:void(0)" {{action 'shareTest'}}>Share</a></li>
+                        {{/if}}
+                        {{#if showDelete}}
+                            <li class="divider"></li>
+                            <li><a href="javascript:void(0)" {{action 'deleteTest'}}>Delete</a></li>
+                        {{/if}}
+                        {{#if showRemove}}
+                            <li class="divider"></li>
+                            <li><a href="javascript:void(0)" {{action 'removeTest'}}>Remove</a></li>
+                        {{/if}}
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>

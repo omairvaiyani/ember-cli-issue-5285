@@ -84,10 +84,13 @@ var ParseUser =  DS.Model.extend(ParseMixin, {
     badgeProgressions: DS.hasMany('badge-progress', {async: true}),
 
     /*
-     * Content
+     * Tests
+     * - These two are relations on Parse
+     * - Relations don't work well with the EmberAdapter
+     * - So we load them manually onto these properties
      */
-    createdTests: DS.attr(),
-    savedTests: DS.attr(),
+    createdTests: new Ember.A(),
+    savedTests: new Ember.A(),
 
 
     /*
@@ -125,7 +128,21 @@ var ParseUser =  DS.Model.extend(ParseMixin, {
     /*
      * Education
      */
-    educationCohort: DS.belongsTo('education-cohort', {async: true})
+    educationCohort: DS.belongsTo('education-cohort', {async: true}),
+
+    /*
+     * Local
+     */
+    myTests: function () {
+        var myTests = new Ember.A();
+
+        if(this.get('createdTests'))
+            myTests.pushObjects(this.get('createdTests'));
+        if(this.get('savedTests'))
+            myTests.pushObjects(this.get('savedTests'));
+
+        return myTests.sortBy('title');
+    }.property('createdTests.length', 'savedTests.length')
 });
 
 ParseUser.reopenClass({

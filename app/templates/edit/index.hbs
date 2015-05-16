@@ -1,11 +1,10 @@
-<div class="card margin-top-16">
-    {{#if questions.isFulfilled}}
-        {{#if questions.length}}
-            <h5 class="text-center">Select a question from the 'Questions list' to edit. Or, {{#link-to 'edit.newQuestion'}}create one
-                now!{{/link-to}}</h5>
-        {{else}}
-            <h5 class="text-center">You have not created any questions yet. {{#link-to 'edit.newQuestion'}}Create one
-                now!{{/link-to}}</h5>
-        {{/if}}
+{{#if questions.isFulfilled}}
+    {{#if questions.length}}
+        <h5 class="text-center">Select a question from the 'Questions list' to edit. Or, {{#link-to 'edit.newQuestion'}}
+            create one
+            now!{{/link-to}}</h5>
+    {{else}}
+        <h5 class="text-center">You have not created any questions yet. {{#link-to 'edit.newQuestion'}}Create one
+            now!{{/link-to}}</h5>
     {{/if}}
-</div>
+{{/if}}

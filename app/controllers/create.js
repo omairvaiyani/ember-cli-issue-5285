@@ -1,6 +1,7 @@
 import Ember from 'ember';
 import CurrentUser from '../mixins/current-user';
 import EventTracker from '../utils/event-tracker';
+import ParseHelper from '../utils/parse-helper';
 
 export default Ember.Controller.extend(CurrentUser, {
     needs: ['application', 'editQuestion', 'join'],
@@ -41,21 +42,6 @@ export default Ember.Controller.extend(CurrentUser, {
         else
             this.set('model.category', null);
     }.observes('parentCategory', 'childCategory'),
-
-    /*
-     * The handlebar for checkbox input cannot decipher booleans
-     * from numbers, which privacy is defined by. We have a computed
-     * boolean within the Test model called privacyBoolean. This
-     * works one way only. Therefore, updating privacyBoolean
-     * requires manual update for the actual privacy property set
-     * on the model.
-     */
-    updatePrivacyFromPrivacyBoolean: function () {
-        if (this.get('privacyBoolean'))
-            this.set('model.privacy', true);
-        else
-            this.set('model.privacy', false);
-    }.observes('privacyBoolean'),
 
     isCreatingNewQuestion: function () {
         return this.get('controllers.application.currentPath') === "edit.newQuestion";
@@ -135,13 +121,14 @@ export default Ember.Controller.extend(CurrentUser, {
 
         checkTest: function (callback) {
             var error = false;
-            if (!this.get('model.category.content')) {
-                this.send('addNotification', 'warning', 'Category not set!', 'You must set a category!');
-                error = true;
-            } else if (!this.get('model.title.length')) {
+
+            if (!this.get('model.title.length')) {
                 this.send('addNotification', 'warning', 'Title not set!', 'You must set a title for the test!');
                 error = true;
-            } else if (this.get('inJoinProcess')) {
+            } if (!this.get('model.category.content')) {
+                this.send('addNotification', 'warning', 'Category not set!', 'You must set a category!');
+                error = true;
+            } if (this.get('inJoinProcess')) {
                 if (this.get('joinStep.create.active')) {
                     this.send('goToJoinStep', 'join');
                     error = true;
@@ -160,23 +147,26 @@ export default Ember.Controller.extend(CurrentUser, {
                     this.set('privacy', 1);
             }
             this.send('incrementLoadingItems');
-            var promise = this.get('model').save();
-            if (callback)
-                callback(promise);
-            promise.then(function (test) {
+            var promise = ParseHelper.cloudFunction(this, 'createNewTest', {test: this.get('model')});
+
+            promise.then(function (response) {
+                    // TODO deal with response ({userEvent, didLevelUp, test})
+                    var test = ParseHelper.extractRawPayload(this.store, 'test', response.test);
+                    this.get('currentUser').reload(); // update points, level, badges etc
+                    this.set('model', test);
                     this.set('categorySelectionInput', '');
                     this.transitionToRoute('edit.newQuestion', test.get('slug'));
                     this.send('decrementLoadingItems');
-                    if (this.get('currentUser.tests'))
-                        this.get('currentUser.tests').pushObject(this.get('model'));
-                    if (this.get('inJoinProcess')) {
+                    if (this.get('currentUser.createdTests'))
+                        this.get('currentUser.createdTests').pushObject(this.get('model'));
+                    /*if (this.get('inJoinProcess')) {
                         this.send('addNotification', 'welcome', 'Congratulations!',
                             'You are now ready to start creating tests on MyCQs!');
                         setTimeout(function () {
                             this.get('joinController').set('joinStep.completed', true);
                         }.bind(this), 2500);
                     }
-                    EventTracker.recordEvent(EventTracker.CREATED_TEST, test);
+                    EventTracker.recordEvent(EventTracker.CREATED_TEST, test);*/
                 }.bind(this),
                 function (error) {
                     this.send('decrementLoadingItems');

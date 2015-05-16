@@ -12,17 +12,18 @@ export default {
             "objectId": object.get('id')
         }
     },
-    generatePointerFromIdAndClass: function (objectId, className) {
-        if (!objectId || !className)
-            return;
-        if (className === "parseUser")
-            className = "_User";
-        return {
-            "__type": "Pointer",
-            "className": StringHelper.upperCaseFirst(className),
-            "objectId": objectId
-        }
-    },
+    /* @Deprecated
+     generatePointerFromIdAndClass: function (objectId, className) {
+     if (!objectId || !className)
+     return;
+     if (className === "parseUser")
+     className = "_User";
+     return {
+     "__type": "Pointer",
+     "className": StringHelper.upperCaseFirst(className),
+     "objectId": objectId
+     }
+     },*/
     generatePointers: function (array) {
         var pointers = [];
         array.forEach(function (object) {
@@ -31,99 +32,52 @@ export default {
         return pointers;
     },
 
-    generatePointerFromNativeParse: function (object) {
-        var className = object.className,
-            id = object.id;
+    // @Deprecated
+    /*generatePointerFromNativeParse: function (object) {
+     var className = object.className,
+     id = object.id;
 
-        if (!id)
-            id = object.get('id');
-        if (!id)
-            id = object.getObjectId();
-        return {
-            "__type": "Pointer",
-            "className": StringHelper.upperCaseFirst(className),
-            "objectId": id
-        }
-    },
+     if (!id)
+     id = object.get('id');
+     if (!id)
+     id = object.getObjectId();
+     return {
+     "__type": "Pointer",
+     "className": StringHelper.upperCaseFirst(className),
+     "objectId": id
+     }
+     },
 
-    generateSearchTags: function (searchTerm) {
-        return _.filter(searchTerm.toLowerCase().split(' '), function (w) {
-            return w.match(/^\w+$/) && !_.contains(this.stopWords, w);
-        }.bind(this));
-    },
+     generateSearchTags: function (searchTerm) {
+     return _.filter(searchTerm.toLowerCase().split(' '), function (w) {
+     return w.match(/^\w+$/) && !_.contains(this.stopWords, w);
+     }.bind(this));
+     },
 
-    stopWords: ["the", "in", "and", "test", "mcqs", "of", "a", "an"],
+     stopWords: ["the", "in", "and", "test", "mcqs", "of", "a", "an"],*/
 
     /**
      * @param {Parse.User} user
-     */
-    getUserProfileImageUrl: function (user) {
-        if (!user)
-            return "https://d3uzzgmigql815.cloudfront.net/img/silhouette.png";
+     * @Deprecated
+     *//*
+     getUserProfileImageUrl: function (user) {
+     if (!user)
+     return "https://d3uzzgmigql815.cloudfront.net/img/silhouette.png";
 
-        if (user.get('profilePicture')) {
-            return this.getSecureParseUrl(user.get('profilePicture').get('url'));
-        } else if (user.get('fbid')) {
-            return "https://graph.facebook.com/" + user.get('fbid') + "/picture?height=250&type=square";
-        } else {
-            return "https://d3uzzgmigql815.cloudfront.net/img/silhouette.png";
-        }
-    },
+     if (user.get('profilePicture')) {
+     return this.getSecureParseUrl(user.get('profilePicture').get('url'));
+     } else if (user.get('fbid')) {
+     return "https://graph.facebook.com/" + user.get('fbid') + "/picture?height=250&type=square";
+     } else {
+     return "https://d3uzzgmigql815.cloudfront.net/img/silhouette.png";
+     }
+     },*/
 
     getSecureParseUrl: function (url) {
         if (url)
             return url._url.replace("http://", "https://s3.amazonaws.com/");
         else
             return "";
-    },
-
-    extractRawPayload: function (store, type, rawPayload, key) {
-        var serializer = store.serializerFor(type),
-            payload = rawPayload.result[key],
-            originalPayload = $.extend(true, [], payload);
-
-        _.each(payload, function (object) {
-            object["id"] = object.objectId;
-        });
-
-
-        var serializedObjects = serializer.extractArray(store,
-            store.modelFor(type), {results: payload});
-        var loadedRecords = store.pushMany(store.modelFor(type), serializedObjects);
-
-        var relationships = [];
-        store.modelFor(type).eachRelationship(function (key, relationship) {
-            relationships.push(relationship);
-        });
-
-        if (relationships.length) {
-            // TODO replace hardcoded relationshipkey 'parent' with dynamic relationship.key
-            loadedRecords.forEach(function (record, index) {
-                if (!originalPayload[index].parent)
-                    return;
-                var serialisedRelationship = serializer.extractSingle(store,
-                    store.modelFor(type), originalPayload[index].parent, originalPayload[index].parent.id);
-                var loadedRelationship = store.pushMany(store.modelFor(type), [serialisedRelationship]);
-                record.set('parent', loadedRelationship[0]);
-            });
-        }
-        return loadedRecords;
-    },
-
-    extractRawCategories: function (store, rawPayload) {
-        var loadedRecords = this.extractRawPayload(store, 'category', rawPayload, 'categories'),
-            originalPayload = $.extend(true, [], rawPayload.result['categories']),
-            serializer = store.serializerFor('category');
-
-        loadedRecords.forEach(function (record, index) {
-            if (!originalPayload[index].parent)
-                return;
-            var serialisedRelationship = serializer.extractSingle(store,
-                store.modelFor('category'), originalPayload[index].parent, originalPayload[index].parent.id);
-            var loadedRelationship = store.pushMany(store.modelFor('category'), [serialisedRelationship]);
-            record.set('parent', loadedRelationship[0]);
-        });
-        return loadedRecords;
     },
 
     cloudFunction: function (context, functionName, params) {
@@ -137,6 +91,114 @@ export default {
                     reject(reason.responseJSON);
                 });
         });
+    },
+    /**
+     * @Function Extract Raw Payload
+     *
+     * Takes a restful response from Parse
+     * and converts JSON objects to Ember
+     * Records - subsequently pushing them
+     * to the store (including embedded
+     * records) and returning the single
+     * or array of records.
+     *
+     * @param {DS.Store} store
+     * @param {String} type e.g. 'test', 'parse-user'
+     * @param {Array or Object} payload
+     * @returns {*}
+     */
+    extractRawPayload: function (store, type, payload) {
+        var serializer = store.serializerFor(type),
+            originalPayload = $.extend(true, [], payload),
+            singleRecord = Object.prototype.toString.call(payload) !== '[object Array]';
+
+        // Convert a single record into an array to unify code
+        if (singleRecord) {
+            payload = [payload];
+            // Original payload is needed to store embedded records
+            originalPayload = [originalPayload];
+        }
+        // Ember uses 'id' as primaryKey.
+        _.each(payload, function (object) {
+            object["id"] = object.objectId;
+        });
+
+
+        var serializedObjects = serializer.extractArray(store,
+            store.modelFor(type), {results: payload});
+        // loadedRecords is the main records - everything after this
+        // is for embedded records
+        var loadedRecords = store.pushMany(store.modelFor(type), serializedObjects);
+
+        // To find embedded records, we need to know the relationships
+        // as defined in the DS.Model extensions
+        var relationships = [];
+        store.modelFor(type).eachRelationship(function (key, relationship) {
+            relationships.push(relationship);
+        });
+
+        if (relationships.length) {
+            /*
+             * This allows us to load included/embedded
+             * relations into the main record.
+             */
+            loadedRecords.forEach(function (record, index) {
+                // For each main record, loop through the
+                // record relationships
+                _.each(relationships, function (relationship) {
+                    // Check if relatedObject exists in the original payload
+                    var relation = originalPayload[index][relationship.key];
+                    if (!relation)
+                        return;
+                    if (relationship.kind === 'belongsTo') {
+                        // check if the record is embedded or just a pointer
+                        if (relation.__type === "Pointer")
+                            return;
+                        var serialisedRelation = serializer.extractArray(store,
+                            relationship.type, {results: [relation]});
+
+                        var relationType = relationship.parentType;
+                        // This bit is a patch - not sure why the function
+                        // store.pushMany() will accept relationship.parentType
+                        // for all records but only relationship.type for parse-user
+                        if (relationship.type.typeKey === 'parseUser')
+                            relationType = relationship.type;
+
+                        var loadedRelation = store.pushMany(relationType, serialisedRelation);
+                        record.set(relationship.key, loadedRelation[0]);
+
+                    } else if (relationship.kind === 'hasMany' && relation.length) {
+                        // check if the record is embedded or just a pointer
+                        if (relation[0].__type === "Pointer")
+                            return;
+                        var serialisedRelations = serializer.extractArray(store,
+                            relationship.type, {results: relation});
+                        var loadedRelations = store.pushMany(relationship.type, serialisedRelations);
+                        record.get(relationship.key).addObjects(loadedRelations);
+                    }
+                });
+            });
+        }
+        if (singleRecord)
+            return loadedRecords[0];
+        else
+            return loadedRecords;
+    },
+    // @deprecated
+    extractRawCategories: function (store, payload) {
+        var loadedRecords = this.extractRawPayload(store, 'category', payload),
+            originalPayload = $.extend(true, [], payload),
+            serializer = store.serializerFor('category');
+
+        loadedRecords.forEach(function (record, index) {
+            if (!originalPayload[index].parent)
+                return;
+            var serialisedRelationship = serializer.extractSingle(store,
+                store.modelFor('category'), originalPayload[index].parent, originalPayload[index].parent.id);
+            var loadedRelationship = store.pushMany(store.modelFor('category'), [serialisedRelationship]);
+            record.set('parent', loadedRelationship[0]);
+        });
+        return loadedRecords;
     }
 
 }

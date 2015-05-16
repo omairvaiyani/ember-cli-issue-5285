@@ -14,23 +14,38 @@ export default Ember.Route.extend({
 
     model: function (params, transition) {
         transition.send('incrementLoadingItems');
-        var testSlug = params.test_slug,
-            testOldId = params.test_slug,
-            where = {
-                "$or": [
-                    {"slug": testSlug},
-                    {"oldId": testOldId}
-                ]
-            };
-        return this.store.findQuery('test', {where: JSON.stringify(where)})
-            .then(function (results) {
-                if (results.objectAt(0)) {
-                    return results.objectAt(0);
-                } else {
-                    var generatedAttemptId = params.test_slug;
-                    return this.store.findById('attempt', generatedAttemptId);
-                }
-            }.bind(this));
+
+        var locallyFound = false;
+        return this.store.filter('test', function (test) {
+            return test.get('slug') === params.test_slug;
+        }).then(function (results) {
+            if (results.objectAt(0)) {
+                locallyFound = true;
+                return results.objectAt(0);
+            }
+
+            var testSlug = params.test_slug,
+                testOldId = params.test_slug,
+                where = {
+                    "$or": [
+                        {"slug": testSlug},
+                        {"oldId": testOldId}
+                    ]
+                };
+            return this.store.findQuery('test', {where: JSON.stringify(where)});
+        }.bind(this)).then(function (results) {
+            if (locallyFound)
+                return results; // results === DS.Model<test>
+
+            if (results.objectAt(0)) {
+                return results.objectAt(0);
+            } else {
+                var generatedAttemptId = params.test_slug;
+                return this.store.findById('attempt', generatedAttemptId);
+            }
+        }.bind(this));
+
+
     },
     /*
      * Prerender readied in Test.Controller.setTimeStarted

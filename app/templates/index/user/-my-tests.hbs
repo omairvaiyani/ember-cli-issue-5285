@@ -1,10 +1,30 @@
 <section class="row">
-    <article class="col-md-4">
-
+    <article class="col-md-3">
+        <div class="well mini-well margin-top-16">
+            {{input type="text" class="form-control floating-label" placeholder="Filter tests" value=myTestsListFilter}}
+            {{#each myTestsListTypes as |listType|}}
+                <div class="radio radio-primary">
+                    <label>
+                        {{radio-button name='myTestsListSelection' value=listType checked=myTestsListType}}
+                        <span class="circle"></span><span class="check"></span>
+                        {{listType.label}}
+                    </label>
+                </div>
+            {{/each}}
+        </div>
     </article>
-    <article class="col-md-8">
-        {{#each myTests as |test|}}
-            {{test.title}} <br>
+    <article class="col-md-9 col-fix-right">
+        <section class="row margin-top-16">
+            <article class="col-md-3">
+                <h5>{{myTestsList.length}} {{pluralize-word 'test' currentUser.myTests.length}}</h5>
+            </article>
+            <article class="col-md-3 pull-right">
+                {{view 'select' class="form-control pull-right" content=myTestsListOrders value=myTestsListOrder
+                optionLabelPath='content.label' optionValuePath='content'}}
+            </article>
+        </section>
+        {{#each myTestsList as |test|}}
+            {{test-card test=test parentController=this}}
         {{/each}}
     </article>
 </section>

@@ -2,68 +2,91 @@
     <div class="row">
         <div class="col-md-12">
             <div class="card">
-                <div class="row">
-                    <div class="col-md-12 margin-bottom-16">
-                        <h3>{{#link-to 'testInfo' model.slug}}{{model.title}}{{/link-to}} <small>{{model.category.name}}</small>
-                            {{#if group}}{{#link-to 'group' group.slug}}<small>{{group.name}}</small>{{/link-to}}{{/if}}</h3>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-12">
-                        <button type="button" class="btn btn-info margin-right-16"
-                                data-toggle="collapse"
-                                data-target="#editTestDetail">
-                            Edit test details
-                        </button>
-                        <button type="button" class="btn btn-success  margin-right-16" {{action 'saveTest'}}>
-                            Save test
-                        </button>
-                        {{#link-to 'test' model.slug tagName="button" class="btn btn-xing"}}
-                            Take test
-                        {{/link-to}}
-                    </div>
-                </div>
-                <div id="editTestDetail" class="collapse out">
-                    {{partial "edit/test-detail"}}
-                </div>
-                <small class="edit-test-saved text-center">
-                    <span>Test saved {{from-now time=model.updatedAt}}</span>
-                </small>
+                <section class="row">
+                    <article class="col-md-6">
+                        <strong>
+                            <legend>{{input type='text' value=model.title class='form-control input-lg'}}</legend>
+                        </strong>
+                    </article>
+                    <article class="col-md-6">
+
+                    </article>
+                </section>
+                <section class="row">
+                    <article class="col-md-4">
+                        {{#if model.category.parent}}
+                            <div {{action 'removeCategory' model.category.parent}}
+                                    class="tag category-edit">{{model.category.parent.name}}</div>
+                        {{/if}}
+                        <div {{action 'removeCategory' model.category}}
+                                class="tag category-edit">{{model.category.name}}</div>
+                    </article>
+                    <article class="col-md-2 text-right">
+                        <div class="togglebutton togglebutton-info">
+                            <label>
+                                <strong class="margin-right-8">Public</strong>
+                                {{input type="checkbox" checked=model.isPublic}}<span class="toggle"></span>
+                            </label>
+                        </div>
+                    </article>
+                    <article class="col-md-6 text-right">
+                        <div class="btn-group">
+                            <button class="btn btn-flat btn-icon margin-right-8" {{action 'deleteTest'}}>
+                                <i class="mdi-action-delete"></i>
+                            </button>
+                            <button class="btn btn-primary" {{action 'finishedEditing'}}>
+                                Done
+                            </button>
+                        </div>
+                    </article>
+                </section>
             </div>
         </div>
     </div>
 
     <div class="row">
-        <div class="col-md-3">
-            <div class="card margin-top-16">
-                <div class="row">
-                    <div class="col-md-12">
-                        <h5>QUESTIONS LIST</h5>
-                        {{#each model.questions itemController='edit.item.question' as |question index|}}
-                            {{#link-to 'editQuestion' question.model tagName='div' class='question-list-item-row row'}}
-                                <div {{bind-attr class=':col-md-12 :question-list-item question.isCurrent:active-question'}}>
-                                    {{#link-to 'editQuestion' question.model}}
-                                        Q{{friendly-index index}}: {{question.model.stem}}
-                                    {{/link-to}}
-                                    <i class="fa fa-minus-circle" {{action 'deleteQuestion' question.model}}
-                                            title="Delete this question"></i>
-                                </div>
-                            {{/link-to}}
-                        {{/each}}
-                        <div class="row">
-                            <div {{bind-attr class=':col-md-12 :question-list-item isCreatingNewQuestion:active-question'}}>
-                                {{#link-to 'edit.newQuestion' this.model}}
-                                    + New question
+        <div class="col-md-3 margin-top-16">
+
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <strong>QUESTIONS LIST</strong>
+                </div>
+                <div class="panel-body">
+                    {{#each model.questions itemController='edit.item.question' as |question index|}}
+                        {{#link-to 'editQuestion' question.model tagName='div' class='question-list-item-row row'}}
+                            <div {{bind-attr class=':col-md-12 :question-list-item question.isCurrent:active-question'}}>
+                                {{#link-to 'editQuestion' question.model}}
+                                    Q{{friendly-index index}}: {{question.model.stem}}
                                 {{/link-to}}
+                                <i class="fa fa-minus-circle" {{action 'deleteQuestion' question.model}}
+                                   title="Delete this question"></i>
                             </div>
+                        {{/link-to}}
+                    {{/each}}
+                    <div class="row">
+                        <div {{bind-attr class=':col-md-12 :question-list-item isCreatingNewQuestion:active-question'}}>
+                            {{#link-to 'edit.newQuestion' this.model}}
+                                + New question
+                            {{/link-to}}
                         </div>
                     </div>
                 </div>
             </div>
+
         </div>
 
-        <div class="col-md-9 col-fix-right">
-            {{outlet}}
+
+        <div class="col-md-9 col-fix-right margin-top-16">
+
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <strong>QUESTION</strong>
+                </div>
+                <div class="panel-body">
+                    {{outlet}}
+                </div>
+            </div>
+
         </div>
     </div>
 </div>

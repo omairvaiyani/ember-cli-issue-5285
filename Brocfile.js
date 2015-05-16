@@ -12,6 +12,10 @@ var app = new EmberApp({
         exclude: ['fonts/'],
         //prepend: 'https://assets.synap.com/' // SSL not set!
         prepend: 'https://s3-eu-west-1.amazonaws.com/synap-dev-assets/' // SSL certified.
+    },
+
+    stylusOptions: {
+        "include css": true
     }
 });
 
@@ -30,6 +34,24 @@ app.import({
     development: 'bower_components/bootstrap/dist/css/bootstrap.css',
     production: 'bower_components/bootstrap/dist/css/bootstrap.min.css'
 });
+/*
+ * MATERIAL DESIGN FOR BOOTSTRAP
+ */
+
+/*
+ Changing the primary material colour requires LESS.
+ We use Stylus. Therefore, we are compiling the material.css
+ separately using a git clone.
+
+ app.import({
+ development: 'bower_components/bootstrap-material-design/dist/css/material-fullpalette.css',
+ production: 'bower_components/bootstrap-material-design/dist/css/material-fullpalette.min.css'
+ });*/
+app.import({
+    development: 'bower_components/bootstrap-material-design/dist/js/material.js',
+    production: 'bower_components/bootstrap-material-design/dist/js/material.min.js'
+});
+app.import('bower_components/bootstrap-material-design/dist/js/material.min.js.map');
 /*
  * FONT AWESOME
  */

@@ -1,7 +1,8 @@
 import Ember from 'ember';
 import ParseHelper from '../utils/parse-helper';
+import CurrentUser from '../mixins/current-user';
 
-export default Ember.ObjectController.extend({
+export default Ember.ObjectController.extend(CurrentUser, {
     needs: 'application',
 
     applicationController: function () {

@@ -58,7 +58,7 @@
 
 <div class="row">
     <div class="col-md-12">
-        <h5>SHARING</h5>
+        <h5>VISIBILITY</h5>
     </div>
 </div>
 {{#if currentUser.groups.length}}
@@ -77,26 +77,26 @@
 {{/if}}
 {{#unless selectedGroup.id}}
     <div class="row">
-        <div class="col-md-4">
-            <label class="switch-light well privacy-switch">
-                {{input type="checkbox" checked=privacyBoolean}}
-                <span>
-                <span {{bind-attr class='privacyBoolean::is-active'}}>Private</span>
-                <span {{bind-attr class='privacyBoolean:is-active'}}>Public</span>
-              </span>
-                <a class="btn"></a>
-            </label>
+        <div class="col-md-4 margin-bottom-8">
+            <div class="togglebutton togglebutton-info">
+                <label>
+                    <strong class="margin-right-8">Public</strong>
+                    {{input type="checkbox" checked=model.isPublic}}<span class="toggle"></span>
+                </label>
+            </div>
         </div>
     </div>
     <div class="row">
         <div class="col-md-12">
-            {{#if model.privacy}}
+            {{#if model.isPublic}}
                 <p>This test is visible to everyone.</p>
             {{else}}
                 <p>Only you can see this test.</p>
             {{/if}}
         </div>
     </div>
+
+
 {{else}}
     <div class="row">
         <div class="col-md-12">

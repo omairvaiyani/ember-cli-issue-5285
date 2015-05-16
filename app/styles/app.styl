@@ -4,6 +4,7 @@
  * Contact: omair@mylabs.io
  * Copyright myLabs Ltd 2014
  */
+@import "material.css"
 
 colorPrimary1 = rgba(66, 101, 54, 1)
 colorBackground = rgb(237, 241, 242)
@@ -39,6 +40,9 @@ body
   outline none
 
 /* COMPONENTS */
+.action-button
+  margin-bottom 0
+
 .card
   position relative
   background-color colorBackgroundCard
@@ -50,7 +54,6 @@ body
 .card .title
   font-size fontSizeXL
   font-weight bold
-
 
 .card .subtitle
   color #B0C0A4
@@ -67,58 +70,6 @@ body
 
 .btn-facebook:hover, .btn-facebook:focus
   color white
-
-.checkbox input[type=checkbox]
-  display none
-
-.checkbox
-  width 20px
-  margin 0 auto
-  position relative
-
-.checkbox label
-  cursor pointer
-  position absolute
-  width 20px
-  height 20px
-  top 0
-  border-radius 4px
-  -webkit-box-shadow: inset 0px 1px 1px white, 0px 1px 3px rgba(0, 0, 0, 0.5);
-  -moz-box-shadow: inset 0px 1px 1px white, 0px 1px 3px rgba(0, 0, 0, 0.5);
-  box-shadow: inset 0px 1px 1px white, 0px 1px 3px rgba(0, 0, 0, 0.5);
-  background: #fcfff4;
-  background: -webkit-linear-gradient(top, #fcfff4 0%, #dfe5d7 40%, #b3bead 100%);
-  background: -moz-linear-gradient(top, #fcfff4 0%, #dfe5d7 40%, #b3bead 100%);
-  background: -o-linear-gradient(top, #fcfff4 0%, #dfe5d7 40%, #b3bead 100%);
-  background: -ms-linear-gradient(top, #fcfff4 0%, #dfe5d7 40%, #b3bead 100%);
-  background: linear-gradient(top, #fcfff4 0%, #dfe5d7 40%, #b3bead 100%);
-
-.checkbox label:after {
-  opacity: 0;
-  content: '';
-  position: absolute;
-  width: 13px;
-  height: 7px;
-  background: 0 0;
-  top: 5px;
-  left: 4px;
-  border: 3px solid #333;
-  border-top: none;
-  border-right: none;
-  -webkit-transform: rotate(-45deg);
-  -moz-transform: rotate(-45deg);
-  -o-transform: rotate(-45deg);
-  -ms-transform: rotate(-45deg);
-  transform: rotate(-45deg);
-}
-
-.checkbox label:hover::after {
-  opacity: 0.5;
-}
-
-.checkbox input[type=checkbox]:checked + label:after {
-  opacity: 1;
-}
 
 .hidden-file-input {
   position: absolute;
@@ -261,15 +212,15 @@ input[type="range"]::-webkit-slider-thumb {
   margin 0px !important
 }
 
-.profile-image, .circular-image {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  background-size: cover;
-  display: inline-block;
-  vertical-align: middle;
-  margin-right: 8px;
-}
+.profile-picture
+  width 50px
+  height 50px
+  background-size cover
+  display inline-block
+  vertical-align middle
+  margin-right 8px
+  &.circular-image
+    border-radius 50%
 
 /*
  * Touch Slider
@@ -519,6 +470,7 @@ input[type="range"]::-webkit-slider-thumb {
   margin: 0 10px 10px 0;
   text-decoration: none;
   -webkit-transition: color 0.2s;
+  cursor pointer
 }
 
 .tag::before {
@@ -562,178 +514,53 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 /* NAVBAR */
+.navbar-main
+  height 40px
+  color white !important
+  .navbar-brand
+    height 40px
+    line-height 20px
 
-.navbar-main {
-  background-color: white;
-  border-radius: 0px;
-  border: 0px;
-  border-bottom: 2px solid colorPrimary1;
-  color: colorPrimary1;
-}
+.navbar-nav > li > a
+  padding-top 15px !important
+  padding-bottom 15px !important
 
-.navbar-main .navbar-brand {
-  color: colorPrimary1;
-}
 
 .navbar-brand .logo-spinner {
   display: inline-block;
-  /*margin: 0px 8px 0px 0px;*/
-  margin: 0px;
+  margin: 0 8px 0 0;
   vertical-align: middle;
 }
 
 .navbar-brand img.logo-icon {
-  /*margin-right:8px;*/
+  margin-right: 8px;
 }
 
 .navbar-brand img.logo-text {
   margin-top: 3px;
 }
 
-.navbar-main .navbar-nav > li > a {
-  color: colorPrimary1;
-}
-
-.navbar-main .navbar-nav > .active > a {
-  background-color: whitesmoke;
-  font-weight: bold;
-}
-
-.navbar-main .navbar-nav > .active > a:hover {
-  background-color: whitesmoke;
-}
-
-.navbar-main .navbar-toggle .icon-bar {
-  background-color: colorPrimary1;
-}
-
 .navbar-brand-adjust {
   margin-top: -6px;
 }
 
-/*
- * Navbar search current
- */
-.navbar-search {
-  background-color: colorPrimary1;
-  color: white;
-}
+// Navbar search current
 
-.navbar-search .navbar-form,
-.navbar-search .navbar-form .form-control {
-  width: 100%;
-}
-
-.navbar-search .navbar-form .form-control input {
-  background: transparent;
-  width: calc(100% - 34px);
-}
-
-/*
- * / End of Navbar Search current
- */
-.sb-search {
-  position: relative;
-  width: 0%;
-  max-width: 250px;
-  min-width: 30px;
-  height: 30px;
-  margin-left: 14px;
-  float: right;
-  -webkit-transition: width 0.3s;
-  -moz-transition: width 0.3s;
-  transition: width 0.3s;
-  -webkit-backface-visibility: hidden;
-}
-
-.sb-search-input {
-  position: absolute;
-  top: 0;
-  right: 0;
-  border: none;
-  outline: none;
-  background: #fff;
-  width: 100%;
-  height: 30px;
-  margin: 0;
-  z-index: 10;
-  padding: 3px 37px 0px 6px;
-  font-family: inherit;
-  font-size: 16px;
-  color: colorPrimary1;
-}
-
-input[type="search"].sb-search-input {
-  -webkit-appearance: none;
-  -webkit-border-radius: 0px;
-}
-
-.sb-search-input::-webkit-input-placeholder {
-  color: #617a50;
-}
-
-.sb-search-input:-moz-placeholder {
-  color: #617a50;
-}
-
-.sb-search-input::-moz-placeholder {
-  color: #617a50;
-}
-
-.sb-search-input:-ms-input-placeholder {
-  color: #617a50;
-}
-
-.sb-icon-search,
-.sb-search-submit {
-  width: 30px;
-  height: 30px;
-  display: block;
-  position: absolute;
-  right: 0;
-  top: 4px;
-  padding: 0;
-  margin: 0;
-  line-height: 30px;
-  text-align: center;
-  cursor: pointer;
-}
-
-.sb-search-submit {
-  background: #fff; /* IE needs this */
-  opacity: 0;
-  color: transparent;
-  border: none;
-  outline: none;
-  z-index: -1;
-}
-
-.sb-icon-search {
-  z-index: 90;
-  font-size: 22px;
-  speak: none;
-  font-style: normal;
-  font-weight: normal;
-  font-variant: normal;
-  text-transform: none;
-  -webkit-font-smoothing: antialiased;
-}
-
-/* Open state */
-.sb-search.sb-search-open,
-.no-js .sb-search {
-  width: 100%;
-}
-
-.sb-search.sb-search-open .sb-icon-search,
-.no-js .sb-search .sb-icon-search {
-  z-index: 11;
-}
-
-.sb-search.sb-search-open .sb-search-submit,
-.no-js .sb-search .sb-search-submit {
-  z-index: 90;
-}
+.navbar-form
+  margin-top 9px !important
+  .form-control
+    width 100%
+    background-color transparent !important
+    input
+      width calc(100% - 34px)
+    &::-webkit-input-placeholder
+      color white
+    &::-moz-placeholder
+      color white
+    &:-moz-placeholder
+      color white
+    &:-ms-input-placeholder
+      color white
 
 @media (min-width: 768px) {
   .navbar-right {
@@ -741,18 +568,13 @@ input[type="search"].sb-search-input {
     margin-right: -15px;
   }
 }
-
-@media (min-width: 768px) {
-  .navbar-nav > li > a.navbar-right-adjust {
-    padding-top: 12px;
-    padding-bottom: 8px;
-  }
-}
-
-.navbar-nav > li > a.nav-icons {
-  padding-top: 10px;
-  padding-bottom: 10px;
-}
+.navbar-right
+  li > a.navbar-right-adjust
+    padding-top 10px !important
+    padding-bottom 12px !important
+  li.navbar-messages > a
+    padding-top 17px !important
+    padding-bottom 13px !important
 
 .navbar-nav > li > a.nav-icons img {
   height: 30px;
@@ -869,7 +691,7 @@ hr.user-message-item-separator {
   background: -o-linear-gradient(top, colorPrimary1 1%, #3a5b2a 100%); /* Opera 11.10+ */
   background: -ms-linear-gradient(top, colorPrimary1 1%, #3a5b2a 100%); /* IE10+ */
   background: linear-gradient(to bottom, colorPrimary1 1%, #3a5b2a 100%); /* W3C */
-/* IE6-9 */
+  /* IE6-9 */
 }
 
 @media (min-width: 768px) {
@@ -1523,12 +1345,24 @@ hr.user-message-item-separator {
   vertical-align: top;
 }
 
+.nav-tabs
+  li a
+    color: #C6F0F5!important;
+  li.active
+    a
+      color: white !important;
+      border-bottom: 2px solid #ffee58 !important;
+      padding-bottom: 7px
+
+.well.mini-well
+  box-shadow 0 3px 7px 0 rgba(0,0,0,.2),0 1px 3px 0 rgba(0,0,0,.19) !important
+
 .card.home-navigation
   padding 0
 
 .home-navigation
   button
-    width calc( (100% / 3) - 3px );
+    width calc((100% / 3) - 3px);
     border none
     border-radius 2px 0 0 2px
     background-color inherit
@@ -1555,7 +1389,7 @@ hr.user-message-item-separator {
 
 .home-navigation .order-tests > button {
   border: none;
-  border-radius: 0px 2px 2px 0px;
+  border-radius: 0 2px 2px 0;
   padding: 9px 8px 8px 8px;
 }
 
@@ -1564,34 +1398,40 @@ hr.user-message-item-separator {
   min-height: 216px;
 }
 
-.test-info-card .profile-image {
-  height: 50px;
-  width: 50px;
-  border-radius: 25px;
-  display: inline-block;
-  vertical-align: top;
-  margin-right: 16px;
-  margin-bottom: 16px;
-  background-size: cover;
-}
+.test-info-card
+  .left
+    width: calc(100% - 209px);
+    h4, p
+      margin-top 0
+      margin-bottom 0
+  .right
+    width 204px
+    text-align right
+    .btn
+      margin-bottom 0
+    .author
+      margin-bottom marginSecondary
+      .profile-image
+        height: 50px;
+        width: 50px;
+        display inline-block
+        vertical-align: top
+        background-size cover
 
-.test-info-card .test-details {
-  width: calc(100% - 71px);
-}
-
-.test-info-card .test-details h4, p {
-  margin-top: 0px;
-  margin-bottom: 0px;
-}
-
-.test-info-card .statistics {
-  /*margin-left: 66px;*/
-  min-height: 20px;
-}
-
-.test-info-card .statistics > div p.lead {
-  margin-bottom: 0px;
-}
+.btn-group
+  box-shadow none !important
+  margin-bottom 0
+  .btn.dropdown-toggle
+  .btn.btn-icon
+    padding 6px 6px
+    line-height 1px
+    border-radius 50% !important
+  .btn.dropdown-toggle:hover
+    background-color transparent
+  .btn.btn-icon:hover
+    border-radius 50%
+  &.open .btn.dropdown-toggle
+    background-color alpha(lightgrey, 0.55)
 
 @media (min-height: 440px) {
   .test-info-card .moments-ago {
@@ -1599,12 +1439,6 @@ hr.user-message-item-separator {
     top: 16px;
     right: 16px;
   }
-}
-
-.test-info-card .test-actions {
-  position: absolute;
-  right: 16px;
-  bottom: 0px;
 }
 
 .search-box {
@@ -1699,7 +1533,6 @@ hr.user-message-item-separator {
   overflow hidden
   a:hover
     text-decoration none
-
 
 .question-list-item-row
   cursor pointer
@@ -2371,9 +2204,9 @@ body {
   color: black !important;
 }
 
-.form-control {
+/*.form-control {
   background-color: #F8F8F8 !important;
-}
+}*/
 
 .inline-block {
   display: inline-block;
@@ -2400,28 +2233,28 @@ body {
 }
 
 .margin-top-16
-  margin-top  marginPrimary !important
+  margin-top marginPrimary !important
 
 .margin-bottom-16
-  margin-bottom  marginPrimary !important
+  margin-bottom marginPrimary !important
 
 .margin-right-16
-  margin-right  marginPrimary !important
+  margin-right marginPrimary !important
 
 .margin-left-16
-  margin-left  marginPrimary !important
+  margin-left marginPrimary !important
 
 .margin-top-8
-  margin-top  marginSecondary !important
+  margin-top marginSecondary !important
 
 .margin-bottom-8
-  margin-bottom  marginSecondary !important
+  margin-bottom marginSecondary !important
 
 .margin-right-8
-  margin-right  marginSecondary !important
+  margin-right marginSecondary !important
 
 .margin-left-8
-  margin-left  marginSecondary !important
+  margin-left marginSecondary !important
 
 .no-margin {
   margin 0px !important

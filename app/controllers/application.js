@@ -144,14 +144,14 @@ export default Ember.Controller.extend({
             var adapter = this.store.adapterFor(currentUser);
             adapter.headers['X-Parse-Session-Token'] = currentUser.get('sessionToken');
             /*Parse.User.become(currentUser.get('sessionToken'))
-                .then(function (user) {
-                }, function (error) {
-                    console.dir(error);
-                });*/
+             .then(function (user) {
+             }, function (error) {
+             console.dir(error);
+             });*/
         } else {
             // TODO Logout with REST API
             /*if (Parse.User.current())
-                Parse.User.logOut();*/
+             Parse.User.logOut();*/
             localStorage.clear();
         }
     }.observes('currentUser'),
@@ -178,35 +178,38 @@ export default Ember.Controller.extend({
             }
         }).then(function (response) {
             // Categories
-            ParseHelper.extractRawCategories(this.store, response);
+            ParseHelper.extractRawPayload(this.store, 'category', response.result.categories);
 
             // Tests
-            var tests = ParseHelper.extractRawPayload(this.store, 'test', response, 'tests');
-            if(this.get('currentUser.tests')) {
-                this.get('currentUser.tests').clear();
-                this.get('currentUser.tests').addObjects(tests);
-            } else
-                this.set('currentUser.tests', tests);
-
+            if (response.result.createdTests) {
+                var createdTests = ParseHelper.extractRawPayload(this.store, 'test', response.result.createdTests);
+                this.get('currentUser.createdTests').clear();
+                this.get('currentUser.createdTests').addObjects(createdTests);
+            }
+            if (response.result.savedTests) {
+                var savedTests = ParseHelper.extractRawPayload(this.store, 'test', response.result.savedTests);
+                this.get('currentUser.savedTests').clear();
+                this.get('currentUser.savedTests').addObjects(savedTests);
+            }
             /* var followers = ParseHelper.extractRawPayload(this.store, 'parse-user',
-                response, 'followers');
-            this.get('currentUser').set('followers', followers);
+             response, 'followers');
+             this.get('currentUser').set('followers', followers);
 
-            var following = ParseHelper.extractRawPayload(this.store, 'parse-user',
-                response, 'following');
-            this.get('currentUser').set('following', following);
+             var following = ParseHelper.extractRawPayload(this.store, 'parse-user',
+             response, 'following');
+             this.get('currentUser').set('following', following);
 
-            var messages = ParseHelper.extractRawPayload(this.store, 'message',
-                response, 'messages');
-            this.get('currentUser').set('messages', messages);
+             var messages = ParseHelper.extractRawPayload(this.store, 'message',
+             response, 'messages');
+             this.get('currentUser').set('messages', messages);
 
-            var groups = ParseHelper.extractRawPayload(this.store, 'group',
-                response, 'groups');
-            this.get('currentUser').set('groups', groups);
+             var groups = ParseHelper.extractRawPayload(this.store, 'group',
+             response, 'groups');
+             this.get('currentUser').set('groups', groups);
 
-            var attempts = ParseHelper.extractRawPayload(this.store, 'attempt',
-                response, 'attempts');
-            this.get('currentUser').set('attempts', attempts);*/
+             var attempts = ParseHelper.extractRawPayload(this.store, 'attempt',
+             response, 'attempts');
+             this.get('currentUser').set('attempts', attempts);*/
 
             /*
              * isMobileUSer

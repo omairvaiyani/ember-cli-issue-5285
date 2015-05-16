@@ -1,29 +1,37 @@
 <div class="row">
-    <div class="col-md-3">
+    <div class="col-md-3 col-md-push-9 col-fix-right">
         <section class="row">
             <article class="col-md-12">
-                <div class="card home-overview">
-                    {{#link-to 'user' currentUser.slug}}{{render 'profile-image' currentUser}}{{/link-to}}
-                    {{#link-to 'user' currentUser.slug}}<h4 class="name">{{currentUser.name}}</h4>{{/link-to}}
+                <div class="card">
+                    {{profile-picture user=currentUser}}
+                    <div class="inline-top">
+                        {{#link-to 'user' currentUser.slug}}
+                            <strong><p class="margin-bottom-8">{{currentUser.name}}</p></strong>
+                        {{/link-to}}
+                        <p>{{currentUser.level.title}}</p>
+                    </div>
+                    {{level-progress points=currentUser.points level=currentUser.level}}
                 </div>
             </article>
         </section>
     </div>
-    <div class="col-md-9 col-fix-right">
+    <div class="col-md-9 col-md-pull-3">
 
         <div role="tabpanel">
 
             <!-- Nav tabs -->
             <ul class="nav nav-tabs" role="tablist">
-                <li role="presentation" class="active"><a href="#activities" aria-controls="activities" role="tab" data-toggle="tab">Activities</a></li>
-                <li role="presentation"><a href="#my-tests" aria-controls="my-tests" role="tab" data-toggle="tab">My Tests</a></li>
+                <li role="presentation"><a href="#overview" aria-controls="overview" role="tab" data-toggle="tab">Overview</a></li>
+                <li role="presentation"><a href="#activities" aria-controls="activities" role="tab" data-toggle="tab">Activities</a></li>
+                <li role="presentation" class="active"><a href="#my-tests" aria-controls="my-tests" role="tab" data-toggle="tab">My Tests</a></li>
                 <li role="presentation"><a href="#my-progress" aria-controls="my-progress" role="tab" data-toggle="tab">My Progress</a></li>
             </ul>
 
             <!-- Tab panes -->
             <div class="tab-content">
-                <div role="tabpanel" class="tab-pane active" id="activities">1</div>
-                <div role="tabpanel" class="tab-pane" id="my-tests">{{partial 'index/user/my-tests'}}</div>
+                <div role="tabpanel" class="tab-pane" id="overview">Overview tiles will go here</div>
+                <div role="tabpanel" class="tab-pane" id="activities">Activity list will go here</div>
+                <div role="tabpanel" class="tab-pane active" id="my-tests">{{partial 'index/user/my-tests'}}</div>
                 <div role="tabpanel" class="tab-pane" id="my-progress">3</div>
             </div>
 

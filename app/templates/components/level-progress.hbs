@@ -1,0 +1,11 @@
+<div class="progress margin-bottom-8">
+    <div role="progressbar"
+        {{bind-attr
+        class=":progress-bar :progress-bar-success"
+        aria-valuenow=progressInLevel
+        style=progressStyle
+        aria-valuemin=progressMin
+        aria-valuemax=progressMax}}>
+    </div>
+</div>
+<small>{{points}}/{{level.pointsRequiredForNextLevel}} xp</small>

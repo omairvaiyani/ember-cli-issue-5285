@@ -427,8 +427,7 @@ export default Ember.Route.extend({
             });
 
             return myModal.modal('show');
-        }
-        ,
+        },
 
         closeModal: function () {
             $('#myModal').modal('hide');
@@ -436,8 +435,7 @@ export default Ember.Route.extend({
                 outlet: 'modal',
                 parentView: 'application'
             });
-        }
-        ,
+        },
 
         followUser: function (user) {
             var currentUser = this.get('currentUser');
@@ -462,8 +460,7 @@ export default Ember.Route.extend({
                         currentUser.get('following').removeObject(user);
                     }.bind(this)
                 });
-        }
-        ,
+        },
 
         unfollowUser: function (user) {
             var currentUser = this.get('currentUser');
@@ -485,8 +482,7 @@ export default Ember.Route.extend({
                         currentUser.get('following').pushObject(user);
                     }.bind(this)
                 });
-        }
-        ,
+        },
 
         bulkFollow: function (users, callback) {
             var userIdsToFollow = [];
@@ -514,20 +510,17 @@ export default Ember.Route.extend({
             }.bind(this), function (error) {
                 console.dir(error);
             });
-        }
-        ,
+        },
 
         incrementLoadingItems: function () {
             if (this.get('applicationController'))
                 this.get('applicationController').incrementProperty('loadingItems');
-        }
-        ,
+        },
 
         decrementLoadingItems: function () {
             if (this.get('applicationController.loadingItems'))
                 this.get('applicationController').decrementProperty('loadingItems');
-        }
-        ,
+        },
 
         sendPush: function (controller, type, sendObject) {
             switch (type) {
@@ -556,8 +549,7 @@ export default Ember.Route.extend({
                         });
                     break;
             }
-        }
-        ,
+        },
 
         /**
          * Action handler for creating a new notification.
@@ -576,8 +568,7 @@ export default Ember.Route.extend({
                 closed: false
             });
             this.get('applicationController.notifications').pushObject(notification);
-        }
-        ,
+        },
 
         activateSiteSearch: function () {
             this.set('preSearchRoute', this.get('applicationController.currentPath'));
@@ -586,8 +577,7 @@ export default Ember.Route.extend({
             setTimeout(function () {
                 Ember.$('#site-search-input').focus();
             }, 500);
-        }
-        ,
+        },
 
         deactivateSiteSearch: function () {
             if (this.get('applicationController.currentPath') === 'search') {
@@ -597,8 +587,61 @@ export default Ember.Route.extend({
                     this.transitionTo('index');
             }
             this.controllerFor('application').set('inSearchMode', false);
-        }
-        ,
+        },
+
+        /**
+         * @Action Save Community Test
+         *
+         * Called from TestCardComponent
+         * Allows current user to save a
+         * community test to their savedTests
+         * list.
+         *
+         * @param test
+         */
+        saveCommunityTest: function (test) {
+            this.get('currentUser.savedTests').addObject(test);
+            var params = {
+                "parentObjectClass": "_User",
+                "parentObjectId": this.get('currentUser.id'),
+                "relationKey": "savedTests",
+                "childObjectClass": "Test",
+                "childObjectIds": [test.id],
+                "isTaskToAdd": true
+            };
+            ParseHelper.cloudFunction(this, 'addOrRemoveRelation', params)
+                .then(function (response) {
+                }, function (error) {
+                    console.dir(error);
+                });
+        },
+
+        /**
+         * @Action Remove Community Test
+         *
+         * Called from TestCardComponent
+         * Allows current user to remove a
+         * community test from their savedTests
+         * list.
+         *
+         * @param test
+         */
+        removeCommunityTest: function (test) {
+            this.get('currentUser.savedTests').removeObject(test);
+            var params = {
+                "parentObjectClass": "_User",
+                "parentObjectId": this.get('currentUser.id'),
+                "relationKey": "savedTests",
+                "childObjectClass": "Test",
+                "childObjectIds": [test.id],
+                "isTaskToAdd": false
+            };
+            ParseHelper.cloudFunction(this, 'addOrRemoveRelation', params)
+                .then(function (response) {
+                }, function (error) {
+                    console.dir(error);
+                });
+        },
 
         /**
          * @DEPRECATED (Use utils/event-tracker.recordEvent)
@@ -637,5 +680,4 @@ export default Ember.Route.extend({
 
 
     }
-})
-    ;
+});

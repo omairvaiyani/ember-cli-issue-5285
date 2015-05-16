@@ -9,7 +9,7 @@
     "ember-qunit": "0.3.1",
     "ember-qunit-notifications": "0.0.7",
     "ember-resolver": "~0.1.15",
-    "jquery": "^1.11.1",
+    "jquery": "^2.1.4",
     "loader.js": "ember-cli/loader.js#3.2.0",
     "qunit": "~1.17.1",
     "bootstrap": "~3.2.0",
@@ -21,6 +21,7 @@
     "numeral": "~1.5.3",
     "moment-timezone": "~0.2.5",
     "tooltipster": "~3.3.0",
-    "jstz": "entraigas/jstz"
+    "jstz": "entraigas/jstz",
+    "bootstrap-material-design": "~0.3.0"
   }
 }
