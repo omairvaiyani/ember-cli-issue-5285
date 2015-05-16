@@ -22,7 +22,7 @@
 
              {{/unless}} --}}
 
-            {{#each option in response.shuffledOptions}}
+            {{#each response.question.options as |option|}}
                 <div class="row">
                     <div {{bind-attr class=":col-md-12 :option option.isChosen:is-selected
                     option.isCorrect:is-correct:is-incorrect"}}>

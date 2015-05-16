@@ -6,6 +6,7 @@
         <span class="glyphicon glyphicon-envelope"></span>
     </a>
     <ul class="dropdown-menu" id="navbar-messages-dropdown-menu" role="menu" aria-labelledby="navbar-messages-dropdown">
+        {{!--
         {{#each item in currentUser.messages itemController='application.navbar.user-messages.item.message'}}
             <li role="presentation" {{bind-attr class=':user-message-item item.read::is-unread'}}>
                 {{partial 'application/navbar/user-messages/item/message'}}
@@ -26,6 +27,7 @@
                 <a disabled="disabled">You have no messages.</a>
             </li>
         {{/unless}}
+        --}}
     </ul>
 </li>
 <script>

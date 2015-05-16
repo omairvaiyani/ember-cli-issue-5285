@@ -133,7 +133,7 @@ Parse.Cloud.define('createNewTest', function (request, response) {
         userEvent = result;
         return user.checkLevelUp();
     }).then(function (didLevelUp) {
-        console.log("Did level up "+didLevelUp);
+        console.log("Did level up " + didLevelUp);
         return response.success({userEvent: userEvent, test: test, didLevelUp: didLevelUp});
     }, function (error) {
         response.error(error);
@@ -164,6 +164,72 @@ Parse.Cloud.define('createNewTest', function (request, response) {
  response.error(error);
  });
  });*/
+
+/**
+ * @CloudFunction Get Community Test
+ *
+ * Fetches a test that does not belong
+ * to the user: response is with questions,
+ * category and limited-author profile
+ * included.
+ *
+ * @param {string} slug OR,
+ * @param {string} testId
+ * @return {Test} test
+ */
+Parse.Cloud.define('getCommunityTest', function (request, response) {
+    var slug = request.params.slug,
+        testId = request.params.testId,
+        query = new Parse.Query(Test);
+
+    query.notEqualTo('isObjectDeleted', true);
+    query.equalTo('isPublic', true);
+    if (slug)
+        query.equalTo('slug', slug);
+    if (testId)
+        query.equalTo('objectId', testId);
+    query.include('questions', 'author', 'category.parent');
+
+    Parse.Cloud.useMasterKey();
+
+    query.find().then(function (result) {
+        // TODO limit user profile
+        response.success(result[0]);
+    }, function (error) {
+        response.error(error);
+    });
+});
+
+/**
+ * @CloudFunction Save Test Attempt
+ * Takes individual responses and saves each one,
+ * storing the array of responses in a new attempt
+ * record. This reduces number of requests needed
+ * from the client's device AND allows us to
+ * allocate and return points/badges to the user.
+ *
+ * @param {Object} attempt
+ * @param {Array} responses
+ * @return {{attempt: Attempt, userEvent: userEvent}}
+ */
+Parse.Cloud.define('saveTestAttempt', function (request, status) {
+    var JSONAttempt = request.params.attempt,
+        JSONResponses = request.params.responses,
+        responses = [];
+    _.each(JSONResponses, function (JSONResponse) {
+        var response = Parse.Object.createFromJSON(JSONResponse, 'Response');
+        responses.push(response);
+    });
+    Parse.Object.saveAll(responses).then(function () {
+        JSONAttempt.responses = responses;
+        var attempt = Parse.Object.createFromJSON(JSONAttempt, 'Attempt');
+        return attempt.save();
+    }).then(function (attempt) {
+        status.success({attempt: attempt});
+    }, function (error) {
+        status.error(error);
+    });
+});
 
 /**
  * @CloudFunction Add or Remove Relation

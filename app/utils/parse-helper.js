@@ -160,8 +160,9 @@ export default {
                         var relationType = relationship.parentType;
                         // This bit is a patch - not sure why the function
                         // store.pushMany() will accept relationship.parentType
-                        // for all records but only relationship.type for parse-user
-                        if (relationship.type.typeKey === 'parseUser')
+                        // for all records but only relationship.type for test.author
+                        // and test.category -_-
+                        if (relationship.key === 'author' || relationship.key === 'category')
                             relationType = relationship.type;
 
                         var loadedRelation = store.pushMany(relationType, serialisedRelation);

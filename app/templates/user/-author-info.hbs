@@ -1,14 +1,14 @@
 <div class="card author-info">
     <h4>Author info</h4>
-    {{#link-to 'user' author.slug}}{{render 'profile-image' author}}{{/link-to}}
-    {{#link-to 'user' author.slug}}<p class="name">{{author.name}}</p>{{/link-to}}
+    {{profile-picture user=model.author}}
+    {{#link-to 'user' model.author.slug}}<p class="name">{{model.author.name}}</p>{{/link-to}}
     <hr>
     <p>Tests
-        <small class="pull-right">{{#link-to 'user.tests' author.slug}}
-            {{author.numberOfTests}}{{/link-to}}</small>
+        <small class="pull-right">{{#link-to 'user.tests' model.author.slug}}
+            {{model.author.numberOfTests}}{{/link-to}}</small>
     </p>
     <p>Followers
-        <small class="pull-right">{{#link-to 'user.followers' author.slug}}
-            {{author.numberOfFollowers}}{{/link-to}}</small>
+        <small class="pull-right">{{#link-to 'user.followers' model.author.slug}}
+            {{model.author.numberOfFollowers}}{{/link-to}}</small>
     </p>
 </div>

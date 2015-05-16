@@ -8,7 +8,6 @@ Ember.MODEL_FACTORY_INJECTIONS = true;
 
 var App = Ember.Application.extend({
     modulePrefix: config.modulePrefix,
-    podModulePrefix: config.podModulePrefix,
     Resolver: Resolver,
     /*
      * This allows us to set CSS styling directly on the App wrapper

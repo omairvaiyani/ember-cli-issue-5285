@@ -53,6 +53,23 @@ Parse.Object.generatePointer = function (className, objectId) {
     return {"__type": "Pointer", "className": className, "objectId": objectId};
 };
 /**
+ * @Function Generate Pointers
+ * @param {string} className
+ * @param {Array<String>} objectIds
+ * @returns {Array}
+ */
+Parse.Object.generatePointers = function (className, objectIds) {
+    var pointers = [];
+    if (!objectIds || !objectIds.length)
+        return pointers;
+    else {
+        _.each(objectIds, function (objectId) {
+            pointers.push(Parse.Object.generatePointer(className, objectId));
+        });
+    }
+    return pointers;
+};
+/**
  * @Function Create from JSON
  * Convert payloads to parse objects.
  * Ambiguous to any class.
@@ -70,8 +87,7 @@ Parse.Object.createFromJSON = function (payload, className) {
         payload = [payload];
         isSingleObject = true;
     }
-    _.each(payload, function (object, index) {
-        console.log("Loop 1 - index " + index + " object " + JSON.stringify(object));
+    _.each(payload, function (object) {
         var parseObject = new Parse.Object(className);
         _.each(_.pairs(object), function (pair) {
             var key = pair[0], value = pair[1];
@@ -99,10 +115,14 @@ Parse.Object.createFromJSON = function (payload, className) {
 Parse.Object.prototype.fetchIfNeeded = function () {
     // This is a good, but not foolproof, way to check
     // if the object is fetched or not.
-    if (!this.createdAt)
+    if (!this.createdAt) {
+        // This works.
         return this.fetch();
-    else
+    } else {
+        // This hasn't been tested yet
+        // Might not work?
         return Parse.Promise.as(this);
+    }
 };
 /****
  * ----------
@@ -187,10 +207,6 @@ Parse.User.prototype.checkLevelUp = function () {
         // User has a level set, fetch and check
         // if the user should level up
         promise = currentLevel.fetchIfNeeded().then(function (a) {
-            console.log("Returned promise from fetch "+JSON.stringify(a));
-            console.log("currentLevel "+JSON.stringify(currentLevel));
-            console.log("Points to level up "+(currentLevel.pointsRequired() + currentLevel.pointsToLevelUp()));
-            console.log("Therefore return as: "+this.points() < (currentLevel.pointsRequired() + currentLevel.pointsToLevelUp()));
             if (this.points() < (currentLevel.pointsRequired() + currentLevel.pointsToLevelUp()))
                 return Parse.Promise.as(false);
             else {
@@ -733,6 +749,20 @@ var Question = Parse.Object.extend("Question", {
  **/
 var Attempt = Parse.Object.extend("Attempt", {
     /**
+     * @Function Get Pointer Fields
+     * Allows ambiguous functions
+     * to create instances from payload
+     * data and differentiate between
+     * direct fields and embedded
+     * fields. Use case:
+     * Parse.Object.createFromJSON.
+     * @returns {string[]}
+     */
+    getPointerFields: function () {
+        return ['questions', 'test', 'responses', 'user'];
+    },
+
+    /**
      * @Property user
      * @returns {Parse.User}
      */
@@ -741,11 +771,83 @@ var Attempt = Parse.Object.extend("Attempt", {
     },
 
     /**
+     * @Function Set User
+     * @param {Parse.User} user
+     * @returns {Attempt}
+     */
+    setUser: function (user) {
+        if (typeof user === 'string') {
+            this.set('user', Parse.Object.generatePointer("_User", user));
+        } else
+            this.set('user', user);
+        return this;
+    },
+
+    /**
      * @Property test
      * @returns {Test}
      */
     test: function () {
         return this.get('test');
+    },
+
+    /**
+     * @Function Set Test
+     * @param {Test} test
+     * @returns {Attempt}
+     */
+    setTest: function (test) {
+        if (typeof test === 'string') {
+            this.set('test', Parse.Object.generatePointer("Test", test));
+        } else
+            this.set('test', test);
+        return this;
+    },
+
+    /**
+     * @Property responses
+     * @returns {Array<Response>}
+     */
+    responses: function () {
+        return this.get('responses');
+    },
+
+    /**
+     * @Function Set Responses
+     * @param {Array<Response>} responses
+     * @returns {Attempt}
+     */
+    setResponses: function (responses) {
+        if (!responses || responses.constructor !== Array)
+            return this;
+        if (responses[0] === String) {
+            this.set('responses', Parse.Object.generatePointers("Response", responses));
+        } else
+            this.set('responses', responses);
+        return this;
+    },
+
+    /**
+     * @Property questions
+     * @returns {Array<Question>}
+     */
+    questions: function () {
+        return this.get('questions');
+    },
+
+    /**
+     * @Function Set Questions
+     * @param {Array<Question>} questions
+     * @returns {Attempt}
+     */
+    setQuestions: function (questions) {
+        if (!questions || questions.constructor !== Array)
+            return this;
+        if (questions[0].constructor === String) {
+            this.set('questions', Parse.Object.generatePointers("Question", questions));
+        } else
+            this.set('questions', questions);
+        return this;
     },
 
     /**
@@ -824,12 +926,39 @@ var Attempt = Parse.Object.extend("Attempt", {
  **/
 var Response = Parse.Object.extend("Response", {
     /**
+     * @Function Get Pointer Fields
+     * Allows ambiguous functions
+     * to create instances from payload
+     * data and differentiate between
+     * direct fields and embedded
+     * fields. Use case:
+     * Parse.Object.createFromJSON.
+     * @returns {string[]}
+     */
+    getPointerFields: function () {
+        return ['user', 'test', 'question', ''];
+    },
+    /**
      * @Property user
      * @returns {Parse.User}
      */
     user: function () {
         return this.get('user');
     },
+
+    /**
+     * @Function Set User
+     * @param {Parse.User} user
+     * @returns {Response}
+     */
+    setUser: function (user) {
+        if (typeof user === 'string') {
+            this.set('user', Parse.Object.generatePointer("_User", user));
+        } else
+            this.set('user', user);
+        return this;
+    },
+
 
     /**
      * @Property test
@@ -840,11 +969,37 @@ var Response = Parse.Object.extend("Response", {
     },
 
     /**
+     * @Function Set Test
+     * @param {Test} test
+     * @returns {Response}
+     */
+    setTest: function (test) {
+        if (typeof test === 'string') {
+            this.set('test', Parse.Object.generatePointer("Test", test));
+        } else
+            this.set('test', test);
+        return this;
+    },
+
+    /**
      * @Property question
      * @returns {Question}
      */
     question: function () {
         return this.get('question');
+    },
+
+    /**
+     * @Function Set Question
+     * @param {Question} question
+     * @returns {Response}
+     */
+    setQuestion: function (question) {
+        if (typeof question === 'string') {
+            this.set('question', Parse.Object.generatePointer("Question", question));
+        } else
+            this.set('question', question);
+        return this;
     },
 
     /**
@@ -1326,7 +1481,7 @@ Parse.Cloud.define('createNewTest', function (request, response) {
         userEvent = result;
         return user.checkLevelUp();
     }).then(function (didLevelUp) {
-        console.log("Did level up "+didLevelUp);
+        console.log("Did level up " + didLevelUp);
         return response.success({userEvent: userEvent, test: test, didLevelUp: didLevelUp});
     }, function (error) {
         response.error(error);
@@ -1357,6 +1512,72 @@ Parse.Cloud.define('createNewTest', function (request, response) {
  response.error(error);
  });
  });*/
+
+/**
+ * @CloudFunction Get Community Test
+ *
+ * Fetches a test that does not belong
+ * to the user: response is with questions,
+ * category and limited-author profile
+ * included.
+ *
+ * @param {string} slug OR,
+ * @param {string} testId
+ * @return {Test} test
+ */
+Parse.Cloud.define('getCommunityTest', function (request, response) {
+    var slug = request.params.slug,
+        testId = request.params.testId,
+        query = new Parse.Query(Test);
+
+    query.notEqualTo('isObjectDeleted', true);
+    query.equalTo('isPublic', true);
+    if (slug)
+        query.equalTo('slug', slug);
+    if (testId)
+        query.equalTo('objectId', testId);
+    query.include('questions', 'author', 'category.parent');
+
+    Parse.Cloud.useMasterKey();
+
+    query.find().then(function (result) {
+        // TODO limit user profile
+        response.success(result[0]);
+    }, function (error) {
+        response.error(error);
+    });
+});
+
+/**
+ * @CloudFunction Save Test Attempt
+ * Takes individual responses and saves each one,
+ * storing the array of responses in a new attempt
+ * record. This reduces number of requests needed
+ * from the client's device AND allows us to
+ * allocate and return points/badges to the user.
+ *
+ * @param {Object} attempt
+ * @param {Array} responses
+ * @return {{attempt: Attempt, userEvent: userEvent}}
+ */
+Parse.Cloud.define('saveTestAttempt', function (request, status) {
+    var JSONAttempt = request.params.attempt,
+        JSONResponses = request.params.responses,
+        responses = [];
+    _.each(JSONResponses, function (JSONResponse) {
+        var response = Parse.Object.createFromJSON(JSONResponse, 'Response');
+        responses.push(response);
+    });
+    Parse.Object.saveAll(responses).then(function () {
+        JSONAttempt.responses = responses;
+        var attempt = Parse.Object.createFromJSON(JSONAttempt, 'Attempt');
+        return attempt.save();
+    }).then(function (attempt) {
+        status.success({attempt: attempt});
+    }, function (error) {
+        status.error(error);
+    });
+});
 
 /**
  * @CloudFunction Add or Remove Relation

@@ -53,6 +53,23 @@ Parse.Object.generatePointer = function (className, objectId) {
     return {"__type": "Pointer", "className": className, "objectId": objectId};
 };
 /**
+ * @Function Generate Pointers
+ * @param {string} className
+ * @param {Array<String>} objectIds
+ * @returns {Array}
+ */
+Parse.Object.generatePointers = function (className, objectIds) {
+    var pointers = [];
+    if (!objectIds || !objectIds.length)
+        return pointers;
+    else {
+        _.each(objectIds, function (objectId) {
+            pointers.push(Parse.Object.generatePointer(className, objectId));
+        });
+    }
+    return pointers;
+};
+/**
  * @Function Create from JSON
  * Convert payloads to parse objects.
  * Ambiguous to any class.
@@ -70,7 +87,7 @@ Parse.Object.createFromJSON = function (payload, className) {
         payload = [payload];
         isSingleObject = true;
     }
-    _.each(payload, function (object, index) {
+    _.each(payload, function (object) {
         var parseObject = new Parse.Object(className);
         _.each(_.pairs(object), function (pair) {
             var key = pair[0], value = pair[1];
@@ -732,6 +749,20 @@ var Question = Parse.Object.extend("Question", {
  **/
 var Attempt = Parse.Object.extend("Attempt", {
     /**
+     * @Function Get Pointer Fields
+     * Allows ambiguous functions
+     * to create instances from payload
+     * data and differentiate between
+     * direct fields and embedded
+     * fields. Use case:
+     * Parse.Object.createFromJSON.
+     * @returns {string[]}
+     */
+    getPointerFields: function () {
+        return ['questions', 'test', 'responses', 'user'];
+    },
+
+    /**
      * @Property user
      * @returns {Parse.User}
      */
@@ -740,11 +771,83 @@ var Attempt = Parse.Object.extend("Attempt", {
     },
 
     /**
+     * @Function Set User
+     * @param {Parse.User} user
+     * @returns {Attempt}
+     */
+    setUser: function (user) {
+        if (typeof user === 'string') {
+            this.set('user', Parse.Object.generatePointer("_User", user));
+        } else
+            this.set('user', user);
+        return this;
+    },
+
+    /**
      * @Property test
      * @returns {Test}
      */
     test: function () {
         return this.get('test');
+    },
+
+    /**
+     * @Function Set Test
+     * @param {Test} test
+     * @returns {Attempt}
+     */
+    setTest: function (test) {
+        if (typeof test === 'string') {
+            this.set('test', Parse.Object.generatePointer("Test", test));
+        } else
+            this.set('test', test);
+        return this;
+    },
+
+    /**
+     * @Property responses
+     * @returns {Array<Response>}
+     */
+    responses: function () {
+        return this.get('responses');
+    },
+
+    /**
+     * @Function Set Responses
+     * @param {Array<Response>} responses
+     * @returns {Attempt}
+     */
+    setResponses: function (responses) {
+        if (!responses || responses.constructor !== Array)
+            return this;
+        if (responses[0] === String) {
+            this.set('responses', Parse.Object.generatePointers("Response", responses));
+        } else
+            this.set('responses', responses);
+        return this;
+    },
+
+    /**
+     * @Property questions
+     * @returns {Array<Question>}
+     */
+    questions: function () {
+        return this.get('questions');
+    },
+
+    /**
+     * @Function Set Questions
+     * @param {Array<Question>} questions
+     * @returns {Attempt}
+     */
+    setQuestions: function (questions) {
+        if (!questions || questions.constructor !== Array)
+            return this;
+        if (questions[0].constructor === String) {
+            this.set('questions', Parse.Object.generatePointers("Question", questions));
+        } else
+            this.set('questions', questions);
+        return this;
     },
 
     /**
@@ -823,12 +926,39 @@ var Attempt = Parse.Object.extend("Attempt", {
  **/
 var Response = Parse.Object.extend("Response", {
     /**
+     * @Function Get Pointer Fields
+     * Allows ambiguous functions
+     * to create instances from payload
+     * data and differentiate between
+     * direct fields and embedded
+     * fields. Use case:
+     * Parse.Object.createFromJSON.
+     * @returns {string[]}
+     */
+    getPointerFields: function () {
+        return ['user', 'test', 'question', ''];
+    },
+    /**
      * @Property user
      * @returns {Parse.User}
      */
     user: function () {
         return this.get('user');
     },
+
+    /**
+     * @Function Set User
+     * @param {Parse.User} user
+     * @returns {Response}
+     */
+    setUser: function (user) {
+        if (typeof user === 'string') {
+            this.set('user', Parse.Object.generatePointer("_User", user));
+        } else
+            this.set('user', user);
+        return this;
+    },
+
 
     /**
      * @Property test
@@ -839,11 +969,37 @@ var Response = Parse.Object.extend("Response", {
     },
 
     /**
+     * @Function Set Test
+     * @param {Test} test
+     * @returns {Response}
+     */
+    setTest: function (test) {
+        if (typeof test === 'string') {
+            this.set('test', Parse.Object.generatePointer("Test", test));
+        } else
+            this.set('test', test);
+        return this;
+    },
+
+    /**
      * @Property question
      * @returns {Question}
      */
     question: function () {
         return this.get('question');
+    },
+
+    /**
+     * @Function Set Question
+     * @param {Question} question
+     * @returns {Response}
+     */
+    setQuestion: function (question) {
+        if (typeof question === 'string') {
+            this.set('question', Parse.Object.generatePointer("Question", question));
+        } else
+            this.set('question', question);
+        return this;
     },
 
     /**

@@ -219,6 +219,10 @@ export default Ember.Controller.extend({
              * to set this.
              */
             //this.set('currentUser.isMobileUser', this.get('currentUser.privateData.isMobileUser'));
+
+            // This ensures index.myTestsList is filled out even when website
+            // loads on a different route to index.
+            this.get('controllers.index').myTestsListUpdate();
         }.bind(this));
         //EventTracker.profileUser(this.get('currentUser'));
     }.observes('currentUser'),

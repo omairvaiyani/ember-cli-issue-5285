@@ -1,13 +1,8 @@
 import Ember from 'ember';
+import ParseHelper from '../utils/parse-helper';
 import EventTracker from '../utils/event-tracker';
 
 export default Ember.Route.extend({
-    needs: ['test'],
-
-    testController: function () {
-        return this.get('controllers.test');
-    }.property('controllers.test'),
-
     beforeModel: function () {
         this.controllerFor('test').set('loading', "Preparing test");
     },
@@ -24,24 +19,18 @@ export default Ember.Route.extend({
                 return results.objectAt(0);
             }
 
-            var testSlug = params.test_slug,
-                testOldId = params.test_slug,
-                where = {
-                    "$or": [
-                        {"slug": testSlug},
-                        {"oldId": testOldId}
-                    ]
-                };
-            return this.store.findQuery('test', {where: JSON.stringify(where)});
-        }.bind(this)).then(function (results) {
+            return ParseHelper.cloudFunction(this, 'getCommunityTest', {slug: params.test_slug});
+        }.bind(this)).then(function (result) {
             if (locallyFound)
-                return results; // results === DS.Model<test>
+                return result; // result === DS.Model<test>
 
-            if (results.objectAt(0)) {
-                return results.objectAt(0);
+            if (result) {
+                // result === ParseObject<Test>
+                var test = ParseHelper.extractRawPayload(this.store, 'test', result);
+                return test;
             } else {
-                var generatedAttemptId = params.test_slug;
-                return this.store.findById('attempt', generatedAttemptId);
+                // TODO handle test not found
+                console.error("Test with slug: "+params.test_slug+" not found!");
             }
         }.bind(this));
 
@@ -51,6 +40,7 @@ export default Ember.Route.extend({
      * Prerender readied in Test.Controller.setTimeStarted
      */
     setupController: function (controller, model) {
+        // TODO replace location.history when transition to 404
         if (!model) {
             this.transitionTo('notFound');
             return;
@@ -81,7 +71,8 @@ export default Ember.Route.extend({
              * Create a new property which holds
              * a shuffled array of questions
              */
-            controller.set('shuffledQuestions', this.shuffle(questions));
+            controller.get('shuffledQuestions').clear();
+            controller.get('shuffledQuestions').addObjects(this.shuffle(questions));
             /*
              * Loop through each shuffled question and:
              * - Get the options which are not empty
@@ -92,7 +83,7 @@ export default Ember.Route.extend({
             controller.get('shuffledQuestions').forEach(function (question) {
                 var nonEmptyOptions = [];
                 /*
-                 * Reset question.isAnswer and options.@each.isSelected to false
+                 * Reset question.isAnswered and options.@each.isSelected to false
                  */
                 question.set('isAnswered', false);
                 if (question.get('options')) {

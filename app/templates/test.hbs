@@ -4,34 +4,34 @@
             <ol class="breadcrumb">
                 {{#unless isGenerated}}
                     {{#link-to 'browse' tagName='li'}}{{#link-to 'browse'}}Browse{{/link-to}}{{/link-to}}
-                    {{#if category.parentCategorySlug}}
-                        {{#link-to 'category' category.parentCategorySlug tagName='li'}}
-                            {{#link-to 'category' category.parentCategorySlug}}
-                                {{category.parentCategoryName}}
+                    {{#if model.category.parent.slug}}
+                        {{#link-to 'category' model.category.parent.slug tagName='li'}}
+                            {{#link-to 'category' model.category.parent.slug}}
+                                {{model.category.parent.name}}
                             {{/link-to}}
                         {{/link-to}}
-                        {{#link-to 'subcategory' category.parentCategorySlug category.slug tagName='li'}}
-                            {{#link-to 'subcategory' category.parentCategorySlug category.slug}}
-                                {{category.name}}
+                        {{#link-to 'subcategory' model.category.parent.slug model.category.slug tagName='li'}}
+                            {{#link-to 'subcategory' model.category.parent.slug model.category.slug}}
+                                {{model.category.name}}
                             {{/link-to}}
                         {{/link-to}}
                     {{else}}
-                        {{#link-to 'category' category.slug tagName='li'}}
-                            {{#link-to 'category' category.slug}}
-                                {{category.name}}
+                        {{#link-to 'category' model.category.slug tagName='li'}}
+                            {{#link-to 'category' model.category.slug}}
+                                {{model.category.name}}
                             {{/link-to}}
                         {{/link-to}}
                     {{/if}}
-                    {{#link-to 'testInfo' slug tagName='li'}}
-                        {{#link-to 'testInfo' slug}}
-                            {{title}}
+                    {{#link-to 'testInfo' model.slug tagName='li'}}
+                        {{#link-to 'testInfo' model.slug}}
+                            {{model.title}}
                         {{/link-to}}
                     {{/link-to}}
-                    {{#link-to 'test' slug tagName='li'}}
+                    {{#link-to 'test' model.slug tagName='li'}}
                         Take test
                     {{/link-to}}
                 {{/unless}}
-                {{#if isProfessional}}
+                {{#if model.isProfessional}}
                     {{#link-to 'medical'}}<i class="fa fa-arrow-circle-o-left margin-right-8"></i>
                         Return to Medical Test Generator{{/link-to}}
                 {{/if}}
@@ -46,8 +46,8 @@
                         <div class="card take-test">
                             <h3>
                                 {{#unless isGeneratedAttempt}}
-                                    {{#link-to 'testInfo' slug}}{{title}}{{/link-to}}
-                                    <small>{{#link-to 'category' category.slug}}{{category.name}}{{/link-to}}</small>
+                                    {{#link-to 'testInfo' model.slug}}{{model.title}}{{/link-to}}
+                                    <small>{{#link-to 'category' model.category.slug}}{{model.category.name}}{{/link-to}}</small>
                                 {{else}}
                                     {{partial 'test/srs-header'}}
                                 {{/unless}}
@@ -59,10 +59,12 @@
                             </h3>
                             <div class="row margin-bottom-16">
                                 <div class="col-md-12 progress-blocks">
-                                    {{#each question in shuffledQuestions itemController='test.item.progressBlock'}}
+                                    {{!--
+                                    {{#each shuffledQuestions itemController='test.item.progressBlock' as |question|}}
                                         <div {{bind-attr style=question.progressBlockWidth
                                         class=":progress-block question.isCurrentItem:is-current-item"}}></div>
                                     {{/each}}
+                                    --}}
                                 </div>
                             </div>
                             <div class="row margin-bottom-16">
@@ -71,7 +73,7 @@
                                 </div>
                             </div>
 
-                            {{#each option in currentQuestion.shuffledOptions}}
+                            {{#each currentQuestion.shuffledOptions as |option|}}
                                 <div class="row" {{action 'optionSelected' _view.contentIndex}}>
                                     <div {{bind-attr class=":col-md-12 :option option.isSelected"}}>
                                         <span class="option-label margin-right-16">{{alphabetise-index _view.contentIndex}}</span>
@@ -85,7 +87,7 @@
                                     <button class="flat-button" {{action 'nextQuestion'}}>Next</button>
                                 </div>
                                 <div class="col-md-2 text-center">
-                                    <p class="margin-top-16">Q{{currentQuestionNumber}} of {{questions.length}}</p>
+                                    <p class="margin-top-16">Q{{currentQuestionNumber}} of {{shuffledQuestions.length}}</p>
                                 </div>
                                 <div class="col-md-5">
                                     <button class="flat-button pull-right"
@@ -104,10 +106,10 @@
                             <h4>
                                 <small>https://mycqs.com</small>
                             </h4>
-                            <h4>{{title}} -
-                                <small class="margin-bottom-16">{{category.name}} written by {{author.name}}</small>
+                            <h4>{{model.title}} -
+                                <small class="margin-bottom-16">{{model.category.name}} written by {{model.author.name}}</small>
                             </h4>
-                            {{#each question in shuffledQuestions}}
+                            {{#each shuffledQuestions as |question|}}
                                 <div class="row margin-bottom-16">
                                     <div class="col-md-12">
                             <span class="question-stem"><strong>Q{{math-helper _view.contentIndex '+' 1}}</strong>
@@ -115,7 +117,7 @@
                                     </div>
                                 </div>
 
-                                {{#each option in question.shuffledOptions}}
+                                {{#each question.shuffledOptions as |option|}}
                                     <div class="row">
                                         <div {{bind-attr class=":col-md-12"}}>
                                             <span class="option-label margin-right-16">{{alphabetise-index _view.contentIndex}}</span>
@@ -128,7 +130,7 @@
                             <p class="margin-top-16">Correct Answers</p>
 
                             <div style="transform: rotate(180deg);">
-                                {{#each question in shuffledQuestions itemController='test/item/question'}}
+                                {{#each shuffledQuestions as |question|}}
                                     Q{{question.itemNumber}}-{{alphabetise-index question.correctOptionIndex}}
                                     <p class="small">{{question.feedback}}</p>
                                 {{/each}}
@@ -148,17 +150,16 @@
         <article class="col-md-3 col-fix-right">
             <section class="row">
                 {{#unless isGeneratedAttempt}}
-                    {{#if isProfessional}}
+                    {{#if model.isProfessional}}
                         <article class="col-md-12 col-sm-6 col-xs-12 margin-bottom-16">
                             <div class="card">
                                 <h4>Generated Test</h4>
-                                <p>{{#link-to 'user' author}}
-                                    {{render 'profile-image' author}}{{/link-to}}
-                                    {{#link-to 'user' author}}{{author.name}}{{/link-to}}</p>
-                                {{#if group.name}}
+                                <p>{{profile-picture user=model.author}}
+                                    {{#link-to 'user' model.author}}{{model.author.name}}{{/link-to}}</p>
+                                {{#if model.group.name}}
                                     <h5>Group:</h5>
-                                    {{#link-to 'group' group.slug}}
-                                        {{group.name}}
+                                    {{#link-to 'group' model.group.slug}}
+                                        {{model.group.name}}
                                     {{/link-to}}
                                 {{/if}}
                             </div>
@@ -167,20 +168,10 @@
                         <article class="col-md-12 col-sm-6 col-xs-12 margin-bottom-16">
                             {{partial 'user/author-info'}}
                         </article>
-                        <article class="col-md-12 col-sm-6 col-xs-12">
-                            <div class="card">
-                                <p class="text-center"><strong>Take this test from your iPhone or iPad.</strong></p>
-                                <a href="https://itunes.apple.com/gb/app/mycqs-multiple-choice-questions/id921380709?mt=8"
-                                   target="_blank">
-                                    <img src="/img/appstore.png"
-                                         style="width:100%;"/>
-                                </a>
-                            </div>
-                        </article>
                     {{/if}}
                 {{else}}
-                    {{#if isProfessional}}
-                        {{#unless test.id.length}}
+                    {{#if model.isProfessional}}
+                        {{#unless model.test.id.length}}
                             <article class="col-md-12 col-sm-6 col-xs-12 margin-bottom-16">
                                 <div class="card">
                                     <h4>Save this Test</h4>
@@ -197,16 +188,15 @@
                             <article class="col-md-12 col-sm-6 col-xs-12 margin-bottom-16">
                                 <div class="card">
                                     <h4>Generated Test</h4>
-                                    {{#link-to 'testInfo' test.slug}} {{test.title}} {{/link-to}}
-                                    {{#if test.privacy}}<br><small> Use this link to share the test</small>{{/if}}
+                                    {{#link-to 'testInfo' model.test.slug}} {{model.test.title}} {{/link-to}}
+                                    {{#if model.test.privacy}}<br><small> Use this link to share the test</small>{{/if}}
                                     <hr>
-                                    <p>{{#link-to 'user' test.author}}
-                                        {{render 'profile-image' test.author}}{{/link-to}}
-                                        {{#link-to 'user' test.author}}{{test.author.name}}{{/link-to}}</p>
-                                    {{#if test.group.name}}
+                                    <p>{{profile-image user=model.test.author}}
+                                        {{#link-to 'user' model.test.author}}{{model.test.author.name}}{{/link-to}}</p>
+                                    {{#if model.test.group.name}}
                                         <h5>Group:</h5>
-                                        {{#link-to 'group' test.group.slug}}
-                                            {{test.group.name}}
+                                        {{#link-to 'group' model.test.group.slug}}
+                                            {{model.test.group.name}}
                                         {{/link-to}}
                                     {{/if}}
                                 </div>

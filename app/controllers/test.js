@@ -3,7 +3,7 @@ import CurrentUser from '../mixins/current-user';
 import ParseHelper from '../utils/parse-helper';
 import EventTracker from '../utils/event-tracker';
 
-export default Ember.ObjectController.extend(CurrentUser, {
+export default Ember.Controller.extend(CurrentUser, {
     loading: 'Preparing test...',
 
     setTimeStarted: function () {
@@ -22,6 +22,8 @@ export default Ember.ObjectController.extend(CurrentUser, {
         suggestions: "",
         error: false
     },
+
+    shuffledQuestions: new Ember.A(),
 
     currentQuestionIndex: 0,
 
@@ -65,8 +67,10 @@ export default Ember.ObjectController.extend(CurrentUser, {
     inPrintView: false,
 
     testUrl: function () {
-        return "https://mycqs.com/test/" + this.get('slug');
-    }.property('slug.length'),
+        if(!this.get('model.slug'))
+            return "";
+        return "https://mycqs.com/test/" + this.get('model.slug');
+    }.property('model.slug.length'),
 
     actions: {
         optionSelected: function (optionIndex) {
@@ -217,16 +221,21 @@ export default Ember.ObjectController.extend(CurrentUser, {
                     return attempt.get('responses');
                 }.bind(this))
                 .then(function (responses) {
-                    responses.addObjects(responsesArray);
-                })
-                .then(function () {
+                    //responses.addObjects(responsesArray);
+                    //console.dir({responsesArray: responsesArray, responses: responses,
+                    //    attemptResponses: attempt.get('responses')});
+                    return ParseHelper.cloudFunction(this, 'saveTestAttempt', {attempt: attempt, responses: responsesArray});
+                }.bind(this))
+                .then(function (result) {
+                    console.dir(result);
+                    var attempt = ParseHelper.extractRawPayload(this.store, 'attempt', result.attempt);
+                    console.dir(attempt);
                     this.set('unsavedAttempt', attempt);
                     this.transitionToRoute('result.new');
                     this.send('decrementLoadingItems');
                 }.bind(this));
 
-            var arrayOfPromises = [],
-                savedResponses;
+           /* var arrayOfPromises = [];
             responsesArray.forEach(function (response) {
                 arrayOfPromises.push(response.save());
             });
@@ -235,7 +244,7 @@ export default Ember.ObjectController.extend(CurrentUser, {
                 return attempt.save();
             }.bind(this))
                 .then(function () {
-                    EventTracker.recordEvent(EventTracker.COMPLETED_TEST, attempt, this.get('currentUser'));
+                    //EventTracker.recordEvent(EventTracker.COMPLETED_TEST, attempt, this.get('currentUser'));
                     if (this.get('currentUser')) {
                         if (this.get('currentUser.attempts'))
                             this.get('currentUser.attempts').insertAt(0, attempt);
@@ -247,7 +256,7 @@ export default Ember.ObjectController.extend(CurrentUser, {
                             attempt: attempt,
                             value: score
                         });
-                        /*if (this.get('currentUser.zzishActivityId:' + EventTracker.STARTED_TEST)) {
+                        *//*if (this.get('currentUser.zzishActivityId:' + EventTracker.STARTED_TEST)) {
                             var passed = score > 50;
                             if (passed)
                                 passed = "Passed";
@@ -255,11 +264,9 @@ export default Ember.ObjectController.extend(CurrentUser, {
                                 passed = "Failed";
                             Zzish.logAction(this.get('currentUser.zzishActivityId:' + EventTracker.STARTED_TEST),
                                 "Finished test", passed, score);
-                        }*/
+                        }*//*
                     }
-                }.bind(this));
-
-            return;
+                }.bind(this));*/
         },
 
         enlargeQuestionImage: function () {
@@ -268,8 +275,8 @@ export default Ember.ObjectController.extend(CurrentUser, {
         },
 
         readyToPrint: function () {
-            var mywindow = window.open('', this.get('title'), 'height=400,width=600');
-            mywindow.document.write('<html><head><title>' + this.get('title') + '</title>');
+            var mywindow = window.open('', this.get('model.title'), 'height=400,width=600');
+            mywindow.document.write('<html><head><title>' + this.get('model.title') + '</title>');
             /*optional stylesheet*/ //mywindow.document.write('<link rel="stylesheet" href="main.css" type="text/css" />');
             mywindow.document.write('</head><body >');
             mywindow.document.write($('#printView').html());
@@ -292,7 +299,7 @@ export default Ember.ObjectController.extend(CurrentUser, {
             else
                 test.set('privacy', 1);
             test.set('isGenerated', true);
-            test.get('questions').addObjects(this.get('questions'));
+            test.get('questions').addObjects(this.get('model.questions'));
             var promise = test.save();
             callback(promise);
             promise.then(function () {

@@ -86,17 +86,17 @@
     <div class="row">
         <div class="col-md-9">
             {{#if isTabAll}}
-                {{#each response in allResponses itemController='result.item.response-card'}}
+                {{#each allResponses as |response|}}
                     {{partial 'result/response-card'}}
                 {{/each}}
             {{/if}}
             {{#if isTabCorrect}}
-                {{#each response in correctResponses itemController='result.item.response-card'}}
+                {{#each correctResponses as |response|}}
                     {{partial 'result/response-card'}}
                 {{/each}}
             {{/if}}
             {{#if isTabIncorrect}}
-                {{#each response in incorrectResponses itemController='result.item.response-card'}}
+                {{#each incorrectResponses as |response|}}
                     {{partial 'result/response-card'}}
                 {{/each}}
             {{/if}}
