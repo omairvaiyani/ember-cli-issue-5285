@@ -157,13 +157,13 @@ export default {
                         var serialisedRelation = serializer.extractArray(store,
                             relationship.type, {results: [relation]});
 
-                        var relationType = relationship.parentType;
+                        var relationType = relationship.type;
                         // This bit is a patch - not sure why the function
                         // store.pushMany() will accept relationship.parentType
                         // for all records but only relationship.type for test.author
                         // and test.category -_-
-                        if (relationship.key === 'author' || relationship.key === 'category')
-                            relationType = relationship.type;
+                        if (relationship.key === 'parent')
+                            relationType = relationship.parentType;
 
                         var loadedRelation = store.pushMany(relationType, serialisedRelation);
                         record.set(relationship.key, loadedRelation[0]);

@@ -191,6 +191,12 @@ export default Ember.Controller.extend({
                 this.get('currentUser.savedTests').clear();
                 this.get('currentUser.savedTests').addObjects(savedTests);
             }
+            if (response.result.uniqueResponses) {
+                var uniqueResponses = ParseHelper.extractRawPayload(this.store, 'unique-response',
+                    response.result.uniqueResponses);
+                this.get('currentUser.uniqueResponses').clear();
+                this.get('currentUser.uniqueResponses').addObjects(uniqueResponses);
+            }
             /* var followers = ParseHelper.extractRawPayload(this.store, 'parse-user',
              response, 'followers');
              this.get('currentUser').set('followers', followers);

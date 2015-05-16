@@ -25,6 +25,7 @@ Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
         categories,
         createdTests,
         savedTests,
+        uniqueResponses,
         promises = [];
 
     // Needed to fetch savedTest authors
@@ -49,10 +50,17 @@ Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
         savedTestsQuery.notEqualTo('isObjectDeleted', true);
         savedTestsQuery.notEqualTo('isSpacedRepetition', true);
         savedTestsQuery.ascending('title');
-        savedTestsQuery.include('questions');
-        savedTestsQuery.include('author');
+        savedTestsQuery.include('questions', 'author');
         savedTestsQuery.limit(1000);
         promises.push(savedTests = savedTestsQuery.find());
+
+        var uniqueResponsesRelation = user.relation('uniqueResponses'),
+            uniqueResponsesQuery = uniqueResponsesRelation.query();
+
+        uniqueResponsesQuery.include('test');
+        uniqueResponsesQuery.limit(100);
+        uniqueResponsesQuery.descending('updatedAt');
+        promises.push(uniqueResponses = uniqueResponsesQuery.find());
 
         /* var messagesQuery = new Parse.Query("Message");
          messagesQuery.equalTo('to', user);
@@ -88,6 +96,9 @@ Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
 
         if (savedTests)
             result.savedTests = savedTests["_result"][0];
+
+        if (uniqueResponses)
+            result.uniqueResponses = uniqueResponses["_result"][0];
 
         /*if (messages)
          result.messages = messages["_result"][0];
@@ -210,21 +221,35 @@ Parse.Cloud.define('getCommunityTest', function (request, response) {
  *
  * @param {Object} attempt
  * @param {Array} responses
- * @return {{attempt: Attempt, userEvent: userEvent}}
+ * @return {{attempt: Attempt, userEvent: UserEvent}}
  */
 Parse.Cloud.define('saveTestAttempt', function (request, status) {
-    var JSONAttempt = request.params.attempt,
+    var user = request.user,
+        JSONAttempt = request.params.attempt,
         JSONResponses = request.params.responses,
-        responses = [];
+        responses = [],
+        attempt;
+
+    // Responses need to be saved before the attempt
     _.each(JSONResponses, function (JSONResponse) {
         var response = Parse.Object.createFromJSON(JSONResponse, 'Response');
         responses.push(response);
     });
+
     Parse.Object.saveAll(responses).then(function () {
+        var promises = [];
+        // Add responses to attempt payload
         JSONAttempt.responses = responses;
-        var attempt = Parse.Object.createFromJSON(JSONAttempt, 'Attempt');
-        return attempt.save();
-    }).then(function (attempt) {
+        // Convert attempt payload to Parse Object and save
+        attempt = Parse.Object.createFromJSON(JSONAttempt, 'Attempt');
+        promises.push(attempt.save());
+
+        // Create or update uniqueResponses
+        promises.push(user.addUniqueResponses(responses));
+
+        return Parse.Promise.when(promises);
+    }).then(function () {
+        // TODO figure if we need to return uniqueResponses as well.
         status.success({attempt: attempt});
     }, function (error) {
         status.error(error);

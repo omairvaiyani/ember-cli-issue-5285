@@ -106,7 +106,7 @@ var ParseUser =  DS.Model.extend(ParseMixin, {
     srLatestAttempt:  DS.attr('attempt', {async: true}),
     srCompletedAttempts: DS.attr(),
     srNextDue: DS.attr('parse-date'),
-    uniqueResponses: DS.attr(),
+    uniqueResponses: new Ember.A(),
 
     /*
      * Stats

@@ -222,6 +222,57 @@ Parse.User.prototype.checkLevelUp = function () {
     return promise;
 };
 /**
+ * @Function Add Unique Responses
+ *
+ * Called after a user finishes an attempt.
+ * All relevant unique responses are queries
+ * from the uniqueResponses relation.
+ *
+ * Existing uniqueResponses are incremented,
+ * and non-existent are created and saved.
+ *
+ * @params {Array<Response>} responses
+ * @return {Parse.Promise<Array<UniqueResponse>>} uniqueResponses
+ */
+Parse.User.prototype.addUniqueResponses = function (responses) {
+    var uniqueResponsesQuery = this.uniqueResponses().query(),
+        questions = [];
+
+    _.each(responses, function (response) {
+        var question = response.question();
+        questions.push(question);
+        //promises.push(question.fetchIfNeeded());
+    });
+    uniqueResponsesQuery.containedIn('question', questions);
+    return uniqueResponsesQuery.find().then(function (uniqueResponses) {
+        // uniqueResponsesToSave allows us to mix old and new uniqueResponses
+        // whilst keeping the old uniqueResponses reference:
+        // This is needed for _.find() within the _.each loop.
+        var uniqueResponsesToSave = [];
+
+        _.each(responses, function (response) {
+            var uniqueResponse = _.find(uniqueResponses, function (uniqueResponse) {
+                return uniqueResponse.question().id === response.question().id;
+            });
+            if (!uniqueResponse) {
+                uniqueResponse = UniqueResponse.initialize(response, this);
+            } else {
+                uniqueResponse.addLatestResponse(response);
+            }
+            uniqueResponsesToSave.push(uniqueResponse);
+        }.bind(this));
+
+        // Cannot edit UniqueResponses without this.
+        Parse.Cloud.useMasterKey();
+
+        return Parse.Object.saveAll(uniqueResponsesToSave);
+    }.bind(this)).then(function (uniqueResponses) {
+        this.uniqueResponses().add(uniqueResponses);
+        this.save();
+        return Parse.Promise.as(uniqueResponses);
+    }.bind(this));
+};
+/**
  * @Property name
  * @returns {string}
  */
@@ -256,7 +307,13 @@ Parse.User.prototype.level = function () {
 Parse.User.prototype.points = function () {
     return this.get('points');
 };
-
+/**
+ * @Property uniqueResponses
+ * @returns {Parse.Relation<UniqueResponse>}
+ */
+Parse.User.prototype.uniqueResponses = function () {
+    return this.relation('uniqueResponses');
+};
 /****
  * ---------
  * UserEvent
@@ -1047,6 +1104,193 @@ var Response = Parse.Object.extend("Response", {
         return this;
     }
 }, {});
+
+/****
+ * --------------
+ * UniqueResponse
+ * --------------
+ *
+ **/
+var UniqueResponse = Parse.Object.extend("UniqueResponse", {
+    /**
+     * @Function Get Pointer Fields
+     * @returns {string[]}
+     */
+    getPointerFields: function () {
+        return ['latestResponse', 'test', 'question'];
+    },
+    /**
+     * @Property test
+     * @returns {Test}
+     */
+    test: function () {
+        return this.get('test');
+    },
+
+    /**
+     * @Function Set Test
+     * @param {Test} test
+     * @returns {UniqueResponse}
+     */
+    setTest: function (test) {
+        if (typeof test === 'string') {
+            this.set('test', Parse.Object.generatePointer("Test", test));
+        } else
+            this.set('test', test);
+        return this;
+    },
+
+    /**
+     * @Property question
+     * @returns {Question}
+     */
+    question: function () {
+        return this.get('question');
+    },
+
+    /**
+     * @Function Set Question
+     * @param {Question} question
+     * @returns {UniqueResponse}
+     */
+    setQuestion: function (question) {
+        if (typeof question === 'string') {
+            this.set('question', Parse.Object.generatePointer("Question", question));
+        } else
+            this.set('question', question);
+        return this;
+    },
+
+    /**
+     * @Property latestResponse
+     * @returns {Response}
+     */
+    latestResponse: function () {
+        return this.get('latestResponse');
+    },
+
+    /**
+     * @Function Set Latest Response
+     * @param {Response} response
+     * @returns {UniqueResponse}
+     */
+    setLatestResponse: function (response) {
+        if (typeof response === 'string') {
+            this.set('latestResponse', Parse.Object.generatePointer("Response", response));
+        } else
+            this.set('latestResponse', response);
+        return this;
+    },
+
+    /**
+     * @Property responses
+     * @returns {Parse.Relation<Response>}
+     */
+    responses: function () {
+        return this.relation('responses');
+    },
+
+    /**
+     * @Property numberOfResponses
+     * @returns {integer}
+     */
+    numberOfResponses: function () {
+        return this.get('numberOfResponses');
+    },
+
+    /**
+     * @Property numberOfCorrectResponses
+     * @returns {integer}
+     */
+    numberOfCorrectResponses: function () {
+        return this.get('numberOfCorrectResponses');
+    },
+
+    /**
+     * @Property latestResponseIsCorrect
+     * @returns {boolean}
+     */
+    latestResponseIsCorrect: function () {
+        return this.get('latestResponseIsCorrect');
+    },
+
+    /**
+     * @Property latestResponseDate
+     * @returns {Date}
+     */
+    latestResponseDate: function () {
+        return this.get('latestResponseDate');
+    },
+
+
+    /**
+     * @Function Set Defaults
+     * ACL if user:
+     * {user: read}
+     * else
+     * {public: read}
+     * @params {Parse.User} user
+     * @returns {UniqueResponse}
+     */
+    setDefaults: function (user) {
+        var ACL = new Parse.ACL();
+        if (user) {
+            ACL.setReadAccess(user, true);
+        } else {
+            ACL.setPublicReadAccess(true);
+        }
+        this.setACL(ACL);
+
+        return this;
+    },
+
+    /**
+     * @Function Add Latest Response
+     * For existent uniqueResponses where
+     * the user has retaken the same
+     * question.
+     *
+     * Current use case, called from
+     * Parse.User.addUniqueResponses()
+     *
+     * @param {Response} response
+     * @return {UniqueResponse}
+     */
+    addLatestResponse: function (response) {
+        this.setLatestResponse(response);
+        this.set('latestResponseIsCorrect', response.isCorrect());
+        this.set('latestResponseDate', response.createdAt ? response.createdAt : new Date());
+        this.increment('numberOfResponses');
+        if (response.isCorrect())
+            this.increment('numberOfCorrectResponses');
+        this.responses().add(response);
+        return this;
+    }
+}, {
+    /**
+     * @Function Initialize
+     *
+     * Current use case, called from
+     * Parse.User.addUniqueResponses()
+     *
+     * @param {Response} response
+     * @param {Parse.User} user
+     * @return {UniqueResponse}
+     */
+    initialize: function (response, user) {
+        var uniqueResponse = new UniqueResponse();
+        uniqueResponse.setQuestion(response.question());
+        uniqueResponse.setTest(response.test());
+        uniqueResponse.setLatestResponse(response);
+        uniqueResponse.set('latestResponseIsCorrect', response.isCorrect());
+        uniqueResponse.set('latestResponseDate', response.createdAt ? response.createdAt : new Date());
+        uniqueResponse.set('numberOfResponses', 1);
+        uniqueResponse.set('numberOfCorrectResponses', response.isCorrect() ? 1 : 0);
+        uniqueResponse.responses().add(response);
+        uniqueResponse.setDefaults(user);
+        return uniqueResponse;
+    }
+});
 
 /****
  * -----
