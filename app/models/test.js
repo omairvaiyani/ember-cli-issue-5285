@@ -1,7 +1,8 @@
 import DS from 'ember-data';
 import ParseMixin from '../mixins/ember-parse-mixin';
+import CurrentUser from '../mixins/current-user';
 
-export default DS.Model.extend(ParseMixin, {
+export default DS.Model.extend(ParseMixin, CurrentUser, {
     title: DS.attr('string'),
     author: DS.belongsTo('parse-user', {defaultValue: null, async: true}),
     category: DS.belongsTo('category', {defaultValue: null, async: true}),
@@ -23,48 +24,41 @@ export default DS.Model.extend(ParseMixin, {
     slug: DS.attr('string'),
     isObjectDeleted: DS.attr('boolean'),
     isSpacedRepetition: DS.attr('boolean'),
-    isProfessional: DS.attr('boolean')/*,
-     group: DS.belongsTo('group', {async: true}),
-     parseClassName: function() {
-     return "Test";
-     },
-     totalQuestions: function () {
-     return this.get('_data.questions.length');
-     }.property(),
-     authorProfileImageUrl: function () {
-     return this.getUserProfileImageUrl('author');
-     }.property(),
-     authorSlug: function () {
-     return this.getIncludedProperty('author', 'slug');
-     }.property(),
-     categoryName: function () {
-     var value = this.getIncludedProperty('category','name');
-     if(value)
-     return value;
-     else {
-     this.store.findById('category', this.getIncludedProperty('category','id'))
-     .then(function (category) {
-     this.set('categorySlug', category.get('slug'));
-     this.set('categoryName', category.get('name'));
-     }.bind(this));
-     }
-     }.property(),
-     categorySlug: function () {
-     return this.getIncludedProperty('category','slug');
-     }.property(),
-     categoryParentCategoryName: function () {
-     var value = this.getIncludedProperty('category','name', 'parent');
-     if(value)
-     return value;
-     else {
-     this.store.findById('category', this.getIncludedProperty('category','id', 'parent'))
-     .then(function (category) {
-     this.set('categoryParentCategorySlug', category.get('slug'));
-     this.set('categoryParentCategoryName', category.get('name'));
-     }.bind(this));
-     }
-     }.property(),
-     categoryParentCategorySlug: function () {
-     return this.getIncludedProperty('category','slug', 'parent');
-     }.property()*/
+    isProfessional: DS.attr('boolean'),
+
+
+    /**
+     * @Property uniqueResponses
+     * Locally set by filtering
+     * currentUser.uniqueResponses
+     * to questions in this test.
+     */
+    uniqueResponses: function () {
+        return this.store.filter('unique-response', function (uniqueResponse) {
+            return uniqueResponse.get('test.id') === this.get('id');
+        }.bind(this));
+    }.property('questions.length'),
+
+    /**
+     * @Property memoryStrength
+     * Locally calculated by averaging
+     * the memoryStrengths of this
+     * tests.questions individual
+     * uniqueResponses.
+     */
+    memoryStrength: function () {
+        var totalMemoryCount = 0,
+            memoryStrength;
+
+        this.get('uniqueResponses').forEach(function (uniqueResponse) {
+            totalMemoryCount += uniqueResponse.get('memoryStrength') ? uniqueResponse.get('memoryStrength') : 0;
+        });
+
+        if (totalMemoryCount > 0)
+            memoryStrength = Math.floor(totalMemoryCount / this.get('uniqueResponses.length'));
+        else
+            memoryStrength = 0;
+
+        return memoryStrength;
+    }.property('uniqueResponses.@each.memoryStrength')
 });

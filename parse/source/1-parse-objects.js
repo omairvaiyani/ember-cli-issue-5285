@@ -1222,6 +1222,14 @@ var UniqueResponse = Parse.Object.extend("UniqueResponse", {
         return this.get('latestResponseDate');
     },
 
+    /**
+     * @Property memoryStrength
+     * @returns {number}
+     */
+    memoryStrength: function () {
+        return this.get('memoryStrength');
+    },
+
 
     /**
      * @Function Set Defaults
@@ -1263,7 +1271,34 @@ var UniqueResponse = Parse.Object.extend("UniqueResponse", {
         this.increment('numberOfResponses');
         if (response.isCorrect())
             this.increment('numberOfCorrectResponses');
+        this.updateMemoryStrength();
         this.responses().add(response);
+        return this;
+    },
+
+    /**
+     * @Function Update Memory Strength
+     * @returns {UniqueResponse}
+     */
+    updateMemoryStrength: function () {
+        var decayMultiplier = 6 - this.numberOfCorrectResponses();
+        if (decayMultiplier < 1)
+            decayMultiplier = 1;
+
+        var hoursSinceLatestResponse = moment().diff(this.latestResponseDate(), 'hours');
+
+        var memoryStrength = (100 - ((hoursSinceLatestResponse / 10 ) * decayMultiplier) ) +
+            ( (hoursSinceLatestResponse / 100) ^ 2 );
+
+        if (!this.latestResponseIsCorrect())
+            memoryStrength = memoryStrength - 30;
+
+        if (memoryStrength < 0)
+            memoryStrength = 0;
+        else if (memoryStrength > 100)
+            memoryStrength = 100;
+
+        this.set('memoryStrength', Math.round(memoryStrength));
         return this;
     }
 }, {
@@ -1286,9 +1321,33 @@ var UniqueResponse = Parse.Object.extend("UniqueResponse", {
         uniqueResponse.set('latestResponseDate', response.createdAt ? response.createdAt : new Date());
         uniqueResponse.set('numberOfResponses', 1);
         uniqueResponse.set('numberOfCorrectResponses', response.isCorrect() ? 1 : 0);
+        uniqueResponse.updateMemoryStrength();
         uniqueResponse.responses().add(response);
         uniqueResponse.setDefaults(user);
         return uniqueResponse;
+    },
+
+    /**
+     * @Function Find With Updated Memory Strengths
+     * @param {Parse.Query<UniqueResponse>} query
+     * @returns {Parse.Promise<Array<UniqueResponse>>}
+     */
+    findWithUpdatedMemoryStrengths: function (query) {
+        return query.find().then(function (uniqueResponses) {
+           return UniqueResponse.updateMemoryStrength(uniqueResponses);
+        });
+    },
+
+    /**
+     * @Function Update Memory Strength
+     * @param {Array<UniqueResponse>} uniqueResponses
+     * @return {Parse.Promise<Array<UniqueResponse>>}
+     */
+    updateMemoryStrength: function (uniqueResponses) {
+        _.each(uniqueResponses, function (uniqueResponse) {
+            uniqueResponse.updateMemoryStrength();
+        });
+        return Parse.Object.saveAll(uniqueResponses);
     }
 });
 

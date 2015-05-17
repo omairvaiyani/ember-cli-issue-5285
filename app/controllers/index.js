@@ -36,9 +36,9 @@ export default Ember.Controller.extend(CurrentUser, {
      * drop down list.
      */
     myTestsListOrders: [
-        {value: 'title', label: "Alphabetical"},
-        {value: 'createdAt', label: "Date Created"},
-        {value: 'memoryStrength', label: "Memory Strength"}
+        {value: 'title', label: "Alphabetical", reverse: false},
+        {value: 'createdAt', label: "Date Created", reverse: true},
+        {value: 'memoryStrength', label: "Memory", reverse: true}
     ],
     /**
      * @Property
@@ -46,7 +46,7 @@ export default Ember.Controller.extend(CurrentUser, {
      * title vs. createdAt etc.
      */
     myTestsListOrder: function () {
-        return this.get('myTestsListOrders')[0];
+        return this.get('myTestsListOrders')[2];
     }.property(),
 
     /**
@@ -80,16 +80,17 @@ export default Ember.Controller.extend(CurrentUser, {
 
         // The finalList var allows us to filter
         // this list only if needed, separating concerns.
-        if(this.get('myTestsListFilter.length')) {
+        if (this.get('myTestsListFilter.length')) {
             var regex = new RegExp(this.get('myTestsListFilter').trim().toLowerCase(), 'gi'),
-                filteredList = finalList.filter(function (test) {
-                    return test.get('title').toLowerCase().match(regex)
-                        || (test.get('description.length') && test.get('description').toLowerCase().match(regex));
-                });
-            finalList = filteredList;
+            finalList = finalList.filter(function (test) {
+                return test.get('title').toLowerCase().match(regex)
+                || (test.get('description.length') && test.get('description').toLowerCase().match(regex));
+            });
         }
 
         var sortedOrderedAndFilteredList = finalList.sortBy(this.get('myTestsListOrder.value'));
+        if (this.get('myTestsListOrder.reverse'))
+            sortedOrderedAndFilteredList = sortedOrderedAndFilteredList.reverse();
         this.get('myTestsList').clear();
         this.get('myTestsList').addObjects(sortedOrderedAndFilteredList);
     },
@@ -102,7 +103,9 @@ export default Ember.Controller.extend(CurrentUser, {
      */
     myTestsListThrottle: function () {
         Ember.run.debounce(this, this.myTestsListUpdate, 50);
-    }.observes('currentUser.myTests.length', 'myTestsListType', 'myTestsListOrder', 'myTestsListFilter.length'),
+    }.observes('currentUser.myTests.length', 'myTestsListType', 'myTestsListOrder', 'myTestsListFilter.length',
+        'currentUser.myTests.@each.title.length', 'currentUser.myTests.@each.createdAt',
+        'currentUser.myTests.@each.memoryStrength'),
 
     actions: {
         /*

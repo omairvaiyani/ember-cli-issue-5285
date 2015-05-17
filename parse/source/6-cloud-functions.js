@@ -13,26 +13,17 @@
  * If currentUser
  * - Created tests
  * - Saved tests
- * - New messages
- * - Followers
- * - Following
- * - Groups
- * - Recent attempts
+ * - Unique responses
  */
 Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
     var user = request.user,
-        config,
-        categories,
-        createdTests,
-        savedTests,
-        uniqueResponses,
         promises = [];
 
     // Needed to fetch savedTest authors
     Parse.Cloud.useMasterKey();
 
-    promises.push(config = Parse.Config.get());
-    promises.push(categories = new Parse.Query("Category").include("parent").find());
+    promises.push(Parse.Config.get());
+    promises.push(new Parse.Query("Category").include("parent").find());
 
     if (user) {
         var createdTestsQuery = new Parse.Query(Test);
@@ -41,8 +32,8 @@ Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
         createdTestsQuery.notEqualTo('isSpacedRepetition', true);
         createdTestsQuery.ascending('title');
         createdTestsQuery.include('questions');
-        createdTestsQuery.limit(1000);
-        promises.push(createdTests = createdTestsQuery.find());
+        createdTestsQuery.limit(25);
+        promises.push(createdTestsQuery.find());
 
         var savedTestsRelation = user.relation('savedTests'),
             savedTestsQuery = savedTestsRelation.query();
@@ -51,16 +42,28 @@ Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
         savedTestsQuery.notEqualTo('isSpacedRepetition', true);
         savedTestsQuery.ascending('title');
         savedTestsQuery.include('questions', 'author');
-        savedTestsQuery.limit(1000);
-        promises.push(savedTests = savedTestsQuery.find());
+        savedTestsQuery.limit(25);
+        promises.push(savedTestsQuery.find());
 
+        // Get uniqueResponses only for tests that are being
+        // sent to the user in this instance.
         var uniqueResponsesRelation = user.relation('uniqueResponses'),
-            uniqueResponsesQuery = uniqueResponsesRelation.query();
+            uniqueResponsesForCreatedTestsQuery = uniqueResponsesRelation.query(),
+            uniqueResponsesForSavedTestsQuery = uniqueResponsesRelation.query();
+        // uniqueResponses on createdTests
+        uniqueResponsesForCreatedTestsQuery.include('test');
+        uniqueResponsesForCreatedTestsQuery.limit(1000);
+        uniqueResponsesForCreatedTestsQuery.matchesQuery('test', createdTestsQuery);
+        // uniqueResponses on savedTests
+        uniqueResponsesForSavedTestsQuery.include('test');
+        uniqueResponsesForSavedTestsQuery.limit(1000);
+        uniqueResponsesForSavedTestsQuery.matchesQuery('test', createdTestsQuery);
+        // Find uniqueResponses in either of the above two queries
+        var uniqueResponsesQuery = Parse.Query.or(uniqueResponsesForCreatedTestsQuery,
+            uniqueResponsesForSavedTestsQuery);
 
-        uniqueResponsesQuery.include('test');
-        uniqueResponsesQuery.limit(100);
-        uniqueResponsesQuery.descending('updatedAt');
-        promises.push(uniqueResponses = uniqueResponsesQuery.find());
+        // Perform the query, then update memoryStrength + save
+        promises.push(UniqueResponse.findWithUpdatedMemoryStrengths(uniqueResponsesQuery));
 
         /* var messagesQuery = new Parse.Query("Message");
          messagesQuery.equalTo('to', user);
@@ -86,20 +89,14 @@ Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
          var groupsQuery = user.relation("groups").query();
          promises.push(groups = groupsQuery.find());*/
     }
-    Parse.Promise.when(promises).then(function () {
+    Parse.Promise.when(promises).then(function (config, categories, createdTests, savedTests, uniqueResponses) {
         var result = {
             config: config,
-            categories: categories["_result"][0]
+            categories: categories,
+            createdTests: createdTests,
+            savedTests: savedTests,
+            uniqueResponses: uniqueResponses
         };
-        if (createdTests)
-            result.createdTests = createdTests["_result"][0];
-
-        if (savedTests)
-            result.savedTests = savedTests["_result"][0];
-
-        if (uniqueResponses)
-            result.uniqueResponses = uniqueResponses["_result"][0];
-
         /*if (messages)
          result.messages = messages["_result"][0];
          if (followers)
@@ -144,7 +141,6 @@ Parse.Cloud.define('createNewTest', function (request, response) {
         userEvent = result;
         return user.checkLevelUp();
     }).then(function (didLevelUp) {
-        console.log("Did level up " + didLevelUp);
         return response.success({userEvent: userEvent, test: test, didLevelUp: didLevelUp});
     }, function (error) {
         response.error(error);
@@ -248,9 +244,8 @@ Parse.Cloud.define('saveTestAttempt', function (request, status) {
         promises.push(user.addUniqueResponses(responses));
 
         return Parse.Promise.when(promises);
-    }).then(function () {
-        // TODO figure if we need to return uniqueResponses as well.
-        status.success({attempt: attempt});
+    }).then(function (attempt, uniqueResponses) {
+        status.success({attempt: attempt, uniqueResponses: uniqueResponses});
     }, function (error) {
         status.error(error);
     });

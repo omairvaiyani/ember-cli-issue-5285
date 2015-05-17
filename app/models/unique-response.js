@@ -10,8 +10,5 @@ export default DS.Model.extend(EmberParseMixin, {
     latestResponseDate: DS.attr('parse-date'),
     latestResponseIsCorrect: DS.attr('boolean'),
     responses: new Ember.A(),
-
-    // TODO this will be calculated on the fly (in cloud code)
-    // How and when should this be set on initialise..
-    memoryStrength: 0
+    memoryStrength: DS.attr('number')
 });

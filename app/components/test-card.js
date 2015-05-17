@@ -50,23 +50,6 @@ export default Ember.Component.extend({
             && this.get('parentController.currentUser.savedTests').contains(this.get('test'));
     }.property('isCurrentUserTheAuthor', 'parentController.currentUser.savedTests.length'),
 
-    /**
-     * @Property Unique Responses
-     * Filters the current user's uniqueResponses
-     * for this particular test.
-     */
-    uniqueResponses: function () {
-        this.set('a', this.get('a') + 1);
-        if (!this.get('currentUser'))
-            return 0;
-
-        var uniqueResponses = this.get('currentUser.uniqueResponses').filter(function (uniqueResponse) {
-            return uniqueResponse.get('test.id') === this.get('test.id');
-        }.bind(this));
-
-        return uniqueResponses;
-    }.property('currentUser.uniqueResponses.length', 'test.questions.length'),
-
     actions: {
         deleteTest: function () {
             this.get('parentController').send('deleteTest', this.get('test'));

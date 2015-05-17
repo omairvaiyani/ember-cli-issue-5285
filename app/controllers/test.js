@@ -229,7 +229,9 @@ export default Ember.Controller.extend(CurrentUser, {
                 .then(function (result) {
                     console.dir(result);
                     var attempt = ParseHelper.extractRawPayload(this.store, 'attempt', result.attempt);
-                    console.dir(attempt);
+                    var uniqueResponses = ParseHelper.extractRawPayload(this.store, 'unique-response', result.uniqueResponses);
+                    console.dir(uniqueResponses);
+                    this.get('currentUser.uniqueResponses').addObjects(uniqueResponses);
                     this.set('unsavedAttempt', attempt);
                     this.transitionToRoute('result.new');
                     this.send('decrementLoadingItems');

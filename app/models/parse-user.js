@@ -124,7 +124,6 @@ var ParseUser =  DS.Model.extend(ParseMixin, {
     numberFollowing: DS.attr('number', {defaultValue: 0}),
     numberOfFollowers: DS.attr('number', {defaultValue: 0}),
 
-
     /*
      * Education
      */

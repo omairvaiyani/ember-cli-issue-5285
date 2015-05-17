@@ -1222,6 +1222,14 @@ var UniqueResponse = Parse.Object.extend("UniqueResponse", {
         return this.get('latestResponseDate');
     },
 
+    /**
+     * @Property memoryStrength
+     * @returns {number}
+     */
+    memoryStrength: function () {
+        return this.get('memoryStrength');
+    },
+
 
     /**
      * @Function Set Defaults
@@ -1263,7 +1271,34 @@ var UniqueResponse = Parse.Object.extend("UniqueResponse", {
         this.increment('numberOfResponses');
         if (response.isCorrect())
             this.increment('numberOfCorrectResponses');
+        this.updateMemoryStrength();
         this.responses().add(response);
+        return this;
+    },
+
+    /**
+     * @Function Update Memory Strength
+     * @returns {UniqueResponse}
+     */
+    updateMemoryStrength: function () {
+        var decayMultiplier = 6 - this.numberOfCorrectResponses();
+        if (decayMultiplier < 1)
+            decayMultiplier = 1;
+
+        var hoursSinceLatestResponse = moment().diff(this.latestResponseDate(), 'hours');
+
+        var memoryStrength = (100 - ((hoursSinceLatestResponse / 10 ) * decayMultiplier) ) +
+            ( (hoursSinceLatestResponse / 100) ^ 2 );
+
+        if (!this.latestResponseIsCorrect())
+            memoryStrength = memoryStrength - 30;
+
+        if (memoryStrength < 0)
+            memoryStrength = 0;
+        else if (memoryStrength > 100)
+            memoryStrength = 100;
+
+        this.set('memoryStrength', Math.round(memoryStrength));
         return this;
     }
 }, {
@@ -1286,9 +1321,33 @@ var UniqueResponse = Parse.Object.extend("UniqueResponse", {
         uniqueResponse.set('latestResponseDate', response.createdAt ? response.createdAt : new Date());
         uniqueResponse.set('numberOfResponses', 1);
         uniqueResponse.set('numberOfCorrectResponses', response.isCorrect() ? 1 : 0);
+        uniqueResponse.updateMemoryStrength();
         uniqueResponse.responses().add(response);
         uniqueResponse.setDefaults(user);
         return uniqueResponse;
+    },
+
+    /**
+     * @Function Find With Updated Memory Strengths
+     * @param {Parse.Query<UniqueResponse>} query
+     * @returns {Parse.Promise<Array<UniqueResponse>>}
+     */
+    findWithUpdatedMemoryStrengths: function (query) {
+        return query.find().then(function (uniqueResponses) {
+           return UniqueResponse.updateMemoryStrength(uniqueResponses);
+        });
+    },
+
+    /**
+     * @Function Update Memory Strength
+     * @param {Array<UniqueResponse>} uniqueResponses
+     * @return {Parse.Promise<Array<UniqueResponse>>}
+     */
+    updateMemoryStrength: function (uniqueResponses) {
+        _.each(uniqueResponses, function (uniqueResponse) {
+            uniqueResponse.updateMemoryStrength();
+        });
+        return Parse.Object.saveAll(uniqueResponses);
     }
 });
 
@@ -1605,26 +1664,17 @@ Parse.Cloud.beforeSave(Response, function (request, response) {
  * If currentUser
  * - Created tests
  * - Saved tests
- * - New messages
- * - Followers
- * - Following
- * - Groups
- * - Recent attempts
+ * - Unique responses
  */
 Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
     var user = request.user,
-        config,
-        categories,
-        createdTests,
-        savedTests,
-        uniqueResponses,
         promises = [];
 
     // Needed to fetch savedTest authors
     Parse.Cloud.useMasterKey();
 
-    promises.push(config = Parse.Config.get());
-    promises.push(categories = new Parse.Query("Category").include("parent").find());
+    promises.push(Parse.Config.get());
+    promises.push(new Parse.Query("Category").include("parent").find());
 
     if (user) {
         var createdTestsQuery = new Parse.Query(Test);
@@ -1633,8 +1683,8 @@ Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
         createdTestsQuery.notEqualTo('isSpacedRepetition', true);
         createdTestsQuery.ascending('title');
         createdTestsQuery.include('questions');
-        createdTestsQuery.limit(1000);
-        promises.push(createdTests = createdTestsQuery.find());
+        createdTestsQuery.limit(25);
+        promises.push(createdTestsQuery.find());
 
         var savedTestsRelation = user.relation('savedTests'),
             savedTestsQuery = savedTestsRelation.query();
@@ -1643,16 +1693,28 @@ Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
         savedTestsQuery.notEqualTo('isSpacedRepetition', true);
         savedTestsQuery.ascending('title');
         savedTestsQuery.include('questions', 'author');
-        savedTestsQuery.limit(1000);
-        promises.push(savedTests = savedTestsQuery.find());
+        savedTestsQuery.limit(25);
+        promises.push(savedTestsQuery.find());
 
+        // Get uniqueResponses only for tests that are being
+        // sent to the user in this instance.
         var uniqueResponsesRelation = user.relation('uniqueResponses'),
-            uniqueResponsesQuery = uniqueResponsesRelation.query();
+            uniqueResponsesForCreatedTestsQuery = uniqueResponsesRelation.query(),
+            uniqueResponsesForSavedTestsQuery = uniqueResponsesRelation.query();
+        // uniqueResponses on createdTests
+        uniqueResponsesForCreatedTestsQuery.include('test');
+        uniqueResponsesForCreatedTestsQuery.limit(1000);
+        uniqueResponsesForCreatedTestsQuery.matchesQuery('test', createdTestsQuery);
+        // uniqueResponses on savedTests
+        uniqueResponsesForSavedTestsQuery.include('test');
+        uniqueResponsesForSavedTestsQuery.limit(1000);
+        uniqueResponsesForSavedTestsQuery.matchesQuery('test', createdTestsQuery);
+        // Find uniqueResponses in either of the above two queries
+        var uniqueResponsesQuery = Parse.Query.or(uniqueResponsesForCreatedTestsQuery,
+            uniqueResponsesForSavedTestsQuery);
 
-        uniqueResponsesQuery.include('test');
-        uniqueResponsesQuery.limit(100);
-        uniqueResponsesQuery.descending('updatedAt');
-        promises.push(uniqueResponses = uniqueResponsesQuery.find());
+        // Perform the query, then update memoryStrength + save
+        promises.push(UniqueResponse.findWithUpdatedMemoryStrengths(uniqueResponsesQuery));
 
         /* var messagesQuery = new Parse.Query("Message");
          messagesQuery.equalTo('to', user);
@@ -1678,20 +1740,14 @@ Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
          var groupsQuery = user.relation("groups").query();
          promises.push(groups = groupsQuery.find());*/
     }
-    Parse.Promise.when(promises).then(function () {
+    Parse.Promise.when(promises).then(function (config, categories, createdTests, savedTests, uniqueResponses) {
         var result = {
             config: config,
-            categories: categories["_result"][0]
+            categories: categories,
+            createdTests: createdTests,
+            savedTests: savedTests,
+            uniqueResponses: uniqueResponses
         };
-        if (createdTests)
-            result.createdTests = createdTests["_result"][0];
-
-        if (savedTests)
-            result.savedTests = savedTests["_result"][0];
-
-        if (uniqueResponses)
-            result.uniqueResponses = uniqueResponses["_result"][0];
-
         /*if (messages)
          result.messages = messages["_result"][0];
          if (followers)
@@ -1736,7 +1792,6 @@ Parse.Cloud.define('createNewTest', function (request, response) {
         userEvent = result;
         return user.checkLevelUp();
     }).then(function (didLevelUp) {
-        console.log("Did level up " + didLevelUp);
         return response.success({userEvent: userEvent, test: test, didLevelUp: didLevelUp});
     }, function (error) {
         response.error(error);
@@ -1840,9 +1895,8 @@ Parse.Cloud.define('saveTestAttempt', function (request, status) {
         promises.push(user.addUniqueResponses(responses));
 
         return Parse.Promise.when(promises);
-    }).then(function () {
-        // TODO figure if we need to return uniqueResponses as well.
-        status.success({attempt: attempt});
+    }).then(function (attempt, uniqueResponses) {
+        status.success({attempt: attempt, uniqueResponses: uniqueResponses});
     }, function (error) {
         status.error(error);
     });
