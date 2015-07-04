@@ -20,10 +20,15 @@
                     {{/if}}
                 </p>
 
-                <p class="margin-bottom-8">{{test.description}}</p>
-
-                <span> Memory strength: {{test.memoryStrength}}</span>
-
+                <p class="margin-bottom-8">{{text-preview test.description 100}}</p>
+                <div>
+                    {{#tool-tipster title="Total Questions" class='inline-block margin-right-16'}}
+                        <strong>Q</strong>{{test.questions.length}}
+                    {{/tool-tipster}}
+                    {{#tool-tipster title="Memory Strength" class='inline-block'}}
+                        <strong>M</strong>{{test.memoryStrength}}
+                    {{/tool-tipster}}
+                </div>
             </div>
 
             <div class="right inline-top">
