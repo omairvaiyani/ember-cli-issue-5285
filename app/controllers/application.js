@@ -14,37 +14,37 @@ export default Ember.Controller.extend({
      * - Send preliminary title to ApplicationRoute.updateTitle()
      */
     currentPathDidChange: function () {
+        this.send('closeModal');
         if (window.prerenderReady) {
-            this.send('closeModal');
             if (this.get('currentPath') !== 'search')
                 this.send('deactivateSiteSearch');
         }
 
         var path = this.get('currentPath'),
             title = "",
-            defaultTitle = "MyCQs: Create & find Multiple Choice Question (MCQ) tests online!";
+            defaultTitle = "Synap - Study smart, not hard.";
 
         if (!path)
             return;
-
+        var user;
         switch (path) {
             case "index":
                 title += defaultTitle;
                 break;
             case "user.index":
-                var user = this.get('controllers.user');
+                user = this.get('controllers.user');
                 title += user.get('name');
                 break;
             case "user.tests":
-                var user = this.get('controllers.user');
+                user = this.get('controllers.user');
                 title += user.get('name') + "'s tests";
                 break;
             case "user.followers":
-                var user = this.get('controllers.user');
+                user = this.get('controllers.user');
                 title += user.get('name') + "'s followers";
                 break;
             case "user.following":
-                var user = this.get('controllers.user');
+                user = this.get('controllers.user');
                 title += user.get('name') + "'s following";
                 break;
             case "create.index":

@@ -10,15 +10,12 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                {{#link-to 'index' tagName='a' classNames='navbar-brand'}}
+                {{#link-to 'index' tagName='a' classNames='navbar-brand navbar-brand-adjust'}}
                     {{#if loadingItems}}
-                        <div class="logo-spinner"></div>
-                        {{!--
-                        TODO add class 'navbar-brand-adjust to above link-to when img is added
-                        <img src="img/logo-text.png" height="29px" class="logo-icon" style="margin-left:3px;"/>--}}
+                        <img src="img/loading-small.gif" height="30px" class="logo-icon" style=""/>
                         {{parseConfig.appName}}
                     {{else}}
-                        {{!-- <img src="img/header.png" height="30px" class="logo-icon"/> --}}
+                        <img src="img/logo-white.png" height="30px" class="logo-icon"/>
                         {{parseConfig.appName}}
                     {{/if}}
                 {{/link-to}}

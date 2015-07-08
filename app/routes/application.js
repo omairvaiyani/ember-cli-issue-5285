@@ -101,8 +101,8 @@ export default Ember.Route.extend({
          * Close any open modal.
          */
         updatePageTitle: function (title) {
-            if (title.indexOf("MyCQs") === -1)
-                this.set('pageTitle', title + " - MyCQs");
+            if (title.indexOf("Synap") === -1)
+                this.set('pageTitle', title + " - Synap");
             else
                 this.set('pageTitle', title);
         },
@@ -186,53 +186,36 @@ export default Ember.Route.extend({
                 email = controller.get('loginUser.email'),
                 password = controller.get('loginUser.password'),
                 ParseUser = this.store.modelFor('parse-user'),
-                data;
+                data = {
+                    username: email,
+                    password: password
+                };
 
             controller.set('loginMessage.connecting', "Logging in...");
 
-            Parse.Cloud.run('preLogIn', {"email": email}, {
-                success: function (response) {
-                    data = {
-                        username: response.username,
-                        password: password
-                    };
-                    ParseUser.login(this.store, data).then(
-                        function (user) {
-                            controller.set('currentUser', user);
-                            controller.set('loginMessage.connecting', null);
-                            this.send('decrementLoadingItems');
-                            this.send('closeModal');
-                            this.send('redirectAfterLogin');
-                        }.bind(this),
-
-                        function (error) {
-                            this.send('decrementLoadingItems');
-                            console.dir(error);
-                            if (error.code === Parse.Error.OBJECT_NOT_FOUND)
-                                controller.set('loginMessage.error', "Incorrect credentials!");
-                            else if (error.code === Parse.Error.EMAIL_MISSING)
-                                controller.set('loginMessage.error', "Please type in your email!");
-                            else if (error.code === Parse.Error.PASSWORD_MISSING)
-                                controller.set('loginMessage.error', "Please type in your password!");
-                            else
-                                controller.set('loginMessage.error', "Error " + error.code);
-                            controller.set('loginMessage.connecting', null);
-                        }.bind(this)
-                    );
-                }.bind(this),
-                error: function (error) {
-                    console.dir(error);
+            ParseUser.login(this.store, data)
+                .then(
+                function (user) {
+                    controller.set('currentUser', user);
+                    controller.set('loginMessage.connecting', null);
                     this.send('decrementLoadingItems');
-                    if (error.message == Parse.Error.EMAIL_NOT_FOUND)
-                        controller.set('loginMessage.error', "Email not found!");
-                    else if (error.message == Parse.Error.EMAIL_MISSING)
+                    this.send('closeModal');
+                    this.send('redirectAfterLogin');
+                }.bind(this),
+
+                function (error) {
+                    this.send('decrementLoadingItems');
+                    console.dir(error);
+                    if (error.code === Parse.Error.OBJECT_NOT_FOUND)
+                        controller.set('loginMessage.error', "Incorrect credentials!");
+                    else if (error.code === Parse.Error.EMAIL_MISSING)
                         controller.set('loginMessage.error', "Please type in your email!");
+                    else if (error.code === Parse.Error.PASSWORD_MISSING)
+                        controller.set('loginMessage.error', "Please type in your password!");
                     else
                         controller.set('loginMessage.error', "Error " + error.code);
                     controller.set('loginMessage.connecting', null);
-                }.bind(this)
-            });
-
+                }.bind(this));
         },
 
         /**
@@ -318,7 +301,10 @@ export default Ember.Route.extend({
             data.timeZone = timeZone;
 
             var promise = ParseUser.signup(this.store, data).then(function (user) {
-                    this.get('applicationController').set('currentUser', user);
+                this.get('applicationController').set('currentUser', user);
+                return user.reload();
+            }.bind(this)).then(function(user) {
+                    console.dir(user);
                     this.send('decrementLoadingItems');
                     this.send('redirectAfterLogin');
                     this.send('decrementLoadingItems');
@@ -382,11 +368,13 @@ export default Ember.Route.extend({
                     this.controllerFor(this.get('applicationController.redirectAfterLoginToRoute'))
                         .send('returnedFromRedirect');
                 this.set('applicationController.redirectAfterLoginToRoute', null);
-            }
-            else if (!this.get('currentUser.finishedWelcomeTutorial')) {
+            } else if (!this.get('currentUser.finishedWelcomeTutorial')) {
+                console.log("First time login.");
                 /*
                  * First time logging into this site
                  */
+                this.transitionTo('index');
+                return; // TODO remove this to take new users to profile page.
                 if (this.get('currentUser.slug'))
                     this.transitionTo('user', this.get('currentUser.slug'));
                 else {
@@ -395,8 +383,7 @@ export default Ember.Route.extend({
 
             } else
                 this.transitionTo('index');
-        }
-        ,
+        },
 
         /**
          * Open Modal

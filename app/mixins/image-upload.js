@@ -1,5 +1,6 @@
 import Ember from 'ember';
 import EmberParseAdapter from '../adapters/parse';
+import ParseHelper from '../utils/parse-helper';
 
 export default Ember.Mixin.create({
     featherEditor: null,
@@ -60,18 +61,29 @@ export default Ember.Mixin.create({
             });
         },
         uploadImage: function () {
-            var parseFile = new Parse.File('image.jpg', {base64: this.get('imageFile.base64')});
+            //var parseFile = new Parse.File('image.jpg', {base64: this.get('imageFile.base64')});
             this.send('incrementLoadingItems');
-            return parseFile.save()
+            return ParseHelper.uploadFile(this, 'image.jpg', {base64: this.get('imageFile.base64')})
+                .then(function (imageUrl) {
+                    var image = new EmberParseAdapter.File('image.jpg', imageUrl);
+                    this.send('decrementLoadingItems');
+                    this.send('saveUploadedImage', image);
+                }.bind(this), function (error) {
+                    console.dir(error);
+                    // The file either could not be read, or could not be saved to Parse.
+                    this.send('decrementLoadingItems');
+                }.bind(this));
+            return;
+            /*return parseFile.save()
                 .then(function (image) {
                     var image = new EmberParseAdapter.File(image.name(), image.url());
                     this.send('decrementLoadingItems');
                     this.send('saveUploadedImage', image);
                 }.bind(this), function (error) {
-                    alert(error);
+                    console.dir(error);
                     // The file either could not be read, or could not be saved to Parse.
                     this.send('decrementLoadingItems');
-                }.bind(this));
+                }.bind(this));*/
         }
     }
 

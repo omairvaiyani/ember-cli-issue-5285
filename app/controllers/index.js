@@ -76,6 +76,8 @@ export default Ember.Controller.extend(CurrentUser, {
     myTestsListUpdate: function () {
         var myTestsList = this.get('currentUser.' + this.get('myTestsListType.value')),
             finalList = new Ember.A();
+        if(!this.get('currentUser'))
+            return this.get('myTestsList').clear();
         finalList.addObjects(myTestsList);
 
         // The finalList var allows us to filter

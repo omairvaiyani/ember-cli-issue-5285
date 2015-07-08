@@ -92,6 +92,20 @@ export default {
                 });
         });
     },
+
+    uploadFile: function (context, name, data) {
+        var adapter = context.store.adapterFor('application');
+        return new Ember.RSVP.Promise(function (resolve, reject) {
+            adapter.ajax("https://api.parse.com/1/files/" + name, "POST", {"data-binary": data}).then(
+                function (response) {
+                    resolve(response.location);
+                },
+                function (reason) {
+                    reject(reason["responseJSON"]);
+                });
+        });
+    },
+
     /**
      * @Function Extract Raw Payload
      *
@@ -184,22 +198,6 @@ export default {
             return loadedRecords[0];
         else
             return loadedRecords;
-    },
-    // @deprecated
-    extractRawCategories: function (store, payload) {
-        var loadedRecords = this.extractRawPayload(store, 'category', payload),
-            originalPayload = $.extend(true, [], payload),
-            serializer = store.serializerFor('category');
-
-        loadedRecords.forEach(function (record, index) {
-            if (!originalPayload[index].parent)
-                return;
-            var serialisedRelationship = serializer.extractSingle(store,
-                store.modelFor('category'), originalPayload[index].parent, originalPayload[index].parent.id);
-            var loadedRelationship = store.pushMany(store.modelFor('category'), [serialisedRelationship]);
-            record.set('parent', loadedRelationship[0]);
-        });
-        return loadedRecords;
     }
 
 }

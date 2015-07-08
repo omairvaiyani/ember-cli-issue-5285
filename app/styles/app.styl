@@ -25,15 +25,8 @@ fontSizeS = 10px
 marginPrimary = 16px
 marginSecondary = 8px
 
-@font-face
-  font-family 'Muli-Light'
-  src url('https://d3uzzgmigql815.cloudfront.net/fonts/muli-light-webfont.eot')
-  src url('https://d3uzzgmigql815.cloudfront.net/fonts/muli-light-webfont.eot?#iefix') format('embedded-opentype'), url('https://d3uzzgmigql815.cloudfront.net/fonts/muli-light-webfont.woff') format('woff'), url('https://d3uzzgmigql815.cloudfront.net/fonts/muli-light-webfont.ttf') format('truetype'), url('https://d3uzzgmigql815.cloudfront.net/fonts/muli-light-webfont.svg#muli_light') format('svg')
-  font-weight normal
-  font-style normal
-
 body
-  font-family "Muli-Light", "Helvetica Neue", Helvetica, Arial, sans-serif
+  font-family 'Oxygen', "Helvetica Neue", Helvetica, Arial, sans-serif !important
   background-color colorBackground
 
 *:focus
@@ -67,6 +60,7 @@ body
   width 80%
   padding 8px
   font-size large
+  color white !important
 
 .btn-facebook:hover, .btn-facebook:focus
   color white
@@ -127,7 +121,6 @@ body
   line-height: 26px;
   font-size: 14px;
   color: white;
-  font-family: Trebuchet, Arial, sans-serif;
   font-weight: bold;
   -moz-box-sizing: border-box;
   -webkit-box-sizing: border-box;
@@ -209,8 +202,17 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 .pagination {
-  margin 0px !important
+  margin 0 !important
 }
+
+.circular-image
+  height: 120px;
+  width: 120px;
+  background-size: cover;
+  border-radius: 50%;
+  display inline-block
+  vertical-align middle
+  margin-right 8px
 
 .profile-picture
   width 50px
@@ -219,8 +221,7 @@ input[type="range"]::-webkit-slider-thumb {
   display inline-block
   vertical-align middle
   margin-right 8px
-  &.circular-image
-    border-radius 50%
+
 
 /*
  * Touch Slider
@@ -231,7 +232,7 @@ input[type="range"]::-webkit-slider-thumb {
   height: 10px;
   border-radius: 10px;
   background: #999;
-  box-shadow: 0px 1px 2px #555 inset;
+  box-shadow: 0 1px 2px #555 inset;
   margin: 0 3px;
   cursor: pointer;
 }
@@ -541,7 +542,7 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 .navbar-brand-adjust {
-  margin-top: -6px;
+  margin-top: -5px;
 }
 
 // Navbar search current
@@ -825,11 +826,10 @@ hr.user-message-item-separator {
 }
 
 .guest-page-actions .btn {
-  height: 50px;
   width: 100%;
   font-size: 22px;
-  background-color: rgba(12, 1, 1, 0.65);
-  border: 2px solid #3CD0FF;
+  background-color: rgba(12,1,1,.65);
+  border: 2px solid;
   margin-top: 114px;
 }
 
