@@ -46,6 +46,8 @@ export default Ember.Component.extend({
      * Dictates the showSave and showRemove properties.
      */
     isTestSaved: function () {
+        if(!this.get('parentController.currentUser'))
+            return false;
         return !this.get('isCurrentUserTheAuthor')
             && this.get('parentController.currentUser.savedTests').contains(this.get('test'));
     }.property('isCurrentUserTheAuthor', 'parentController.currentUser.savedTests.length'),

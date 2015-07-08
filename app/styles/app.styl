@@ -522,6 +522,9 @@ input[type="range"]::-webkit-slider-thumb {
     height 40px
     line-height 20px
 
+.navbar-transparent
+  background-color transparent !important
+
 .navbar-nav > li > a
   padding-top 15px !important
   padding-bottom 15px !important
@@ -801,17 +804,24 @@ hr.user-message-item-separator {
 
 .mycqs-page-header.index-page {
   position: absolute;
-  height: 600px;
-  top: 0px;
-  left: 0px;
-  right: 0px;
+  height: 700px;
+  top: 0
+  left: 0
+  right: 0
   z-index: -2;
-  background-image: url('/img/library-background.jpg');
+  //background-image: url('/img/library-background.jpg');
   background-size: cover;
   background-position: center top;
   padding-bottom: 30px;
   padding-top: 100px;
-  margin-bottom: 0px;
+  margin-bottom: 0
+  background: #e94e1b;
+  background: -moz-linear-gradient(left,  #e94e1b 0%, #e41d72 100%);
+  background: -webkit-gradient(linear, left top, right top, color-stop(0%,#e94e1b), color-stop(100%,#e41d72));
+  background: -webkit-linear-gradient(left,  #e94e1b 0%,#e41d72 100%);
+  background: -o-linear-gradient(left,  #e94e1b 0%,#e41d72 100%);
+  background: -ms-linear-gradient(left,  #e94e1b 0%,#e41d72 100%);
+  background: linear-gradient(to right,  #e94e1b 0%,#e41d72 100%);
 }
 
 /*
@@ -820,7 +830,7 @@ hr.user-message-item-separator {
  * the main parallax image
  */
 .guest-page-actions {
-  margin-top: 204px;
+  margin-top: 350px;
   height: 200px;
   overflow: hidden;
 }
@@ -896,7 +906,6 @@ hr.user-message-item-separator {
 .mycqs-page-header.index-page h2, .mycqs-page-header.index-page h3 {
   margin-right: 0px;
   color: white;
-  text-shadow: 0px 4px 6px black;
 }
 
 .index-page > .container {
@@ -914,7 +923,7 @@ hr.user-message-item-separator {
   bottom: 0px;
   left: 0px;
   right: 0px;
-  background: linear-gradient(to right, rgba(0, 0, 0, 0.23) 0%, rgba(255, 255, 255, 0.3) 100%);
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.18) 0%, rgba(255, 255, 255, 0.2) 100%);
 }
 
 .index-stats {
@@ -967,10 +976,6 @@ hr.user-message-item-separator {
 .parallax-follower .create-column {
   padding-right: 0px;
   padding-left: 0px;
-}
-
-.parallax-follower .btn-primary {
-  width: 100%;
 }
 
 .achievements-row img {

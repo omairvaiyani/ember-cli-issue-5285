@@ -14,7 +14,6 @@ export default Ember.Controller.extend({
      * - Send preliminary title to ApplicationRoute.updateTitle()
      */
     currentPathDidChange: function () {
-        this.send('closeModal');
         if (window.prerenderReady) {
             if (this.get('currentPath') !== 'search')
                 this.send('deactivateSiteSearch');
@@ -26,10 +25,14 @@ export default Ember.Controller.extend({
 
         if (!path)
             return;
+        this.send('closeModal');
         var user;
+        this.set('navbarTransparent', false);
         switch (path) {
             case "index":
                 title += defaultTitle;
+                if(!this.get('currentUser'))
+                    this.set('navbarTransparent', true);
                 break;
             case "user.index":
                 user = this.get('controllers.user');
@@ -110,7 +113,7 @@ export default Ember.Controller.extend({
 
         this.send('updatePageTitle', title);
         window.scrollTo(0, 0);
-    }.observes('currentPath'),
+    }.observes('currentPath', 'currentUser'),
 
     /*
      * Search in Navbar
