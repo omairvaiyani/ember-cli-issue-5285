@@ -14,7 +14,8 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
         if (this.get('currentUser.fbid')) {
             this.send('setEducationHistoryFromFacebook');
         }
-        this.set('currentUser.educationCohort', null);
+        if (this.get('currentUser'))
+            this.set('currentUser.educationCohort', null);
         this.setProfileImage();
     }.on('init'),
 
@@ -29,7 +30,7 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
 
     setProfileImage: function () {
         this.set('imageFile.style', "background-image:url('" +
-        this.get('currentUser.profileImageURL') + "');");
+            this.get('currentUser.profileImageURL') + "');");
         this.set('imageFile.url', this.get('currentUser.profileImageURL'));
         if (this.get('currentUser.profilePicture') || this.get('currentUser.fbid'))
             this.set('imageFile.isDefault', false);
@@ -109,16 +110,14 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
 
             Parse.Cloud.run('setEducationCohortUsingFacebook', {educationHistory: this.get('currentUser.education')})
                 .then(function (result) {
-                    if(result.studyField)
+                    if (result.studyField)
                         studyFieldId = result.studyField.id;
                     graduationYear = result.graduationYear;
                     return this.store.findById('educational-institution', result.educationalInstitution.id);
                 }.bind(this)).then(function (result) {
                     educationalInstitution = result;
-                    if(studyFieldId)
+                    if (studyFieldId)
                         return this.store.findById('study-field', studyFieldId);
-                    else
-                        return;
                 }.bind(this)).then(function (studyField) {
                     var educationCohort = this.store.createRecord('education-cohort', {
                         institution: educationalInstitution,
@@ -126,7 +125,7 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
                         graduationYear: graduationYear
                     });
                     this.set('facebookEducationCohort', educationCohort);
-                    if(this.get('hasAskedToConfirmFacebook')) {
+                    if (this.get('hasAskedToConfirmFacebook')) {
                         // Education Arrived too late, push for confirmation again
                         this.set('hasAskedToConfirmFacebook', false);
                         this.send('confirmFacebookEducationHistory');

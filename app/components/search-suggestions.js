@@ -84,6 +84,22 @@ export default Ember.Component.extend({
      */
     defaultItem: null,
 
+    /**
+     * @Property floatingLabel
+     * Used for the material design
+     * input labels. Don't forget
+     * to add a placeholder.
+     */
+    floatingLabel: false,
+
+    /**
+     * @Property placeholder
+     * This will be an input hint,
+     * either for within the input
+     * or as a floating label.
+     */
+    placeholder: "",
+
     defaultItemDidChange: function () {
         if (this.get('defaultItem'))
             this.set('selectedItem', this.mapItem(this.get('defaultItem')));
@@ -332,6 +348,9 @@ export default Ember.Component.extend({
         editSelectedItem: function () {
             this.set('textInput', this.get('selectedItem.label'));
             this.set('selectedItem', null);
+            setTimeout(function () {
+                this.$().find('input').focus();
+            }.bind(this), 60);
         },
 
         focusItem: function () {

@@ -200,6 +200,11 @@ export default Ember.Controller.extend({
                 this.get('currentUser.uniqueResponses').clear();
                 this.get('currentUser.uniqueResponses').addObjects(uniqueResponses);
             }
+            if (response.result.educationCohort) {
+                var educationCohort = ParseHelper.extractRawPayload(this.store, 'education-cohort',
+                    response.result.educationCohort);
+                this.set('currentUser.educationCohort', educationCohort);
+            }
             /* var followers = ParseHelper.extractRawPayload(this.store, 'parse-user',
              response, 'followers');
              this.get('currentUser').set('followers', followers);

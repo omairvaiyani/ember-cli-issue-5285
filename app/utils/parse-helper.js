@@ -96,9 +96,9 @@ export default {
     uploadFile: function (context, name, data) {
         var adapter = context.store.adapterFor('application');
         return new Ember.RSVP.Promise(function (resolve, reject) {
-            adapter.ajax("https://api.parse.com/1/files/" + name, "POST", {"data-binary": data}).then(
+            adapter.ajax("https://api.parse.com/1/files/" + name, "POST", {"data": data}).then(
                 function (response) {
-                    resolve(response.location);
+                    resolve(response);
                 },
                 function (reason) {
                     reject(reason["responseJSON"]);

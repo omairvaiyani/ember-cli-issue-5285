@@ -64,8 +64,8 @@ export default Ember.Mixin.create({
             //var parseFile = new Parse.File('image.jpg', {base64: this.get('imageFile.base64')});
             this.send('incrementLoadingItems');
             return ParseHelper.uploadFile(this, 'image.jpg', {base64: this.get('imageFile.base64')})
-                .then(function (imageUrl) {
-                    var image = new EmberParseAdapter.File('image.jpg', imageUrl);
+                .then(function (image) {
+                    var image = new EmberParseAdapter.File(image.name, image.url);
                     this.send('decrementLoadingItems');
                     this.send('saveUploadedImage', image);
                 }.bind(this), function (error) {
@@ -73,17 +73,6 @@ export default Ember.Mixin.create({
                     // The file either could not be read, or could not be saved to Parse.
                     this.send('decrementLoadingItems');
                 }.bind(this));
-            return;
-            /*return parseFile.save()
-                .then(function (image) {
-                    var image = new EmberParseAdapter.File(image.name(), image.url());
-                    this.send('decrementLoadingItems');
-                    this.send('saveUploadedImage', image);
-                }.bind(this), function (error) {
-                    console.dir(error);
-                    // The file either could not be read, or could not be saved to Parse.
-                    this.send('decrementLoadingItems');
-                }.bind(this));*/
         }
     }
 

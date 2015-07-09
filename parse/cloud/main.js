@@ -222,6 +222,32 @@ Parse.User.prototype.checkLevelUp = function () {
     return promise;
 };
 /**
+ * @Function FetchEducationCohort
+ * This allows us to fetch the user's educationCohort
+ * *as well as* the studyField and institution.
+ * @return {Parse.Promise<EducationCohort>} educationCohort
+ */
+Parse.User.prototype.fetchEducationCohort = function () {
+    var educationCohort = this.educationCohort();
+
+    // User has no level set: this shouldn't happen
+    // *once* we set Level 1 by default on sign up.
+    if (educationCohort) {
+        var promise = educationCohort.fetch().then(function () {
+            var promises = [];
+            if(educationCohort.studyField())
+                promises.push(educationCohort.studyField().fetch());
+            if(educationCohort.institution())
+                promises.push(educationCohort.institution().fetch());
+            return Parse.Promise.when(promises);
+        }.bind(this)).then(function () {
+            return Parse.Promise.as(educationCohort);
+        });
+        return promise;
+    } else
+        Parse.Promise.resolve(null);
+};
+/**
  * @Function Add Unique Responses
  *
  * Called after a user finishes an attempt.
@@ -313,6 +339,13 @@ Parse.User.prototype.points = function () {
  */
 Parse.User.prototype.uniqueResponses = function () {
     return this.relation('uniqueResponses');
+};
+/**
+ * @Property educationCohort
+ * @returns {EducationCohort}
+ */
+Parse.User.prototype.educationCohort = function () {
+    return this.get('educationCohort');
 };
 /****
  * ---------
@@ -1404,6 +1437,149 @@ var Level = Parse.Object.extend("Level", {
             return Parse.Promise.as(result[0]);
         });
     }
+});
+
+/****
+ * -----
+ * EducationCohort
+ * -----
+ *
+ **/
+var EducationCohort = Parse.Object.extend("EducationCohort", {
+    /**
+     * @Property currentYear
+     * @returns {String}
+     */
+    currentYear: function () {
+        return this.get('currentYear');
+    },
+
+    /**
+     * @Property graduationYear
+     * @returns {number}
+     */
+    graduationYear: function () {
+        return this.get('graduationYear');
+    },
+
+    /**
+     * @Property institution
+     * @returns {Institution}
+     */
+    institution: function () {
+        return this.get('institution');
+    },
+
+
+    /**
+     * @Property studyField
+     * @returns {StudyField}
+     */
+    studyField: function () {
+        return this.get('studyField');
+    }
+}, {
+
+});
+/****
+ * -----
+ * Institution
+ * -----
+ *
+ **/
+var Institution = Parse.Object.extend("Institution", {
+    /**
+     * @Property name
+     * @returns {String}
+     */
+    name: function () {
+        return this.get('name');
+    },
+
+    /**
+     * @Property type
+     * @returns {String}
+     */
+    type: function () {
+        return this.get('type');
+    },
+
+    /**
+     * @Property facebookId
+     * @returns {String}
+     */
+    facebookId: function () {
+        return this.get('facebookId');
+    },
+
+    /**
+     * @Property fbObject
+     * @returns {Object}
+     */
+    fbObject: function () {
+        return this.get('fbObject');
+    },
+
+    /**
+     * @Property pictureUrl
+     * @returns {String}
+     */
+    pictureUrl: function () {
+        return this.get('pictureURl');
+    },
+
+
+    /**
+     * @Property cover
+     * @returns {Object}
+     */
+    cover: function () {
+        return this.get('cover');
+    }
+}, {
+
+});
+
+/****
+ * -----
+ * StudyField
+ * -----
+ *
+ **/
+var StudyField = Parse.Object.extend("StudyField", {
+    /**
+     * @Property name
+     * @returns {String}
+     */
+    name: function () {
+        return this.get('name');
+    },
+
+    /**
+     * @Property facebookId
+     * @returns {String}
+     */
+    facebookId: function () {
+        return this.get('facebookId');
+    },
+
+    /**
+     * @Property fbObject
+     * @returns {Object}
+     */
+    fbObject: function () {
+        return this.get('fbObject');
+    },
+
+    /**
+     * @Property pictureUrl
+     * @returns {String}
+     */
+    pictureUrl: function () {
+        return this.get('pictureURl');
+    }
+}, {
+
 });// Concat source to main.js with 'cat source/*.js > cloud/main.js'
 
 var _ = require("underscore"),
@@ -1662,6 +1838,7 @@ Parse.Cloud.beforeSave(Response, function (request, response) {
  * - Send Parse.Config
  * - Send all categories
  * If currentUser
+ * - EducationCohort
  * - Created tests
  * - Saved tests
  * - Unique responses
@@ -1674,7 +1851,7 @@ Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
     Parse.Cloud.useMasterKey();
 
     promises.push(Parse.Config.get());
-    promises.push(new Parse.Query("Category").include("parent").find());
+    promises.push(new Parse.Query(Category).include("parent").find());
 
     if (user) {
         var createdTestsQuery = new Parse.Query(Test);
@@ -1716,6 +1893,9 @@ Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
         // Perform the query, then update memoryStrength + save
         promises.push(UniqueResponse.findWithUpdatedMemoryStrengths(uniqueResponsesQuery));
 
+        if (user.educationCohort())
+            promises.push(user.fetchEducationCohort());
+
         /* var messagesQuery = new Parse.Query("Message");
          messagesQuery.equalTo('to', user);
          messagesQuery.descending("createdAt");
@@ -1740,13 +1920,15 @@ Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
          var groupsQuery = user.relation("groups").query();
          promises.push(groups = groupsQuery.find());*/
     }
-    Parse.Promise.when(promises).then(function (config, categories, createdTests, savedTests, uniqueResponses) {
+    Parse.Promise.when(promises).then(function (config, categories, createdTests, savedTests, uniqueResponses,
+    educationCohort) {
         var result = {
             config: config,
             categories: categories,
             createdTests: createdTests,
             savedTests: savedTests,
-            uniqueResponses: uniqueResponses
+            uniqueResponses: uniqueResponses,
+            educationCohort: educationCohort
         };
         /*if (messages)
          result.messages = messages["_result"][0];
@@ -1954,6 +2136,243 @@ Parse.Cloud.define('addOrRemoveRelation', function (request, response) {
 
 });
 
+/**
+ * @CloudFunction Create or Get EducationCohort
+ * Takes educational institution, study field
+ * and current year to find matching cohort
+ * or create a new one. Bonus, add graduation
+ * year to existing cohort if one is provided
+ * here.
+ * @param {String} educationalInstitutionId
+ * @param {String} studyFieldId (Required if University)
+ * @param {String} currentYear (Required if University)
+ * @param {Number} graduationYear (optional)
+ * @return {EducationCohort} educationCohort
+ */
+Parse.Cloud.define('createOrGetEducationCohort', function (request, response) {
+    var educationalInstitutionId = request.params.educationalInstitutionId,
+        studyFieldId = request.params.studyFieldId,
+        currentYear = request.params.currentYear,
+        graduationYear = request.params.graduationYear;
+
+    if (!educationalInstitutionId)
+        return response.error("Educational Institution Id is needed.");
+
+    var educationalInstitution = new Institution(),
+        studyField = new StudyField(),
+        promises = [];
+
+    educationalInstitution.id = educationalInstitutionId;
+    studyField.id = studyFieldId;
+    promises.push(educationalInstitution.fetch());
+    if (studyFieldId)
+        promises.push(studyField.fetch());
+    Parse.Promise.when(promises).then(function () {
+        var query = new Parse.Query(EducationCohort);
+        query.equalTo('institution', educationalInstitution);
+        if (studyFieldId)
+            query.equalTo('studyField', studyField);
+        if (currentYear)
+            query.equalTo('currentYear', currentYear);
+        return query.find();
+    }).then(function (results) {
+        Parse.Cloud.useMasterKey(); // Cannot edit existing EducationCohort objects w/o masterkey.
+        var educationCohort = results[0];
+        if (educationCohort) {
+            if (!educationCohort.get('graduationYear') && graduationYear) {
+                educationCohort.set('graduationYear', graduationYear);
+                return educationCohort.save();
+            } else
+                return educationCohort;
+        } else {
+            educationCohort = new EducationCohort();
+            educationCohort.set('institution', educationalInstitution);
+            if (studyFieldId)
+                educationCohort.set('studyField', studyField);
+            if (currentYear)
+                educationCohort.set('currentYear', currentYear);
+            if (graduationYear)
+                educationCohort.set('graduationYear', graduationYear);
+            var ACL = new Parse.ACL();
+            ACL.setPublicReadAccess(true);
+            educationCohort.setACL(ACL);
+            return educationCohort.save();
+        }
+    }).then(function (educationCohort) {
+        response.success(educationCohort);
+    }, function (error) {
+        response.error(error);
+    });
+});
+/**
+ * @CloudFunction Create or Update EducationalInstitution
+ * EducationalInstitution.name is the key unique factor
+ * Can be added by user input, from facebook
+ * search or updated to include facebookId.
+ * Will return a new or updated educationalInstitution.
+ *
+ * @param {String} name
+ * @param {String} type (e.g. University)
+ * @param {String} facebookId (optional)
+ * @return {Institution} educationalInstitution
+ */
+Parse.Cloud.define('createOrUpdateEducationalInstitution', function (request, response) {
+    var name = request.params.name,
+        facebookId = request.params.facebookId,
+        type = request.params.type,
+        educationalInstitution;
+
+    if (!name)
+        return response.error("Please send a 'name' for the new EducationalInstitution.");
+
+    name = name.capitalizeFirstLetter();
+    var query = new Parse.Query(Institution);
+    query.equalTo('name', name);
+    Parse.Cloud.useMasterKey();
+    query.find().then(function (results) {
+        if (results[0]) {
+            educationalInstitution = results[0];
+            // If existing study field has no facebookId and we have one here, set it
+            if ((!educationalInstitution.get('facebookId') || !educationalInstitution.get('facebookId').length) &&
+                facebookId) {
+                educationalInstitution.set('facebookId', facebookId);
+                return educationalInstitution.save();
+            } else
+                return educationalInstitution;
+        } else {
+            educationalInstitution = new Institution();
+            educationalInstitution.set('name', name);
+            educationalInstitution.set('type', type);
+            if (facebookId)
+                educationalInstitution.set('facebookId', facebookId);
+            return educationalInstitution.save();
+        }
+    }).then(function () {
+        response.success(educationalInstitution);
+    }, function (error) {
+        response.error(error);
+    });
+});
+/**
+ * @CloudFunction Create or Update StudyField
+ * StudyField.name is the key unique factor
+ * Can be added by user input, from facebook
+ * search or updated to include facebookId.
+ * Will return a new or updated studyField.
+ *
+ * @param {string} name
+ * @param {string} facebookId (optional)
+ * @return {StudyField} studyField
+ */
+Parse.Cloud.define('createOrUpdateStudyField', function (request, response) {
+    var name = request.params.name,
+        facebookId = request.params.facebookId,
+        studyField;
+
+    if (!name)
+        return response.error("Please send a 'name' for the new StudyField.");
+
+    name = name.capitalizeFirstLetter();
+    var query = new Parse.Query(StudyField);
+    query.equalTo('name', name);
+    Parse.Cloud.useMasterKey();
+    query.find()
+        .then(function (results) {
+            if (results[0]) {
+                studyField = results[0];
+                // If existing study field has no facebookId and we have one here, set it
+                if ((!studyField.get('facebookId') || !studyField.get('facebookId').length) && facebookId) {
+                    studyField.set('facebookId', facebookId);
+                    return studyField.save();
+                } else
+                    return studyField;
+            } else {
+                studyField = new StudyField();
+                studyField.set('name', name);
+                if (facebookId)
+                    studyField.set('facebookId', facebookId);
+                return studyField.save();
+            }
+        }).then(function () {
+            response.success(studyField);
+        }, function (error) {
+            response.error(error);
+        });
+});
+/**
+ * @CloudFunction Set Education Cohort using Facebook
+ * Loops through education history to find the
+ * education object with the latest graduation year.
+ * Uses the concentration to create/get a studyField,
+ * and school to create/get an educationalInstitution.
+ *
+ * Note, 'currentYear', is not given by Facebook.
+ * Therefore, the educationCohort is NOT saved by this
+ * function. You must confirm the details with the user
+ * on client-side and call createOrGetEducationCohort.
+ * @param {Object} educationHistory
+ * @return {Instituion, StudyField, Integer} educationalInstitution, studyField, graduationYear
+ */
+Parse.Cloud.define('setEducationCohortUsingFacebook', function (request, response) {
+    Parse.Cloud.useMasterKey();
+    var educationHistory = request.params.educationHistory;
+
+    if (!educationHistory)
+        return response.error("Please send a valid Facebook education history object.");
+    else if (!educationHistory.length)
+        return response.error("The education history is empty.");
+
+    var latestGraduationYear = 0,
+        latestEducation;
+    _.each(educationHistory, function (education) {
+        if (education.year && education.year.name && parseInt(education.year.name) > latestGraduationYear) {
+            latestGraduationYear = parseInt(education.year.name);
+            latestEducation = education;
+        }
+    });
+    if (!latestEducation)
+        latestEducation = educationHistory[0];
+
+    var educationalInstitution,
+        studyField,
+        graduationYear = latestGraduationYear;
+    Parse.Cloud.run('createOrUpdateEducationalInstitution', {
+        name: latestEducation.school.name,
+        type: latestEducation.type,
+        facebookId: latestEducation.school.id
+    }).then(function (result) {
+        educationalInstitution = result;
+        if (!latestEducation.concentration)
+            return;
+        return Parse.Cloud.run('createOrUpdateStudyField', {
+            name: latestEducation.concentration[0].name,
+            facebookId: latestEducation.concentration[0].id
+        });
+    }).then(function (result) {
+        studyField = result;
+        response.success({
+            educationalInstitution: educationalInstitution,
+            studyField: studyField, graduationYear: graduationYear
+        });
+    }, function (error) {
+        return response.error(error);
+    });
+});
+
+/**
+ * @CloudFunction Map Old Tests to New
+ *
+ * Used to migrate MyCQs tests to Synap.
+ * Work in progress.
+ *
+ * Currently creates new tests or updates
+ * previously added tests, to a pre-existing
+ * Synap user.
+ *
+ * @param {string} authorId
+ * @param {string} oldTests
+ * @return success/error
+ */
 Parse.Cloud.define('mapOldTestsToNew', function (request, response) {
     var author = new Parse.User(),
         oldTests = request.params.tests.results,

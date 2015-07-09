@@ -6,7 +6,10 @@
  */
 @import "material.css"
 
-colorPrimary1 = rgba(66, 101, 54, 1)
+colorPrimary1 = #e73a3d
+colorPrimary-100 = #F8C4C5
+colorPrimary-200 = #F39D9E
+colorPrimary-300 = #EF7C7E
 colorBackground = rgb(237, 241, 242)
 colorBackgroundCard = white
 colorRed = #a94442
@@ -2062,32 +2065,31 @@ body {
   padding-bottom: 90px;
 }
 
-.footer {
+.footer
   position: absolute;
-  bottom: 0px;
-  left: 0px;
+  bottom: 0;
+  left: 0;
   width: 100%;
   height: 87px;
   text-align: center;
   font-size: 12px;
   padding-top: 16px;
-}
+  .logo-text
+      h4
+        color white
+        margin 0
 
 .footer .card {
   background-color: colorPrimary1;
 }
 
 .footer .card p, .footer .card a, .footer .card i {
-  color: #97AA86;
+  color colorPrimary-200
 }
 
 .footer .card a:hover, .footer .card i:hover {
-  color: #A2C58B;
+  color colorPrimary-100
   text-decoration: none;
-}
-
-.footer .card img.logo-icon {
-  margin-bottom: 8px;
 }
 
 .footer .sitemap a {
@@ -2116,10 +2118,10 @@ body {
   font-size: 20px;
 }
 
-.footer address {
-  text-align: left;
-  color: #97AA86;
-}
+.footer address
+  text-align left
+  color colorPrimary-200
+
 
 .footer .footer-dependencies img {
   max-width: 80px;
@@ -2230,7 +2232,7 @@ body {
 
 .linkify {
   cursor: pointer;
-  color: #428bca;
+  color: colorPrimary1;
 }
 
 .red-link {
@@ -2524,7 +2526,7 @@ body {
   width: 30px;
   height: 30px;
   display: block;
-  background: rgba(153, 166, 144, 1);
+  background: alpha(colorPrimary1, 0.45);
   top: 45px;
   left: 50%;
   margin-top: -15px;
@@ -2552,16 +2554,16 @@ body {
 
 .bs-wizard > .bs-wizard-step > .progress {
   position: relative;
-  border-radius: 0px;
+  border-radius: 0;
   height: 8px;
   box-shadow: none;
   margin: 20px 0;
 }
 
 .bs-wizard > .bs-wizard-step > .progress > .progress-bar {
-  width: 0px;
+  width: 0;
   box-shadow: none;
-  background: rgba(153, 166, 144, 1);
+  background: alpha(colorPrimary1, 0.45);
 }
 
 .bs-wizard > .bs-wizard-step.completed > .progress > .progress-bar {

@@ -1,9 +1,18 @@
-{{#if selectedItem}}
+{{#if selectedItem.label}}
     <div class="form-control" {{action 'editSelectedItem'}}>
         <label>{{selectedItem.label}}</label>
     </div>
 {{else}}
-    {{autocomplete-input type='text' value=textInput class='form-control' contextController=this}}
+    {{#if floatingLabel}}
+        <div class="form-control-wrapper">
+            {{autocomplete-input type='text' value=textInput class='form-control empty' contextController=this}}
+            <div class="floating-label">{{placeholder}}</div>
+            <span class="material-input"></span>
+        </div>
+    {{else}}
+        {{autocomplete-input type='text' value=textInput class='form-control' contextController=this
+        placeholder=placeholder}}
+    {{/if}}
 {{/if}}
 {{#if suggestions.length}}
     <div {{bind-attr class=":autocomplete-container"}} style="margin-top:0px;">

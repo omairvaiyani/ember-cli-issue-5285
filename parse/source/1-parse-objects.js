@@ -222,6 +222,32 @@ Parse.User.prototype.checkLevelUp = function () {
     return promise;
 };
 /**
+ * @Function FetchEducationCohort
+ * This allows us to fetch the user's educationCohort
+ * *as well as* the studyField and institution.
+ * @return {Parse.Promise<EducationCohort>} educationCohort
+ */
+Parse.User.prototype.fetchEducationCohort = function () {
+    var educationCohort = this.educationCohort();
+
+    // User has no level set: this shouldn't happen
+    // *once* we set Level 1 by default on sign up.
+    if (educationCohort) {
+        var promise = educationCohort.fetch().then(function () {
+            var promises = [];
+            if(educationCohort.studyField())
+                promises.push(educationCohort.studyField().fetch());
+            if(educationCohort.institution())
+                promises.push(educationCohort.institution().fetch());
+            return Parse.Promise.when(promises);
+        }.bind(this)).then(function () {
+            return Parse.Promise.as(educationCohort);
+        });
+        return promise;
+    } else
+        Parse.Promise.resolve(null);
+};
+/**
  * @Function Add Unique Responses
  *
  * Called after a user finishes an attempt.
@@ -313,6 +339,13 @@ Parse.User.prototype.points = function () {
  */
 Parse.User.prototype.uniqueResponses = function () {
     return this.relation('uniqueResponses');
+};
+/**
+ * @Property educationCohort
+ * @returns {EducationCohort}
+ */
+Parse.User.prototype.educationCohort = function () {
+    return this.get('educationCohort');
 };
 /****
  * ---------
@@ -1404,4 +1437,147 @@ var Level = Parse.Object.extend("Level", {
             return Parse.Promise.as(result[0]);
         });
     }
+});
+
+/****
+ * -----
+ * EducationCohort
+ * -----
+ *
+ **/
+var EducationCohort = Parse.Object.extend("EducationCohort", {
+    /**
+     * @Property currentYear
+     * @returns {String}
+     */
+    currentYear: function () {
+        return this.get('currentYear');
+    },
+
+    /**
+     * @Property graduationYear
+     * @returns {number}
+     */
+    graduationYear: function () {
+        return this.get('graduationYear');
+    },
+
+    /**
+     * @Property institution
+     * @returns {Institution}
+     */
+    institution: function () {
+        return this.get('institution');
+    },
+
+
+    /**
+     * @Property studyField
+     * @returns {StudyField}
+     */
+    studyField: function () {
+        return this.get('studyField');
+    }
+}, {
+
+});
+/****
+ * -----
+ * Institution
+ * -----
+ *
+ **/
+var Institution = Parse.Object.extend("Institution", {
+    /**
+     * @Property name
+     * @returns {String}
+     */
+    name: function () {
+        return this.get('name');
+    },
+
+    /**
+     * @Property type
+     * @returns {String}
+     */
+    type: function () {
+        return this.get('type');
+    },
+
+    /**
+     * @Property facebookId
+     * @returns {String}
+     */
+    facebookId: function () {
+        return this.get('facebookId');
+    },
+
+    /**
+     * @Property fbObject
+     * @returns {Object}
+     */
+    fbObject: function () {
+        return this.get('fbObject');
+    },
+
+    /**
+     * @Property pictureUrl
+     * @returns {String}
+     */
+    pictureUrl: function () {
+        return this.get('pictureURl');
+    },
+
+
+    /**
+     * @Property cover
+     * @returns {Object}
+     */
+    cover: function () {
+        return this.get('cover');
+    }
+}, {
+
+});
+
+/****
+ * -----
+ * StudyField
+ * -----
+ *
+ **/
+var StudyField = Parse.Object.extend("StudyField", {
+    /**
+     * @Property name
+     * @returns {String}
+     */
+    name: function () {
+        return this.get('name');
+    },
+
+    /**
+     * @Property facebookId
+     * @returns {String}
+     */
+    facebookId: function () {
+        return this.get('facebookId');
+    },
+
+    /**
+     * @Property fbObject
+     * @returns {Object}
+     */
+    fbObject: function () {
+        return this.get('fbObject');
+    },
+
+    /**
+     * @Property pictureUrl
+     * @returns {String}
+     */
+    pictureUrl: function () {
+        return this.get('pictureURl');
+    }
+}, {
+
 });

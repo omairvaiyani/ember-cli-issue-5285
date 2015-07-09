@@ -103,7 +103,7 @@ var ParseUser =  DS.Model.extend(ParseMixin, {
     /*
      * Spaced Repetition
      */
-    srLatestAttempt:  DS.attr('attempt', {async: true}),
+    srLatestAttempt:  DS.belongsTo('attempt', {async: true}),
     srCompletedAttempts: DS.attr(),
     srNextDue: DS.attr('parse-date'),
     uniqueResponses: new Ember.A(),

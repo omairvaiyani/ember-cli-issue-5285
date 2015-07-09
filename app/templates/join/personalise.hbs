@@ -17,11 +17,11 @@
                             {{#if currentUser.educationCohort}}
                                 <h4>Are these details about your education correct?</h4>
                             {{else}}
-                                <h4>Would you like to add your education information?</h4>
+                                <h4 id="ab-education-info-title">Would you like to add your education information?</h4>
                             {{/if}}
-                            <p class="margin-bottom-16">We use your education information to personalise MyCQs for you!
-                                This includes suggesting the most relevant tests to take and authors
-                                to follow.</p>
+                            <p class="margin-bottom-16" id="ab-education-info-desc">We use your education information
+                                to personalise Synap for you!
+                                This includes suggesting the most relevant tests to take and authors to follow.</p>
                         {{/if}}
                         {{#if step3}}
                             {{#if userController.suggestedFollowingAll.length}}
@@ -112,7 +112,6 @@
                                         {{action 'openModal' 'user/modal/course-selection' 'user' currentUser}}>
                                         Change Education Info
                                     </button>
-                                {{else}}
                                 {{/if}}
                             {{/if}}
                             {{#if step3}}
@@ -144,7 +143,7 @@
                                 {{#if currentUser.educationCohort}}
                                     <button class="btn btn-success btn-lg margin-top-16 pull-right"
                                         {{action 'acceptEducationInfo'}}>
-                                        They are correct
+                                        Looks good
                                     </button>
                                 {{else}}
                                     <button class="btn btn-success btn-lg margin-top-16 pull-right"

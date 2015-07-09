@@ -401,14 +401,13 @@ export default Ember.ObjectController.extend(CurrentUser, {
                 facebookId = object.id;
             else
                 facebookId = object.facebookId;
-            Parse.Cloud.run('createOrUpdateEducationalInstitution', {
+            ParseHelper.cloudFunction(this,'createOrUpdateEducationalInstitution', {
                 name: object.name,
                 facebookId: facebookId,
                 type: object.category // from facebook // TODO need non-facebook input
-            }).then(function (educationalInstitutionParse) {
-                return this.store.find('educational-institution', educationalInstitutionParse.id);
-            }.bind(this)).then(function (educationalInstitution) {
-                this.set('newEducationCohort.institution', educationalInstitution);
+            }).then(function (result) {
+                var institution = ParseHelper.extractRawPayload(this.store, 'institution', result);
+                this.set('newEducationCohort.institution', institution);
             }.bind(this), function (error) {
                 console.dir(error);
             });
@@ -425,12 +424,11 @@ export default Ember.ObjectController.extend(CurrentUser, {
                 facebookId = object.id;
             else
                 facebookId = object.facebookId;
-            Parse.Cloud.run('createOrUpdateStudyField', {
+            ParseHelper.cloudFunction(this, 'createOrUpdateStudyField', {
                 name: object.name,
                 facebookId: facebookId
-            }).then(function (studyFieldParse) {
-                return this.store.find('study-field', studyFieldParse.id);
-            }.bind(this)).then(function (studyField) {
+            }).then(function (result) {
+                var studyField = ParseHelper.extractRawPayload(this.store, 'study-field', result);
                 this.set('newEducationCohort.studyField', studyField);
             }.bind(this), function (error) {
                 console.dir(error);
@@ -440,23 +438,22 @@ export default Ember.ObjectController.extend(CurrentUser, {
         saveEducationCohort: function (callback) {
             var promise;
             if (this.get('studyingAtUniversity')) {
-                promise = Parse.Cloud.run('createOrGetEducationCohort', {
+                promise = ParseHelper.cloudFunction(this, 'createOrGetEducationCohort', {
                     educationalInstitutionId: this.get('newEducationCohort.institution.id'),
                     studyFieldId: this.get('newEducationCohort.studyField.id'),
                     currentYear: this.get('newEducationCohort.currentYear'),
                     graduationYear: this.get('newEducationCohort.graduationYear')
                 });
             } else {
-                promise = Parse.Cloud.run('createOrGetEducationCohort', {
+                promise = ParseHelper.cloudFunction(this,'createOrGetEducationCohort', {
                     educationalInstitutionId: this.get('newEducationCohort.institution.id')
                 });
             }
             callback(promise);
 
-            promise.then(function (educationCohortParse) {
+            promise.then(function (result) {
                 this.send('closeModal');
-                return this.store.find('education-cohort', educationCohortParse.id);
-            }.bind(this)).then(function (educationCohort) {
+                var educationCohort = ParseHelper.extractRawPayload(this.store, 'education-cohort', result);
                 this.set('educationCohort', educationCohort);
                 this.get('model').save();
             }.bind(this), function (error) {

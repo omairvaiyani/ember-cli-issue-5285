@@ -5,7 +5,7 @@
 </div>
 <div class="modal-body">
 
-    <div class="container-fluid course-selection">
+    <div class="course-selection">
         <p class="lead">Enter course information</p>
 
         <div class="row">
@@ -14,21 +14,21 @@
             </div>
         </div>
         <div class="row">
-            <div class="col-md-12">
+            <div class="col-md-12 margin-bottom-8">
                 {{radio-button value='School' checked=studyingAt id="is-studying-at-school"}}
-                <label for="is-studying-at-school">School</label>
+                <label for="is-studying-at-school" class="margin-left-8">School</label>
             </div>
             <div class="col-md-12 margin-bottom-8">
                 {{radio-button value='University' checked=studyingAt id="is-studying-at-university"}}
-                <label for="is-studying-at-university">University</label>
+                <label for="is-studying-at-university" class="margin-left-8">University</label>
             </div>
         </div>
-
+        {{!--
         <div class="row">
             <div class="col-md-12">
                 <p>{{studyingAt}}</p>
             </div>
-        </div>
+        </div> --}}
         <div class="row">
             <div class="col-md-12">
                 {{search-suggestions
@@ -39,17 +39,14 @@
                 actionOnSelection='educationalInstitutionSelected'
                 contextController=this
                 defaultItem=newEducationCohort.institution
+                floatingLabel=true
+                placeholder=studyingAt
                 }}
             </div>
         </div>
         {{#if studyingAtUniversity}}
             <div class="row">
                 <div class="col-md-12 margin-top-16">
-                    <p>Course</p>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-12">
                     {{search-suggestions
                     type='study-fields'
                     labelPath='name'
@@ -57,6 +54,8 @@
                     actionOnSelection='studyFieldSelected'
                     contextController=this
                     defaultItem=newEducationCohort.studyField
+                    floatingLabel=true
+                    placeholder="Course"
                     }}
                 </div>
             </div>
@@ -77,6 +76,7 @@
                     }}
                 </div>
             </div>
+        {{!--
             <div class="row">
                 <div class="col-md-12 margin-top-16">
                     <p>Graduation year</p>
@@ -87,15 +87,18 @@
                     {{rl-year-picker year=newEducationCohort.graduationYear}}
                 </div>
             </div>
+            --}}
         {{/if}}
     </div>
 
 </div>
 <div class="modal-footer">
-    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-    {{#if newEducationCohort.isDirty}}
-        {{async-button action='saveEducationCohort' class='btn btn-success' default='Save Changes'
-        pending="Saving..." rejected="Error! Try again." fulfilled="Saved!" resest=true}}
-    {{/if}}
+    <div class="container-fluid margin-bottom-16">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+        {{#if newEducationCohort.isDirty}}
+            {{async-button action='saveEducationCohort' class='btn btn-success' default='Save Changes'
+            pending="Saving..." rejected="Error! Try again." fulfilled="Saved!" resest=true}}
+        {{/if}}
+    </div>
 </div>
 
