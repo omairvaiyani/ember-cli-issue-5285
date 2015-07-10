@@ -182,14 +182,15 @@ export default Ember.Route.extend({
         login: function () {
             this.send('incrementLoadingItems');
 
-            var controller = this.controllerFor('application'),
-                email = controller.get('loginUser.email'),
+            var controller = this.controllerFor('application');
+
+            var email = controller.get('loginUser.email'),
                 password = controller.get('loginUser.password'),
-                ParseUser = this.store.modelFor('parse-user'),
-                data = {
-                    username: email,
-                    password: password
-                };
+                ParseUser = this.store.modelFor('parse-user');
+            data = {
+                username: email,
+                password: password
+            };
 
             controller.set('loginMessage.connecting', "Logging in...");
 
@@ -300,17 +301,17 @@ export default Ember.Route.extend({
 
             data.timeZone = timeZone;
 
-            var promise = ParseUser.signup(this.store, data).then(function (user) {
+            var promise = ParseUser.signup(this.store, {authData: data.authData}).then(function (user) {
                 this.get('applicationController').set('currentUser', user);
                 return user.reload();
-            }.bind(this)).then(function(user) {
+            }.bind(this)).then(function (user) {
                     this.send('decrementLoadingItems');
                     this.send('redirectAfterLogin');
                     this.send('decrementLoadingItems');
                 }.bind(this),
                 function (error) {
                     this.send('decrementLoadingItems');
-                    console.log("Error with ParseUser.signup() in: " + "signUpAuthorisedFacebookUser");
+                    console.log("Error with ParseUser.signup() in: signUpAuthorisedFacebookUser");
                     console.dir(error);
                 }.bind(this));
 

@@ -15,8 +15,7 @@
                         <img src="img/loading-big.gif" height="30px" class="logo-icon"/>
                         {{parseConfig.appName}}
                     {{else}}
-                        <img src="img/logo-white.png" height="30px" class="logo-icon"/>
-                        {{parseConfig.appName}}
+                        <img src="img/icon-header.png" height="30px" class="logo-icon"/>
                     {{/if}}
                 {{/link-to}}
             </div>
@@ -24,8 +23,10 @@
             <!-- Collect the nav links, forms, and other content for toggling -->
             <div class="collapse navbar-collapse" id="bs-navbar-collapsing">
                 <ul class="nav navbar-nav">
-                    {{#link-to 'create' tagName='li' title='MCQ Test Maker'}}{{#link-to 'create' tagName='a'}}
-                        Create{{/link-to}}{{/link-to}}
+                    {{#if currentUser}}
+                        {{#link-to 'create' tagName='li' title='MCQ Test Maker'}}{{#link-to 'create' tagName='a'}}
+                            Create{{/link-to}}{{/link-to}}
+                    {{/if}}
                     <!-- About dropdown menu-->
                     <li class="dropdown">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
@@ -44,38 +45,41 @@
                             {{/link-to}}
                         </ul>
                     </li>
-
+                    {{!--
                     {{#link-to 'groups' tagName='li' title='Browse Groups'}}{{#link-to 'groups' tagName='a'}}
                         Groups{{/link-to}}{{/link-to}}
-
+                    --}}
                     <!-- About dropdown menu-->
-                    <li class="dropdown">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
-                            About <span class="caret"></span></a>
-                        <ul class="dropdown-menu" role="menu">
-                            {{#link-to 'about.index' tagName='li' title='About us'}}
-                                {{#link-to 'about.index' tagName='a'}}
-                                    Overview
+                    {{#unless currentUser}}
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+                                About <span class="caret"></span></a>
+                            <ul class="dropdown-menu" role="menu">
+                                {{#link-to 'about.index' tagName='li' title='About us'}}
+                                    {{#link-to 'about.index' tagName='a'}}
+                                        Overview
+                                    {{/link-to}}
                                 {{/link-to}}
-                            {{/link-to}}
-                            {{#link-to 'about.team' tagName='li' title='MyCQs Team'}}
-                                {{#link-to 'about.team' tagName='a'}}
-                                    Team
+                                {{#link-to 'about.team' tagName='li' title='MyCQs Team'}}
+                                    {{#link-to 'about.team' tagName='a'}}
+                                        Team
+                                    {{/link-to}}
                                 {{/link-to}}
-                            {{/link-to}}
-                            <li class="divider"></li>
-                            {{#link-to 'contact' tagName='li' title='Contact us'}}
-                                {{#link-to 'contact' tagName='a'}}
-                                    Contact
+                                <li class="divider"></li>
+                                {{#link-to 'contact' tagName='li' title='Contact us'}}
+                                    {{#link-to 'contact' tagName='a'}}
+                                        Contact
+                                    {{/link-to}}
                                 {{/link-to}}
-                            {{/link-to}}
-                            {{#link-to 'support' tagName='li' title='Support'}}
-                                {{#link-to 'support' tagName='a'}}
-                                    Support
+                                {{#link-to 'support' tagName='li' title='Support'}}
+                                    {{#link-to 'support' tagName='a'}}
+                                        Support
+                                    {{/link-to}}
                                 {{/link-to}}
-                            {{/link-to}}
-                        </ul>
-                    </li>
+                            </ul>
+                        </li>
+                    {{/unless}}
+
                 </ul>
 
                 <form class="navbar-form navbar-left" {{action 'activateSiteSearch'}} role="search">

@@ -1,84 +1,53 @@
 <div class="footer">
-    <div class="card">
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-md-3 text-center margin-bottom-16">
-                    <section class="row">
-                        <article class="col-md-12">
-                            {{#link-to 'index' tagName='a' class='logo-text'}}
-                                <img src="img/logo-white.png" height="30px" class="logo-icon inline-block"/>
-                                <h4 class="inline-block">synap</h4>
-                            {{/link-to}}
-                        </article>
-                    </section>
-                    <section class="row">
-                        <article class="col-md-12">
-                            <p>Copyright 2015 by <a href='http://mylabs.io' target="_blank">MyLabs Ltd</a></p>
-                        </article>
-                    </section>
-                </div>
-                <div class="col-md-6 sitemap text-center margin-bottom-16">
-                    <section class="row">
-                        <article class="col-md-12">
-                            {{#link-to 'index' tagName='a'}}Home{{/link-to}}
-                            {{#link-to 'browse' tagName='a'}}Browse{{/link-to}}
-                            {{#link-to 'create' tagName='a'}}Create{{/link-to}}
-                            {{#link-to 'about' tagName='a'}}About{{/link-to}}
-                            {{!--
-                            {{#link-to 'features' tagName='a'}}Features{{/link-to}}
-                            --}}
-                            <a href='http://blog.mycqs.com' target="_blank">Blog</a>
-                        </article>
-                    </section>
-                    <section class="row">
-                        <article class="col-md-12">
-                            {{#link-to 'support' tagName='a'}}Support{{/link-to}}
-                            {{#link-to 'contact' tagName='a'}}Contact us{{/link-to}}
-                            {{#link-to 'presskit' tagName='a'}}Press{{/link-to}}
-                            {{#link-to 'privacyPolicy' tagName='a'}}Privacy Policy{{/link-to}}
-                            {{#link-to 'terms' tagName='a'}}Terms & Conditions{{/link-to}}
-                        </article>
-                    </section>
-                </div>
-                <div class="col-md-3 text-center">
-                    <div class='social'>
-                        <a href='https://facebook.com/mycqs' target='_blank'><i class="fa fa-facebook"></i></a>
-                        <a href='https://twitter.com/mycqs' target='_blank'><i class="fa fa-twitter"></i></a>
-                    </div>
-                </div>
+    <div class="container-fluid">
+        <section class="row">
+            <div class="col-md-3 text-center margin-bottom-16">
             </div>
-            <section class="row">
-                <article class="col-md-3 text-center">
-                    <address style="text-align:left;">
-                        <strong>Synap</strong><br>
-                        InTechnology Enterprise Incubation Program<br>
-                        Leeds Innovation Centre<br>
-                        Suite 11b<br>
-                        103 Clarendon Road<br>
-                        Leeds<br>
-                        LS2 9DF
-                    </address>
-                </article>
-                <article class="col-md-9">
-                    <div class="pull-right footer-dependencies">
-                        <a href="https://aws.amazon.com/" target="_blank">
-                            <img src="/img/aws-logo.png">
-                        </a>
-                        <a href="https://parse.com/" target="_blank">
-                            <img src="/img/parse-logo.png">
-                        </a>
-                        <a href="http://emberjs.com/" target="_blank">
-                            <img src="/img/ember-js.png">
-                        </a>
-                        <a href="https://ssl.comodo.com/comodo-ssl-certificate.php" target="_blank">
-                            <img src="/img/comodo-secure-padlock.png">
-                        </a>
-                        <a href="https://stripe.com/" target="_blank">
-                            <img src="/img/stripe-logo.png">
-                        </a>
-                    </div>
-                </article>
-            </section>
-        </div>
+            <div class="col-md-6 sitemap text-center margin-bottom-16">
+                <section class="row">
+                    <article class="col-md-12">
+                        {{#link-to 'index' tagName='a'}}Home{{/link-to}}
+                        {{#link-to 'browse' tagName='a'}}Browse{{/link-to}}
+                        {{#link-to 'create' tagName='a'}}Create{{/link-to}}
+                        {{#link-to 'about' tagName='a'}}About{{/link-to}}
+                        {{!--
+                        {{#link-to 'features' tagName='a'}}Features{{/link-to}}
+                        --}}
+                        <a href='http://blog.mycqs.com' target="_blank">Blog</a>
+                    </article>
+                </section>
+                <section class="row">
+                    <article class="col-md-12">
+                        {{#link-to 'support' tagName='a'}}Support{{/link-to}}
+                        {{#link-to 'contact' tagName='a'}}Contact us{{/link-to}}
+                        {{#link-to 'presskit' tagName='a'}}Press{{/link-to}}
+                        {{#link-to 'privacyPolicy' tagName='a'}}Privacy Policy{{/link-to}}
+                        {{#link-to 'terms' tagName='a'}}Terms & Conditions{{/link-to}}
+                    </article>
+                </section>
+            </div>
+            <div class="col-md-3 text-center">
+
+            </div>
+        </section>
+        <section class="row">
+            <article class="col-md-4">
+                <a href="mailto:support@synap.ac" target="_blank" class="email-link">support@synap.ac</a>
+            </article>
+            <article class="col-md-4">
+                {{#link-to 'index' tagName='a' class='watermark'}}
+                    <img src="img/logo-white.png" height="30px" class="logo-icon inline-block"/>
+                {{/link-to}}
+                <p class="copyright-mark">
+                    Copyright 2015 by <a href='http://mylabs.io' target="_blank">MyLabs Ltd</a>
+                </p>
+            </article>
+            <article class="col-md-4">
+                <div class='social'>
+                    <a href='https://facebook.com/mycqs' target='_blank'><i class="fa fa-facebook"></i></a>
+                    <a href='https://twitter.com/mycqs' target='_blank'><i class="fa fa-twitter"></i></a>
+                </div>
+            </article>
+        </section>
     </div>
 </div>
