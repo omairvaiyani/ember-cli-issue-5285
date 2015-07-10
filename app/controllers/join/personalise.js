@@ -67,6 +67,9 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
             if (this.get('currentStep') === 2) {
                 this.send('confirmFacebookEducationHistory');
             }
+            // TODO user suggestions are being skipped until followers/following is complete.
+            if(this.get('currentStep') === 3)
+                this.get('controllers.join').send('goToJoinStep', 'features');
         },
         previousStep: function () {
             this.decrementProperty('currentStep');
@@ -105,30 +108,23 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
          * Called on init if fbid and !educationCohort
          */
         setEducationHistoryFromFacebook: function () {
-            console.log("Setting ed history from fb");
             var educationalInstitution,
-                studyFieldId,
+                studyField,
                 graduationYear;
-            console.dir(this.get('currentUser.fbEducation'));
             ParseHelper.cloudFunction(this, 'setEducationCohortUsingFacebook',
                 {educationHistory: this.get('currentUser.fbEducation')})
                 .then(function (result) {
                     if (result.studyField)
-                        studyFieldId = result.studyField.id;
+                        studyField = ParseHelper.extractRawPayload(this.store, 'study-field', result.studyField);
                     graduationYear = result.graduationYear;
-                    return this.store.findById('institution', result.educationalInstitution.id);
-                }.bind(this)).then(function (result) {
-                    educationalInstitution = result;
-                    if (studyFieldId)
-                        return this.store.findById('study-field', studyFieldId);
-                }.bind(this)).then(function (studyField) {
+                    if (result.educationalInstitution)
+                        educationalInstitution = ParseHelper.extractRawPayload(this.store, 'institution',
+                            result.educationalInstitution);
                     var educationCohort = this.store.createRecord('education-cohort', {
                         institution: educationalInstitution,
                         studyField: studyField,
                         graduationYear: graduationYear
                     });
-                    console.log("Ed cohort set");
-                    console.dir(educationCohort);
                     this.set('facebookEducationCohort', educationCohort);
                     if (this.get('hasAskedToConfirmFacebook')) {
                         // Education Arrived too late, push for confirmation again
@@ -140,7 +136,6 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
                 });
         },
         confirmFacebookEducationHistory: function () {
-            console.log("Confirming fb history...");
             if (!this.get('currentUser.fbid') || this.get('hasAskedToConfirmFacebook'))
                 return;
             this.set('userController.newEducationCohort', this.get('facebookEducationCohort'));
