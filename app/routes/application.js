@@ -231,8 +231,8 @@ export default Ember.Route.extend({
                     this.send('signUpAuthorisedFacebookUser', response.authResponse);
                 }
             }.bind(this), {
-                scope: 'public_profile, user_friends, user_about_me, ' +
-                'email, user_location, user_education_history'
+                scope: 'public_profile, user_friends, user_about_me, user_education_history,' +
+                'email, user_location'
             });
 
         },
@@ -304,7 +304,6 @@ export default Ember.Route.extend({
                 this.get('applicationController').set('currentUser', user);
                 return user.reload();
             }.bind(this)).then(function(user) {
-                    console.dir(user);
                     this.send('decrementLoadingItems');
                     this.send('redirectAfterLogin');
                     this.send('decrementLoadingItems');

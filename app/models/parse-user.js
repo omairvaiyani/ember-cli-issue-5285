@@ -127,6 +127,7 @@ var ParseUser =  DS.Model.extend(ParseMixin, {
     /*
      * Education
      */
+    fbEducation: DS.attr(),
     educationCohort: DS.belongsTo('education-cohort', {async: true}),
 
     /*

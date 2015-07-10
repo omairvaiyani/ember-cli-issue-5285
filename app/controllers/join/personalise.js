@@ -1,6 +1,7 @@
 import Ember from 'ember';
 import CurrentUser from '../../mixins/current-user';
 import ImageUpload from '../../mixins/image-upload';
+import ParseHelper from '../../utils/parse-helper';
 
 export default Ember.Controller.extend(CurrentUser, ImageUpload, {
     needs: ['user', 'join'],
@@ -104,16 +105,18 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
          * Called on init if fbid and !educationCohort
          */
         setEducationHistoryFromFacebook: function () {
+            console.log("Setting ed history from fb");
             var educationalInstitution,
                 studyFieldId,
                 graduationYear;
-
-            Parse.Cloud.run('setEducationCohortUsingFacebook', {educationHistory: this.get('currentUser.education')})
+            console.dir(this.get('currentUser.fbEducation'));
+            ParseHelper.cloudFunction(this, 'setEducationCohortUsingFacebook',
+                {educationHistory: this.get('currentUser.fbEducation')})
                 .then(function (result) {
                     if (result.studyField)
                         studyFieldId = result.studyField.id;
                     graduationYear = result.graduationYear;
-                    return this.store.findById('educational-institution', result.educationalInstitution.id);
+                    return this.store.findById('institution', result.educationalInstitution.id);
                 }.bind(this)).then(function (result) {
                     educationalInstitution = result;
                     if (studyFieldId)
@@ -124,6 +127,8 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
                         studyField: studyField,
                         graduationYear: graduationYear
                     });
+                    console.log("Ed cohort set");
+                    console.dir(educationCohort);
                     this.set('facebookEducationCohort', educationCohort);
                     if (this.get('hasAskedToConfirmFacebook')) {
                         // Education Arrived too late, push for confirmation again
@@ -135,6 +140,7 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
                 });
         },
         confirmFacebookEducationHistory: function () {
+            console.log("Confirming fb history...");
             if (!this.get('currentUser.fbid') || this.get('hasAskedToConfirmFacebook'))
                 return;
             this.set('userController.newEducationCohort', this.get('facebookEducationCohort'));
