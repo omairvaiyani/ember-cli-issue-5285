@@ -1,5 +1,5 @@
 <div class="card margin-top-16 response-card">
-    {{#if response.chosenAnswer}}
+    {{#if response.chosenOptions.length}}
         <div {{bind-attr class=":response-indicator :pull-left response.isCorrect:is-correct"}}></div>
     {{else}}
         <div class="response-indicator pull-left is-unimportant"></div>
@@ -22,12 +22,12 @@
 
              {{/unless}} --}}
 
-            {{#each response.question.options as |option|}}
+            {{#each response.shuffledOptions as |option index|}}
                 <div class="row">
                     <div {{bind-attr class=":col-md-12 :option option.isChosen:is-selected
                     option.isCorrect:is-correct:is-incorrect"}}>
                         <div class="option-statistics" {{bind-attr style=option.statisticsStyling}}></div>
-                        <span class="option-label margin-right-16">{{alphabetise-index _view.contentIndex}}</span>
+                        <span class="option-label margin-right-16">{{alphabetise-index index}}</span>
                         <span class="phrase-over-statistics">{{option.phrase}}</span>
                         <span class="phrase-hidden">{{option.phrase}}</span>
                         {{#if showResponseStatistics}}

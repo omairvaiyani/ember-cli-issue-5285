@@ -14,16 +14,44 @@
                 </section>
                 <section class="row">
                     <article class="col-md-4">
-                        {{#if model.category.parent}}
-                            <div {{action 'removeCategory' model.category.parent}}
-                                    class="tag category-edit">{{model.category.parent.name}}</div>
+                        {{#if model.category}}
+                            {{#if model.category.parent}}
+                                <div {{action 'removeCategory' model.category.parent}}
+                                        class="tag category-edit">{{model.category.parent.name}}</div>
+                            {{/if}}
+                            <div {{action 'removeCategory' model.category}}
+                                    class="tag category-edit">{{model.category.name}}</div>
+                        {{else}}
+                            <div class="row">
+                                <div class="col-md-12 margin-bottom-16">
+                                    {{view 'select'
+                                    classNames='form-control'
+                                    content=parentCategories
+                                    optionValuePath="content"
+                                    optionLabelPath="content.name"
+                                    selection=parentCategory
+                                    prompt="Please select a subject"}}
+                                </div>
+                            </div>
+                            {{#if childCategories.length}}
+                                <div class="row">
+                                    <div class="col-md-12 margin-bottom-16">
+                                        {{view 'select'
+                                        classNames='form-control'
+                                        content=childCategories
+                                        optionValuePath="content"
+                                        optionLabelPath="content.name"
+                                        selection=childCategory
+                                        prompt="Please select a subject area"}}
+                                    </div>
+                                </div>
+                            {{/if}}
                         {{/if}}
-                        <div {{action 'removeCategory' model.category}}
-                                class="tag category-edit">{{model.category.name}}</div>
+
                     </article>
                     <article class="col-md-2 text-right">
                         <div class="togglebutton togglebutton-info">
-                            <label>
+                            <label class="text-left">
                                 <strong class="margin-right-8">Public</strong>
                                 {{input type="checkbox" checked=model.isPublic}}<span class="toggle"></span>
                             </label>

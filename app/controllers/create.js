@@ -125,10 +125,12 @@ export default Ember.Controller.extend(CurrentUser, {
             if (!this.get('model.title.length')) {
                 this.send('addNotification', 'warning', 'Title not set!', 'You must set a title for the test!');
                 error = true;
-            } if (!this.get('model.category.content')) {
+            }
+            if (!this.get('model.category.content')) {
                 this.send('addNotification', 'warning', 'Category not set!', 'You must set a category!');
                 error = true;
-            } if (this.get('inJoinProcess')) {
+            }
+            if (this.get('inJoinProcess')) {
                 if (this.get('joinStep.create.active')) {
                     this.send('goToJoinStep', 'join');
                     error = true;
@@ -160,13 +162,13 @@ export default Ember.Controller.extend(CurrentUser, {
                     if (this.get('currentUser.createdTests'))
                         this.get('currentUser.createdTests').pushObject(this.get('model'));
                     /*if (this.get('inJoinProcess')) {
-                        this.send('addNotification', 'welcome', 'Congratulations!',
-                            'You are now ready to start creating tests on MyCQs!');
-                        setTimeout(function () {
-                            this.get('joinController').set('joinStep.completed', true);
-                        }.bind(this), 2500);
-                    }
-                    EventTracker.recordEvent(EventTracker.CREATED_TEST, test);*/
+                     this.send('addNotification', 'welcome', 'Congratulations!',
+                     'You are now ready to start creating tests on MyCQs!');
+                     setTimeout(function () {
+                     this.get('joinController').set('joinStep.completed', true);
+                     }.bind(this), 2500);
+                     }
+                     EventTracker.recordEvent(EventTracker.CREATED_TEST, test);*/
                 }.bind(this),
                 function (error) {
                     this.send('decrementLoadingItems');
@@ -174,13 +176,15 @@ export default Ember.Controller.extend(CurrentUser, {
                 }.bind(this));
         },
 
-        saveTest: function () {
+        saveTest: function (callback) {
             if (!this.get('model.category.content')) {
                 console.log("No category set!");
                 return;
             }
             this.send('incrementLoadingItems');
             var questions = this.get('model.questions.content.content');
+            if (!questions)
+                questions = new Ember.A();
             for (var i = 0; i < questions.length; i++) {
                 var question = questions[i];
                 if (question.get('isDirty')) {
@@ -189,15 +193,19 @@ export default Ember.Controller.extend(CurrentUser, {
                 }
             }
             this.set('model.title', this.get('model.title').capitalize());
-            this.get('model').save().then(
+            var promise = this.get('model').save().then(
                 function () {
                     this.send('decrementLoadingItems');
                     this.send('addNotification', 'saved', this.get('model.title'), 'All changes saved!');
+                    if (callback)
+                        callback(true);
                 }.bind(this),
 
                 function (error) {
                     this.send('decrementLoadingItems');
                     this.send('addNotification', 'error', 'An error occurred', "Could not save test!");
+                    if (callback)
+                        callback(false);
                 }.bind(this));
         },
 
@@ -222,27 +230,6 @@ export default Ember.Controller.extend(CurrentUser, {
             this.toggleProperty('showQuestionListCheckBoxes');
         },
 
-        // @deprecated
-        deleteObjectsInActionBar: function (objects) {
-            /*
-             * Delete questions from test.
-             * We are not DELETING the questions
-             * permanently. They will remain on
-             * the server unlinked to this test.
-             * Save the test with the updated
-             * 'questions' array
-             */
-            var length = objects.length;
-            this.get('questions').removeObjects(objects);
-            this.get('model').save();
-            this.set('showQuestionListCheckBoxes', false);
-            this.transitionToRoute('edit');
-            if (length === 1)
-                this.send('addNotification', 'deleted', 'Question deleted!', 'Your test is up to date!');
-            else
-                this.send('addNotification', 'deleted', length + ' questions deleted!', 'Your test is up to date!');
-        },
-
         /**
          * @Action Delete Question
          * - Only un-linking question from test
@@ -255,6 +242,14 @@ export default Ember.Controller.extend(CurrentUser, {
             this.get('model').save();
             this.transitionToRoute('edit.index');
             this.send('addNotification', 'deleted', 'Question deleted!', 'Your test is up to date!');
+        },
+
+        finishedEditing: function () {
+            var callback = function (isSaved) {
+                if (isSaved)
+                    this.transitionToRoute('testInfo', this.get('model.slug'));
+            }.bind(this);
+            this.send('saveTest', callback);
         },
 
         goToJoinStep: function (step, callback) {

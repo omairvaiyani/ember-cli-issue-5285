@@ -1,16 +1,16 @@
 <!-- Author info -->
 <h4>AUTHOR</h4>
-{{#link-to 'user' author.slug tagName="a"}}{{render 'profile-image' author}}{{/link-to}}
+{{#link-to 'user' model.author.slug tagName="a"}}{{profile-picture user=model.author}}{{/link-to}}
 <div class="author-info inline-block">
-    <p>{{#link-to 'user' author.slug tagName="a"}}{{author.name}}{{/link-to}}</p>
+    <p>{{#link-to 'user' model.author.slug tagName="a"}}{{model.author.name}}{{/link-to}}</p>
 
-    <p>{{author.numberOfFollowers}} followers</p>
+    <p>{{model.author.numberOfFollowers}} followers</p>
     {{#if currentUser}}
         {{#unless isCurrentUser}}
             {{#if isFollowing}}
-                <p><a href="javascript:void(0)" {{action 'unfollowUser' author.content}}>Following</a></p>
+                <p><a href="javascript:void(0)" {{action 'unfollowUser' model.author.content}}>Following</a></p>
             {{else}}
-                <p><a href="javascript:void(0)" {{action 'followUser' author.content}}>Follow</a></p>
+                <p><a href="javascript:void(0)" {{action 'followUser' model.author.content}}>Follow</a></p>
             {{/if}}
         {{/unless}}
     {{/if}}
@@ -20,24 +20,28 @@
 <h4>CATEGORY</h4>
 
 <p>
-    {{#if category.parentCategorySlug}}
-        {{#link-to 'category' category.parentCategorySlug}}{{category.parentCategoryName}}{{/link-to}} /
-        {{#link-to 'subcategory' category.parentCategorySlug category.slug}}{{category.name}}{{/link-to}}
+    {{#if model.category.parentCategorySlug}}
+        {{#link-to 'category' model.category.parentCategorySlug}}
+            {{model.category.parentCategoryName}}
+        {{/link-to}} /
+        {{#link-to 'subcategory' model.category.parentCategorySlug model.category.slug}}
+            {{model.category.name}}
+        {{/link-to}}
     {{else}}
-        {{#link-to 'category' category.slug}}{{category.name}}{{/link-to}}
+        {{#link-to 'category' model.category.slug}}{{model.category.name}}{{/link-to}}
     {{/if}}
 </p>
 
-{{#if description.length}}
+{{#if model.description.length}}
     <hr>
     <h4>TEST DESCRIPTION</h4>
 
-    <p>{{description}}</p>
+    <p>{{model.description}}</p>
 {{/if}}
 <hr>
 <h4>STATS</h4>
 
-<p>{{totalQuestions}} <strong>multiple choice {{pluralize-word "question" totalQuestions ""}}</strong></p>
+<p>{{model.questions.length}} <strong>multiple choice {{pluralize-word "question" model.questions.length ""}}</strong></p>
 
 <p>{{math-round averageScore 2}}% community average</p>
 

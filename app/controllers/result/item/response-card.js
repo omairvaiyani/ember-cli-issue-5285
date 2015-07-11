@@ -14,7 +14,7 @@ export default Ember.ObjectController.extend(EachItem, CurrentUser, {
                 option.set('isCorrect', jsonOption.isCorrect);
                 option.set('phrase', jsonOption.phrase);
                 option.set('numberOfTimesChosen', jsonOption.numberOfTimesChosen);
-                option.set('isChosen', this.get('chosenAnswer') === option.get('phrase'));
+                option.set('isChosen', this.get('chosenOptions').contains(option.get('phrase')));
 
                 if (option.get('phrase')) {
                     nonEmptyOptions.pushObject(option);

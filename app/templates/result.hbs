@@ -1,22 +1,23 @@
-<div class="container">
+<div class="container margin-bottom-16 ">
     <div class="card padding-bottom-0">
         <h3>Result overview</h3>
         <hr>
         <div class="row margin-bottom-16">
             <div class="col-md-12">
-                <h4>You scored <span style="font-size:x-large;">{{math-round score}}%</span>{{#if test}}
-                    &nbsp;in {{#link-to 'testInfo' test.slug tagName='a'}}{{test.title}}{{/link-to}}{{/if}}.
-                    <small class="pull-right text-center">Test taken {{from-now time=createdAt}}</small>
+                <h4>You scored <span style="font-size:x-large;">{{math-round model.score}}%</span>{{#if model.test}}
+                    &nbsp;in {{#link-to 'testInfo' model.test.slug tagName='a'}}
+                    {{model.test.title}}{{/link-to}}{{/if}}.
+                    <small class="pull-right text-center">Test taken {{from-now time=model.createdAt}}</small>
                 </h4>
             </div>
         </div>
-        {{#unless isGenerated}}
+        {{#unless model.isGenerated}}
             <div class="row margin-bottom-16">
                 <div class="col-md-6">
                     <p>Community average</p>
-                    {{progress-bar progress=test.averageScore}}
+                    {{progress-bar progress=model.test.averageScore}}
                     <p>Your score</p>
-                    {{progress-bar progress=score}}
+                    {{progress-bar progress=model.score}}
                 </div>
                 {{#if currentUser.privateData.isPremium}}
                     <div class="col-md-6">
@@ -60,17 +61,18 @@
             </div>
         </div>
     </div>
-    <div clas="row">
+    <div class="row">
         <article class="col-xs-3 margin-top-16">
-            {{#if test.group.name.length}}
-                {{#link-to 'group' test.group.slug}}<i class="fa fa-arrow-circle-o-left margin-right-8"></i>
-                    Go to {{test.group.name}}{{/link-to}}
+            {{#if model.test.group.name.length}}
+                {{#link-to 'group' model.test.group.slug}}<i class="fa fa-arrow-circle-o-left margin-right-8"></i>
+                    Go to {{model.test.group.name}}{{/link-to}}
             {{/if}}
-            {{#if isProfessional}}
+            {{#if model.isProfessional}}
                 {{#link-to 'medical'}}<i class="fa fa-arrow-circle-o-left margin-right-8"></i>
                     Generate another test{{/link-to}}
             {{/if}}
         </article>
+        {{!--
         <article class="col-xs-6 margin-top-16">
             <div class="pull-right">
                 <div class="checkbox inline-top margin-right-8">
@@ -82,38 +84,39 @@
                 </div>
             </div>
         </article>
+        --}}
     </div>
     <div class="row">
         <div class="col-md-9">
             {{#if isTabAll}}
-                {{#each allResponses as |response|}}
+                {{#each allResponses itemController="result.item.response-card" as |response|}}
                     {{partial 'result/response-card'}}
                 {{/each}}
             {{/if}}
             {{#if isTabCorrect}}
-                {{#each correctResponses as |response|}}
+                {{#each correctResponses itemController="result.item.response-card" as |response|}}
                     {{partial 'result/response-card'}}
                 {{/each}}
             {{/if}}
             {{#if isTabIncorrect}}
-                {{#each incorrectResponses as |response|}}
+                {{#each incorrectResponses itemController="result.item.response-card" as |response|}}
                     {{partial 'result/response-card'}}
                 {{/each}}
             {{/if}}
         </div>
         <div class="col-md-3 margin-top-16 col-fix-right">
-            {{#if test.author}}
+            {{#if model.test.author}}
                {{!-- {{render 'user/-author-info' test}}--}}
             {{/if}}
             {{!-- {{partial 'application/social-sharing'}} --}}
             {{#if categoryTests.length}}
-                <div class="card margin-top-16">
-                    <h4 class="margin-bottom-16">Recent {{test.category.name}} tests</h4>
+                <div class="card">
+                    <h4 class="margin-bottom-16">Recent {{model.test.category.name}} tests</h4>
                     {{#each categoryTest in categoryTests}}
                         <p>{{#link-to 'test' categoryTest.slug}}{{categoryTest.title}}{{/link-to}}</p>
                     {{/each}}
-                    <p class="margin-top-16">{{#link-to 'category' test.category.slug}}
-                        See all {{test.category.totalTests}} tests!
+                    <p class="margin-top-16">{{#link-to 'category' model.test.category.slug}}
+                        See all {{model.test.category.totalTests}} tests!
                     {{/link-to}}</p>
                 </div>
             {{/if}}

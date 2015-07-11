@@ -1,21 +1,22 @@
 import Ember from 'ember';
 import EventTracker from  '../utils/event-tracker';
+import ParseHelper from '../utils/parse-helper';
 
-export default
-Ember.Route.extend({
+export default Ember.Route.extend({
     model: function (params) {
         var where = {
             "objectId": params.attempt_id
         };
-        return this.store.findQuery('attempt', {where: JSON.stringify(where), include:'responses.questions'})
-            .then(function(results) {
-            if(!results.objectAt(0)) {
-                this.transitionTo('notFound');
-                return;
-            } else {
-                return results.objectAt(0);
-            }
-        }.bind(this));
+        return ParseHelper.findQuery(this, 'Attempt', {where: where, include: "responses,questions"})
+            .then(function (result) {
+                console.dir(result);
+                if (result.objectAt(0))
+                    return result.objectAt(0);
+                else
+                    console.log("Result not found, handle it.");
+            }, function (error) {
+                console.dir(error);
+            });
     },
 
     setupController: function (controller, model) {

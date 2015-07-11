@@ -1,7 +1,7 @@
 import Ember from 'ember';
 
 function pluralizeWord(singular, value, plural) {
-    if (value < 2)
+    if (value === 1)
         return singular;
     else if (plural.length)
         return plural;

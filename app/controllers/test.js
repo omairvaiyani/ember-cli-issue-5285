@@ -97,10 +97,12 @@ export default Ember.Controller.extend(CurrentUser, {
             this.set('currentQuestion.shuffledOptions.' + optionIndex + '.isSelected', true);
             this.set('currentQuestion.isAnswered', true);
 
-            if (this.get('currentQuestionIndex') < (this.get('shuffledQuestions.length') - 1))
-                this.incrementProperty('currentQuestionIndex');
-            else
-                this.send('confirmFinish');
+            setTimeout(function () {
+                if (this.get('currentQuestionIndex') < (this.get('shuffledQuestions.length') - 1))
+                    this.incrementProperty('currentQuestionIndex');
+                else
+                    this.send('confirmFinish');
+            }.bind(this), 250);
         },
         previousQuestion: function () {
             if (this.get('currentQuestionIndex'))

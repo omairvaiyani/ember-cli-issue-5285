@@ -3,13 +3,10 @@ import ParseHelper from '../utils/parse-helper';
 import CurrentUser from '../mixins/current-user';
 import EventTracker from '../utils/event-tracker';
 
-export default Ember.ObjectController.extend(CurrentUser, {
+export default Ember.Controller.extend(CurrentUser, {
     didPass: function () {
-        if (this.get('score') < 40)
-            return false;
-        else
-            return true;
-    }.property('score'),
+        return this.get('model.score') > 39;
+    }.property('model.score'),
 
     /*
      * bind-attr css requires
@@ -21,19 +18,14 @@ export default Ember.ObjectController.extend(CurrentUser, {
     isTabIncorrect: false,
 
     allResponses: function () {
-        if (!this.get('questionsLoaded')) {
-            this.get('questions').then(function () {
-                this.set('questionsLoaded', true);
-            }.bind(this));
-            return;
-        }
+        console.dir(this.get('model.responses'));
         var allResponses = [];
-        this.get('questions').forEach(function (question) {
+        this.get('model.questions').forEach(function (question) {
             var questionHasResponse = false;
-            this.get('responses').forEach(function (response) {
-                var responseQuestionId = response.get('_data.question.id');
+            this.get('model.responses').forEach(function (response) {
+                var responseQuestionId = response.get('_data.question');
                 if (!responseQuestionId)
-                    responseQuestionId = response.get('question.id');
+                    responseQuestionId = response.get('_data.question');
                 if (responseQuestionId === question.get('id')) {
                     allResponses.pushObject(response);
                     questionHasResponse = true;
@@ -43,35 +35,35 @@ export default Ember.ObjectController.extend(CurrentUser, {
                 var responseForSkippedQuestion = this.store.createRecord('response', {
                     question: question,
                     isCorrect: false,
-                    chosenAnswer: "",
-                    correctAnswer: question.get('options').findBy('isCorrect', true).phrase
+                    chosenOptions: [],
+                    correctionOptions: [question.get('options').findBy('isCorrect', true).phrase]
                 });
                 allResponses.pushObject(responseForSkippedQuestion);
             }
         }.bind(this));
 
         return allResponses;
-    }.property('responses.length', 'questionsLoaded'),
+    }.property('model.responses.length'),
 
     correctResponses: function () {
-        return this.get('responses').filterBy('isCorrect', true);
-    }.property('responses.length'),
+        return this.get('model.responses').filterBy('isCorrect', true);
+    }.property('model.responses.length'),
 
     incorrectResponses: function () {
         if (this.get('allResponses.length'))
             return this.get('allResponses').filterBy('isCorrect', false);
         else
-            return this.get('responses').filterBy('isCorrect', false);
+            return this.get('model.responses').filterBy('isCorrect', false);
     }.property('allResponses.length'),
 
     categoryTests: [],
     getCategoryTests: function () {
-        if (!this.get('test.category.id') || this.get('categoryTests.length'))
+        if (!this.get('model.test.category.id') || this.get('categoryTests.length'))
             return;
 
         var categoryTests = [],
             where = {
-                'category': ParseHelper.generatePointer(this.get('test.category.content'))
+                'category': ParseHelper.generatePointer(this.get('model.test.category.content'))
             };
         this.store.findQuery('test', {where: JSON.stringify(where), order: '-createdAt', limit: '5'})
             .then(function (tests) {
@@ -79,10 +71,10 @@ export default Ember.ObjectController.extend(CurrentUser, {
                 this.get('categoryTests').addObjects(tests);
             }.bind(this));
         return categoryTests;
-    }.observes('test.category.id'),
+    }.observes('model.test.category.id'),
 
     showResponseStatisticsDidChange: function () {
-        if(this.get('showResponseStatistics'))
+        if (this.get('showResponseStatistics'))
             EventTracker.recordEvent(EventTracker.VIEWED_RESPONSE_STATISTICS, this.get('model'));
     }.observes('showResponseStatistics'),
 
@@ -107,13 +99,14 @@ export default Ember.ObjectController.extend(CurrentUser, {
 
         addQuestionsToSRS: function (addAll) {
             var questionIds = [];
-            this.get('responses').forEach(function (response) {
+            this.get('model.responses').forEach(function (response) {
                 if (addAll ||
                     response.get('correctAnswer') !== response.get('chosenAnswer'))
                     questionIds.push(response.get('question.id'));
             });
             this.send('incrementLoadingItems');
             this.set('addingOrRemovingQuestionsToSRS', true);
+            // TODO switch to ParseHelper
             Parse.Cloud.run('addOrRemoveQuestionsToSRSTest', {questionIds: questionIds, task: 0})
                 .then(function () {
                     this.set('addingOrRemovingQuestionsToSRS', false);
@@ -125,7 +118,7 @@ export default Ember.ObjectController.extend(CurrentUser, {
                     this.set('addingOrRemovingQuestionsToSRS', false);
                     this.send('decrementLoadingItems');
                     this.send('addNotification', 'error', 'There was an error!', 'We could not add questions' +
-                    ' to your spaced repetition at this time.');
+                        ' to your spaced repetition at this time.');
                 }.bind(this));
         },
         removeQuestionsFromSRS: function () {
@@ -135,6 +128,7 @@ export default Ember.ObjectController.extend(CurrentUser, {
             });
             this.send('incrementLoadingItems');
             this.set('addingOrRemovingQuestionsToSRS', true);
+            // TODO switch to ParseHelper
             Parse.Cloud.run('addOrRemoveQuestionsToSRSTest', {questionIds: questionIds, task: 1})
                 .then(function () {
                     this.set('addingOrRemovingQuestionsToSRS', false);
@@ -146,7 +140,7 @@ export default Ember.ObjectController.extend(CurrentUser, {
                     this.set('addingOrRemovingQuestionsToSRS', false);
                     this.send('decrementLoadingItems');
                     this.send('addNotification', 'error', 'There was an error!', 'We could not remove questions' +
-                    ' to your spaced repetition at this time.');
+                        ' to your spaced repetition at this time.');
                 }.bind(this));
         }
     }

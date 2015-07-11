@@ -1,13 +1,14 @@
-<div class='container'>
+<div class='container margin-bottom-16'>
     <div class='card'>
         <h1 class="modal-title">
-            <small>MCQ Test</small> {{title}}</h1>
+            {{model.title}}
+        </h1>
         {{partial 'test/test-info-base'}}
         <div class='row'>
             <div class='col-md-6 margin-top-16'>
                 {{#if currentUser}}
                     {{#if isCurrentUser}}
-                        {{#link-to 'edit' slug classNames='btn btn-primary'}}Edit{{/link-to}}
+                        {{#link-to 'edit' model.slug classNames='btn btn-primary'}}Edit{{/link-to}}
                     {{else}}
                         {{#if currentUser.isMobileUser}}
                             <button type="button" class="btn btn-info"
@@ -19,7 +20,7 @@
                 {{/if}}
             </div>
             <div class='col-md-6 margin-top-16'>
-                {{#link-to 'test' slug tagName='a' classNames="btn btn-primary pull-right"}}Take test{{/link-to}}
+                {{#link-to 'test' model.slug tagName='a' classNames="btn btn-primary pull-right"}}Take test{{/link-to}}
             </div>
         </div>
     </div>

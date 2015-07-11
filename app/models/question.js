@@ -16,6 +16,7 @@ export default DS.Model.extend(ParseMixin, {
     quality: DS.attr('number'),
     difficulty: DS.attr('number'),
     tags: DS.attr(),
+    isPublic: DS.attr('boolean'),
     parseClassName: function() {
         return "Question";
     }

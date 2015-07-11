@@ -196,6 +196,7 @@ export default Ember.Controller.extend({
 
             window.scrollTo(0, 0);
             this.send("refreshRoute");
+            this.set('isPublic', this.get('test.isPublic'));
             /*
              * If user added an image,
              * save that first, add it to the question,

@@ -80,6 +80,13 @@ export default {
             return "";
     },
 
+    /**
+     * @Function Cloud Function
+     * @param context
+     * @param functionName
+     * @param params
+     * @returns {Ember.RSVP.Promise}
+     */
     cloudFunction: function (context, functionName, params) {
         var adapter = context.store.adapterFor('application');
         return new Ember.RSVP.Promise(function (resolve, reject) {
@@ -93,6 +100,15 @@ export default {
         });
     },
 
+    /**
+     * @Function Upload File
+     * Needed as Parse.File.save will not work.
+     * Check mixins/image-upload for use example.
+     * @param context
+     * @param {String} name
+     * @param data
+     * @returns {Ember.RSVP.Promise}
+     */
     uploadFile: function (context, name, data) {
         var adapter = context.store.adapterFor('application');
         return new Ember.RSVP.Promise(function (resolve, reject) {
@@ -107,6 +123,31 @@ export default {
     },
 
     /**
+     * @Function Find Query
+     * This allows us to use include parameters
+     * properly.
+     * @param context
+     * @param {String} type
+     * @param {Object} params
+     * @returns {Ember.RSVP.Promise}
+     */
+    findQuery: function (context, type, params) {
+        var adapter = context.store.adapterFor('application'),
+            className = Ember.String.capitalize(Ember.String.camelize(type));
+        return new Ember.RSVP.Promise(function (resolve, reject) {
+            adapter.ajax("https://api.parse.com/1/classes/" + className,
+                "GET", {data: params}).then(
+                function (response) {
+                    var result = this.extractRawPayload(context.store, type, response.results);
+                    resolve(result);
+                }.bind(this),
+                function (reason) {
+                    reject(reason.responseJSON);
+                });
+        }.bind(this));
+    },
+
+    /**
      * @Function Extract Raw Payload
      *
      * Takes a restful response from Parse
@@ -118,7 +159,7 @@ export default {
      *
      * @param {DS.Store} store
      * @param {String} type e.g. 'test', 'parse-user'
-     * @param {Array or Object} payload
+     * @param {Array || Object} payload
      * @returns {*}
      */
     extractRawPayload: function (store, type, payload) {
