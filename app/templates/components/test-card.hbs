@@ -19,20 +19,25 @@
                         {{#link-to 'category' test.category.slug}}{{test.category.name}}{{/link-to}}
                     {{/if}}
                 </p>
+                <p class="small margin-bottom-8">
+                    {{test.questions.length}} {{pluralize-word 'question' test.questions.length}}
+                </p>
 
                 <p class="margin-bottom-8">{{text-preview test.description 100}}</p>
-                <div>
-                    {{#tool-tipster title="Total Questions" class='inline-block margin-right-16'}}
-                        <strong>Q</strong>{{test.questions.length}}
-                    {{/tool-tipster}}
-                    {{#tool-tipster title="Memory Strength" class='inline-block'}}
-                        <strong>M</strong>{{test.memoryStrength}}
-                    {{/tool-tipster}}
-                </div>
             </div>
 
             <div class="right inline-top">
-                <div class="author">{{profile-picture user=test.author}}</div>
+                <div class="memory-strength inline-block margin-right-16">
+                    {{#tool-tipster title="Memory Strength" class='inline-block'}}
+                        <img src="/img/brain-small.png" class="inline-block"/>
+                        <span>
+                            {{test.memoryStrength}}
+                        </span>
+                    {{/tool-tipster}}
+                </div>
+                <div class="author inline-block">
+                    {{profile-picture user=test.author}}
+                </div>
                 {{#link-to 'test' test.slug tagName='button' class="btn btn-primary"}}Take Test{{/link-to}}
                 <div class="btn-group">
                     <button type="button" class="btn btn-default btn-flat dropdown-toggle" data-toggle="dropdown"

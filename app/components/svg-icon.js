@@ -19,7 +19,7 @@ Ember.Component.extend({
     width: 30,
     margin: 'none',
 
-    colour: "#4f6640",
+    colour: "#e73a3d",
 
     setColour: function () {
         if(this.get('colour') === white) {

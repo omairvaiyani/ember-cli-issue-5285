@@ -63,6 +63,11 @@ export default Ember.Component.extend({
 
         removeTest: function () {
             this.get('parentController').send('removeCommunityTest', this.get('test'));
+        },
+
+        openModal: function () {
+            this.get('parentController').send('openModal', 'browse/modal/test-info', 'browse.modal.testInfo',
+                this.get('test'));
         }
     }
 });
