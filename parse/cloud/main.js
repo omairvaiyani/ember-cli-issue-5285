@@ -89,6 +89,8 @@ Parse.Object.createFromJSON = function (payload, className) {
     }
     _.each(payload, function (object) {
         var parseObject = new Parse.Object(className);
+        if(object.id)
+            parseObject.id = object.id;
         _.each(_.pairs(object), function (pair) {
             var key = pair[0], value = pair[1];
             if (_.contains(parseObject.getPointerFields(), key))
@@ -423,6 +425,7 @@ var UserEvent = Parse.Object.extend("UserEvent", {
     }
 }, {
     CREATED_TEST: "createdTest",
+    ADDED_QUESTION: "addedQuestion",
 
     /**
      * @Deprecated
@@ -726,6 +729,19 @@ var Test = Parse.Object.extend("Test", {
  *
  **/
 var Question = Parse.Object.extend("Question", {
+    /**
+     * @Function Get Pointer Fields
+     * Allows ambiguous functions
+     * to create instances from payload
+     * data and differentiate between
+     * direct fields and embedded
+     * fields. Use case:
+     * Parse.Object.createFromJSON.
+     * @returns {string[]}
+     */
+    getPointerFields: function () {
+        return [];
+    },
     /**
      * @Property stem
      * @returns {string}
@@ -1965,6 +1981,68 @@ Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
  * @return {UserEvent} userEvent
  */
 Parse.Cloud.define('createNewTest', function (request, response) {
+    var user = request.user,
+        testPayload = request.params.test,
+        test = Parse.Object.createFromJSON(testPayload, "Test"),
+        userEvent;
+
+    test.save().then(function () {
+        // Creates a new userEvent and increments the users points.
+        return UserEvent.newEvent(UserEvent.CREATED_TEST, test, user);
+    }).then(function (result) {
+        userEvent = result;
+        return user.checkLevelUp();
+    }).then(function (didLevelUp) {
+        return response.success({userEvent: userEvent, test: test, didLevelUp: didLevelUp});
+    }, function (error) {
+        response.error(error);
+    });
+});
+/**
+ * @CloudFunction Add Question to Test
+ * Saves a new question. Creates a user
+ * event (hence why Test object is needed).
+ * But, does not add question to test.
+ * This is because the client will need
+ * to update the local Test record anyways.
+ *
+ * So just send the question payload, a Test
+ * pointer, and expect back a userEvent
+ * and question. Add the saved question to
+ * the Test.questions - save the test normally
+ * from the client.
+ *
+ * @param {Parse.Pointer<Test>} test
+ * @param {Question} question
+ * @return {UserEvent} userEvent
+ */
+Parse.Cloud.define('saveNewQuestion', function (request, response) {
+    var user = request.user,
+        test = request.params.test,
+        questionPayload = request.params.question,
+        question = Parse.Object.createFromJSON(questionPayload, "Question"),
+        userEvent;
+
+    question.save().then(function () {
+        // Creates a new userEvent and increments the users points.
+        return UserEvent.newEvent(UserEvent.ADDED_QUESTION, [question, test], user);
+    }).then(function (result) {
+        userEvent = result;
+        return user.checkLevelUp();
+    }).then(function (didLevelUp) {
+        return response.success({userEvent: userEvent, question: question, didLevelUp: didLevelUp});
+    }, function (error) {
+        response.error(error);
+    });
+});
+/**
+ * @CloudFunction New User Event
+ * @param {Array<Parse.Object>} objects
+ * @param {Array<String>} objectTypes
+ * @param {String} type
+ * @return {UserEvent} userEvent
+ */
+Parse.Cloud.define('newUserEvent', function (request, response) {
     var user = request.user,
         testPayload = request.params.test,
         test = Parse.Object.createFromJSON(testPayload, "Test"),

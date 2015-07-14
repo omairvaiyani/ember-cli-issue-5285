@@ -161,14 +161,6 @@ export default Ember.Controller.extend(CurrentUser, {
                     this.send('decrementLoadingItems');
                     if (this.get('currentUser.createdTests'))
                         this.get('currentUser.createdTests').pushObject(this.get('model'));
-                    /*if (this.get('inJoinProcess')) {
-                     this.send('addNotification', 'welcome', 'Congratulations!',
-                     'You are now ready to start creating tests on MyCQs!');
-                     setTimeout(function () {
-                     this.get('joinController').set('joinStep.completed', true);
-                     }.bind(this), 2500);
-                     }
-                     EventTracker.recordEvent(EventTracker.CREATED_TEST, test);*/
                 }.bind(this),
                 function (error) {
                     this.send('decrementLoadingItems');

@@ -1,13 +1,14 @@
 import Ember from 'ember';
 import validateQuestion from '../utils/validate-question';
 import EmberParseAdapter from '../adapters/parse';
-
+import ParseHelper from '../utils/parse-helper';
+import CurrentUser from '../mixins/current-user';
 /*
  * EditQuestionController for the following routes:
  * - edit.newQuestion
  * - editQuestion
  */
-export default Ember.Controller.extend({
+export default Ember.Controller.extend(CurrentUser, {
     needs: ['application', 'create'],
 
     featherEditor: null,
@@ -203,6 +204,7 @@ export default Ember.Controller.extend({
              * then save the question
              */
             if (this.get('imageFile.base64.length')) {
+                // TODO deal with images properly, look at the else part (cloud function to save)
                 /*
                  * Check if our temporary imageFile object has been used
                  * If so, use the Parse SDK to save the image first.
@@ -222,21 +224,30 @@ export default Ember.Controller.extend({
                     }.bind(this)).then(function (test) {
                         this.send('decrementLoadingItems');
                         this.set('saving', false);
-                        this.send('addNotification', 'saved', 'Question saved!', 'This test now has ' + this.get('questions.length') + ' questions.');
+                        this.send('addNotification', 'saved', 'Question saved!', 'This test now has '
+                            + this.get('questions.length') + ' questions.');
                     }.bind(this));
             } else {
                 /*
                  * No image, just save the question
                  */
-                this.get('model').save()
-                    .then(function (question) {
-                        this.get('questions').pushObject(question);
-                        return this.get('test').save();
-                    }.bind(this)).then(function (test) {
-                        this.send('decrementLoadingItems');
-                        this.set('saving', false);
-                        this.send('addNotification', 'saved', 'Question saved!', 'This test now has ' + this.get('questions.length') + ' questions.');
-                    }.bind(this));
+                var promise = ParseHelper.cloudFunction(this, 'saveNewQuestion', {question: this.get('model'),
+                test: ParseHelper.generatePointer(this.get('test'), 'Test')});
+
+                promise.then(function (response) {
+                    // TODO deal with response ({userEvent, didLevelUp, test})
+                    var question = ParseHelper.extractRawPayload(this.store, 'question', response.question);
+                    this.get('currentUser').reload(); // update points, level, badges etc
+                    this.get('questions').pushObject(question);
+                    return this.get('test').save();
+                }.bind(this)).then(function () {
+                    this.send('decrementLoadingItems');
+                    this.set('saving', false);
+                    this.send('addNotification', 'saved', 'Question saved!', 'This test now has '
+                        + this.get('questions.length') + ' questions.');
+                }.bind(this), function (error) {
+                    console.dir(error);
+                });
             }
         },
         updateQuestion: function (shouldCheckValidity) {

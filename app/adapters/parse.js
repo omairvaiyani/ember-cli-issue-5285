@@ -108,7 +108,7 @@ EmberParseAdapter.Serializer = DS.RESTSerializer.extend({
                                 // This occurs when request was made with the include query param.
                                 delete item.__type;
                                 delete item.className;
-                                item.id = item.objectId;
+                                item.id = item.objectId; // id is read-only
                                 delete item.objectId;
                                 item.type = relationship.type;
                                 serializer.normalizeAttributes(relationship.type, item);

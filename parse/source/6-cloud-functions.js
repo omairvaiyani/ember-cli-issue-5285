@@ -152,6 +152,68 @@ Parse.Cloud.define('createNewTest', function (request, response) {
         response.error(error);
     });
 });
+/**
+ * @CloudFunction Add Question to Test
+ * Saves a new question. Creates a user
+ * event (hence why Test object is needed).
+ * But, does not add question to test.
+ * This is because the client will need
+ * to update the local Test record anyways.
+ *
+ * So just send the question payload, a Test
+ * pointer, and expect back a userEvent
+ * and question. Add the saved question to
+ * the Test.questions - save the test normally
+ * from the client.
+ *
+ * @param {Parse.Pointer<Test>} test
+ * @param {Question} question
+ * @return {UserEvent} userEvent
+ */
+Parse.Cloud.define('saveNewQuestion', function (request, response) {
+    var user = request.user,
+        test = request.params.test,
+        questionPayload = request.params.question,
+        question = Parse.Object.createFromJSON(questionPayload, "Question"),
+        userEvent;
+
+    question.save().then(function () {
+        // Creates a new userEvent and increments the users points.
+        return UserEvent.newEvent(UserEvent.ADDED_QUESTION, [question, test], user);
+    }).then(function (result) {
+        userEvent = result;
+        return user.checkLevelUp();
+    }).then(function (didLevelUp) {
+        return response.success({userEvent: userEvent, question: question, didLevelUp: didLevelUp});
+    }, function (error) {
+        response.error(error);
+    });
+});
+/**
+ * @CloudFunction New User Event
+ * @param {Array<Parse.Object>} objects
+ * @param {Array<String>} objectTypes
+ * @param {String} type
+ * @return {UserEvent} userEvent
+ */
+Parse.Cloud.define('newUserEvent', function (request, response) {
+    var user = request.user,
+        testPayload = request.params.test,
+        test = Parse.Object.createFromJSON(testPayload, "Test"),
+        userEvent;
+
+    test.save().then(function () {
+        // Creates a new userEvent and increments the users points.
+        return UserEvent.newEvent(UserEvent.CREATED_TEST, test, user);
+    }).then(function (result) {
+        userEvent = result;
+        return user.checkLevelUp();
+    }).then(function (didLevelUp) {
+        return response.success({userEvent: userEvent, test: test, didLevelUp: didLevelUp});
+    }, function (error) {
+        response.error(error);
+    });
+});
 /*
  *//**
  * @CloudFunction Save Objects

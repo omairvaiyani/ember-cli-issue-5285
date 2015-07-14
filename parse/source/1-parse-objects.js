@@ -89,6 +89,8 @@ Parse.Object.createFromJSON = function (payload, className) {
     }
     _.each(payload, function (object) {
         var parseObject = new Parse.Object(className);
+        if(object.id)
+            parseObject.id = object.id;
         _.each(_.pairs(object), function (pair) {
             var key = pair[0], value = pair[1];
             if (_.contains(parseObject.getPointerFields(), key))
@@ -423,6 +425,7 @@ var UserEvent = Parse.Object.extend("UserEvent", {
     }
 }, {
     CREATED_TEST: "createdTest",
+    ADDED_QUESTION: "addedQuestion",
 
     /**
      * @Deprecated
@@ -726,6 +729,19 @@ var Test = Parse.Object.extend("Test", {
  *
  **/
 var Question = Parse.Object.extend("Question", {
+    /**
+     * @Function Get Pointer Fields
+     * Allows ambiguous functions
+     * to create instances from payload
+     * data and differentiate between
+     * direct fields and embedded
+     * fields. Use case:
+     * Parse.Object.createFromJSON.
+     * @returns {string[]}
+     */
+    getPointerFields: function () {
+        return [];
+    },
     /**
      * @Property stem
      * @returns {string}
