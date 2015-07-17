@@ -12,8 +12,7 @@
                 </button>
                 {{#link-to 'index' tagName='a' classNames='navbar-brand navbar-brand-adjust'}}
                     {{#if loadingItems}}
-                        <img src="img/loading-big.gif" height="30px" class="logo-icon"/>
-                        {{parseConfig.appName}}
+                        <img src="img/loading-wide.gif" height="30px" class="logo-icon"/>
                     {{else}}
                         <img src="img/icon-header.png" height="30px" class="logo-icon"/>
                     {{/if}}
@@ -81,11 +80,11 @@
                     {{/unless}}
 
                 </ul>
-
+                {{!--
                 <form class="navbar-form navbar-left" {{action 'activateSiteSearch'}} role="search">
-                    <input type="text" class="form-control col-lg-8" placeholder="Search">
+                    <input type="text" class="form-control col-lg-8" placeholder="SEARCH">
                 </form>
-
+                --}}
                 <ul class="nav navbar-nav navbar-right">
                     {{#if currentUser}}
                         {{partial 'application/navbar/user-messages'}}
@@ -93,7 +92,8 @@
                         {{partial 'application/navbar/current-user'}}
                     {{else}}
                         <li>
-                            <a href="javascript:void(0)" {{action 'openModal' 'application/modal/login-or-register' 'application'}}>
+                            <a href="javascript:void(0)" {{action 'openModal' 'application/modal/login-or-register'
+                            'application'}}>
                                 Log in
                             </a>
                         </li>

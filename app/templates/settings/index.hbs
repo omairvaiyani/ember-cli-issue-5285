@@ -1,0 +1,31 @@
+<h3>General settings</h3>
+
+<form class="form-horizontal">
+    <div class="form-group">
+        <label for="email" class="col-sm-6 control-label">Email</label>
+        <div class="col-sm-6">
+            {{input type="email" class="form-control" id="email" placeholder="Email"
+            value=currentUser.email}}
+        </div>
+    </div>
+    <hr>
+    <div class="form-group">
+        <label class="col-sm-6 control-label">Password</label>
+        <div class="col-sm-6">
+            <button class="btn btn-default" {{action 'openModal' 'application/modal/change-password'
+            'application'}}>CHANGE</button>
+        </div>
+    </div>
+    <hr>
+    <div class="form-group">
+        <label for="marketing" class="col-sm-6 control-label">Receive promotional emails</label>
+        <div class="col-sm-6">
+            <div class="togglebutton togglebutton-info">
+                <label class="pull-right">
+                    {{input type="checkbox" checked=currentUser.receivePromotionalEmails}}
+                    <span class="toggle"></span>
+                </label>
+            </div>
+        </div>
+    </div>
+</form>

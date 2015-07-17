@@ -31,7 +31,7 @@ export default Ember.Controller.extend({
         switch (path) {
             case "index":
                 title += defaultTitle;
-                if(!this.get('currentUser'))
+                if (!this.get('currentUser'))
                     this.set('navbarTransparent', true);
                 break;
             case "user.index":
@@ -304,6 +304,12 @@ export default Ember.Controller.extend({
         }
     }.observes('notifications.@each.closed'),
 
+    changePassword: {
+        oldPassword: "",
+        newPassword: "",
+        confirmPassword: ""
+    },
+
     actions: {
         incrementLoadingItems: function () {
             this.incrementProperty('loadingItems');
@@ -343,6 +349,29 @@ export default Ember.Controller.extend({
                 this.transitionToRoute('testInfo', object.slug);
             else if (className === 'parse-user')
                 this.transitionToRoute('user', object.slug);
+        },
+
+        changePassword: function (callback) {
+            if (this.get('changePassword.newPassword') !== this.get('changePassword.confirmPassword')) {
+                this.send('addNotification', 'error', 'Error!', "Your new passwords do not match.");
+                if(callback)
+                    callback(new Parse.Promise.error());
+                return;
+            }
+
+            var promise = ParseHelper.cloudFunction(this, 'changePassword', {
+                oldPassword: this.get('changePassword.oldPassword'),
+                newPassword: this.get('changePassword.newPassword')
+            }).then(function () {
+                this.send('addNotification', 'saved', 'Success!', "Your password has been changed.");
+                this.send('closeModal');
+            }.bind(this), function (response) {
+                console.dir(response);
+                this.send('addNotification', 'error', 'Error!', response.error);
+            }.bind(this));
+
+            if (callback)
+                callback(promise);
         }
     }
 });

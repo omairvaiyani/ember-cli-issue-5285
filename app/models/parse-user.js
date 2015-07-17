@@ -107,6 +107,8 @@ var ParseUser =  DS.Model.extend(ParseMixin, {
     srCompletedAttempts: DS.attr(),
     srNextDue: DS.attr('parse-date'),
     uniqueResponses: new Ember.A(),
+    srActivated: DS.attr('boolean'),
+    srIntensityLevel: DS.attr('number'),
 
     /*
      * Stats
@@ -129,6 +131,11 @@ var ParseUser =  DS.Model.extend(ParseMixin, {
      */
     fbEducation: DS.attr(),
     educationCohort: DS.belongsTo('education-cohort', {async: true}),
+
+    /*
+     * Misc.
+     */
+    receivePromotionalEmails: DS.attr('boolean'),
 
     /*
      * Local

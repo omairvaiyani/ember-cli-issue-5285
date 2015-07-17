@@ -235,16 +235,13 @@ export default Ember.Controller.extend(CurrentUser, {
                 test: ParseHelper.generatePointer(this.get('test'), 'Test')});
 
                 promise.then(function (response) {
-                    // TODO deal with response ({userEvent, didLevelUp, test})
                     var question = ParseHelper.extractRawPayload(this.store, 'question', response.question);
-                    this.get('currentUser').reload(); // update points, level, badges etc
+                    this.send('newUserEvent', response);
                     this.get('questions').pushObject(question);
                     return this.get('test').save();
                 }.bind(this)).then(function () {
                     this.send('decrementLoadingItems');
                     this.set('saving', false);
-                    this.send('addNotification', 'saved', 'Question saved!', 'This test now has '
-                        + this.get('questions.length') + ' questions.');
                 }.bind(this), function (error) {
                     console.dir(error);
                 });
@@ -270,9 +267,6 @@ export default Ember.Controller.extend(CurrentUser, {
                     var image = new EmberParseAdapter.File(image.name(), image.url());
                     this.set('model.image', image);
                     return this.get('model').save();
-                }.bind(this), function (error) {
-                    alert(error);
-                    // The file either could not be read, or could not be saved to Parse.
                 }.bind(this)).then(function () {
                     this.set('updating', false);
                     this.send('decrementLoadingItems');

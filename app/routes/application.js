@@ -186,8 +186,8 @@ export default Ember.Route.extend({
 
             var email = controller.get('loginUser.email'),
                 password = controller.get('loginUser.password'),
-                ParseUser = this.store.modelFor('parse-user');
-            data = {
+                ParseUser = this.store.modelFor('parse-user'),
+                data = {
                 username: email,
                 password: password
             };
@@ -555,6 +555,18 @@ export default Ember.Route.extend({
                 closed: false
             });
             this.get('applicationController.notifications').pushObject(notification);
+        },
+
+        newUserEvent: function (payload) {
+            if (!payload.userEvent)
+                return;
+            var userEvent = ParseHelper.extractRawPayload(this.store, 'user-event', payload.userEvent);
+            this.get('currentUser').reload().then(function () {
+                this.send('addNotification', 'points',
+                    '+' + userEvent.get('pointsTransacted') + "XP | " + userEvent.get('label'),
+                    'Total: ' + this.get('currentUser.points') +
+                    "xp / " + this.get('currentUser.level.title'));
+            }.bind(this));
         },
 
         activateSiteSearch: function () {

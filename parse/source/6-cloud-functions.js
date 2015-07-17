@@ -94,7 +94,7 @@ Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
          promises.push(groups = groupsQuery.find());*/
     }
     Parse.Promise.when(promises).then(function (config, categories, createdTests, savedTests, uniqueResponses,
-    educationCohort) {
+                                                educationCohort) {
         var result = {
             config: config,
             categories: categories,
@@ -591,6 +591,45 @@ Parse.Cloud.define('setEducationCohortUsingFacebook', function (request, respons
         });
     }, function (error) {
         return response.error(error);
+    });
+});
+
+/**
+ * @CloudFunction Change Password
+ * Simple function to change a user's
+ * password by request. Must send
+ * old (current) password and a new
+ * password which fits our password
+ * characteristics criteria (to be
+ * fetched via config).
+ *
+ * @param {String} oldPassword
+ * @param {String} newPassword
+ * @return {String} status
+ */
+Parse.Cloud.define('changePassword', function (request, response) {
+    Parse.Cloud.useMasterKey();
+    var oldPassword = request.params.oldPassword,
+        newPassword = request.params.newPassword,
+        user = request.user;
+
+    if (!user)
+        return response.error("Unauthorised request. Please log in.");
+
+    if (!oldPassword || !newPassword)
+        return response.error("You must send an old and new password.");
+
+    Parse.User.logIn(user.getUsername(), oldPassword).then(function () {
+        // correct
+        user.set('password', newPassword);
+        return user.save();
+    }, function () {
+        // incorrect
+        return Parse.Promise.error("The old password you provided was incorrect.");
+    }).then(function () {
+        response.success("Password changed.");
+    }, function (error) {
+        response.error(error);
     });
 });
 

@@ -1,0 +1,33 @@
+<div class="container">
+    <section class="row">
+        <article class="col-sm-3">
+
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <h3 class="panel-title">SETTINGS</h3>
+                </div>
+                <ul class="nav sidebar-nav">
+                    {{#link-to 'settings.index' tagName='li'}}
+                        {{#link-to 'settings.index'}}
+                            General
+                        {{/link-to}}
+                    {{/link-to}}
+                    {{#link-to 'settings.study' tagName='li'}}
+                        {{#link-to 'settings.study'}}
+                            Study
+                        {{/link-to}}
+                    {{/link-to}}
+                    <li>
+                        <a href="#">Close Account</a>
+                    </li>
+                </ul>
+            </div>
+        </article>
+
+        <article class="col-sm-7 col-sm-push-1 col-fix-right">
+            <div class="well settings-well">
+               {{outlet}}
+            </div>
+        </article>
+    </section>
+</div>

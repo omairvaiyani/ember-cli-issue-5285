@@ -83,10 +83,20 @@ Router.map(function () {
     this.resource('passwordReset', {path: 'password-reset/:password_reset_id'});
 
     /*
+     * @Deprecated
      * Premium dashboard. e.g. SRS
      */
     this.resource('dashboard', function () {
         this.route('admin');
+    });
+
+    /*
+     * Settings:
+     * Account
+     * Billing
+     * Spaced Practice
+     */
+    this.resource('settings', function () {
     });
 
     /*
@@ -101,15 +111,18 @@ Router.map(function () {
      */
     this.route('notFound', {path: '/not-found'});
     this.route('fourOhFour', {path: '*path'});
+    this.route('settings', function() {
+      this.route('study');
+    });
 });
 
 /*Router.reopen({
-    notifyGoogleAnalytics: function () {
-        return ga('send', 'pageview', {
-            'page': this.get('url'),
-            'title': window.document.title
-        });
-    }.on('didTransition')
-});*/
+ notifyGoogleAnalytics: function () {
+ return ga('send', 'pageview', {
+ 'page': this.get('url'),
+ 'title': window.document.title
+ });
+ }.on('didTransition')
+ });*/
 
 export default Router;

@@ -152,9 +152,8 @@ export default Ember.Controller.extend(CurrentUser, {
             var promise = ParseHelper.cloudFunction(this, 'createNewTest', {test: this.get('model')});
 
             promise.then(function (response) {
-                    // TODO deal with response ({userEvent, didLevelUp, test})
+                    this.send('newUserEvent', response);
                     var test = ParseHelper.extractRawPayload(this.store, 'test', response.test);
-                    this.get('currentUser').reload(); // update points, level, badges etc
                     this.set('model', test);
                     this.set('categorySelectionInput', '');
                     this.transitionToRoute('edit.newQuestion', test.get('slug'));

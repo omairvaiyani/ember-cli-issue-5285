@@ -21,7 +21,7 @@ colorPrimary-A100 = #F8C4C5
 colorPrimary-A200 = #F39D9E
 colorPrimary-A400 = #EB5B5D
 colorPrimary-A700 = #AD2C2E
-
+colorSecondary = #e41d72
 
 colorBackground = rgb(237, 241, 242)
 colorDarkBackground = #212b3a
@@ -88,6 +88,19 @@ body
   position: absolute;
   left: -9999em;
 }
+
+.form-horizontal
+  .control-label
+    text-align left !important
+  .btn
+    margin 0 1px
+    float right
+    &:hover, &:active
+      box-shadow none !important
+  input[type=range]
+    margin-top 8px
+    cursor pointer
+
 .memory-strength
   position relative
   text-align center
@@ -112,6 +125,9 @@ body
     right 0
     color: colorPrimary-400;
     font-size: 12px;
+
+.modal-title
+  color colorPrimary-600
 
 .my-tab {
   text-align: center;
@@ -215,8 +231,8 @@ input[type="range"] {
   -webkit-appearance: none !important; /*Needed to reset default slider styles */
   width: 100%;
   height: 15px;
-  background-color: #A3CD99;
-  border: 1px solid #97c68b;
+  background-color: colorPrimary-100;
+  border: 1px solid colorPrimary-100;
   border-radius: 10px;
   margin: auto;
   transition: all 0.3s ease;
@@ -226,9 +242,9 @@ input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none !important;
   width: 20px;
   height: 20px;
-  background-color: #579E81;
+  background-color: colorPrimary-600;
   border-radius: 30px;
-  box-shadow: 0px 0px 1px #376c58;
+  box-shadow: 0px 0px 1px colorPrimary-900;
   transition: all 0.5s ease;
 }
 
@@ -247,6 +263,7 @@ input[type="range"]::-webkit-slider-thumb {
 .pagination {
   margin 0 !important
 }
+
 .pagination
   li
     a, a:hover
@@ -256,7 +273,6 @@ input[type="range"]::-webkit-slider-thumb {
       background colorPrimary
       border-color colorPrimary
       cursor pointer
-
 
 .circular-image
   height: 120px;
@@ -275,6 +291,11 @@ input[type="range"]::-webkit-slider-thumb {
   vertical-align middle
   margin-right 8px
   border-radius 50%
+
+.sidebar-nav
+  li.active, a.active, li.active:hover, a.active:hover
+    background-color colorPrimary-A100
+    color colorPrimary-800
 
 /*
  * Touch Slider
@@ -396,8 +417,8 @@ input[type="range"]::-webkit-slider-thumb {
   padding: 5px 10px 5px 45px;
   border: 2px solid transparent;
   border-radius: 10px;
-  background-color: rgba(79, 102, 64, 0.85);
-  color: rgb(255, 255, 255);
+  background-color: colorPrimary-800;
+  color: white
   font-size: 12px;
   text-shadow: 1px 1px 3px rgb(0, 0, 0);
   box-shadow: 0px 0px 15px -5px rgb(0, 0, 0);
@@ -571,6 +592,16 @@ input[type="range"]::-webkit-slider-thumb {
 .navbar-main
   height 40px
   color white !important
+  text-transform uppercase
+  font-size 12px
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.8);
+  background: colorPrimary;
+  background: -moz-linear-gradient(left, colorPrimary 0%, colorSecondary 100%);
+  background: -webkit-gradient(linear, left top, right top, color-stop(0%, colorPrimary), color-stop(100%, colorSecondary));
+  background: -webkit-linear-gradient(left, colorPrimary 0%, colorSecondary 100%);
+  background: -o-linear-gradient(left, colorPrimary 0%, colorSecondary 100%);
+  background: -ms-linear-gradient(left, colorPrimary 0%, colorSecondary 100%);
+  background: linear-gradient(to right, colorPrimary 0%, colorSecondary 100%);
   .navbar-brand
     height 40px
     line-height 20px
@@ -581,6 +612,10 @@ input[type="range"]::-webkit-slider-thumb {
 .navbar-nav > li > a
   padding-top 15px !important
   padding-bottom 15px !important
+
+.navbar-default.navbar .dropdown-menu li > a, .navbar.navbar .dropdown-menu li > a
+  text-shadow 0 0 0
+  font-size 12px
 
 .navbar-brand .logo-spinner {
   display: inline-block;
@@ -781,8 +816,8 @@ hr.user-message-item-separator {
   background-size: cover;
   height: 100%;
   margin-top: -20px;
-  margin-left: 0px;
-  margin-right: 0px;
+  margin-left: 0
+  margin-right: 0;
 }
 
 .full-width-cover-container .cover-info {
@@ -793,6 +828,12 @@ hr.user-message-item-separator {
   right: 16px;
   bottom: 16px;
 }
+
+.settings-well
+  h3
+    color colorPrimary
+    margin-top 0
+    margin-bottom marginPrimary
 
 /* TEMPLATE - APPLICATION */
 .action-bar {
@@ -857,13 +898,13 @@ hr.user-message-item-separator {
   padding-bottom: 30px;
   padding-top: 100px;
   margin-bottom: 0
-  background: #e94e1b;
-  background: -moz-linear-gradient(left, #e94e1b 0%, #e41d72 100%);
-  background: -webkit-gradient(linear, left top, right top, color-stop(0%, #e94e1b), color-stop(100%, #e41d72));
-  background: -webkit-linear-gradient(left, #e94e1b 0%, #e41d72 100%);
-  background: -o-linear-gradient(left, #e94e1b 0%, #e41d72 100%);
-  background: -ms-linear-gradient(left, #e94e1b 0%, #e41d72 100%);
-  background: linear-gradient(to right, #e94e1b 0%, #e41d72 100%);
+  background: colorPrimary;
+  background: -moz-linear-gradient(left, colorPrimary 0%, colorSecondary 100%);
+  background: -webkit-gradient(linear, left top, right top, color-stop(0%, colorPrimary), color-stop(100%, colorSecondary));
+  background: -webkit-linear-gradient(left, colorPrimary 0%, colorSecondary 100%);
+  background: -o-linear-gradient(left, colorPrimary 0%, colorSecondary 100%);
+  background: -ms-linear-gradient(left, colorPrimary 0%, colorSecondary 100%);
+  background: linear-gradient(to right, colorPrimary 0%, colorSecondary 100%);
 }
 
 /*
@@ -1480,7 +1521,7 @@ hr.user-message-item-separator {
   .btn.btn-icon
     padding 6px 6px
     line-height 1px
-    /*border-radius 50% !important*/
+  /*border-radius 50% !important*/
   .btn.dropdown-toggle:hover
     background-color transparent
   .btn.btn-icon:hover
