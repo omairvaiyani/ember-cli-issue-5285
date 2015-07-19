@@ -4,8 +4,9 @@
 
     <div class="form-group">
         <label class="col-sm-6 control-label">Activate 'Spaced Practice'</label>
+
         <div class="col-sm-6">
-            <div class="togglebutton togglebutton-primary">
+            <div class="togglebutton togglebutton-success">
                 <label class="pull-right">
                     {{input type="checkbox" checked=currentUser.srActivated}}
                     <span class="toggle"></span>
@@ -16,9 +17,61 @@
 
     <div class="form-group">
         <label class="col-sm-6 control-label">Study intensity</label>
+
         <div class="col-sm-5">
             {{input type="range" min=1 max=4 value=currentUser.srIntensityLevel class='inline-block'}}
         </div>
-        <label class="col-sm-1 control-label"><strong></{{currentUser.srIntensityLevel}}</strong></label>
+        <label class="col-sm-1 control-label"><strong>{{currentUser.srIntensityLevel}}</strong></label>
     </div>
+
+    <h4>Practice schedule</h4>
+    <section class="row margin-bottom-8">
+        <article class="col-sm-4">
+            <strong>Day</strong>
+        </article>
+        {{#each slotsOfTheDay as |slot|}}
+        <article class="col-sm-2">
+            {{slot.times}}
+        </article>
+        {{/each}}
+    </section>
+    {{#each week as |day|}}
+        <section class="row text-center margin-bottom-8">
+            <article class="col-sm-4 text-left">
+                {{day.label}}
+            </article>
+            <article class="col-sm-2">
+                <div class="togglebutton togglebutton-info">
+                    <label class="">
+                        {{input type="checkbox" checked=day.morning.active disabled=day.morning.disabled}}
+                        <span class="toggle"></span>
+                    </label>
+                </div>
+            </article>
+            <article class="col-sm-2">
+                <div class="togglebutton togglebutton-info">
+                    <label class="">
+                        {{input type="checkbox" checked=day.earlyAfternoon.active disabled=day.earlyAfternoon.disabled}}
+                        <span class="toggle"></span>
+                    </label>
+                </div>
+            </article>
+            <article class="col-sm-2">
+                <div class="togglebutton togglebutton-info">
+                    <label class="">
+                        {{input type="checkbox" checked=day.lateAfternoon.active disabled=day.lateAfternoon.disabled}}
+                        <span class="toggle"></span>
+                    </label>
+                </div>
+            </article>
+            <article class="col-sm-2">
+                <div class="togglebutton togglebutton-info">
+                    <label class="">
+                        {{input type="checkbox" checked=day.evening.active disabled=day.evening.disabled}}
+                        <span class="toggle"></span>
+                    </label>
+                </div>
+            </article>
+        </section>
+    {{/each}}
 </form>
