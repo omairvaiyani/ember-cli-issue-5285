@@ -37,7 +37,7 @@
     </section>
     {{#each week as |day|}}
         <section class="row text-center margin-bottom-8">
-            <article class="col-sm-4 text-left">
+            <article class="col-sm-3 text-left">
                 {{day.label}}
             </article>
             <article class="col-sm-2">
@@ -71,6 +71,9 @@
                         <span class="toggle"></span>
                     </label>
                 </div>
+            </article>
+            <article class="col-sm-1">
+                {{day.activeSlots}}/{{maxSlotsPerDay}}
             </article>
         </section>
     {{/each}}

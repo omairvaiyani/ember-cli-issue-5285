@@ -5,15 +5,15 @@ export default Ember.Controller.extend(CurrentUser, {
     init: function () {
         var week = [];
         _.each(this.get('daysOfTheWeek'), function (dayName) {
-            var day = {
-                label: dayName
-            };
+            var day = new Ember.Object();
+            day.set('label', dayName);
+            day.set('activeSlots', 0);
             _.each(this.get('slotsOfTheDay'), function (slot) {
-                day[slot.label] = {
-                    time: slot.times,
-                    disabled: true,
-                    activate: false
-                };
+                var slotData = new Ember.Object();
+                slotData.set('time', slot.times);
+                slotData.set('disabled', true);
+                slotData.set('active', false);
+                day.set(slot.label, slotData);
             });
             week.push(day);
         }.bind(this));
@@ -28,9 +28,42 @@ export default Ember.Controller.extend(CurrentUser, {
 
     week: new Ember.A(),
 
-    updateScheduleBasedOnIntensity: function () {
-        this.get('week').forEach(function (day) {
+    maxSlotsPerDay: function () {
+        return this.get('currentUser.srIntensityLevel');
+    }.property('currentUser.srIntensityLevel'),
 
+    updateScheduleBasedOnIntensity: function () {
+
+        this.get('week').forEach(function (day) {
+            day.set('morning.disabled', false);
+            day.set('morning.active', true);
+            if (this.get('currentUser.srIntensityLevel') > 1) {
+                day.set('lateAfternoon.active', true);
+                day.set('lateAfternoon.disabled', false);
+            }
+            if (this.get('currentUser.srIntensityLevel') > 2) {
+                day.set('earlyAfternoon.active', true);
+                day.set('earlyAfternoon.disabled', false);
+            }
+            if (this.get('currentUser.srIntensityLevel') > 3) {
+                day.set('evening.active', true);
+                day.set('evening.disabled', false);
+            }
         }.bind(this));
-    }.observes('currentUser.srIntensityLevel')
+
+    }.observes('currentUser.srIntensityLevel'),
+
+    setActiveSlotsPerDay: function () {
+        console.log("Active slots...");
+        this.get('week').forEach(function (day) {
+            var activeSlots = 0;
+            _.each(this.get('slotsOfTheDay'), function (slot) {
+                if (day.get(slot.label + ".active"))
+                    activeSlots++;
+            });
+            console.log(day.get('label')+" "+activeSlots);
+            day.set('activeSlots', activeSlots);
+        }.bind(this));
+    }.observes('week.@each.morning.active', 'week.@each.earlyAfternoon.active',
+        'week.@each.lateAfternoon.active', 'week.@each.evening.active')
 });
