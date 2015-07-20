@@ -2469,7 +2469,7 @@ Parse.Cloud.define('changePassword', function (request, response) {
         // correct
         user.set('password', newPassword);
         return user.save();
-    }, function (error) {
+    }, function () {
         // incorrect
         return Parse.Promise.error("The old password you provided was incorrect.");
     }).then(function () {
@@ -2477,6 +2477,55 @@ Parse.Cloud.define('changePassword', function (request, response) {
     }, function (error) {
         response.error(error);
     });
+});
+
+/**
+ * @CloudFunction Activate Spaced Repetition for User
+ * Activates spaced practice for the user and
+ * sets defaults such as intensity, notification
+ * methods and do not disturb times.
+ * @return {Object} {srDoNotDisturbTimes}
+ */
+Parse.Cloud.define('activateSpacedRepetitionForUser', function (request, response) {
+    var user = request.user;
+    if (!user)
+        return response.error("Must be logged in.");
+
+    user.set('srActivated', true);
+    user.set('srIntensityLevel', 2);
+    user.set('srNotifyByEmail', true);
+    // TODO check if user has app.
+    user.set('srNotifyByPush', false);
+
+    var doNotDisturbTimes = [];
+    Parse.Config.get().then(function (config) {
+        var dailySlots = config.get('srDailySlots'),
+            week = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
+        _.each(week, function (dayName) {
+            var day = {
+                "label": dayName,
+                "slots": []
+            };
+            _.each(dailySlots, function (slot) {
+                var daySlot = _.clone(slot);
+                if (( (dayName === "Thursday" || dayName === "Friday") && slot.label === "evening") ||
+                    ( (dayName === "Saturday" || dayName === "Sunday") && slot.label === "morning"))
+                    daySlot.active = true;
+                else
+                    daySlot.active = false;
+                day.slots.push(daySlot);
+            });
+            doNotDisturbTimes.push(day);
+        });
+        user.set('srDoNotDisturbTimes', doNotDisturbTimes);
+        return user.save();
+    }).then(function () {
+        response.success();
+    }, function (error) {
+        response.error(error);
+    });
+
 });
 
 /**

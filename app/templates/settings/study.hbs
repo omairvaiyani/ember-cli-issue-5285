@@ -1,80 +1,138 @@
 <h3>Study settings</h3>
 
 <form class="form-horizontal">
+    {{#unless currentUser.srActivated}}
+        <div class="form-group">
+            <article class="col-sm-6">
+                <h5 class="control-label">Activate 'Spaced Practice'<br>
+                    <small>Watch the video below and then tap the toggle on your right.</small>
+                </h5>
+            </article>
 
-    <div class="form-group">
-        <label class="col-sm-6 control-label">Activate 'Spaced Practice'</label>
-
-        <div class="col-sm-6">
-            <div class="togglebutton togglebutton-success">
-                <label class="pull-right">
-                    {{input type="checkbox" checked=currentUser.srActivated}}
-                    <span class="toggle"></span>
-                </label>
+            <div class="col-sm-6">
+                <div class="togglebutton togglebutton-success">
+                    <label class="margin-top-16 pull-right">
+                        {{input type="checkbox" checked=currentUser.srActivated}}
+                        <span class="toggle"></span>
+                    </label>
+                </div>
             </div>
         </div>
-    </div>
+    {{/unless}}
+    {{#if currentUser.srActivated}}
+        {{#unless preparingSpacedRepetition}}
+            <div class="form-group">
+                <article class="col-sm-6">
+                    <h5 class="control-label">Study intensity <br>
+                        <small>Increase this as you come closer to exams. It makes us more strict when deciding
+                            whether you've remembered your revision material properly!
+                        </small>
+                    </h5>
+                </article>
 
-    <div class="form-group">
-        <label class="col-sm-6 control-label">Study intensity</label>
+                <div class="col-sm-5 margin-top-16">
+                    {{input type="range" min=1 max=4 value=currentUser.srIntensityLevel class='inline-block'}}
+                </div>
+                <label class="col-sm-1 margin-top-16 control-label">
+                    <strong>{{currentUser.srIntensityLevel}}</strong>
+                </label>
+            </div>
 
-        <div class="col-sm-5">
-            {{input type="range" min=1 max=4 value=currentUser.srIntensityLevel class='inline-block'}}
-        </div>
-        <label class="col-sm-1 control-label"><strong>{{currentUser.srIntensityLevel}}</strong></label>
-    </div>
+            <div class="form-group">
+                <article class="col-sm-6">
+                    <h5 class="control-label">Time Zone <br>
+                        <small>Because afternoon to us might be bed time for you.</small>
+                    </h5>
+                </article>
 
-    <h4>Practice schedule</h4>
-    <section class="row margin-bottom-8">
-        <article class="col-sm-4">
-            <strong>Day</strong>
-        </article>
-        {{#each slotsOfTheDay as |slot|}}
-        <article class="col-sm-2">
-            {{slot.times}}
-        </article>
-        {{/each}}
-    </section>
-    {{#each week as |day|}}
-        <section class="row text-center margin-bottom-8">
-            <article class="col-sm-3 text-left">
-                {{day.label}}
-            </article>
-            <article class="col-sm-2">
-                <div class="togglebutton togglebutton-info">
-                    <label class="">
-                        {{input type="checkbox" checked=day.morning.active disabled=day.morning.disabled}}
-                        <span class="toggle"></span>
-                    </label>
+                <div class="col-sm-4 col-sm-push-2">
+                    {{view 'select' content=timeZones value=currentUser.timeZone class="form-control"}}
                 </div>
-            </article>
-            <article class="col-sm-2">
-                <div class="togglebutton togglebutton-info">
-                    <label class="">
-                        {{input type="checkbox" checked=day.earlyAfternoon.active disabled=day.earlyAfternoon.disabled}}
-                        <span class="toggle"></span>
-                    </label>
+            </div>
+
+            <div class="form-group">
+                <article class="col-sm-6">
+                    <h5 class="control-label">Email <br>
+                        <small>Reminders and updates will be emailed to you at {{currentUser.email}}.</small>
+                    </h5>
+                </article>
+
+                <div class="col-sm-6">
+                    <div class="togglebutton togglebutton-info">
+                        <label class="margin-top-16 pull-right">
+                            {{input type="checkbox" checked=currentUser.srNotifyByEmail}}
+                            <span class="toggle"></span>
+                        </label>
+                    </div>
                 </div>
-            </article>
-            <article class="col-sm-2">
-                <div class="togglebutton togglebutton-info">
-                    <label class="">
-                        {{input type="checkbox" checked=day.lateAfternoon.active disabled=day.lateAfternoon.disabled}}
-                        <span class="toggle"></span>
-                    </label>
+            </div>
+            <div class="form-group">
+                <article class="col-sm-6">
+                    <h5 class="control-label">Push Notifications <br>
+                        <small>Reminders and updates will be sent to your smartphone/tablet.</small>
+                    </h5>
+                </article>
+
+                <div class="col-sm-6">
+                    <div class="togglebutton togglebutton-info">
+                        <label class="margin-top-16 pull-right">
+                            {{input type="checkbox" checked=currentUser.srNotifyByPush}}
+                            <span class="toggle"></span>
+                        </label>
+                    </div>
                 </div>
-            </article>
-            <article class="col-sm-2">
-                <div class="togglebutton togglebutton-info">
-                    <label class="">
-                        {{input type="checkbox" checked=day.evening.active disabled=day.evening.disabled}}
-                        <span class="toggle"></span>
-                    </label>
+            </div>
+
+            <h5>Do not disturb <br>
+                <small>Everyone deserves a social life. Toggle on the hours and days when you <strong>do not</strong>
+                    want to revise. We'll avoid sleeping hours anyways.
+                </small>
+            </h5>
+            <section class="row margin-bottom-8">
+                <article class="col-sm-4">
+                    <strong>Day</strong>
+                </article>
+                {{#each slotsOfTheDay as |slot|}}
+                    <article class="col-sm-2">
+                        {{slot.times}}
+                    </article>
+                {{/each}}
+            </section>
+            {{#each currentUser.srDoNotDisturbTimes as |day dayIndex|}}
+                <section class="row text-center margin-bottom-8">
+                    <article class="col-sm-4 text-left">
+                        {{day.label}}
+                    </article>
+                    {{#each day.slots as |slot slotIndex|}}
+                    <article class="col-sm-2">
+                        <div class="togglebutton togglebutton-info">
+                            <label {{action 'toggleSlot' slotIndex dayIndex}}>
+                                {{input type="checkbox" checked=slot.active}}
+                                <span class="toggle"></span>
+                            </label>
+                        </div>
+                    </article>
+                    {{/each}}
+                </section>
+            {{/each}}
+            <div class="form-group">
+                <article class="col-sm-6">
+                    <h5 class="control-label">Turn off 'Spaced Practice' <br>
+                        <small>If you're getting too many notifications, try lowering your Study Intensity.</small>
+                    </h5>
+                </article>
+
+                <div class="col-sm-6">
+                    <div class="togglebutton togglebutton-danger">
+                        <label class="margin-top-16 pull-right">
+                            {{input type="checkbox" checked=currentUser.srActivated}}
+                            <span class="toggle"></span>
+                        </label>
+                    </div>
                 </div>
-            </article>
-            <article class="col-sm-1">
-                {{day.activeSlots}}/{{maxSlotsPerDay}}
-            </article>
-        </section>
-    {{/each}}
+            </div>
+        {{else}}
+            <h4 class="text-center">Preparing ...</h4>
+        {{/unless}}
+    {{/if}}
 </form>

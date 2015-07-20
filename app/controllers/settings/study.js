@@ -1,69 +1,53 @@
 import Ember from 'ember';
 import CurrentUser from '../../mixins/current-user';
+import ParseHelper from '../../utils/parse-helper';
 
 export default Ember.Controller.extend(CurrentUser, {
-    init: function () {
-        var week = [];
-        _.each(this.get('daysOfTheWeek'), function (dayName) {
-            var day = new Ember.Object();
-            day.set('label', dayName);
-            day.set('activeSlots', 0);
-            _.each(this.get('slotsOfTheDay'), function (slot) {
-                var slotData = new Ember.Object();
-                slotData.set('time', slot.times);
-                slotData.set('disabled', true);
-                slotData.set('active', false);
-                day.set(slot.label, slotData);
-            });
-            week.push(day);
-        }.bind(this));
-        this.get('week').clear();
-        this.get('week').addObjects(week);
-    },
+    needs: ['application'],
+
+    preparingSpacedRepetition: false,
 
     daysOfTheWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
 
-    slotsOfTheDay: [{label: "morning", times: "8am - 11am"}, {label: "earlyAfternoon", times: "12pm - 2pm"},
-        {label: "lateAfternoon", times: "3pm - 5pm"}, {label: "evening", times: "7pm - 10pm"}],
+    timeZones: function () {
+        return moment.tz.names();
+    }.property(),
 
-    week: new Ember.A(),
+    slotsOfTheDay: function () {
+        return this.get('controllers.application.parseConfig.srDailySlots');
+    }.property('controllers.application.parseConfig.srDailySlots'),
 
-    maxSlotsPerDay: function () {
-        return this.get('currentUser.srIntensityLevel');
-    }.property('currentUser.srIntensityLevel'),
+    srActivatedDidChange: function () {
+        if (this.get('currentUser.srActivated'))
+            this.send('activateSpacedRepetition');
+    }.observes('currentUser.srActivated'),
 
-    updateScheduleBasedOnIntensity: function () {
+    // TODO update ember-data to make this work
+    /*currentUserDidDirty: function () {
 
-        this.get('week').forEach(function (day) {
-            day.set('morning.disabled', false);
-            day.set('morning.active', true);
-            if (this.get('currentUser.srIntensityLevel') > 1) {
-                day.set('lateAfternoon.active', true);
-                day.set('lateAfternoon.disabled', false);
-            }
-            if (this.get('currentUser.srIntensityLevel') > 2) {
-                day.set('earlyAfternoon.active', true);
-                day.set('earlyAfternoon.disabled', false);
-            }
-            if (this.get('currentUser.srIntensityLevel') > 3) {
-                day.set('evening.active', true);
-                day.set('evening.disabled', false);
-            }
-        }.bind(this));
+    }.observes('currentUser.isDirty'),*/
 
-    }.observes('currentUser.srIntensityLevel'),
-
-    setActiveSlotsPerDay: function () {
-        console.log("Active slots...");
-        this.get('week').forEach(function (day) {
-            var activeSlots = 0;
-            _.each(this.get('slotsOfTheDay'), function (slot) {
-                if (day.get(slot.label + ".active"))
-                    activeSlots++;
-            });
-            console.log(day.get('label')+" "+activeSlots);
-            day.set('activeSlots', activeSlots);
-        }.bind(this));
-    }.observes('week.@each.morning.active', 'week.@each.earlyAfternoon.active',
-        'week.@each.lateAfternoon.active', 'week.@each.evening.active')
+    actions: {
+        activateSpacedRepetition: function () {
+            if (this.get('preparingSpacedRepetition'))
+                return;
+            this.set('preparingSpacedRepetition', true);
+            this.send('incrementLoadingItems');
+            ParseHelper.cloudFunction(this, 'activateSpacedRepetitionForUser', {})
+                .then(function () {
+                    return this.get('currentUser').reload();
+                }.bind(this)).then(function () {
+                    this.set('preparingSpacedRepetition', false);
+                    this.send('decrementLoadingItems');
+                    this.get('currentUser').save();
+                }.bind(this), function (error) {
+                    console.dir(error);
+                    this.send('decrementLoadingItems');
+                }.bind(this));
+        },
+        toggleSlot: function (slotIndex, dayIndex) {
+            var slot = this.get('currentUser.srDoNotDisturbTimes')[dayIndex].slots[slotIndex];
+            Ember.set(slot, 'active', !slot.active);
+        }
+    }
 });

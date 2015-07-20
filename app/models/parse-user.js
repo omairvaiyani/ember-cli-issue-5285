@@ -109,6 +109,9 @@ var ParseUser =  DS.Model.extend(ParseMixin, {
     uniqueResponses: new Ember.A(),
     srActivated: DS.attr('boolean'),
     srIntensityLevel: DS.attr('number'),
+    srNotifyByEmail: DS.attr('boolean'),
+    srNotifyByPush: DS.attr('boolean'),
+    srDoNotDisturbTimes: DS.attr(),
 
     /*
      * Stats
