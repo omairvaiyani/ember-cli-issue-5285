@@ -22,10 +22,6 @@ module.exports = function (grunt) {
                         dest: '/assets/'
                     },
                     {
-                        src: 'dist/img/favicon/*',
-                        dest: '/img/favicon/'
-                    },
-                    {
                         src: 'dist/style/*',
                         dest: '/style/'
                     },
@@ -38,8 +34,8 @@ module.exports = function (grunt) {
                         dest: '/img/'
                     },
                     {
-                        src: 'dist/img/features/*',
-                        dest: '/img/features/'
+                        src: 'dist/img/favicons/*',
+                        dest: '/img/favicons/'
                     }
                 ]
             }
