@@ -76,6 +76,9 @@ body
   color white
   background-color colorPrimary !important
 
+.input-lg
+  height 32px
+
 .btn-facebook
   width 80%
   padding 8px
@@ -294,7 +297,6 @@ input[type="range"]::-webkit-slider-thumb {
   border-radius 50%
 
 
-
 .sidebar-nav
   li.active, a.active, li.active:hover, a.active:hover
     background-color colorPrimary-A100
@@ -355,6 +357,8 @@ input[type="range"]::-webkit-slider-thumb {
   background: transparent;
 }
 
+.textarea-holder
+  padding marginSecondary
 /*
  * Global spinner for cross-page items
  */
@@ -525,21 +529,18 @@ input[type="range"]::-webkit-slider-thumb {
   border-left-color: #3cb8ff;
 }
 
-.tags {
+.tags
   list-style: none;
-  margin: 0;
+  margin 4px 0 0 0
   overflow: hidden;
   padding: 0;
-}
+  li
+    float: left;
 
-.tags li {
-  float: left;
-}
-
-.tag {
-  background: #eee;
+.tag
+  background: colorPrimary-200;
   border-radius: 3px 0 0 3px;
-  color: #999;
+  color: whitesmoke;
   display: inline-block;
   height: 26px;
   line-height: 26px;
@@ -549,39 +550,55 @@ input[type="range"]::-webkit-slider-thumb {
   text-decoration: none;
   -webkit-transition: color 0.2s;
   cursor pointer
-}
+  &::before
+    background: white;
+    border-radius: 10px;
+    box-shadow: inset 0 1px rgba(0, 0, 0, 0.25);
+    content: '';
+    height: 6px;
+    left: 10px;
+    position: absolute;
+    width: 6px;
+    top: 10px;
+  &::after
+    background: white;
+    border-bottom: 13px solid transparent;
+    border-left: 10px solid colorPrimary-200;
+    border-top: 13px solid transparent;
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+  &:hover
+    background-color: colorPrimary-400;
+    color: white;
+    &::after
+      border-left-color: colorPrimary-400;
+  &.default
+    background-color lighten(grey, 40)
+    color lighten(grey, 15)
+    &::after
+      border-left-color  lighten(grey, 40)
+    &:hover
+      background-color  lighten(grey, 38)
+      color lighten(grey, 10)
+      &::after
+        border-left-color  lighten(grey, 38)
+  input[type=text]
+    background transparent
+    border none
+    width 100px
+  .add-tag
+    cursor pointer
+    color colorPrimary-400
+    transition all 0.2s
+    &:hover
+      color colorPrimary
+    &.close-tag
+      transform: rotate(45deg);
 
-.tag::before {
-  background: #fff;
-  border-radius: 10px;
-  box-shadow: inset 0 1px rgba(0, 0, 0, 0.25);
-  content: '';
-  height: 6px;
-  left: 10px;
-  position: absolute;
-  width: 6px;
-  top: 10px;
-}
 
-.tag::after {
-  background: #fff;
-  border-bottom: 13px solid transparent;
-  border-left: 10px solid #eee;
-  border-top: 13px solid transparent;
-  content: '';
-  position: absolute;
-  right: 0;
-  top: 0;
-}
 
-.tag:hover {
-  background-color: crimson;
-  color: white;
-}
-
-.tag:hover::after {
-  border-left-color: crimson;
-}
 
 .btn.fulfilled {
   background-color: green;
@@ -1498,7 +1515,7 @@ hr.user-message-item-separator {
       margin-bottom 0
   .right
     width 204px
-    min-height 120px
+    min-height 108px
     text-align right
     .btn
       margin-bottom 0
@@ -1515,7 +1532,6 @@ hr.user-message-item-separator {
       position absolute
       bottom marginPrimary
       right marginPrimary
-      width 100%
 
 .btn-group
   box-shadow none !important

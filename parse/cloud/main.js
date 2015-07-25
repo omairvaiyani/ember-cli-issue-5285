@@ -247,6 +247,23 @@ Parse.User.prototype.fetchEducationCohort = function () {
         });
         return promise;
     } else
+       return Parse.Promise.as(null);
+};
+/**
+ * @Function Fetch SR Latest Test
+ * This allows us to fetch the user's srLatestTest
+ * *as well as* the questions within it
+ * @return {Parse.Promise<Test>} srLatestTest
+ */
+Parse.User.prototype.fetchSRLatestTest = function () {
+    var srLatestTest = this.srLatestTest();
+    // User has no level set: this shouldn't happen
+    // *once* we set Level 1 by default on sign up.
+    if (srLatestTest) {
+        var query = new Parse.Query(Test);
+        query.include('questions');
+        return query.get(srLatestTest.id);
+    } else
         Parse.Promise.resolve(null);
 };
 /**
@@ -348,6 +365,13 @@ Parse.User.prototype.uniqueResponses = function () {
  */
 Parse.User.prototype.educationCohort = function () {
     return this.get('educationCohort');
+};
+/**
+ * @Property srLatestTest
+ * @returns {Test}
+ */
+Parse.User.prototype.srLatestTest = function () {
+    return this.get('srLatestTest');
 };
 /****
  * ---------
@@ -679,7 +703,8 @@ var Test = Parse.Object.extend("Test", {
             this.setACL(ACL);
         }
 
-        this.generateTags();
+        if(!this.get('tags') || !this.get('tags').length)
+            this.set('tags', []);
 
         return this;
     },
@@ -823,12 +848,14 @@ var Question = Parse.Object.extend("Question", {
             this.setACL(ACL);
         }
 
-        this.generateTags();
+        if(!this.get('tags') || !this.get('tags').length)
+            this.set('tags', []);
         return this;
     },
 
     /**
      * @Function Generate Tags
+     * @Deprecated
      * Creates an array of tags based on
      * title and feedback.
      * @returns {Question}
@@ -1632,7 +1659,7 @@ var FB = {
  * @Function Capitalize
  * @returns {string}
  */
-String.prototype.capitalizeFirstLetter = function() {
+String.prototype.capitalizeFirstLetter = function () {
     return this.charAt(0).toUpperCase() + this.slice(1);
 }
 /**
@@ -1653,7 +1680,7 @@ String.prototype.slugify = function () {
 String.prototype.removeStopWords = function () {
     var x, y, word, stop_word, regex_str,
         regex, cleansed_string = this.valueOf(),
-        // Split out all the individual words in the phrase
+    // Split out all the individual words in the phrase
         words = cleansed_string.match(/[^\s]+|\s+[^\s+]$/g),
         stopWords = require("cloud/stop-words.js").english;
 
@@ -1682,6 +1709,64 @@ String.prototype.removeStopWords = function () {
         }
     }
     return cleansed_string.replace(/^\s+|\s+$/g, "");
+};
+/**
+ * @Function Find Next Available Slot for SR
+ * Gets the next available time for the user
+ * to be sent an SR test
+ * @param {Moment} now
+ * @param {Array} slots
+ * @param {Array} dndTimes for User (the whole week)
+ * @return {Object} time: Moment, slot: Object
+ */
+var findNextAvailableSlotForSR = function (now, slots, dndTimes) {
+    var scheduleForSR = {
+        time: _.clone(now).add(5, 'minutes'),
+        slot: null
+    };
+    // Schedule a task for the test to be sent to the user
+    // at the next available slot (not night time, not in DND time)
+    var todayIndex = now.day() - 1;
+    // Moment week starts on Sunday, clearly they're stupid and it should be Monday.
+    if (todayIndex < 0)
+        todayIndex = 6;
+
+    scheduleForSR.slot = _.find(slots, function (slot) {
+        return now.hour() >= slot.start && now.hour() < slot.finish;
+    });
+    var slotIsToday = true;
+    for (var i = 0; i < 6; i++) {
+        var dndSlotsForToday = dndTimes[todayIndex];
+        console.error("DNDSLOTS : " + JSON.stringify(dndSlotsForToday));
+        // Check if it's currently sleeping time (scheduleSlot was null) or
+        // scheduleSlot is DND for user.
+        if (!scheduleForSR.slot || (slotIsToday &&
+            _.where(dndSlotsForToday.slots, {label: scheduleForSR.slot.label})[0].active)) {
+            scheduleForSR.slot = null;
+            // Find the next available slot
+            _.each(_.where(dndSlotsForToday.slots, {active: false}), function (slot) {
+                if (!scheduleForSR.slot && (now.hour() <= slot.finish || !slotIsToday)) {
+                    // Next free slot found
+                    scheduleForSR.slot = slot;
+                    scheduleForSR.time = _.clone(now).set('hour', slot.start);
+                }
+            });
+        }
+        // If still no slots, then today is not a good day.
+        if (!scheduleForSR.slot) {
+            if(todayIndex === 6)
+                todayIndex = 0;
+            else
+                todayIndex++;
+            slotIsToday = false;
+        } else
+            break;
+    }
+
+    return scheduleForSR;
+};
+var findNextAvailableSlotForSRMiniFunction = function () {
+
 };/*
  * BACKGROUND JOBS
  */
@@ -1746,7 +1831,6 @@ Parse.Cloud.afterSave(Parse.User, function (request) {
 Parse.Cloud.beforeSave(Test, function (request, response) {
     var test = request.object,
         user = request.user,
-        userEvent,
         promises = [];
 
     if (test.isNew()) {
@@ -1755,7 +1839,6 @@ Parse.Cloud.beforeSave(Test, function (request, response) {
         if (!test.isGenerated() && test.title() && user && !test.slug()) {
             promises.push(test.generateSlug(user));
         }
-
     }
 
     if (!promises.length)
@@ -1864,7 +1947,8 @@ Parse.Cloud.beforeSave(Response, function (request, response) {
  */
 Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
     var user = request.user,
-        promises = [];
+        promises = [],
+        result;
 
     // Needed to fetch savedTest authors
     Parse.Cloud.useMasterKey();
@@ -1912,62 +1996,72 @@ Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
         // Perform the query, then update memoryStrength + save
         promises.push(UniqueResponse.findWithUpdatedMemoryStrengths(uniqueResponsesQuery));
 
-        if (user.educationCohort())
-            promises.push(user.fetchEducationCohort());
+        if (user.srLatestTest())
+            promises.push(user.fetchSRLatestTest());
 
-        /* var messagesQuery = new Parse.Query("Message");
-         messagesQuery.equalTo('to', user);
-         messagesQuery.descending("createdAt");
-         messagesQuery.limit(5);
-         promises.push(messages = messagesQuery.find());
-
-         var attemptsQuery = new Parse.Query("Attempt");
-         attemptsQuery.equalTo('user', user);
-         attemptsQuery.descending("createdAt");
-         attemptsQuery.equalTo('isProcessed', true);
-         attemptsQuery.exists('test');
-         attemptsQuery.include('test');
-         attemptsQuery.limit(50);
-         promises.push(attempts = attemptsQuery.find());
-
-         var followersQuery = user.relation("followers").query();
-         promises.push(followers = followersQuery.find());
-
-         var followingQuery = user.relation("following").query();
-         promises.push(following = followingQuery.find());
-
-         var groupsQuery = user.relation("groups").query();
-         promises.push(groups = groupsQuery.find());*/
+        // Seems to be a limit of 6 parallel promises
     }
-    Parse.Promise.when(promises).then(function (config, categories, createdTests, savedTests, uniqueResponses,
-                                                educationCohort) {
-        var result = {
-            config: config,
-            categories: categories,
-            createdTests: createdTests,
-            savedTests: savedTests,
-            uniqueResponses: uniqueResponses,
-            educationCohort: educationCohort
-        };
-        /*if (messages)
-         result.messages = messages["_result"][0];
-         if (followers)
-         result.followers = followers["_result"][0];
-         if (following)
-         result.following = following["_result"][0];
-         if (groups)
-         result.groups = groups["_result"][0];
-         if (attempts) {
-         result.attempts = [];
-         _.each(attempts["_result"][0], function (attempt) {
-         if (attempt.get('test') && attempt.get('test').id && result.attempts.length < 15)
-         result.attempts.push(attempt);
-         });
-         }*/
-        return response.success(result);
-    }, function (error) {
-        return response.error(error);
-    });
+    Parse.Promise.when(promises)
+        .then(function (config, categories, createdTests, savedTests, uniqueResponses, srLatestTest) {
+            result = {
+                config: config,
+                categories: categories,
+                createdTests: createdTests,
+                savedTests: savedTests,
+                uniqueResponses: uniqueResponses,
+                srLatestTest: srLatestTest
+            };
+            if (user) {
+                // Another 6 promises can go here if need be
+                promises = [];
+                promises.push(user.fetchEducationCohort());
+
+                return Parse.Promise.when(promises);
+            }
+        }).then(function (educationCohort) {
+            result.educationCohort = educationCohort;
+            /* var messagesQuery = new Parse.Query("Message");
+             messagesQuery.equalTo('to', user);
+             messagesQuery.descending("createdAt");
+             messagesQuery.limit(5);
+             promises.push(messages = messagesQuery.find());
+
+             var attemptsQuery = new Parse.Query("Attempt");
+             attemptsQuery.equalTo('user', user);
+             attemptsQuery.descending("createdAt");
+             attemptsQuery.equalTo('isProcessed', true);
+             attemptsQuery.exists('test');
+             attemptsQuery.include('test');
+             attemptsQuery.limit(50);
+             promises.push(attempts = attemptsQuery.find());
+
+             var followersQuery = user.relation("followers").query();
+             promises.push(followers = followersQuery.find());
+
+             var followingQuery = user.relation("following").query();
+             promises.push(following = followingQuery.find());
+
+             var groupsQuery = user.relation("groups").query();
+             promises.push(groups = groupsQuery.find());*/
+            /*if (messages)
+             result.messages = messages["_result"][0];
+             if (followers)
+             result.followers = followers["_result"][0];
+             if (following)
+             result.following = following["_result"][0];
+             if (groups)
+             result.groups = groups["_result"][0];
+             if (attempts) {
+             result.attempts = [];
+             _.each(attempts["_result"][0], function (attempt) {
+             if (attempt.get('test') && attempt.get('test').id && result.attempts.length < 15)
+             result.attempts.push(attempt);
+             });
+             }*/
+            return response.success(result);
+        }, function (error) {
+            return response.error(error);
+        });
 });
 
 /**
@@ -2089,33 +2183,46 @@ Parse.Cloud.define('newUserEvent', function (request, response) {
 /**
  * @CloudFunction Get Community Test
  *
- * Fetches a test that does not belong
- * to the user: response is with questions,
+ * Fetches a test that is not locally stored
+ * to the client: response is with questions,
  * category and limited-author profile
  * included.
+ *
+ * If test does not belong to user, author
+ * profile is minimised.
  *
  * @param {string} slug OR,
  * @param {string} testId
  * @return {Test} test
  */
 Parse.Cloud.define('getCommunityTest', function (request, response) {
-    var slug = request.params.slug,
+    var user = request.user,
+        slug = request.params.slug,
         testId = request.params.testId,
         query = new Parse.Query(Test);
 
     query.notEqualTo('isObjectDeleted', true);
-    query.equalTo('isPublic', true);
     if (slug)
         query.equalTo('slug', slug);
     if (testId)
         query.equalTo('objectId', testId);
     query.include('questions', 'author', 'category.parent');
 
+    // Need this to get author.
     Parse.Cloud.useMasterKey();
 
     query.find().then(function (result) {
+        var test = result[0];
+        if (!test)
+            return response.error("Test not found");
+        // Query includes private tests in case the test
+        // belongs to the user. We check it manually here.
+        if (!test.get('isPublic')) {
+            if (!user || user.id !== test.get('author').id)
+                return response.error("You do not have permission to view this test.");
+        }
         // TODO limit user profile
-        response.success(result[0]);
+        response.success(test);
     }, function (error) {
         response.error(error);
     });
@@ -2496,6 +2603,7 @@ Parse.Cloud.define('activateSpacedRepetitionForUser', function (request, respons
     user.set('srNotifyByEmail', true);
     // TODO check if user has app.
     user.set('srNotifyByPush', false);
+    user.set('srNextDue', moment().add(1, 'minute'));
 
     var doNotDisturbTimes = [];
     Parse.Config.get().then(function (config) {
@@ -2509,8 +2617,8 @@ Parse.Cloud.define('activateSpacedRepetitionForUser', function (request, respons
             };
             _.each(dailySlots, function (slot) {
                 var daySlot = _.clone(slot);
-                if (( (dayName === "Thursday" || dayName === "Friday") && slot.label === "evening") ||
-                    ( (dayName === "Saturday" || dayName === "Sunday") && slot.label === "morning"))
+                if (((dayName === "Thursday" || dayName === "Friday") && slot.label === "evening") ||
+                    ((dayName === "Saturday" || dayName === "Sunday") && slot.label === "morning"))
                     daySlot.active = true;
                 else
                     daySlot.active = false;
@@ -2604,5 +2712,249 @@ Parse.Cloud.define('mapOldTestsToNew', function (request, response) {
         response.success("Added " + tests.length + " tests for " + author.name());
     }, function (error) {
         response.error(error);
+    });
+});/*
+ * TASK WORKER
+ */
+/*function handleComingFromTask(object) {
+ object.unset('silenced_afterSave');
+ if (object.has('should_silence_afterSave')) {
+ object.unset('should_silence_afterSave');
+ object.set('silenced_afterSave', true);
+ }
+ }
+
+ function setComingFromTask(object) {
+ object.set('should_silence_afterSave', true);
+ }
+
+ function didComeFromTask(object) {
+ return object.has('silenced_afterSave');
+ }*/
+
+var WorkTask = Parse.Object.extend('WorkTask');
+/**
+ * @Function Task Creator
+ *
+ * @param {String} taskType
+ * @param {String} taskAction
+ * @param {Object} taskParameters
+ * @param {Array} taskObjects
+ * @returns {Parse.Promise}
+ */
+function taskCreator(taskType, taskAction, taskParameters, taskObjects) {
+    var task = new WorkTask();
+    return task.save({
+        'taskType': taskType,
+        'taskAction': taskAction,
+        'taskParameters': taskParameters,
+        'taskObjects': taskObjects,
+        'taskClaimed': 0
+    }, {useMasterKey: true});
+}
+
+// Available actions are defined here and link to their function.
+var WorkActions = {
+    srCycle: srCycleTask,
+    notifyUserForSR: notifyUserForSRTask
+};
+/**
+ * @Task SR Cycle
+ * Every 5 minutes, this task loops through
+ * SR activated users, finds their URs,
+ * generates a test based on their memoryStrength
+ * and study intensity and schedules the test to be
+ * sent to them at the next available slot.
+ *
+ * This task is self cycling.
+ * @param {String} task
+ * @returns {WorkTask}
+ */
+function srCycleTask(task) {
+    Parse.Cloud.useMasterKey();
+    var initialPromises = [],
+        testsGenerated = 0;
+
+    // Config needed to determine memory thresholds
+    initialPromises.push(Parse.Config.get());
+    // Query activated users
+    var queryForUsers = new Parse.Query(Parse.User);
+    queryForUsers.equalTo('srActivated', true);
+    queryForUsers.lessThanOrEqualTo('srNextDue', new Date());
+    queryForUsers.limit(100);
+
+    initialPromises.push(queryForUsers.find());
+
+    // Loop through users with SR activated and SR due time in the past
+    return Parse.Promise.when(initialPromises).then(function (config, users) {
+        // Spaced Repetition Category for all SR tests
+        var spacedRepetitionCategory = new Category();
+        spacedRepetitionCategory.id = config.get('srCategoryId');
+        // Per user, we create a promise, and resolve for all before
+        // setting this task as complete.
+        var perUserPromises = [];
+        _.each(users, function (user) {
+
+            // SR Intensity Level for User
+            var srIntensityLevel = _.where(config.get('srIntensityLevels'), {level: user.get('srIntensityLevel')})[0],
+                urRelation = user.uniqueResponses(),
+                urQuery = urRelation.query();
+            // Find URs below the user's SR intensity threshold
+            urQuery.lessThanOrEqualTo('memoryStrength', srIntensityLevel.upperLimit);
+            urQuery.ascending('memoryStrength');
+            // Max 30 questions per test (intensity level based)
+            // But we shuffle the lowest 60 to be unpredictable
+            urQuery.limit(60);
+            urQuery.include('question');
+
+            // Get current time based on User's timeZone
+            var timeZone = user.get('timeZone'),
+                now = moment().tz(timeZone);
+
+            // scheduleSlotForSR contains the *slot* and the exact *time* (Moment)
+            // at which this test will be sent to the user.
+            var scheduleForSR = findNextAvailableSlotForSR(now, config.get('srDailySlots'),
+                user.get('srDoNotDisturbTimes'));
+
+            // Don't cycle through this user again
+            // until two hours after the scheduled time for this test.
+            // Even if a test is not generated (due to lack of URs for e.g.),
+            // this will still be saved.
+            var srNextDue = _.clone(scheduleForSR.time).add(2, 'hours');
+            user.set('srNextDue', srNextDue.toDate());
+
+            // Begin by getting URs and updating their memory strengths
+            var perUserPromise =
+                UniqueResponse.findWithUpdatedMemoryStrengths(urQuery).then(function (uniqueResponses) {
+                    if (!uniqueResponses.length) {
+                        return null;
+                    }
+                    // Generate the SR test
+                    var test = new Test();
+                    test.set('isGenerated', true);
+                    test.set('isSpacedRepetition', true);
+                    test.set('isPublic', false);
+                    test.setAuthor(user);
+                    test.set('category', spacedRepetitionCategory);
+                    test.set('title', "Spaced Practice");
+                    test.set('slug', user.get('slug') +
+                        "-" + scheduleForSR.time.daysInMonth() + "-" + scheduleForSR.time.month() + "-" +
+                        scheduleForSR.time.year() + "-" + scheduleForSR.slot.label);
+
+                    var questions = [],
+                        testTags = [];
+                    // Though we want mostly questions with the user's lowest memoryStrengths,
+                    // we don't want to be completely linear and predictable.
+                    // By shuffling the lowest ~60, and then taking the first [maxQuestions],
+                    // we have a good mix of UR memoryStrengths.
+                    _.each(_.shuffle(uniqueResponses), function (uniqueResponse, index) {
+                        if (index < srIntensityLevel.maxQuestions) {
+                            questions.push(uniqueResponse.get('question'));
+                            _.each(uniqueResponse.get('question').get('tags'), function (tag) {
+                                if (!_.contains(testTags, tag))
+                                    testTags.push(tag);
+                            });
+                        }
+                    });
+                    test.set('questions', questions);
+                    test.set('tags', testTags);
+                    return test.save();
+                }).then(function (test) {
+                    if (!test)
+                        return;
+                    user.set('srLatestTest', test);
+                    testsGenerated++;
+
+                    // Save user and create a task for the user to be notified
+                    // upon schedule.
+                    var innerPromises = [];
+                    innerPromises.push(user.save());
+                    innerPromises.push(taskCreator('SpacedRepetition', 'notifyUserForSR',
+                        {scheduledTime: scheduleForSR.time.toDate()}, [test]));
+                    return Parse.Promise.when(innerPromises);
+                });
+            perUserPromises.push(perUserPromise);
+        });
+        // Set next SR cycle time to 5 minutes from now.
+        perUserPromises.push(taskCreator('SpacedRepetition', 'srCycle',
+            {scheduledTime: moment().add(5, 'minutes').toDate()}, []));
+        return Parse.Promise.when(perUserPromises);
+    }).then(function () {
+        var changes = {
+            'taskStatus': 'done',
+            'taskMessage': testsGenerated + ' test(s) generated.',
+            'taskClaimed': 1
+        };
+        return task.save(changes, {useMasterKey: true});
+    }, function (error) {
+        console.error(JSON.stringify(error));
+    });
+}
+
+function notifyUserForSRTask(task) {
+    var changes = {
+        'taskStatus': 'done',
+        'taskMessage': '',
+        'taskClaimed': 1
+    };
+    return task.save(changes, {useMasterKey: true});
+}
+
+/**
+ * @Function Is Task Scheduled for Now
+ * Some tasks are only meant to run at
+ * specific times or intervals. Others
+ * must be run whenever present.
+ * @param {WorkTask} task
+ * @returns {boolean}
+ */
+var isTaskScheduledForNow = function (task) {
+    if (!task.get('taskParameters') || !task.get('taskParameters')['scheduledTime'])
+        return true;
+    var now = moment(),
+        scheduledTime = moment(task.get('taskParameters')['scheduledTime']);
+
+    return now.isAfter(scheduledTime);
+};
+
+// This background job is scheduled, or run ad-hoc, and processes outstanding tasks.
+Parse.Cloud.job('workQueue', function (request, status) {
+    Parse.Cloud.useMasterKey();
+    var query = new Parse.Query(WorkTask);
+    query.equalTo('taskClaimed', 0);
+    query.include('taskObjects');
+    var processed = 0,
+        removed = 0;
+    query.each(function (task) {
+        // This block will return a promise which is manually resolved to prevent errors from bubbling up.
+        var promise = new Parse.Promise();
+        processed++;
+        var params = task.get('taskParameters'),
+            objects = task.get('taskObjects'),
+        // The taskClaimed field is automatically incremented to ensure that it is processed only once.
+            action = task.get('taskAction');
+        // invalid actions not defined by WorkActions are discarded and will not be processed again.
+        if (task.get('taskClaimed') == 0 && WorkActions[action] && isTaskScheduledForNow(task)) {
+            WorkActions[action](task, params, objects).then(function () {
+                promise.resolve();
+            }, function () {
+                promise.resolve();
+            });
+        } else {
+            promise.resolve();
+        }
+        return promise;
+    }).then(function () {
+        var query = new Parse.Query(WorkTask);
+        query.equalTo('taskClaimed', 1);
+        return query.each(function (task) {
+            removed++;
+            return task.destroy();
+        });
+    }).then(function () {
+        status.success('Processed: ' + processed + ', Removed ' + removed);
+    }, function (err) {
+        console.log(err);
+        status.error('Something failed!  Check the cloud log.');
     });
 });

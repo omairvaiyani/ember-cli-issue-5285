@@ -3,8 +3,9 @@ import ParseHelper from '../utils/parse-helper';
 
 export default Ember.Route.extend({
     model: function (params, transition) {
-        if (!this.get('metaTagsSorted'))
-            this.sortOutMetaTags(params, transition);
+        // TODO undo commented code and figure out error
+        //if (!this.get('metaTagsSorted'))
+          //  this.sortOutMetaTags(params, transition);
 
         transition.send('incrementLoadingItems');
         var where = {

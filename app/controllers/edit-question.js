@@ -198,6 +198,7 @@ export default Ember.Controller.extend(CurrentUser, {
             window.scrollTo(0, 0);
             this.send("refreshRoute");
             this.set('isPublic', this.get('test.isPublic'));
+            this.set('model.tags', this.get('test.tags'));
             /*
              * If user added an image,
              * save that first, add it to the question,
@@ -257,6 +258,7 @@ export default Ember.Controller.extend(CurrentUser, {
             window.scrollTo(0, 0);
             this.transitionToRoute('edit');
 
+            this.set('model.tags', this.get('test.tags'));
             /*
              * If user added, updated, edited or removed image,
              * save that first then the question.

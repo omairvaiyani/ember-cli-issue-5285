@@ -14,6 +14,9 @@
         </div>
     </article>
     <article class="col-md-9 col-fix-right">
+        {{#if currentUser.srLatestTest}}
+            {{test-card test=currentUser.srLatestTest parentController=this}}
+        {{/if}}
         <section class="row margin-top-16">
             <article class="col-md-3">
                 <h5>{{myTestsList.length}} {{pluralize-word 'test' currentUser.myTests.length}}</h5>

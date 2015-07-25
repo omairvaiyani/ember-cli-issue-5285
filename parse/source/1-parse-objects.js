@@ -247,6 +247,23 @@ Parse.User.prototype.fetchEducationCohort = function () {
         });
         return promise;
     } else
+       return Parse.Promise.as(null);
+};
+/**
+ * @Function Fetch SR Latest Test
+ * This allows us to fetch the user's srLatestTest
+ * *as well as* the questions within it
+ * @return {Parse.Promise<Test>} srLatestTest
+ */
+Parse.User.prototype.fetchSRLatestTest = function () {
+    var srLatestTest = this.srLatestTest();
+    // User has no level set: this shouldn't happen
+    // *once* we set Level 1 by default on sign up.
+    if (srLatestTest) {
+        var query = new Parse.Query(Test);
+        query.include('questions');
+        return query.get(srLatestTest.id);
+    } else
         Parse.Promise.resolve(null);
 };
 /**
@@ -348,6 +365,13 @@ Parse.User.prototype.uniqueResponses = function () {
  */
 Parse.User.prototype.educationCohort = function () {
     return this.get('educationCohort');
+};
+/**
+ * @Property srLatestTest
+ * @returns {Test}
+ */
+Parse.User.prototype.srLatestTest = function () {
+    return this.get('srLatestTest');
 };
 /****
  * ---------
@@ -679,7 +703,8 @@ var Test = Parse.Object.extend("Test", {
             this.setACL(ACL);
         }
 
-        this.generateTags();
+        if(!this.get('tags') || !this.get('tags').length)
+            this.set('tags', []);
 
         return this;
     },
@@ -823,12 +848,14 @@ var Question = Parse.Object.extend("Question", {
             this.setACL(ACL);
         }
 
-        this.generateTags();
+        if(!this.get('tags') || !this.get('tags').length)
+            this.set('tags', []);
         return this;
     },
 
     /**
      * @Function Generate Tags
+     * @Deprecated
      * Creates an array of tags based on
      * title and feedback.
      * @returns {Question}

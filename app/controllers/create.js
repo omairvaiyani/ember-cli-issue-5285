@@ -47,6 +47,7 @@ export default Ember.Controller.extend(CurrentUser, {
         return this.get('controllers.application.currentPath') === "edit.newQuestion";
     }.property('controllers.application.currentPath'),
 
+
     /*
      * Group Test
      */
@@ -111,6 +112,8 @@ export default Ember.Controller.extend(CurrentUser, {
         }
     }.property('currentUser', 'joinStep.completed'),
 
+    newTag: "",
+
     actions: {
         removeCategory: function (category) {
             this.set('model.category', null);
@@ -151,6 +154,8 @@ export default Ember.Controller.extend(CurrentUser, {
             this.send('incrementLoadingItems');
             var promise = ParseHelper.cloudFunction(this, 'createNewTest', {test: this.get('model')});
 
+            this.set('model.tags', this.get('model.tags').split(','));
+
             promise.then(function (response) {
                     this.send('newUserEvent', response);
                     var test = ParseHelper.extractRawPayload(this.store, 'test', response.test);
@@ -172,18 +177,20 @@ export default Ember.Controller.extend(CurrentUser, {
                 console.log("No category set!");
                 return;
             }
-            this.send('incrementLoadingItems');
-            var questions = this.get('model.questions.content.content');
-            if (!questions)
-                questions = new Ember.A();
-            for (var i = 0; i < questions.length; i++) {
-                var question = questions[i];
-                if (question.get('isDirty')) {
-                    question.set('areOptionsDirty', false);
-                    question.save();
-                }
-            }
             this.set('model.title', this.get('model.title').capitalize());
+            if (typeof this.get('model.tags') === 'string')
+                this.set('model.tags', this.get('model.tags').split(','));
+
+            this.send('incrementLoadingItems');
+            this.get('model.questions').then(function (questions) {
+                questions.forEach(function (question) {
+                    if (!question.get('tags') ||
+                        JSON.stringify(this.get('model.tags')) !== JSON.stringify(question.get('tags'))) {
+                        question.set('tags', this.get('model.tags'));
+                        question.save();
+                    }
+                }.bind(this));
+            }.bind(this));
             var promise = this.get('model').save().then(
                 function () {
                     this.send('decrementLoadingItems');
@@ -262,6 +269,25 @@ export default Ember.Controller.extend(CurrentUser, {
                 }
             } else
                 this.get('joinController').send('goToJoinStep', step); // clears other steps
+        },
+
+        startAddingNewTag: function () {
+            this.set('addingTag', true);
+            setTimeout(function () {
+                Ember.$("#new-tag").focus();
+            }, 150);
+        },
+
+        completeAddingTag: function () {
+            if (this.get('newTag.length')) {
+                this.get('model.tags').pushObject(this.get('newTag'));
+                this.set('newTag', "");
+            }
+            this.set('addingTag', false);
+        },
+
+        removeTag: function (tag) {
+            this.get('model.tags').removeObject(tag);
         }
     }
 

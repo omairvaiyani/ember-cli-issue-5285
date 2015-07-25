@@ -103,7 +103,9 @@ var ParseUser =  DS.Model.extend(ParseMixin, {
     /*
      * Spaced Repetition
      */
-    srLatestAttempt:  DS.belongsTo('attempt', {async: true}),
+    // No need for this as test is set manually after cloud function fetches
+    // This stops ember-data from trying to fetch it AND its questions separately
+    //srLatestTest:  DS.belongsTo('test', {async: true}),
     srCompletedAttempts: DS.attr(),
     srNextDue: DS.attr('parse-date'),
     uniqueResponses: new Ember.A(),

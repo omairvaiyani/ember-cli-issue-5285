@@ -1,8 +1,7 @@
 import Ember from 'ember';
 import CurrentUser from '../mixins/current-user';
 
-export default
-Ember.Route.extend(CurrentUser, {
+export default Ember.Route.extend(CurrentUser, {
     controllerName: 'create',
 
     model: function (params) {
@@ -12,18 +11,18 @@ Ember.Route.extend(CurrentUser, {
             };
         return this.store.findQuery('test', {where: JSON.stringify(where)})
             .then(
-                function (results) {
-                    if(results.objectAt(0)) {
-                        model = results.objectAt(0);
-                        if (model.get('_data.author.id') === this.get('currentUser.id'))
-                            return model;
-                        else {
-                            this.transitionTo('notFound');
-                        }
-                    } else {
+            function (results) {
+                if (results.objectAt(0)) {
+                    model = results.objectAt(0);
+                    if (model.get('_data.author.id') === this.get('currentUser.id'))
+                        return model;
+                    else {
                         this.transitionTo('notFound');
                     }
-                }.bind(this));
+                } else {
+                    this.transitionTo('notFound');
+                }
+            }.bind(this));
     }
 
 });

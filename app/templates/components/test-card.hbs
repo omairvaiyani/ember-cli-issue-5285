@@ -25,51 +25,68 @@
                 </p>
 
                 <p class="margin-bottom-8">{{text-preview test.description 100}}</p>
+
+                <ul class="tags">
+                    {{#each test.tags as |tag|}}
+                        <li class="tag">{{tag}}</li>
+                    {{/each}}
+                </ul>
             </div>
 
             <div class="right inline-top">
-                <div class="memory-strength inline-top margin-right-16">
-                    {{#tool-tipster title="Memory Strength" class='inline-block'}}
-                        <div class="brain-bulb-fill" {{bind-attr style=memoryStrengthMeterStyle}}></div>
-                        <img src="/img/brain-bulb-small-0.png" {{bind-attr style=memoryStrengthMeterInverseStyle}}/>
-                        <img {{bind-attr src=memoryStrengthSrc}} />
-                        <label>
-                            {{test.memoryStrength}}
-                        </label>
-                    {{/tool-tipster}}
-                </div>
-                <div class="author inline-top">
-                    {{profile-picture user=test.author}}
-                </div>
+                {{#if showMemoryStrength}}
+                    <div class="memory-strength inline-top margin-right-16">
+                        {{#tool-tipster title="Memory Strength" class='inline-block'}}
+                            <div class="brain-bulb-fill" {{bind-attr style=memoryStrengthMeterStyle}}></div>
+                            <img src="/img/brain-bulb-small-0.png" {{bind-attr style=memoryStrengthMeterInverseStyle}}/>
+                            <img {{bind-attr src=memoryStrengthSrc}} />
+                            <label>
+                                {{test.memoryStrength}}
+                            </label>
+                        {{/tool-tipster}}
+                    </div>
+                {{/if}}
+                {{#if showSRIcon}}
+                    <div class="inline-top">
+                        <img src="/img/brain-bulb-small-gradient.png" height="50px" />
+                    </div>
+                {{/if}}
+                {{#if showProfilePicture}}
+                    <div class="author inline-top">
+                        {{profile-picture user=test.author}}
+                    </div>
+                {{/if}}
 
                 <div class="right-bottom">
                     {{#link-to 'test' test.slug tagName='button' class="btn btn-primary"}}Take Test{{/link-to}}
-                    <div class="btn-group">
-                        <button type="button" class="btn btn-default btn-flat dropdown-toggle" data-toggle="dropdown"
-                                aria-expanded="false">
-                            <i class="mdi-navigation-more-vert"></i>
-                        </button>
-                        <ul class="dropdown-menu" role="menu">
-                            {{#if showEdit}}
-                                {{#link-to 'edit' test.slug tagName='li'}}{{#link-to 'edit' test.slug}}
-                                    Edit{{/link-to}}{{/link-to}}
-                            {{/if}}
-                            {{#if showSave}}
-                                <li><a href="javascript:void(0)" {{action 'saveTest'}}>Save</a></li>
-                            {{/if}}
-                            {{#if showShare}}
-                                <li><a href="javascript:void(0)" {{action 'shareTest'}}>Share</a></li>
-                            {{/if}}
-                            {{#if showDelete}}
-                                <li class="divider"></li>
-                                <li><a href="javascript:void(0)" {{action 'deleteTest'}}>Delete</a></li>
-                            {{/if}}
-                            {{#if showRemove}}
-                                <li class="divider"></li>
-                                <li><a href="javascript:void(0)" {{action 'removeTest'}}>Remove</a></li>
-                            {{/if}}
-                        </ul>
-                    </div>
+                    {{#if showMenuOverFlow}}
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-default btn-flat dropdown-toggle" data-toggle="dropdown"
+                                    aria-expanded="false">
+                                <i class="mdi-navigation-more-vert"></i>
+                            </button>
+                            <ul class="dropdown-menu" role="menu">
+                                {{#if showEdit}}
+                                    {{#link-to 'edit' test.slug tagName='li'}}{{#link-to 'edit' test.slug}}
+                                        Edit{{/link-to}}{{/link-to}}
+                                {{/if}}
+                                {{#if showSave}}
+                                    <li><a href="javascript:void(0)" {{action 'saveTest'}}>Save</a></li>
+                                {{/if}}
+                                {{#if showShare}}
+                                    <li><a href="javascript:void(0)" {{action 'shareTest'}}>Share</a></li>
+                                {{/if}}
+                                {{#if showDelete}}
+                                    <li class="divider"></li>
+                                    <li><a href="javascript:void(0)" {{action 'deleteTest'}}>Delete</a></li>
+                                {{/if}}
+                                {{#if showRemove}}
+                                    <li class="divider"></li>
+                                    <li><a href="javascript:void(0)" {{action 'removeTest'}}>Remove</a></li>
+                                {{/if}}
+                            </ul>
+                        </div>
+                    {{/if}}
                 </div>
 
             </div>

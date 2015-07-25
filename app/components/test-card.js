@@ -9,15 +9,34 @@ export default Ember.Component.extend({
         return this.get('currentUser.id') === this.get('test.author.id');
     }.property('currentUser'),
 
+    showMenuOverFlow: function () {
+        return this.get('showDelete') || this.get('showEdit') || this.get('showShare') ||
+                this.get('showSave') || this.get('showRemove');
+    }.property( 'showDelete', 'showEdit', 'showShare', 'showSave', 'showRemove'),
+
+    showProfilePicture: function () {
+        return !this.get('test.isGenerated');
+    }.property('test.isGenerated'),
+
+    showMemoryStrength: function () {
+        return !this.get('test.isGenerated');
+    }.property('test.isGenerated'),
+
+    showSRIcon: function () {
+        return this.get('test.isSpacedRepetition');
+    }.property('test.isSpacedRepetition'),
+
     showDelete: function () {
-        return this.get('isCurrentUserTheAuthor');
-    }.property('isCurrentUserTheAuthor'),
+        return this.get('isCurrentUserTheAuthor') && !this.get('test.isGenerated');
+    }.property('isCurrentUserTheAuthor', 'test.isGenerated'),
 
     showEdit: function () {
-        return this.get('isCurrentUserTheAuthor');
-    }.property('isCurrentUserTheAuthor'),
+        return this.get('isCurrentUserTheAuthor') && !this.get('test.isGenerated');
+    }.property('isCurrentUserTheAuthor', 'test.isGenerated'),
 
-    showShare: true,
+    showShare: function () {
+        return !this.get('isGenerated') && this.get('isPublic');
+    }.property('test.isGenerated', 'test.isPublic'),
 
     /**
      * @Property Show Save
@@ -27,8 +46,8 @@ export default Ember.Component.extend({
      */
     showSave: function () {
         return !this.get('isCurrentUserTheAuthor')
-            && !this.get('isTestSaved');
-    }.property('isCurrentUserTheAuthor', 'isTestSaved'),
+            && !this.get('isTestSaved') && !this.get('test.isGenerated');
+    }.property('isCurrentUserTheAuthor', 'isTestSaved', 'test.isGenerated'),
 
     /**
      * @Property Show Remove
@@ -38,8 +57,8 @@ export default Ember.Component.extend({
      */
     showRemove: function () {
         return !this.get('isCurrentUserTheAuthor')
-            && this.get('isTestSaved');
-    }.property('isCurrentUserTheAuthor', 'isTestSaved'),
+            && this.get('isTestSaved') && !this.get('test.isGenerated');
+    }.property('isCurrentUserTheAuthor', 'isTestSaved', 'test.isGenerated'),
 
     /**
      * @Property Is Test Saved

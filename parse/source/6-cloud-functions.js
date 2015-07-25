@@ -18,7 +18,8 @@
  */
 Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
     var user = request.user,
-        promises = [];
+        promises = [],
+        result;
 
     // Needed to fetch savedTest authors
     Parse.Cloud.useMasterKey();
@@ -66,62 +67,72 @@ Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
         // Perform the query, then update memoryStrength + save
         promises.push(UniqueResponse.findWithUpdatedMemoryStrengths(uniqueResponsesQuery));
 
-        if (user.educationCohort())
-            promises.push(user.fetchEducationCohort());
+        if (user.srLatestTest())
+            promises.push(user.fetchSRLatestTest());
 
-        /* var messagesQuery = new Parse.Query("Message");
-         messagesQuery.equalTo('to', user);
-         messagesQuery.descending("createdAt");
-         messagesQuery.limit(5);
-         promises.push(messages = messagesQuery.find());
-
-         var attemptsQuery = new Parse.Query("Attempt");
-         attemptsQuery.equalTo('user', user);
-         attemptsQuery.descending("createdAt");
-         attemptsQuery.equalTo('isProcessed', true);
-         attemptsQuery.exists('test');
-         attemptsQuery.include('test');
-         attemptsQuery.limit(50);
-         promises.push(attempts = attemptsQuery.find());
-
-         var followersQuery = user.relation("followers").query();
-         promises.push(followers = followersQuery.find());
-
-         var followingQuery = user.relation("following").query();
-         promises.push(following = followingQuery.find());
-
-         var groupsQuery = user.relation("groups").query();
-         promises.push(groups = groupsQuery.find());*/
+        // Seems to be a limit of 6 parallel promises
     }
-    Parse.Promise.when(promises).then(function (config, categories, createdTests, savedTests, uniqueResponses,
-                                                educationCohort) {
-        var result = {
-            config: config,
-            categories: categories,
-            createdTests: createdTests,
-            savedTests: savedTests,
-            uniqueResponses: uniqueResponses,
-            educationCohort: educationCohort
-        };
-        /*if (messages)
-         result.messages = messages["_result"][0];
-         if (followers)
-         result.followers = followers["_result"][0];
-         if (following)
-         result.following = following["_result"][0];
-         if (groups)
-         result.groups = groups["_result"][0];
-         if (attempts) {
-         result.attempts = [];
-         _.each(attempts["_result"][0], function (attempt) {
-         if (attempt.get('test') && attempt.get('test').id && result.attempts.length < 15)
-         result.attempts.push(attempt);
-         });
-         }*/
-        return response.success(result);
-    }, function (error) {
-        return response.error(error);
-    });
+    Parse.Promise.when(promises)
+        .then(function (config, categories, createdTests, savedTests, uniqueResponses, srLatestTest) {
+            result = {
+                config: config,
+                categories: categories,
+                createdTests: createdTests,
+                savedTests: savedTests,
+                uniqueResponses: uniqueResponses,
+                srLatestTest: srLatestTest
+            };
+            if (user) {
+                // Another 6 promises can go here if need be
+                promises = [];
+                promises.push(user.fetchEducationCohort());
+
+                return Parse.Promise.when(promises);
+            }
+        }).then(function (educationCohort) {
+            result.educationCohort = educationCohort;
+            /* var messagesQuery = new Parse.Query("Message");
+             messagesQuery.equalTo('to', user);
+             messagesQuery.descending("createdAt");
+             messagesQuery.limit(5);
+             promises.push(messages = messagesQuery.find());
+
+             var attemptsQuery = new Parse.Query("Attempt");
+             attemptsQuery.equalTo('user', user);
+             attemptsQuery.descending("createdAt");
+             attemptsQuery.equalTo('isProcessed', true);
+             attemptsQuery.exists('test');
+             attemptsQuery.include('test');
+             attemptsQuery.limit(50);
+             promises.push(attempts = attemptsQuery.find());
+
+             var followersQuery = user.relation("followers").query();
+             promises.push(followers = followersQuery.find());
+
+             var followingQuery = user.relation("following").query();
+             promises.push(following = followingQuery.find());
+
+             var groupsQuery = user.relation("groups").query();
+             promises.push(groups = groupsQuery.find());*/
+            /*if (messages)
+             result.messages = messages["_result"][0];
+             if (followers)
+             result.followers = followers["_result"][0];
+             if (following)
+             result.following = following["_result"][0];
+             if (groups)
+             result.groups = groups["_result"][0];
+             if (attempts) {
+             result.attempts = [];
+             _.each(attempts["_result"][0], function (attempt) {
+             if (attempt.get('test') && attempt.get('test').id && result.attempts.length < 15)
+             result.attempts.push(attempt);
+             });
+             }*/
+            return response.success(result);
+        }, function (error) {
+            return response.error(error);
+        });
 });
 
 /**
@@ -243,33 +254,46 @@ Parse.Cloud.define('newUserEvent', function (request, response) {
 /**
  * @CloudFunction Get Community Test
  *
- * Fetches a test that does not belong
- * to the user: response is with questions,
+ * Fetches a test that is not locally stored
+ * to the client: response is with questions,
  * category and limited-author profile
  * included.
+ *
+ * If test does not belong to user, author
+ * profile is minimised.
  *
  * @param {string} slug OR,
  * @param {string} testId
  * @return {Test} test
  */
 Parse.Cloud.define('getCommunityTest', function (request, response) {
-    var slug = request.params.slug,
+    var user = request.user,
+        slug = request.params.slug,
         testId = request.params.testId,
         query = new Parse.Query(Test);
 
     query.notEqualTo('isObjectDeleted', true);
-    query.equalTo('isPublic', true);
     if (slug)
         query.equalTo('slug', slug);
     if (testId)
         query.equalTo('objectId', testId);
     query.include('questions', 'author', 'category.parent');
 
+    // Need this to get author.
     Parse.Cloud.useMasterKey();
 
     query.find().then(function (result) {
+        var test = result[0];
+        if (!test)
+            return response.error("Test not found");
+        // Query includes private tests in case the test
+        // belongs to the user. We check it manually here.
+        if (!test.get('isPublic')) {
+            if (!user || user.id !== test.get('author').id)
+                return response.error("You do not have permission to view this test.");
+        }
         // TODO limit user profile
-        response.success(result[0]);
+        response.success(test);
     }, function (error) {
         response.error(error);
     });
@@ -650,6 +674,7 @@ Parse.Cloud.define('activateSpacedRepetitionForUser', function (request, respons
     user.set('srNotifyByEmail', true);
     // TODO check if user has app.
     user.set('srNotifyByPush', false);
+    user.set('srNextDue', moment().add(1, 'minute'));
 
     var doNotDisturbTimes = [];
     Parse.Config.get().then(function (config) {
@@ -663,8 +688,8 @@ Parse.Cloud.define('activateSpacedRepetitionForUser', function (request, respons
             };
             _.each(dailySlots, function (slot) {
                 var daySlot = _.clone(slot);
-                if (( (dayName === "Thursday" || dayName === "Friday") && slot.label === "evening") ||
-                    ( (dayName === "Saturday" || dayName === "Sunday") && slot.label === "morning"))
+                if (((dayName === "Thursday" || dayName === "Friday") && slot.label === "evening") ||
+                    ((dayName === "Saturday" || dayName === "Sunday") && slot.label === "morning"))
                     daySlot.active = true;
                 else
                     daySlot.active = false;
