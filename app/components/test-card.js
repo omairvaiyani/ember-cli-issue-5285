@@ -11,8 +11,8 @@ export default Ember.Component.extend({
 
     showMenuOverFlow: function () {
         return this.get('showDelete') || this.get('showEdit') || this.get('showShare') ||
-                this.get('showSave') || this.get('showRemove');
-    }.property( 'showDelete', 'showEdit', 'showShare', 'showSave', 'showRemove'),
+            this.get('showSave') || this.get('showRemove');
+    }.property('showDelete', 'showEdit', 'showShare', 'showSave', 'showRemove'),
 
     showProfilePicture: function () {
         return !this.get('test.isGenerated');
@@ -106,6 +106,10 @@ export default Ember.Component.extend({
         openModal: function () {
             this.get('parentController').send('openModal', 'browse/modal/test-info', 'browse.modal.testInfo',
                 this.get('test'));
+        },
+
+        toggleTagFilter: function (tag) {
+            this.get('parentController').send('toggleTagFilter', tag);
         }
     }
 });

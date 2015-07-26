@@ -21,7 +21,7 @@ export default Ember.Controller.extend({
 
         var path = this.get('currentPath'),
             title = "",
-            defaultTitle = "Synap - Study smart, not hard.";
+            defaultTitle = "Synap - Study smart.";
 
         if (!path)
             return;
@@ -167,9 +167,9 @@ export default Ember.Controller.extend({
      */
     initializeCurrentUser: function () {
         if (!this.get('currentUser')) {
-            this.send('decrementLoadingItems');
             return;
         }
+        this.send('incrementLoadingItems');
         Ember.$.ajax({
             url: "https://api.parse.com/1/functions/initialiseWebsiteForUser",
             method: "POST",
@@ -242,6 +242,7 @@ export default Ember.Controller.extend({
             // This ensures index.myTestsList is filled out even when website
             // loads on a different route to index.
             this.get('controllers.index').myTestsListUpdate();
+            this.send('decrementLoadingItems');
         }.bind(this));
         //EventTracker.profileUser(this.get('currentUser'));
     }.observes('currentUser'),

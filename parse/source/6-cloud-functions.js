@@ -707,81 +707,209 @@ Parse.Cloud.define('activateSpacedRepetitionForUser', function (request, respons
 
 });
 
+/**                      **/
+/** MIGRATION CODE BELOW **/
+/**                      **/
+
+/**
+ * @Property MyCQs API
+ * Used for migration purposes.
+ * @type {{appId: string, restKey: string}}
+ */
+var MyCQsAPI = {
+    appId: "DjQgBjzLml5feb1a34s25g7op7Zqgwqk8eWbOotT",
+    restKey: "xN4I6AYSdW2P8iufiEOEP1EcbiZtdqyjyFBsfOrh"
+};
+/**
+ * @CloudFunction Check If User Exists on MyCQs
+ *
+ * Send email and password, ideally whilst logged in.
+ * This function calls the MyCQs API to login and confirm
+ * that the user existed on MyCQs.
+ *
+ * @param {string} email
+ * @param {string} password (if not a FB user)
+ */
+Parse.Cloud.define('checkIfUserExistsOnMyCQs', function (request, response) {
+    var email = request.params.email,
+        password = request.params.password;
+
+    if (!email) {
+        return response.error("You must be send your email.");
+    }
+    Parse.Cloud.httpRequest({
+        method: 'POST',
+        url: 'https://api.parse.com/1/functions/preLogIn',
+        headers: {
+            "X-Parse-Application-Id": MyCQsAPI.appId,
+            "X-Parse-REST-API-Key": MyCQsAPI.restKey,
+            "Content-Type": "application/json; charset=utf-8"
+        },
+        body: {
+            email: email,
+            secretKey: "Xquulpwz1!"
+        }
+    }).then(function (httpResponse) {
+        var result = httpResponse.data.result,
+            url,
+            body,
+            method;
+
+        if(result.user.authData && result.user.authData.facebook) {
+            method = "POST";
+            url = 'https://api.parse.com/1/users';
+            body = {
+                authData: result.user.authData
+            };
+        } else {
+            method = "GET";
+            url = 'https://api.parse.com/1/login';
+            body = {
+                username: result.username,
+                password: password
+            };
+        }
+        return Parse.Cloud.httpRequest({
+            method: method,
+            url: url,
+            headers: {
+                "X-Parse-Application-Id": "DjQgBjzLml5feb1a34s25g7op7Zqgwqk8eWbOotT",
+                "X-Parse-REST-API-Key": "xN4I6AYSdW2P8iufiEOEP1EcbiZtdqyjyFBsfOrh",
+                "Content-Type": "application/json; charset=utf-8"
+            },
+            body: body
+        });
+    }).then(function (httpResponse) {
+        response.success(httpResponse.data);
+    }, function (httpResponse) {
+        response.error('Request failed with response code ' + httpResponse.status);
+    });
+});
+/**
+ * @CloudFunction Get Old Tests for User
+ *
+ * This returns the user's old tests
+ * from MyCQs in the *old* format.
+ * Use this to show to the user
+ * what tests they want to migrate
+ * over. Then, use the 'mapOldTestsToNew'
+ * CF to continue migration.
+ *
+ * Get the sessionToken and authorId
+ * *OLD authorId* using the
+ * 'checkIfUserExistsOnMyCQs' CF.
+ *
+ * @param {string} sessionToken
+ * @param {string} authorId
+ * @return {Array}
+ */
+Parse.Cloud.define('getOldTestsForUser', function (request, response) {
+    var sessionToken = request.params.sessionToken,
+        authorId = request.params.authorId;
+
+    if (!sessionToken || !authorId)
+        return response.error("You must send a MyCQs sessionToken and authorId.");
+
+    var where = {
+            author: generatePointer(authorId, "_User"),
+            isObjectDeleted: {"$ne": true},
+            isGenerated: {"$ne": true}
+        },
+        url = "https://api.parse.com/1/classes/Test?where=" + JSON.stringify(where) + "&limit=1000";
+    url += "&include=questions";
+    Parse.Cloud.httpRequest({
+        method: 'GET',
+        url: url,
+        headers: {
+            "X-Parse-Application-Id": MyCQsAPI.appId,
+            "X-Parse-REST-API-Key": MyCQsAPI.restKey,
+            "Content-Type": "application/json; charset=utf-8",
+            "X-Parse-Session-Token": sessionToken
+        }
+    }).then(function (httpResponse) {
+        response.success(httpResponse.data.results);
+    }, function (error) {
+        response.error(error);
+    });
+});
 /**
  * @CloudFunction Map Old Tests to New
  *
  * Used to migrate MyCQs tests to Synap.
- * Work in progress.
  *
  * Currently creates new tests or updates
  * previously added tests, to a pre-existing
  * Synap user.
  *
- * @param {string} authorId
- * @param {string} oldTests
+ * Must send 'oldTests' in the MyCQs format.
+ *
+ * @param {string} key "Xquulpwz1!"
+ * @param {Array} oldTests
  * @return success/error
  */
 Parse.Cloud.define('mapOldTestsToNew', function (request, response) {
-    var author = new Parse.User(),
-        oldTests = request.params.tests.results,
+    var user = request.user,
+        oldTests = request.params.oldTests,
         tests = [],
         promises = [];
 
-    if (request.params.key !== "Xquulpwz1!")
-        return response.error("Unauthorized request!");
+    if (!user)
+        return response.error("Please log in first!");
 
     Parse.Cloud.useMasterKey();
 
-    author.id = request.params.authorId;
+    _.each(oldTests, function (oldTest) {
+        if (!oldTest.category)
+            return;
 
-    author.fetch().then(function () {
-        _.each(oldTests, function (oldTest) {
-            if (oldTest.isGenerated || !oldTest.category || oldTest.isObjectDeleted)
-                return;
+        var test = new Test();
+        // alreadyMigratedId is set on the Web during migration selection
+        // it allows us to update tests instead of creating duplicates.
+        if(oldTest.alreadyMigratedId)
+            test.id = oldTest.alreadyMigratedId;
+        test.set('slug', oldTest.slug);
+        test.set('title', oldTest.title);
+        test.set('author', user);
+        test.set('description', oldTest.description);
+        test.set('averageScore', oldTest.averageScore);
+        test.set('averageUniqueScore', oldTest.uniqueAverageScore);
+        test.set('numberOfAttempts', oldTest.numberOfAttempts);
+        test.set('numberOfUniqueAttempts', oldTest.uniqueNumberOfAttempts);
+        test.set('quality', oldTest.quality);
+        test.set('isPublic', !!oldTest.privacy);
+        test.set('category', oldTest.category);
+        test.set('oldId', oldTest.objectId);
 
-            var test = new Test();
-            test.set('slug', oldTest.slug);
-            test.set('title', oldTest.title);
-            test.set('author', author);
-            test.set('description', oldTest.description);
-            test.set('averageScore', oldTest.averageScore);
-            test.set('averageUniqueScore', oldTest.uniqueAverageScore);
-            test.set('numberOfAttempts', oldTest.numberOfAttempts);
-            test.set('numberOfUniqueAttempts', oldTest.uniqueNumberOfAttempts);
-            test.set('quality', oldTest.quality);
-            test.set('isPublic', !!oldTest.privacy);
-            test.set('category', oldTest.category);
-
-            var questions = [];
-            _.each(oldTest.questions, function (oldQuestion) {
-                var question = new Question();
-                question.set('stem', oldQuestion.stem());
-                question.set('feedback', oldQuestion.feedback());
-                question.set('numberOfResponses', oldQuestion.get('numberOfTimesTaken'));
-                question.set('numberOfCorrectResponses', oldQuestion.get('numberAnsweredCorrectly'));
-                question.set('options', oldQuestion.options());
-                question.set('isPublic', test.isPublic());
-                // setDefaults is normally called beforeSave
-                // but requires the user - not present when called
-                // from CC. Therefore, call now with the author.
-                question.setDefaults(author);
-                questions.push(question);
-            });
-            var promise = Parse.Object.saveAll(questions).then(function () {
-                test.set('questions', questions);
-                tests.push(test);
-                return test.save();
-            });
-            return promises.push(promise);
+        var questions = [];
+        _.each(oldTest.questions, function (oldQuestion) {
+            var question = new Question();
+            question.set('stem', oldQuestion.get("stem"));
+            question.set('feedback', oldQuestion.get("feedback"));
+            question.set('numberOfResponses', oldQuestion.get('numberOfTimesTaken'));
+            question.set('numberOfCorrectResponses', oldQuestion.get('numberAnsweredCorrectly'));
+            question.set('options', oldQuestion.get('options'));
+            question.set('isPublic', test.isPublic());
+            // setDefaults is normally called beforeSave
+            // but requires the user - not present when called
+            // from CC. Therefore, call now with the author.
+            question.setDefaults(user);
+            questions.push(question);
         });
-        return Parse.Promise.when(promises);
-    }).then(function () {
-        var createdTests = author.createdTests();
-        createdTests.add(tests);
-        return author.save();
-    }).then(function () {
-        response.success("Added " + tests.length + " tests for " + author.name());
-    }, function (error) {
-        response.error(error);
+        var promise = Parse.Object.saveAll(questions).then(function () {
+            test.set('questions', questions);
+            tests.push(test);
+            return test.save();
+        });
+        return promises.push(promise);
     });
+    Parse.Promise.when(promises)
+        .then(function () {
+            var createdTests = user.createdTests();
+            createdTests.add(tests);
+            return user.save();
+        }).then(function () {
+            response.success(tests);
+        }, function (error) {
+            response.error(error);
+        });
 });

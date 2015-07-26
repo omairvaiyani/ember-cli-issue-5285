@@ -4,31 +4,11 @@
             <div class="card">
                 <section class="row margin-bottom-16">
                     <article class="col-md-1">
-                        <h5 class="">TITLE</h5>
+                        <h4>TITLE</h4>
                     </article>
                     <article class="col-md-5">
                         {{input type="text" class="form-control input-lg" placeholder="Type your test title here."
                         value=model.title}}
-                    </article>
-                    <article class="col-md-1">
-                        <h5 class="">TAGS</h5>
-                    </article>
-                    <article class="col-md-5">
-                        <ul class="tags">
-                            {{#each model.tags as |tag|}}
-                                <li class="tag" {{action "removeTag" tag}}>{{tag}}</li>
-                            {{/each}}
-                            <li class="tag default">
-                                {{#if addingTag}}
-                                    {{input type='text' value=newTag placeholder="Type a tag..."
-                                    id="new-tag" action="completeAddingTag"}}
-                                    <i {{bind-attr class=":fa :fa-plus :add-tag newTag.length::close-tag"}}
-                                        {{action 'completeAddingTag'}}></i>
-                                {{else}}
-                                    <span {{action 'startAddingNewTag'}}>+ add</span>
-                                {{/if}}
-                            </li>
-                        </ul>
                     </article>
                 </section>
                 <section class="row">
@@ -84,7 +64,27 @@
                     </article>
                 </section>
                 <section class="row">
-                    <article class="col-md-push-6 col-md-6 text-right">
+                    <article class="col-md-1">
+                        <h5 class="">TAGS</h5>
+                    </article>
+                    <article class="col-md-5">
+                        <ul class="tags">
+                            {{#each model.tags as |tag|}}
+                                <li class="tag" {{action "removeTag" tag}}>{{tag}}</li>
+                            {{/each}}
+                            <li class="tag default">
+                                {{#if addingTag}}
+                                    {{input type='text' value=newTag placeholder="Type a tag..."
+                                    id="new-tag" action="completeAddingTag"}}
+                                    <i {{bind-attr class=":fa :fa-plus :add-tag newTag.length::close-tag"}}
+                                        {{action 'completeAddingTag'}}></i>
+                                {{else}}
+                                    <span {{action 'startAddingNewTag'}}>+ add</span>
+                                {{/if}}
+                            </li>
+                        </ul>
+                    </article>
+                    <article class="col-md-6 text-right">
                         <div class="togglebutton togglebutton-info inline-block margin-right-8 margin-top-8">
                             <label class="text-left">
                                 <strong class="margin-right-8">Public</strong>

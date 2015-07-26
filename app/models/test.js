@@ -25,6 +25,7 @@ export default DS.Model.extend(ParseMixin, CurrentUser, {
     isObjectDeleted: DS.attr('boolean'),
     isSpacedRepetition: DS.attr('boolean'),
     isProfessional: DS.attr('boolean'),
+    oldId: DS.attr('string'),
 
 
     /**

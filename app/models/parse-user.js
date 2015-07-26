@@ -15,6 +15,7 @@ var ParseUser =  DS.Model.extend(ParseMixin, {
     emailVerified: DS.attr('boolean'),
     sessionToken: DS.attr('string'),
     signUpSource: DS.attr('string'),
+    authData: DS.attr(),
 
     /*
      * Profile

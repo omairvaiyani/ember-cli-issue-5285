@@ -1,0 +1,85 @@
+<div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span
+            class="sr-only">Close</span></button>
+    <h4 class="modal-title">Migrate Tests</h4>
+</div>
+<div class="modal-body">
+    <form class="form-horizontal">
+        {{#if credentialChecking}}
+            <div class="form-group">
+                <label for="oldEmail" class="col-sm-6 control-label">MyCQs Email</label>
+
+                <div class="col-sm-6">
+                    {{input type="email" class="form-control" id="oldEmail" placeholder="Type your MyCQs email"
+                    value=oldEmail}}
+                </div>
+            </div>
+            <hr>
+            <div class="form-group">
+                <label for="oldPassword" class="col-sm-6 control-label">MyCQs password</label>
+
+                <div class="col-sm-6">
+                    {{input type="password" class="form-control" id="oldPassword" placeholder="Type your MyCQs password"
+                    value=oldPassword}}
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-sm-6 col-sm-push-6">
+                    {{async-button default="Check Credentials" class="btn btn-primary" action='checkCredentials'
+                    pending="Checking..." reset=true rejected="Error!"}}
+                </div>
+            </div>
+        {{/if}}
+        {{#if checkingFacebookUser}}
+            <h5 class="text-center">Connecting to MyCQs with Facebook...</h5>
+        {{/if}}
+        {{#if fetchingOldTests}}
+            <h5 class="text-center">Fetching tests...</h5>
+        {{/if}}
+        {{#if testSelection}}
+            <h4>
+                Select tests to migrate
+                <small class="pull-right">
+                    <label for="select-all-tests margin-right-16">Select all</label>
+                    {{input type='checkbox' checked=selectAllTests id='select-all-tests'}}
+                </small>
+            </h4>
+            <ul class="migrate-test-selection">
+                {{#each oldTests as |test|}}
+                    <li {{bind-attr class="test.isSelected:is-active"}}
+                        {{action "toggleTestSelect" test}}>
+                        <h5>{{test.title}}
+                            {{#if test.alreadyMigrated}}
+                                <small>Already migrated.</small>
+                            {{/if}}
+                            <small class="pull-right">{{test.questions.length}} question(s)</small>
+                        </h5>
+                    </li>
+                {{/each}}
+            </ul>
+            <h4>
+                <small>Tests selected: {{testsToMigrate.length}}</small>
+                {{async-button default="Migrate tests" class="btn btn-success btn-small pull-right"
+                action='beginTestMigration' pending="Migrating..." reset=true rejected="Error!"}}
+            </h4>
+            {{#if testsToMigrateIncludesAlreadyMigratedTests}}
+                <h4>
+                    <small>
+                        For already migrated tests, new changes made on Synap will be reverted to the MyCQs Version.
+                    </small>
+                </h4>
+            {{/if}}
+        {{/if}}
+    </form>
+</div>
+<div class="modal-footer">
+    <div class="container-fluid margin-bottom-16">
+        <section class="row">
+            <article class="col-xs-12">
+                <button type="button" class="btn btn-default" {{action "cleanUpModalAndDismiss"}}>
+                    Cancel
+                </button>
+            </article>
+        </section>
+    </div>
+</div>

@@ -76,18 +76,31 @@ export default Ember.Controller.extend(CurrentUser, {
     myTestsListUpdate: function () {
         var myTestsList = this.get('currentUser.' + this.get('myTestsListType.value')),
             finalList = new Ember.A();
-        if(!this.get('currentUser'))
+        if (!this.get('currentUser'))
             return this.get('myTestsList').clear();
         finalList.addObjects(myTestsList);
+
+        // Tag filter, is separate from implicit filters
+        if (this.get('activeTags.length')) {
+            var activeTags = this.get('activeTags');
+            finalList = finalList.filter(function (test) {
+                var tagFound = false;
+                _.each(test.get('tags'), function (tag) {
+                    if (!tagFound && _.contains(activeTags, tag))
+                        tagFound = true;
+                });
+                return tagFound;
+            });
+        }
 
         // The finalList var allows us to filter
         // this list only if needed, separating concerns.
         if (this.get('myTestsListFilter.length')) {
             var regex = new RegExp(this.get('myTestsListFilter').trim().toLowerCase(), 'gi'),
-            finalList = finalList.filter(function (test) {
-                return test.get('title').toLowerCase().match(regex)
-                || (test.get('description.length') && test.get('description').toLowerCase().match(regex));
-            });
+                finalList = finalList.filter(function (test) {
+                    return test.get('title').toLowerCase().match(regex)
+                        || (test.get('description.length') && test.get('description').toLowerCase().match(regex));
+                });
         }
 
         var sortedOrderedAndFilteredList = finalList.sortBy(this.get('myTestsListOrder.value'));
@@ -107,7 +120,13 @@ export default Ember.Controller.extend(CurrentUser, {
         Ember.run.debounce(this, this.myTestsListUpdate, 50);
     }.observes('currentUser.myTests.length', 'myTestsListType', 'myTestsListOrder', 'myTestsListFilter.length',
         'currentUser.myTests.@each.title.length', 'currentUser.myTests.@each.createdAt',
-        'currentUser.myTests.@each.memoryStrength'),
+        'currentUser.myTests.@each.memoryStrength', 'activeTags.length'),
+
+    /**
+     * @Property Active Tag
+     * Used to filter tests on page by tag.
+     */
+    activeTags: [],
 
     actions: {
         /*
@@ -116,9 +135,18 @@ export default Ember.Controller.extend(CurrentUser, {
         searchTests: function () {
             this.transitionToRoute('category', "all",
                 {queryParams: {search: this.get('searchTermForTests').toLowerCase()}});
-        }
+        },
         /*
-         * HOME MODE
+         * USER MODE
          */
+        toggleTagFilter: function (tag) {
+            if (!tag)
+                return;
+
+            if (_.contains(this.get('activeTags'), tag))
+                this.get('activeTags').removeObject(tag);
+            else
+                this.get('activeTags').pushObject(tag);
+        }
     }
 });

@@ -2,6 +2,18 @@
     <article class="col-md-3">
         <div class="well mini-well margin-top-16">
             {{input type="text" class="form-control floating-label" placeholder="Filter tests" value=myTestsListFilter}}
+
+            <ul class="tags">
+                {{#if activeTags.length}}
+                    <div class="margin-top-8">
+                        <h5>TAGS</h5>
+                    </div>
+                {{/if}}
+                {{#each activeTags as |tag|}}
+                    <li class="tag" {{action 'toggleTagFilter' tag}}>{{tag}}</li>
+                {{/each}}
+            </ul>
+
             {{#each myTestsListTypes as |listType|}}
                 <div class="radio radio-primary">
                     <label>

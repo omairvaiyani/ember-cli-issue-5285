@@ -188,9 +188,9 @@ export default Ember.Route.extend({
                 password = controller.get('loginUser.password'),
                 ParseUser = this.store.modelFor('parse-user'),
                 data = {
-                username: email,
-                password: password
-            };
+                    username: email,
+                    password: password
+                };
 
             controller.set('loginMessage.connecting', "Logging in...");
 
@@ -301,13 +301,30 @@ export default Ember.Route.extend({
 
             data.timeZone = timeZone;
 
-            var promise = ParseUser.signup(this.store, {authData: data.authData}).then(function (user) {
+            var promise = ParseUser.signup(this.store, data).then(function (user) {
                 this.get('applicationController').set('currentUser', user);
                 return user.reload();
             }.bind(this)).then(function (user) {
                     this.send('decrementLoadingItems');
                     this.send('redirectAfterLogin');
-                    this.send('decrementLoadingItems');
+                    //this.send('decrementLoadingItems');
+
+                    // TODO test migration prompt must ONLY be for new registrations...
+                    // Check if its a MyCQs user and then prompt them to migrate tests
+                    ParseHelper.cloudFunction(this, "checkIfUserExistsOnMyCQs",
+                        {
+                            email: this.get('currentUser.email'),
+                            password: this.get('applicationController.newUser.password')
+                        })
+                        .then(function (response) {
+                            console.dir(response);
+                            if (response.sessionToken) {
+                                this.send('openModal', 'application/modal/migrate-tests');
+                            }
+                        }.bind(this), function (error) {
+                            console.dir(error);
+                        });
+
                 }.bind(this),
                 function (error) {
                     this.send('decrementLoadingItems');
@@ -322,6 +339,7 @@ export default Ember.Route.extend({
         logout: function () {
             this.get('applicationController').set('currentUser', null);
             this.transitionTo('index');
+            window.location.reload();
         },
 
         forgotPassword: function () {
@@ -369,18 +387,10 @@ export default Ember.Route.extend({
                         .send('returnedFromRedirect');
                 this.set('applicationController.redirectAfterLoginToRoute', null);
             } else if (!this.get('currentUser.finishedWelcomeTutorial')) {
-                console.log("First time login.");
                 /*
                  * First time logging into this site
                  */
                 this.transitionTo('index');
-                return; // TODO remove this to take new users to profile page.
-                if (this.get('currentUser.slug'))
-                    this.transitionTo('user', this.get('currentUser.slug'));
-                else {
-                    this.transitionTo('user', this.get('currentUser'));
-                }
-
             } else
                 this.transitionTo('index');
         },

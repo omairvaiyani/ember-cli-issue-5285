@@ -121,7 +121,12 @@ function srCycleTask(task) {
                     test.set('isPublic', false);
                     test.setAuthor(user);
                     test.set('category', spacedRepetitionCategory);
-                    test.set('title', "Spaced Practice");
+                    var daysOfTheWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+                        title = daysOfTheWeek[scheduleForSR.time.day()];
+                    title += " "+scheduleForSR.slot.label.camelCaseToNormal() + " test";
+                    var humanDate = scheduleForSR.time.format("Do of MMMM, YYYY");
+                    test.set('description', "This test was created and sent to you on " + humanDate);
+                    test.set('title', title);
                     test.set('slug', user.get('slug') +
                         "-" + scheduleForSR.time.daysInMonth() + "-" + scheduleForSR.time.month() + "-" +
                         scheduleForSR.time.year() + "-" + scheduleForSR.slot.label);

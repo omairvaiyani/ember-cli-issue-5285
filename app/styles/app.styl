@@ -74,10 +74,10 @@ body
 
 .is-active
   color white
-  background-color colorPrimary !important
+  background-color colorPrimary
 
 .input-lg
-  height 32px
+  height 38px
 
 .btn-facebook
   width 80%
@@ -117,11 +117,16 @@ body
     bottom -4px
     width 27px
     background-color colorPrimary-400
-  img
+  img, .grey-fill
     position absolute
     top 4px
     left 7px
     width 27px
+  .grey-fill
+    height: 40px;
+    background-image: url("/img/brain-bulb-small-0.png");
+    width: 27px;
+    background-size: cover;
   label
     position: absolute;
     bottom: -24px;
@@ -538,7 +543,7 @@ input[type="range"]::-webkit-slider-thumb {
     float: left;
 
 .tag
-  background: colorPrimary-200;
+  background: colorPrimary-400;
   border-radius: 3px 0 0 3px;
   color: whitesmoke;
   display: inline-block;
@@ -563,17 +568,22 @@ input[type="range"]::-webkit-slider-thumb {
   &::after
     background: white;
     border-bottom: 13px solid transparent;
-    border-left: 10px solid colorPrimary-200;
+    border-left: 10px solid colorPrimary-400;
     border-top: 13px solid transparent;
     content: '';
     position: absolute;
     right: 0;
     top: 0;
   &:hover
-    background-color: colorPrimary-400;
+    background-color: colorPrimary-500
     color: white;
     &::after
-      border-left-color: colorPrimary-400;
+      border-left-color: colorPrimary-500
+  &.is-active
+    background-color: colorPrimary-600
+    color: white;
+    &::after
+      border-left-color: colorPrimary-600;
   &.default
     background-color lighten(grey, 40)
     color lighten(grey, 15)
@@ -614,7 +624,7 @@ input[type="range"]::-webkit-slider-thumb {
   color white !important
   text-transform uppercase
   font-size 12px
-  text-shadow: 0 0 2px rgba(0, 0, 0, 0.8);
+  text-shadow: 0 0 1px rgba(0, 0, 0, 0.6);
   background: colorPrimary;
   background: -moz-linear-gradient(left, colorPrimary 0%, colorSecondary 100%);
   background: -webkit-gradient(linear, left top, right top, color-stop(0%, colorPrimary), color-stop(100%, colorSecondary));
@@ -2154,6 +2164,24 @@ hr.user-message-item-separator {
 .professional-bank-generate .btn {
   margin-top: -5px;
 }
+/* TEMPLATE - MODAL MIGRATE TESTS */
+ul.migrate-test-selection
+  height: 250px;
+  overflow-y: scroll;
+  border: 1px solid;
+  list-style-type: none;
+  padding 0
+  li
+    padding: 4px 8px;
+    cursor default
+    &:hover
+      background-color alpha(lightgrey, 0.4)
+      color black
+    &.is-active
+      color white
+      background-color colorPrimary-400 !important
+      small
+        color white
 
 /* TEMPLATE - FOOTER */
 /*

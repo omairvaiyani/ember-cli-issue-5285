@@ -7,7 +7,7 @@
  */
 String.prototype.capitalizeFirstLetter = function () {
     return this.charAt(0).toUpperCase() + this.slice(1);
-}
+};
 /**
  * @Function Slugify
  * Lower cases, replaces spaces with -
@@ -57,6 +57,40 @@ String.prototype.removeStopWords = function () {
     return cleansed_string.replace(/^\s+|\s+$/g, "");
 };
 /**
+ * @Function Camel Case to Normal
+ * turnsThis to turns this
+ * Or if capitalize
+ * turnsThis to Turns This
+ * @param {Boolean} capitalize (optional)
+ * @returns {String}
+ */
+String.prototype.camelCaseToNormal = function (capitalize) {
+    var normal = this.replace(/([A-Z])/g, ' $1');
+    if (capitalize)
+        return normal.replace(/^./, function (str) {
+            return str.toUpperCase();
+        });
+    else
+        return normal.toLowerCase();
+};
+/**
+ * @Function Generate Pointer
+ * @param {string} objectId
+ * @param {string} className
+ * @returns {Object} pointer
+ */
+var generatePointer = function (objectId, className) {
+    if (!objectId || !className)
+        return "";
+
+    return {
+        "__type": "Pointer",
+        "className": className,
+        "objectId": objectId
+    };
+};
+
+/**
  * @Function Find Next Available Slot for SR
  * Gets the next available time for the user
  * to be sent an SR test
@@ -83,7 +117,6 @@ var findNextAvailableSlotForSR = function (now, slots, dndTimes) {
     var slotIsToday = true;
     for (var i = 0; i < 6; i++) {
         var dndSlotsForToday = dndTimes[todayIndex];
-        console.error("DNDSLOTS : " + JSON.stringify(dndSlotsForToday));
         // Check if it's currently sleeping time (scheduleSlot was null) or
         // scheduleSlot is DND for user.
         if (!scheduleForSR.slot || (slotIsToday &&
@@ -100,7 +133,7 @@ var findNextAvailableSlotForSR = function (now, slots, dndTimes) {
         }
         // If still no slots, then today is not a good day.
         if (!scheduleForSR.slot) {
-            if(todayIndex === 6)
+            if (todayIndex === 6)
                 todayIndex = 0;
             else
                 todayIndex++;
@@ -110,7 +143,4 @@ var findNextAvailableSlotForSR = function (now, slots, dndTimes) {
     }
 
     return scheduleForSR;
-};
-var findNextAvailableSlotForSRMiniFunction = function () {
-
 };

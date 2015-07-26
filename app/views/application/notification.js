@@ -106,6 +106,7 @@ export default Ember.View.extend({
                 'saved': 'glyphicon-floppy-saved',
                 'deleted': 'glyphicon-trash',
                 'unsavedChanges': 'glyphicon-warning-sign',
+                'success': 'fa fa-check-square-o',
                 'warning': 'fa fa-exclamation',
                 'error': 'fa fa-exclamation',
                 'alert': 'fa fa-exclamation',

@@ -27,8 +27,8 @@
                 <p class="margin-bottom-8">{{text-preview test.description 100}}</p>
 
                 <ul class="tags">
-                    {{#each test.tags as |tag|}}
-                        <li class="tag">{{tag}}</li>
+                    {{#each test.tags itemController="component.testCard.item.tag" as |tag|}}
+                        <li {{bind-attr class=":tag tag.isActive"}} {{action 'toggleTagFilter' tag.model}}>{{tag.model}}</li>
                     {{/each}}
                 </ul>
             </div>
@@ -38,7 +38,7 @@
                     <div class="memory-strength inline-top margin-right-16">
                         {{#tool-tipster title="Memory Strength" class='inline-block'}}
                             <div class="brain-bulb-fill" {{bind-attr style=memoryStrengthMeterStyle}}></div>
-                            <img src="/img/brain-bulb-small-0.png" {{bind-attr style=memoryStrengthMeterInverseStyle}}/>
+                            <div class="grey-fill" {{bind-attr style=memoryStrengthMeterInverseStyle}}/>
                             <img {{bind-attr src=memoryStrengthSrc}} />
                             <label>
                                 {{test.memoryStrength}}
