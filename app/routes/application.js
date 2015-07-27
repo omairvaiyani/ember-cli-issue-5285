@@ -146,7 +146,6 @@ export default Ember.Route.extend({
             var name = applicationController.get('newUser.name'),
                 email = applicationController.get('newUser.email'),
                 password = applicationController.get('newUser.password'),
-                confirmPassword = applicationController.get('newUser.confirmPassword'),
                 errors = false;
 
             if (!FormValidation.name(name.trim())) {
@@ -159,10 +158,6 @@ export default Ember.Route.extend({
             }
             if (!FormValidation.password(password)) {
                 applicationController.set('signUpValidationErrors.password', true);
-                errors = true;
-            }
-            if (!FormValidation.confirmPassword(password, confirmPassword)) {
-                applicationController.set('signUpValidationErrors.confirmPassword', true);
                 errors = true;
             }
             if (!errors) {
@@ -304,27 +299,14 @@ export default Ember.Route.extend({
             var promise = ParseUser.signup(this.store, data).then(function (user) {
                 this.get('applicationController').set('currentUser', user);
                 return user.reload();
-            }.bind(this)).then(function (user) {
+            }.bind(this)).then(function () {
                     this.send('decrementLoadingItems');
+                    if(this.get('currentUser.firstTimeLogin')) {
+                        this.set('currentUser.firstTimeLogin', false);
+                        this.set('applicationController.redirectAfterLoginToRoute', 'join.personalise');
+                        this.set('applicationController.redirectAfterLoginToController', 'join');
+                    }
                     this.send('redirectAfterLogin');
-                    //this.send('decrementLoadingItems');
-
-                    // TODO test migration prompt must ONLY be for new registrations...
-                    // Check if its a MyCQs user and then prompt them to migrate tests
-                    ParseHelper.cloudFunction(this, "checkIfUserExistsOnMyCQs",
-                        {
-                            email: this.get('currentUser.email'),
-                            password: this.get('applicationController.newUser.password')
-                        })
-                        .then(function (response) {
-                            console.dir(response);
-                            if (response.sessionToken) {
-                                this.send('openModal', 'application/modal/migrate-tests');
-                            }
-                        }.bind(this), function (error) {
-                            console.dir(error);
-                        });
-
                 }.bind(this),
                 function (error) {
                     this.send('decrementLoadingItems');
@@ -386,11 +368,6 @@ export default Ember.Route.extend({
                     this.controllerFor(this.get('applicationController.redirectAfterLoginToRoute'))
                         .send('returnedFromRedirect');
                 this.set('applicationController.redirectAfterLoginToRoute', null);
-            } else if (!this.get('currentUser.finishedWelcomeTutorial')) {
-                /*
-                 * First time logging into this site
-                 */
-                this.transitionTo('index');
             } else
                 this.transitionTo('index');
         },
@@ -398,13 +375,14 @@ export default Ember.Route.extend({
         /**
          * Open Modal
          * - Must supply modalName.
-         * If controller name is set as *true*,
-         * controller path will be presumed as
-         * modalName.
+         * - No controller or controller set as true
+         *      to resolve modalName to controller path.
+         * - Model can be anything, if no controller is
+         *   supplied, model can be second param.
          *
-         * @param {String} modalName (Template)
+         *  @param {String} modalName (Template)
          * @param {String} controller (Name)
-         * @param {EmberModel} model
+         * @param {Object} model
          * @returns {*}
          */
         openModal: function (modalName, controller, model) {
@@ -415,7 +393,6 @@ export default Ember.Route.extend({
 
             if (model)
                 this.controllerFor(controller).set('model', model);
-
 
             this.render(modalName, {
                 into: 'application',

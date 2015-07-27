@@ -68,7 +68,7 @@ export default Ember.ObjectController.extend(CurrentUser, {
 
     userActions: [],
 
-    getUserActionsAndModify: function () {
+    /*getUserActionsAndModify: function () {
         if (!this.get('model.id'))
             return;
 
@@ -97,7 +97,7 @@ export default Ember.ObjectController.extend(CurrentUser, {
             }.bind(this));
             this.get('userActions').addObjects(userActions);
         }.bind(this));
-    }.observes('model'),
+    }.observes('model'),*/
 
     /*
      * COURSE SELECTION

@@ -19,12 +19,13 @@ export default
     },
 
     password: function(password) {
-        if (!password || !password.length || (password.length < 6) || (password.length > 18))
+        if (!password || !password.length || (password.length < 6))
             return false;
         else
             return true;
     },
 
+    // @Deprecated
     confirmPassword: function(password, confirmPassword) {
         if(password !== confirmPassword)
             return false;

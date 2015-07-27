@@ -243,6 +243,9 @@ export default Ember.Controller.extend({
             // loads on a different route to index.
             this.get('controllers.index').myTestsListUpdate();
             this.send('decrementLoadingItems');
+        }.bind(this), function (error) {
+            console.dir(error);
+            this.send('decrementLoadingItems');
         }.bind(this));
         //EventTracker.profileUser(this.get('currentUser'));
     }.observes('currentUser'),

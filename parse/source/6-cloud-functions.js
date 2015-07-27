@@ -34,7 +34,7 @@ Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
         createdTestsQuery.notEqualTo('isSpacedRepetition', true);
         createdTestsQuery.ascending('title');
         createdTestsQuery.include('questions');
-        createdTestsQuery.limit(25);
+        createdTestsQuery.limit(200);
         promises.push(createdTestsQuery.find());
 
         var savedTestsRelation = user.relation('savedTests'),
@@ -44,7 +44,7 @@ Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
         savedTestsQuery.notEqualTo('isSpacedRepetition', true);
         savedTestsQuery.ascending('title');
         savedTestsQuery.include('questions', 'author');
-        savedTestsQuery.limit(25);
+        savedTestsQuery.limit(200);
         promises.push(savedTestsQuery.find());
 
         // Get uniqueResponses only for tests that are being
@@ -85,7 +85,8 @@ Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
             if (user) {
                 // Another 6 promises can go here if need be
                 promises = [];
-                promises.push(user.fetchEducationCohort());
+                if (user.educationCohort())
+                    promises.push(user.fetchEducationCohort());
 
                 return Parse.Promise.when(promises);
             }
@@ -752,10 +753,11 @@ Parse.Cloud.define('checkIfUserExistsOnMyCQs', function (request, response) {
     }).then(function (httpResponse) {
         var result = httpResponse.data.result,
             url,
+            params,
             body,
             method;
 
-        if(result.user.authData && result.user.authData.facebook) {
+        if (result.user.authData && result.user.authData.facebook) {
             method = "POST";
             url = 'https://api.parse.com/1/users';
             body = {
@@ -764,7 +766,7 @@ Parse.Cloud.define('checkIfUserExistsOnMyCQs', function (request, response) {
         } else {
             method = "GET";
             url = 'https://api.parse.com/1/login';
-            body = {
+            params = {
                 username: result.username,
                 password: password
             };
@@ -777,6 +779,7 @@ Parse.Cloud.define('checkIfUserExistsOnMyCQs', function (request, response) {
                 "X-Parse-REST-API-Key": "xN4I6AYSdW2P8iufiEOEP1EcbiZtdqyjyFBsfOrh",
                 "Content-Type": "application/json; charset=utf-8"
             },
+            params: params,
             body: body
         });
     }).then(function (httpResponse) {
@@ -842,6 +845,8 @@ Parse.Cloud.define('getOldTestsForUser', function (request, response) {
  * Synap user.
  *
  * Must send 'oldTests' in the MyCQs format.
+ * Do not send more than 25 tests at one time,
+ * this will avoid timeouts and max data limits.
  *
  * @param {string} key "Xquulpwz1!"
  * @param {Array} oldTests
@@ -865,7 +870,7 @@ Parse.Cloud.define('mapOldTestsToNew', function (request, response) {
         var test = new Test();
         // alreadyMigratedId is set on the Web during migration selection
         // it allows us to update tests instead of creating duplicates.
-        if(oldTest.alreadyMigratedId)
+        if (oldTest.alreadyMigratedId)
             test.id = oldTest.alreadyMigratedId;
         test.set('slug', oldTest.slug);
         test.set('title', oldTest.title);

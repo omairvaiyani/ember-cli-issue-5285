@@ -156,6 +156,7 @@ Parse.User.prototype.setDefaults = function () {
     }.bind(this));
 
     this.set('isPremium', false);
+    this.set('firstTimeLogin', true);
 
     return this;
 };
@@ -256,15 +257,21 @@ Parse.User.prototype.fetchEducationCohort = function () {
  * @return {Parse.Promise<Test>} srLatestTest
  */
 Parse.User.prototype.fetchSRLatestTest = function () {
-    var srLatestTest = this.srLatestTest();
+    var srLatestTest = this.srLatestTest(),
+        promise = new Parse.Promise();
     // User has no level set: this shouldn't happen
     // *once* we set Level 1 by default on sign up.
     if (srLatestTest) {
         var query = new Parse.Query(Test);
         query.include('questions');
-        return query.get(srLatestTest.id);
+        query.get(srLatestTest.id).then(function (test) {
+            promise.resolve(test);
+        }, function (error) {
+            console.error(error);
+            promise.resolve(null);
+        });
     } else
-        Parse.Promise.resolve(null);
+        promise.resolve(null);
 };
 /**
  * @Function Add Unique Responses

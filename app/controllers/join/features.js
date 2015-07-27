@@ -1,14 +1,10 @@
 import Ember from 'ember';
-import PremiumPayment from '../../controllers/application/modal/premium-payment';
 
-export default PremiumPayment.extend({
+export default Ember.Controller.extend({
     needs: ['join'],
     actions: {
-        goToNextStep: function (callback) {
-            if(this.get('controllers.join.joinStep.addQuestions'))
-                this.get('controllers.join').send('goToJoinStep', 'addQuestions', callback);
-            else
-                this.transitionToRoute('user', this.get('currentUser.slug'));
+        goToNextStep: function () {
+            this.get('controllers.join').send('registrationComplete');
         },
         postUpgradeSetup: function () {
             this.get('currentUser').reload();

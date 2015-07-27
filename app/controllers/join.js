@@ -1,8 +1,9 @@
 import Ember from 'ember';
 import CurrentUser from '../mixins/current-user';
+import ParseHelper from '../utils/parse-helper';
 
 export default Ember.Controller.extend(CurrentUser, {
-    needs: ['application','create'],
+    needs: ['application', 'create'],
 
     setRedirectPostSignUp: function () {
         this.get('controllers.application').set('redirectAfterLoginToRoute', 'join.personalise');
@@ -12,11 +13,6 @@ export default Ember.Controller.extend(CurrentUser, {
      * Join process
      */
     joinStep: {
-        /*create: {
-            active: false,
-            disabled: false,
-            completed: false
-        },*/
         join: {
             active: false,
             disabled: false,
@@ -32,21 +28,16 @@ export default Ember.Controller.extend(CurrentUser, {
             disabled: true,
             completed: false
         },
-      /*  addQuestions: {
-            active: false,
-            disabled: true,
-            completed: false
-        },*/
         completed: false
     },
 
     actions: {
         goToJoinStep: function (step) {
-            if(step === 'create' || step === 'addQuestions') {
+            if (step === 'create' || step === 'addQuestions') {
                 this.get('controllers.create').send('goToJoinStep', step);
                 return;
             }
-            if(this.get('joinStep.create')) {
+            if (this.get('joinStep.create')) {
                 this.set('joinStep.create.active', false);
                 this.set('joinStep.join.active', false);
             }
@@ -78,10 +69,36 @@ export default Ember.Controller.extend(CurrentUser, {
             this.get('controllers.create').notifyPropertyChange('joinStep');
         },
 
-        returnedFromRedirect: function () {
-            if (this.get('joinStep.join.active')) {
-                this.send('goToJoinStep', 'personalise');
+        registrationComplete: function () {
+            if (this.get('joinStep.addQuestions'))
+                this.send('goToJoinStep', 'addQuestions');
+            else {
+                this.transitionToRoute('index');
+                // Check if its a MyCQs user, and ask them to migrate
+                // their tests over
+                ParseHelper.cloudFunction(this, "checkIfUserExistsOnMyCQs",
+                    {
+                        email: this.get('currentUser.email'),
+                        password: this.get('controllers.application.newUser.password')
+                    })
+                    .then(function (response) {
+                        if (response.sessionToken) {
+                            this.set('currentUser.firstTimeLogin', true); // Needed by migrate-tests controller
+                            this.send('openModal', 'application/modal/migrate-tests');
+                        }
+                    }.bind(this), function (error) {
+                        console.dir(error);
+                    });
+
             }
+        },
+
+        returnedFromRedirect: function () {
+            // Not why why join.active goes back to true, but we
+            // need it to be false.
+            setTimeout(function () {
+                this.send('goToJoinStep', 'personalise');
+            }.bind(this), 400);
         }
     }
 });

@@ -1,10 +1,12 @@
 <div class="modal-header">
-    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span
-            class="sr-only">Close</span></button>
     <h4 class="modal-title">Migrate Tests</h4>
 </div>
 <div class="modal-body">
     <form class="form-horizontal">
+        {{#if explanation}}
+            <p>We've noticed that you are a MyCQs user. Would you like us to transfer your
+                tests over to Synap now? You can do it later in your 'Settings' page.</p>
+        {{/if}}
         {{#if credentialChecking}}
             <div class="form-group">
                 <label for="oldEmail" class="col-sm-6 control-label">MyCQs Email</label>
@@ -27,6 +29,9 @@
                 <div class="col-sm-6 col-sm-push-6">
                     {{async-button default="Check Credentials" class="btn btn-primary" action='checkCredentials'
                     pending="Checking..." reset=true rejected="Error!"}}
+                    {{#if incorrectDetails}}
+                        <h5 class="pull-right">Incorrect details</h5>
+                    {{/if}}
                 </div>
             </div>
         {{/if}}
@@ -39,10 +44,6 @@
         {{#if testSelection}}
             <h4>
                 Select tests to migrate
-                <small class="pull-right">
-                    <label for="select-all-tests margin-right-16">Select all</label>
-                    {{input type='checkbox' checked=selectAllTests id='select-all-tests'}}
-                </small>
             </h4>
             <ul class="migrate-test-selection">
                 {{#each oldTests as |test|}}
@@ -59,8 +60,10 @@
             </ul>
             <h4>
                 <small>Tests selected: {{testsToMigrate.length}}</small>
-                {{async-button default="Migrate tests" class="btn btn-success btn-small pull-right"
-                action='beginTestMigration' pending="Migrating..." reset=true rejected="Error!"}}
+                <small class="pull-right">
+                    <label for="select-all-tests" class="margin-right-8">Select all</label>
+                    {{input type='checkbox' checked=selectAllTests id='select-all-tests'}}
+                </small>
             </h4>
             {{#if testsToMigrateIncludesAlreadyMigratedTests}}
                 <h4>
@@ -70,15 +73,36 @@
                 </h4>
             {{/if}}
         {{/if}}
+        {{#if migratingTests}}
+            <h5 class="text-center">Migrating tests... {{migrationProgress}}%</h5>
+            <h5 class="text-center small">
+                This may take a few moments. Please do not press or click anything.
+                Closing the browser will stop the migration and may cause problems.
+            </h5>
+        {{/if}}
     </form>
 </div>
 <div class="modal-footer">
     <div class="container-fluid margin-bottom-16">
         <section class="row">
             <article class="col-xs-12">
-                <button type="button" class="btn btn-default" {{action "cleanUpModalAndDismiss"}}>
-                    Cancel
-                </button>
+                {{#if explanation}}
+                    <button type="button" class="btn btn-default" {{action "cleanUpModalAndDismiss"}}>
+                        Later
+                    </button>
+                    <button type="button" class="btn btn-primary" {{action "explanationRead"}}>
+                        Do it now
+                    </button>
+                {{/if}}
+
+                {{#if testSelection}}
+                    {{#if testsToMigrate.length}}
+                        {{async-button default=migrateSelectedTestsLabel class="btn btn-default btn-small"
+                        action='beginTestMigration' pending="Migrating..." reset=true rejected="Error!"}}
+                    {{/if}}
+                    {{async-button default="Migrate ALL tests" class="btn btn-primary"
+                    action='migrateAllTests' pending="Migrating..." reset=true rejected="Error!"}}
+                {{/if}}
             </article>
         </section>
     </div>

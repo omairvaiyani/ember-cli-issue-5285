@@ -82,7 +82,7 @@ body
 .btn-facebook
   width 80%
   padding 8px
-  font-size large
+  font-size small
   color white !important
 
 .btn-facebook:hover, .btn-facebook:focus
@@ -135,9 +135,6 @@ body
     color: colorPrimary-400;
     font-size: 12px;
 
-.modal-title
-  color colorPrimary-600
-
 .my-tab {
   text-align: center;
   background-color: #B0C0A4;
@@ -149,6 +146,12 @@ body
 .my-tab:hover {
   text-decoration: underline;
 }
+.modal-dialog
+  padding 24px
+  .modal-content
+    border-radius 8px
+    .modal-title
+      color colorPrimary-600
 
 .onoffswitch {
   position: relative;
@@ -235,6 +238,18 @@ body
   right: 0px;
   background-color: #14A325;
 }
+.or-wrapper
+  border-bottom: 1px solid #eee;
+  padding: 10px 0;
+  position: relative;
+  display: block;
+  margin-bottom: 30px;
+  .or-text
+    position: absolute;
+    left: 46%;
+    top: 0;
+    background: #fff;
+    padding: 10px;
 
 input[type="range"] {
   -webkit-appearance: none !important; /*Needed to reset default slider styles */
@@ -658,7 +673,7 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 .navbar-brand-adjust {
-  margin-top: -7px;
+  margin: -14px;
 }
 
 // Navbar search current
@@ -883,13 +898,6 @@ hr.user-message-item-separator {
 }
 
 /* Login Modal */
-@media (max-width: 420px) {
-  .login-item .btn-facebook {
-    width: 100%;
-    font-size: 14px;
-  }
-}
-
 .sign-up-validation {
   padding-top: 6px;
 }
@@ -1084,7 +1092,7 @@ hr.user-message-item-separator {
 .parallax-follower .btn-facebook {
   width: 49%;
   padding: 6px;
-  font-size: inherit;
+  font-size: small;
 }
 
 .parallax-follower .create-column {

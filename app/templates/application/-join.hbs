@@ -1,19 +1,19 @@
 <div class="text-center">
     <button class="btn btn-facebook" {{action 'facebookConnect'}}>
-        <i class="fa fa-facebook margin-right-16"></i>Connect with Facebook
+        <i class="fa fa-facebook margin-right-16"></i>Sign up with Facebook
     </button>
 </div>
 
-<hr>
-<h4 class="text-center">Or sign up with your email</h4>
+<span class="or-wrapper">
+    <span class="or-text">Or</span>
+</span>
 
 <h4>Name</h4>
 
 <div class="row">
     <div class="col-md-12 margin-bottom-16">
         {{input type='text' value=newUser.name action='submitSignUp'
-        placeholder='Please enter your full name' classNames='form-control'
-        }}
+        placeholder='Please enter your full name' classNames='form-control'}}
     </div>
     {{#if signUpValidationErrors.name}}
         <div class="col-md-12 text-center sign-up-validation margin-bottom-16">
@@ -45,21 +45,7 @@
     </div>
     {{#if signUpValidationErrors.password}}
         <div class="col-md-12 text-center sign-up-validation margin-bottom-16">
-            <span class="alert alert-danger">6-18 characters only</span>
-        </div>
-    {{/if}}
-</div>
-
-<h4>Confirm password</h4>
-
-<div class="row">
-    <div class="col-md-12 margin-bottom-16">
-        {{input type='password' value=newUser.confirmPassword action='submitSignUp'
-        placeholder='Retype your password just to make sure' classNames='form-control'}}
-    </div>
-    {{#if signUpValidationErrors.confirmPassword}}
-        <div class="col-md-12 text-center sign-up-validation margin-bottom-16">
-            <span class="alert alert-danger">Mismatch!</span>
+            <span class="alert alert-danger">Min 6 characters</span>
         </div>
     {{/if}}
 </div>
@@ -74,7 +60,7 @@
 
 <div class="row">
     <div class="col-md-12 text-center margin-bottom-16">
-        <span class="linkify" {{action 'openModal' 'application/modal/login-or-register' 'application'}}
+        <span class="linkify" {{action 'openModal' 'application/modal/login' 'application'}}
                 >I already have an account</span>
     </div>
 

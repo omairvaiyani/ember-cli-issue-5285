@@ -1,0 +1,57 @@
+<div class="modal-header">
+    <h4 class="modal-title">Log in or Sign up</h4>
+</div>
+<div class="modal-body">
+    <div class="container-fluid text-center">
+        <button class="btn btn-facebook" {{action 'facebookConnect'}}>
+            <i class="fa fa-facebook margin-right-16"></i>Sign in with Facebook
+        </button>
+            <span class="or-wrapper">
+                <span class="or-text">Or</span>
+            </span>
+
+        <div class="form-group">
+            <div class="row">
+                <div class="row margin-bottom-16">
+                    <div class="col-md-12 text-center">
+                        <h4>Log in using your email</h4>
+                    </div>
+                </div>
+                <div class="row margin-bottom-16">
+                    <div class="col-md-8 col-md-offset-2 text-center">
+                        {{input type='email' value=loginUser.email placeholder='Email'
+                        action='login' classNames='form-control'}}
+                    </div>
+                </div>
+                <div class="row margin-bottom-16">
+                    <div class="col-md-8 col-md-offset-2 text-center">
+                        {{input type='password' value=loginUser.password placeholder='Password'
+                        action='login' classNames='form-control'}}
+                    </div>
+                </div>
+                <div class="row margin-bottom-16">
+                    <div class="col-md-8 col-md-offset-2">
+                        <a href='' class='forgot-password pull-left' {{action 'forgotPassword'}}>Forgot
+                            password</a>
+                        {{#if loginMessage.error}}
+                            <span class="alert alert-danger login-connecting-error pull-right">{{loginMessage.error}}</span>
+                        {{else}}
+                            {{#if loginMessage.connecting}}
+                                <span class="alert alert-info login-connecting-error pull-right">{{loginMessage.connecting}}</span>
+                            {{else}}
+                                <button class="btn btn-primary pull-right" {{action 'login'}}>Login</button>
+                            {{/if}}
+                        {{/if}}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-8 col-md-offset-2 text-center margin-bottom-16">
+                <span class="linkify" {{action 'openModal' 'application/modal/register' 'application'}}>
+                    Register a free account
+                </span>
+        </div>
+    </div>
+</div> <!-- /modal-body -->

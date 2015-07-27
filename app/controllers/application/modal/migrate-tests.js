@@ -4,7 +4,11 @@ import ParseHelper from '../../../utils/parse-helper';
 
 export default Ember.Controller.extend(CurrentUser, {
     init: function () {
-        if(this.get('currentUser.authData.facebook')) {
+        if(this.get('currentUser.firstTimeLogin')) {
+            this.send('setView', 'explanation');
+            this.set('currentUser.firstTimeLogin', false);
+            this.get('currentUser').save();
+        } else if (this.get('currentUser.authData.facebook')) {
             // facebook user, no need to ask for email/password
             this.send('setView', "checkingFacebookUser");
             this.send('checkCredentials');
@@ -25,11 +29,16 @@ export default Ember.Controller.extend(CurrentUser, {
 
     oldPassword: "",
 
-    views: ["credentialChecking", "checkingFacebookUser", "fetchingOldTests", "testSelection"],
+    incorrectDetails: false,
+
+    views: ["explanation", "credentialChecking", "checkingFacebookUser",
+        "fetchingOldTests", "testSelection", "migratingTests"],
+    explanation: false,
     credentialChecking: false,
     checkingFacebookUser: false,
     fetchingOldTests: false,
     testSelection: false,
+    migratingTests: false,
 
     oldTests: new Ember.A(),
 
@@ -60,6 +69,15 @@ export default Ember.Controller.extend(CurrentUser, {
         return !!this.get('testsToMigrate').findBy('alreadyMigrated', true);
     }.property('testsToMigrate.length'),
 
+    migrateSelectedTestsLabel: function () {
+        var buttonLabel = "Migrate " + this.get('testsToMigrate.length') + " test";
+        if(this.get('testsToMigrate.length') > 1)
+            buttonLabel += "s";
+        return buttonLabel;
+    }.property("testsToMigrate.length"),
+
+    migrationProgress: 0,
+
     actions: {
         setView: function (view) {
             _.each(this.get('views'), function (view) {
@@ -74,9 +92,12 @@ export default Ember.Controller.extend(CurrentUser, {
                 {email: this.get('oldEmail'), password: this.get('oldPassword')})
                 .then(function (response) {
                     this.send('fetchOldTests', response);
-                }.bind(this), function (error) {
-                    console.dir(error);
-                }).then(function () {
+                }.bind(this), function () {
+                    this.set('incorrectDetails', true);
+                    setTimeout(function () {
+                        this.set('incorrectDetails', false);
+                    }.bind(this), 2000);
+                }.bind(this)).then(function () {
                     this.send('decrementLoadingItems');
                 }.bind(this));
             if (callback)
@@ -125,26 +146,70 @@ export default Ember.Controller.extend(CurrentUser, {
             }
         },
 
-        beginTestMigration: function (callback) {
-            var promise = ParseHelper.cloudFunction(this, "mapOldTestsToNew",
-                {oldTests: this.get('testsToMigrate')}).then(function (response) {
-                    // Convert tests to ember-data
-                    var tests = ParseHelper.extractRawPayload(this.store, 'test', response);
-                    // Add them to user's createdTests
-                    this.get('currentUser.createdTests').pushObjects(tests);
-                    // Notify user of completed task
-                    this.send('addNotification', 'success', "Migration complete!",
-                        "We have added " + tests.get('length') + " of your tests!");
+        migrateAllTests: function () {
+            this.set('selectAllTests', true);
+            this.send('beginTestMigration');
+        },
 
-                    this.send('cleanUpModalAndDismiss');
-                }.bind(this), function (error) {
-                    console.dir(error);
-                    this.send('setView', 'credentialChecking');
-                }.bind(this)).then(function () {
-                    this.send('decrementLoadingItems');
-                }.bind(this));
+        beginTestMigration: function (callback) {
+            this.send('setView', 'migratingTests');
+            var batches = [new Ember.A()],
+                currentBatchIndex = 0,
+                batchPromise = new Parse.Promise();
+
+            this.get('testsToMigrate').forEach(function (test) {
+                if (batches[currentBatchIndex].get('length') > 10) {
+                    batches.push(new Ember.A());
+                    currentBatchIndex++;
+                }
+                batches[currentBatchIndex].pushObject(test);
+            });
+            var parseResponses = [];
+            var batchLoop = function (batchIndex) {
+                this.incrementProperty('migrationProgress', 5);
+                ParseHelper.cloudFunction(this, "mapOldTestsToNew",
+                    {oldTests: batches[batchIndex]}).then(function (response) {
+                        this.set('migrationProgress', Math.round( ((batchIndex + 1) / batches.length ) * 100));
+                        parseResponses.push.apply(parseResponses, response);
+                        if(batchIndex + 1 < batches.length) {
+                            setTimeout(function () {
+                                batchLoop(batchIndex + 1);
+                            }, 9000);
+                        } else {
+                            batchPromise.resolve(parseResponses);
+                        }
+                    }.bind(this));
+            }.bind(this);
+            batchLoop(0);
+            var promise = Parse.Promise.when(batchPromise).then(function (response) {
+                // Convert tests to ember-data
+                var tests = ParseHelper.extractRawPayload(this.store, 'test', response);
+                // Add them to user's createdTests
+                this.get('currentUser.createdTests').pushObjects(tests);
+                // Notify user of completed task
+                this.send('addNotification', 'success', "Migration complete!",
+                    "We have added " + tests.get('length') + " of your tests!");
+
+                this.send('cleanUpModalAndDismiss');
+            }.bind(this), function (error) {
+                console.dir(error);
+                this.send('setView', 'credentialChecking');
+            }.bind(this)).then(function () {
+                this.send('decrementLoadingItems');
+            }.bind(this));
+
             if (callback)
                 callback(promise);
+        },
+
+        explanationRead: function () {
+            if (this.get('currentUser.authData.facebook')) {
+                // facebook user, no need to ask for email/password
+                this.send('setView', "checkingFacebookUser");
+                this.send('checkCredentials');
+            } else {
+                this.send('setView', "credentialChecking");
+            }
         },
 
         cleanUpModalAndDismiss: function () {
@@ -152,6 +217,7 @@ export default Ember.Controller.extend(CurrentUser, {
             this.get('testsToMigrate').clear();
             this.set('selectAllTests', false);
             this.set('oldPassword', "");
+            this.set('migrationProgress', 0);
             this.send('setView', 'credentialChecking');
             this.send('closeModal');
         }

@@ -35,6 +35,8 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
         this.set('imageFile.url', this.get('currentUser.profileImageURL'));
         if (this.get('currentUser.profilePicture') || this.get('currentUser.fbid'))
             this.set('imageFile.isDefault', false);
+        if(!this.get('imageFile.isDefault'))
+            this.set('showSkip', false);
     }.observes('currentUser.profileImageURL.length'),
 
     moreSuggestionsToShow: function () {

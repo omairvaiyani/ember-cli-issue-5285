@@ -12,9 +12,9 @@
                 </button>
                 {{#link-to 'index' tagName='a' classNames='navbar-brand navbar-brand-adjust'}}
                     {{#if loadingItems}}
-                        <img src="img/loading-wide.gif" height="30px" class="logo-icon"/>
+                        <img src="img/loading-white.gif" height="45px" class="logo-icon"/>
                     {{else}}
-                        <img src="img/icon-header.png" height="30px" class="logo-icon"/>
+                        <img src="img/logo-wide.png" height="45px" class="logo-icon"/>
                     {{/if}}
                 {{/link-to}}
             </div>
@@ -92,15 +92,16 @@
                         {{partial 'application/navbar/current-user'}}
                     {{else}}
                         <li>
-                            <a href="javascript:void(0)" {{action 'openModal' 'application/modal/login-or-register'
+                            <a href="javascript:void(0)" {{action 'openModal' 'application/modal/login'
                             'application'}}>
                                 Log in
                             </a>
                         </li>
                         <li>
-                            {{#link-to 'join'}}
+                            <a href="javascript:void(0)" {{action 'openModal' 'application/modal/register'
+                            'application'}}>
                                 Register
-                            {{/link-to}}
+                            </a>
                         </li>
                     {{/if}}
                 </ul>

@@ -40,14 +40,28 @@ export default Ember.Controller.extend(CurrentUser, {
         {value: 'createdAt', label: "Date Created", reverse: true},
         {value: 'memoryStrength', label: "Memory", reverse: true}
     ],
+
     /**
      * @Property
      * The selected sorting method, e.g. by
      * title vs. createdAt etc.
      */
     myTestsListOrder: function () {
-        return this.get('myTestsListOrders')[2];
+        if(localStorage.myTestsListOrder)
+            return _.where(this.get('myTestsListOrders'),
+                {value: localStorage.getObject('myTestsListOrder').value})[0];
+        else
+            return this.get('myTestsListOrders')[0];
     }.property(),
+
+    /**
+     * @Property
+     * Stores the list order on the client browser
+     * If set, it will be set by init on next load.
+     */
+    storeMyTestsListOrderLocally: function () {
+        localStorage.setObject('myTestsListOrder',this.get('myTestsListOrder'));
+    }.observes('myTestsListOrder'),
 
     /**
      * @Property

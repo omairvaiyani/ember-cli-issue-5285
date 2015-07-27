@@ -1,12 +1,10 @@
 <div class="modal-header">
-    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span
-            class="sr-only">Close</span></button>
     <h4 class="modal-title">Education</h4>
 </div>
 <div class="modal-body">
 
     <div class="course-selection">
-        <p class="lead">Enter course information</p>
+        <p class="lead">Tell us what you're studying</p>
 
         <div class="row">
             <div class="col-md-12 margin-bottom-8">
@@ -96,7 +94,7 @@
     <div class="container-fluid margin-bottom-16">
         <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
         {{#if newEducationCohort.isDirty}}
-            {{async-button action='saveEducationCohort' class='btn btn-success' default='Save Changes'
+            {{async-button action='saveEducationCohort' class='btn btn-primary' default='Save Changes'
             pending="Saving..." rejected="Error! Try again." fulfilled="Saved!" resest=true}}
         {{/if}}
     </div>
