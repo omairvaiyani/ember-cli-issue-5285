@@ -6,6 +6,10 @@ import EventTracker from './utils/event-tracker';
 
 Ember.MODEL_FACTORY_INJECTIONS = true;
 
+// This disables deprecation warnings
+Ember.deprecate = function(){};
+Ember.warn = function(i){};
+
 var App = Ember.Application.extend({
     modulePrefix: config.modulePrefix,
     Resolver: Resolver,
@@ -19,9 +23,6 @@ var App = Ember.Application.extend({
 // Check initializers/session.js for main workload and loading state.
 loadInitializers(App, config.modulePrefix);
 
-// This disables deprecation warnings
-Ember.deprecate = function(){};
-Ember.warn = function(i){};
 /*
  * zzish set up
  *//*

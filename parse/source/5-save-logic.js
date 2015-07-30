@@ -80,6 +80,23 @@ Parse.Cloud.beforeSave(Test, function (request, response) {
 });
 
 /**
+ * @afterSave Test
+ *
+ */
+Parse.Cloud.afterSave(Test, function (request) {
+    var test = request.object;
+
+    if (!test.existed()) {
+        // Add to Angolia
+        testIndex.addObject(test, test.id);
+    } else {
+        // Update to Angolia
+        test.objectID = test.id;
+        testIndex.saveObject(test);
+    }
+});
+
+/**
  * @beforeSave Question
  *
  * New Question:

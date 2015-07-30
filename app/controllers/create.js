@@ -154,8 +154,6 @@ export default Ember.Controller.extend(CurrentUser, {
             this.send('incrementLoadingItems');
             var promise = ParseHelper.cloudFunction(this, 'createNewTest', {test: this.get('model')});
 
-            this.set('model.tags', this.get('model.tags').split(','));
-
             promise.then(function (response) {
                     this.send('newUserEvent', response);
                     var test = ParseHelper.extractRawPayload(this.store, 'test', response.test);

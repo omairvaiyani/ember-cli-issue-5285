@@ -4,7 +4,13 @@ var _ = require("underscore"),
     moment = require('cloud/moment-timezone-with-data.js'),
     mandrillKey = 'zAg8HDZtlJSoDu-ozHA3HQ',
     Mandrill = require('mandrill'),
-    Stripe = require('stripe');
+    Stripe = require('stripe'),
+    algoliasearch = require('cloud/algoliasearch.parse.js'),
+    algoliaClient = algoliasearch('ONGKY2T0Y8', 'b13daea376f182bdee7a089ade58b656');
+
+// Algolia Indices
+var testIndex = algoliaClient.initIndex('Test'),
+    userIndex = algoliaClient.initIndex('User');
 
 Mandrill.initialize(mandrillKey);
 

@@ -52,6 +52,7 @@
     "stripe": "^2.9.0"
   },
   "dependencies": {
+    "algoliasearch": "^3.7.5",
     "phantomjs": "^1.9.16"
   }
 }

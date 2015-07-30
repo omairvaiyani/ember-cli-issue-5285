@@ -9,6 +9,13 @@ export default Ember.Controller.extend(CurrentUser, {
         return this.get('controllers.application');
     }.property('controllers'),
 
+    init: function () {
+        // algolia Search API
+        var algoliaClient = algoliasearch("ONGKY2T0Y8", "8553807a02b101962e7bfa8c811fd105"),
+            testIndex = algoliaClient.initIndex('Test');
+        this.set('testIndex', testIndex);
+    },
+
     loadingItems: 0,
 
     queryParams: ['page', 'order', 'search'],
@@ -190,7 +197,21 @@ export default Ember.Controller.extend(CurrentUser, {
                 this.get('tests').addObjects(tests);
                 this.send('decrementLoadingItems');
             }.bind(this));
-    }.observes('model.id', 'readyToGetTests', 'order', 'search'),
+    }.observes('model.id', 'readyToGetTests', 'order'),
+
+    getTestsNew: function () {
+        this.get('testIndex').search(this.get('searchTerm')).then(function (response) {
+            var tests = ParseHelper.extractRawPayload(this.store, 'test', response.hits);
+            this.get('tests').clear();
+            this.get('tests').addObjects(tests);
+        }.bind(this), function (error) {
+            console.dir(error);
+        });
+    },
+
+    throttleGetTests: function () {
+        Ember.run.debounce(this, this.getTestsNew, 200);
+    }.observes('searchTerm.length'),
 
     testsOnPage: function () {
         if (!this.get('tests.length'))
