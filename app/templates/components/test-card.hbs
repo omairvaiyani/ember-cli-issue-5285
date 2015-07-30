@@ -4,29 +4,21 @@
         <div class="card test-info-card margin-top-16">
             <div class="left inline-top">
                 <h4>
-                    <a href="javascript:void(0)"
-                        {{action 'openModal' 'browse/modal/test-info' 'browse.modal.testInfo' test}}>
-                        {{test.title}}
-                    </a>
+                    {{test.title}}
                 </h4>
-
-                <p class="margin-bottom-8">
-                    {{#if test.category.parent.slug}}
-                        {{#link-to 'category' test.category.parent.slug}}{{test.category.parent.name}}{{/link-to}}
-                        /
-                        {{#link-to 'subcategory' test.category.parent.slug category.slug}}{{test.category.name}}{{/link-to}}
-                    {{else}}
-                        {{#link-to 'category' test.category.slug}}{{test.category.name}}{{/link-to}}
-                    {{/if}}
-                </p>
 
                 <p class="small margin-bottom-8">
                     {{test.questions.length}} {{pluralize-word 'question' test.questions.length}}
                 </p>
 
-                <p class="margin-bottom-8">{{text-preview test.description 100}}</p>
+                <p class="margin-bottom-8">{{text-preview test.description 120}}</p>
 
                 <ul class="tags">
+                    {{#if test.category}}
+                        <li {{bind-attr class=":tag :category test.category.isActive"}}
+                            {{action 'toggleCategoryFilter' test.category}}>{{test.category.name}}
+                        </li>
+                    {{/if}}
                     {{#each test.tags itemController="component.testCard.item.tag" as |tag|}}
                         <li {{bind-attr class=":tag tag.isActive"}} {{action 'toggleTagFilter' tag.model}}>{{tag.model}}</li>
                     {{/each}}
@@ -48,7 +40,7 @@
                 {{/if}}
                 {{#if showSRIcon}}
                     <div class="inline-top">
-                        <img src="/img/brain-bulb-small-gradient.png" height="50px" />
+                        <img src="/img/brain-bulb-small-gradient.png" height="50px"/>
                     </div>
                 {{/if}}
                 {{#if showProfilePicture}}
@@ -58,10 +50,12 @@
                 {{/if}}
 
                 <div class="right-bottom">
-                    {{#link-to 'test' test.slug tagName='button' class="btn btn-primary"}}Take Test{{/link-to}}
+                    <button {{action 'openModal' 'browse/modal/test-info' 'browse.modal.testInfo' test}}
+                            class="btn btn-primary" >Take Test</button>
                     {{#if showMenuOverFlow}}
                         <div class="btn-group">
-                            <button type="button" class="btn btn-default btn-flat dropdown-toggle" data-toggle="dropdown"
+                            <button type="button" class="btn btn-default btn-flat dropdown-toggle"
+                                    data-toggle="dropdown"
                                     aria-expanded="false">
                                 <i class="mdi-navigation-more-vert"></i>
                             </button>

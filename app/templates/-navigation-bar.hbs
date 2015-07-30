@@ -23,27 +23,22 @@
             <div class="collapse navbar-collapse" id="bs-navbar-collapsing">
                 <ul class="nav navbar-nav">
                     {{#if currentUser}}
-                        {{#link-to 'create' tagName='li' title='MCQ Test Maker'}}{{#link-to 'create' tagName='a'}}
-                            Create{{/link-to}}{{/link-to}}
+                        {{#link-to 'create' tagName='li' title='MCQ Quiz Maker'}}
+                            {{#link-to 'create' tagName='a'}}
+                                Create
+                            {{/link-to}}
+                        {{/link-to}}
+                        {{#link-to 'index' tagName='li' title='My Quizzes'}}
+                            {{#link-to 'index' tagName='a'}}
+                                Practice
+                            {{/link-to}}
+                        {{/link-to}}
                     {{/if}}
-                    <!-- About dropdown menu-->
-                    <li class="dropdown">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
-                            Tests <span class="caret"></span></a>
-                        <ul class="dropdown-menu" role="menu">
-                            {{#link-to 'browse' tagName='li' title='Browse MCQ tests'}}
-                                {{#link-to 'browse' tagName='a'}}
-                                Browse categories
-                                {{/link-to}}
-                            {{/link-to}}
-                            <li class="divider"></li>
-                            {{#link-to 'medical' tagName='li' title='Medical question bank'}}
-                                {{#link-to 'medical' tagName='a'}}
-                                    Medical Question Bank
-                                {{/link-to}}
-                            {{/link-to}}
-                        </ul>
-                    </li>
+                    {{#link-to 'browse' tagName='li' title='Search for quizzes'}}
+                        {{#link-to 'browse' tagName='a'}}
+                            Browse
+                        {{/link-to}}
+                    {{/link-to}}
                     {{!--
                     {{#link-to 'groups' tagName='li' title='Browse Groups'}}{{#link-to 'groups' tagName='a'}}
                         Groups{{/link-to}}{{/link-to}}
@@ -51,7 +46,8 @@
                     <!-- About dropdown menu-->
                     {{#unless currentUser}}
                         <li class="dropdown">
-                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                               aria-expanded="false">
                                 About <span class="caret"></span></a>
                             <ul class="dropdown-menu" role="menu">
                                 {{#link-to 'about.index' tagName='li' title='About us'}}
@@ -124,7 +120,7 @@
                         <div class="form-control">
                             <i class="fa fa-search margin-right-16 inline-block"></i>
                             {{input type="text" class="inline-block no-border-input"
-                                   placeholder="Search..." id='site-search-input' value=searchInputText}}
+                            placeholder="Search..." id='site-search-input' value=searchInputText}}
                         </div>
                     </form>
                 </article>

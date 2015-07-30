@@ -160,93 +160,14 @@ export default Ember.Controller.extend({
     }.observes('currentUser'),
 
     /**
-     * This hook gets the currentUser's
-     * attempts, latestAttempts, followers and following
-     * It is called on ApplicationRoute.setupController
-     * as well as anytime the currentUser is changed.
+     * @Observes
+     * Updates myTestsList after init:session
      */
     initializeCurrentUser: function () {
         if (!this.get('currentUser')) {
             return;
         }
-        this.send('incrementLoadingItems');
-        Ember.$.ajax({
-            url: "https://api.parse.com/1/functions/initialiseWebsiteForUser",
-            method: "POST",
-            headers: {
-                "X-Parse-Application-Id": config.parse.appId,
-                "X-Parse-REST-API-Key": config.parse.restKey,
-                "X-Parse-Session-Token": this.get('currentUser.sessionToken')
-
-            }
-        }).then(function (response) {
-            // Categories
-            ParseHelper.extractRawPayload(this.store, 'category', response.result.categories);
-
-            // Tests
-            if (response.result.createdTests) {
-                var createdTests = ParseHelper.extractRawPayload(this.store, 'test', response.result.createdTests);
-                this.get('currentUser.createdTests').clear();
-                this.get('currentUser.createdTests').addObjects(createdTests);
-            }
-            if (response.result.savedTests) {
-                var savedTests = ParseHelper.extractRawPayload(this.store, 'test', response.result.savedTests);
-                this.get('currentUser.savedTests').clear();
-                this.get('currentUser.savedTests').addObjects(savedTests);
-            }
-            if (response.result.uniqueResponses) {
-                var uniqueResponses = ParseHelper.extractRawPayload(this.store, 'unique-response',
-                    response.result.uniqueResponses);
-                this.get('currentUser.uniqueResponses').clear();
-                this.get('currentUser.uniqueResponses').addObjects(uniqueResponses);
-            }
-            if (response.result.educationCohort) {
-                var educationCohort = ParseHelper.extractRawPayload(this.store, 'education-cohort',
-                    response.result.educationCohort);
-                this.set('currentUser.educationCohort', educationCohort);
-            }
-            if (response.result.srLatestTest) {
-                var srLatestTest = ParseHelper.extractRawPayload(this.store, 'test',
-                    response.result.srLatestTest);
-                this.set('currentUser.srLatestTest', srLatestTest);
-            }
-            /* var followers = ParseHelper.extractRawPayload(this.store, 'parse-user',
-             response, 'followers');
-             this.get('currentUser').set('followers', followers);
-
-             var following = ParseHelper.extractRawPayload(this.store, 'parse-user',
-             response, 'following');
-             this.get('currentUser').set('following', following);
-
-             var messages = ParseHelper.extractRawPayload(this.store, 'message',
-             response, 'messages');
-             this.get('currentUser').set('messages', messages);
-
-             var groups = ParseHelper.extractRawPayload(this.store, 'group',
-             response, 'groups');
-             this.get('currentUser').set('groups', groups);
-
-             var attempts = ParseHelper.extractRawPayload(this.store, 'attempt',
-             response, 'attempts');
-             this.get('currentUser').set('attempts', attempts);*/
-
-            /*
-             * isMobileUSer
-             * Actual value on privateData to stop user's from changing it manually.
-             * But easier to stick it on the currentUser in memory for simpler
-             * coding. No longer need CloudFunction for this but this is a good place
-             * to set this.
-             */
-            //this.set('currentUser.isMobileUser', this.get('currentUser.privateData.isMobileUser'));
-
-            // This ensures index.myTestsList is filled out even when website
-            // loads on a different route to index.
-            this.get('controllers.index').myTestsListUpdate();
-            this.send('decrementLoadingItems');
-        }.bind(this), function (error) {
-            console.dir(error);
-            this.send('decrementLoadingItems');
-        }.bind(this));
+        this.get('controllers.index').myTestsListUpdate();
         //EventTracker.profileUser(this.get('currentUser'));
     }.observes('currentUser'),
 

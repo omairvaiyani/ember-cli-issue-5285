@@ -16,7 +16,9 @@ var App = Ember.Application.extend({
     rootElement: '#body-wrap'
 });
 
+// Check initializers/session.js for main workload and loading state.
 loadInitializers(App, config.modulePrefix);
+
 // This disables deprecation warnings
 Ember.deprecate = function(){};
 Ember.warn = function(i){};

@@ -6,16 +6,19 @@
             <h4>Search from thousands of mcq tests in MyCQs.</h4>
         {{else}}
             <div class='inline-block svg-icon-white'>
-                {{#if parentCategoryName}}
-                    {{svg-icon icon=parentCategoryName height=60 width=60 colour="white"}}
+                {{#unless model.hasChildren}}
+                    {{#if model.parent}}
+                        {{svg-icon icon=model.parent.name height=60 width=60 colour="white"}}
+                    {{/if}}
                 {{else}}
-                    {{svg-icon icon=name height=60 width=60 colour="white"}}
-                {{/if}}
+                    {{svg-icon icon=model.name height=60 width=60 colour="white"}}
+                {{/unless}}
             </div>
             <h1 class="inline-block">{{seoPageHeader}}</h1>
 
-            <h4>Search from over {{math-round totalTests 10}}
-                {{#if secondaryName}}{{secondaryName}}{{else}}{{name}}{{/if}} mcqs{{#if seoChildCategories.length}} on
+            <h4>Search from over {{math-round model.totalTests 10}}
+                {{#if model.secondaryName}}{{model.secondaryName}}{{else}}{{model.name}}{{/if}} mcqs
+                {{#if seoChildCategories.length}} on
                     a range of subjects such as {{seoChildCategories}}{{/if}}.</h4>
         {{/if}}
     </div>
@@ -24,19 +27,19 @@
     <ol class="breadcrumb">
         {{#link-to 'browse' tagName='li'}}{{#link-to 'browse'}}Browse{{/link-to}}{{/link-to}}
         {{#if hasChildren}}
-            {{#link-to 'category' slug tagName='li'}}
-                {{name}}
+            {{#link-to 'category' model.slug tagName='li'}}
+                {{model.name}}
             {{/link-to}}
         {{else}}
-            {{#if parentCategorySlug}}
-                {{#link-to 'category' parentCategorySlug tagName='li'}}
-                    {{#link-to 'category' parentCategorySlug}}
-                        {{parentCategoryName}}
+            {{#if model.parent.slug}}
+                {{#link-to 'category' model.parent.slug tagName='li'}}
+                    {{#link-to 'category' model.parent.slug}}
+                        {{model.parent.name}}
                     {{/link-to}}
                 {{/link-to}}
             {{/if}}
-            {{#link-to 'subcategory' parentCategorySlug slug tagName='li'}}
-                {{name}}
+            {{#link-to 'subcategory' model.parent.slug model.slug tagName='li'}}
+                {{model.name}}
             {{/link-to}}
         {{/if}}
     </ol>
@@ -56,28 +59,34 @@
                 </div>
 
                 {{#if childCategories.length}}
-                    <h5>Filter {{tests.count}} results</h5>
+                    <h5>Categories</h5>
 
-                    <ul class="nav nav-pills nav-stacked">
-                        {{#each category in childCategories itemController='category.item.childCategory'}}
-                            {{#if browseAll}}
-                                <li>
-                                    {{#link-to 'category' category.slug}}
-                                        {{category.name}}
-                                        <small>({{category.totalTests}})</small>
-                                    {{/link-to}}
-                                </li>
-                            {{else}}
-                                {{#link-to 'subcategory' category.parentCategorySlug category.slug tagName='li'}}
-                                    {{#link-to 'subcategory' category.parentCategorySlug category.slug tagName='a'}}
-                                        {{category.name}}
-                                        <small>({{category.totalTests}})</small>
-                                    {{/link-to}}
+                    <ul class="nav nav-pills nav-stacked category-list">
+                        {{#each topLevelCategories itemController='category.item.parentCategory' as |parentCategory|}}
+                            {{#link-to 'category' parentCategory.model.slug tagName='li'
+                            classNameBindings="parentCategory.isSemiActive:semi-active"}}
+                                {{#link-to 'category' parentCategory.model.slug tagName='a'
+                                classNameBindings="parentCategory.isSemiActive:semi-active"}}
+                                    {{parentCategory.model.name}}
+                                    <small>({{parentCategory.model.totalTests}})</small>
                                 {{/link-to}}
-                            {{/if}}
+                                {{#if parentCategory.isActive}}
+                                    <ul class="inner-list nav nav-pills nav-stacked margin-left-16">
+                                        {{#each childCategories itemController='category.item.childCategory' as |category|}}
+                                            {{#link-to 'subcategory' parentCategory.model.slug
+                                            category.model.slug tagName='li'}}
+                                                {{#link-to 'subcategory' parentCategory.model.slug
+                                                category.model.slug tagName='a'}}
+                                                    {{category.model.name}}
+                                                    <small>({{category.model.totalTests}})</small>
+                                                {{/link-to}}
+                                            {{/link-to}}
+                                        {{/each}}
+                                    </ul>
+                                {{/if}}
+                            {{/link-to}}
                         {{/each}}
                     </ul>
-
                 {{/if}}
             </div>
         </div>

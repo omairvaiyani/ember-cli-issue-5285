@@ -2,22 +2,11 @@ import Ember from 'ember';
 
 export default Ember.Route.extend({
     model: function (params) {
-        var where = {
-                "slug": params.subcategory_slug
-            };
-        return this.store.findQuery('category',
-            {
-                where: JSON.stringify(where),
-                include: 'parent'
-            }
-        ).then(function (results) {
-                if (results.objectAt(0)) {
-                    results.objectAt(0).get('parent');
-                    return results.objectAt(0);
-                } else {
-                    return;
-                }
-            }.bind(this));
+        var recordArray = this.store.all('category').filterBy('slug', params.subcategory_slug);
+        if(recordArray.objectAt(0))
+            return recordArray.objectAt(0);
+        else
+            console.error("category not found");
     },
     renderTemplate: function () {
         this.render('category');
@@ -28,6 +17,8 @@ export default Ember.Route.extend({
             this.transitionTo('notFound');
             return;
         }
+        var topLevelCategories = this.store.all('category').filterBy('level', 1).sortBy('name');
+        controller.set('topLevelCategories', topLevelCategories);
         /*
          * These properties help avoid repetitive calls
          * to get childCategories for the same model.

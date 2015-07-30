@@ -3,16 +3,27 @@
         <div class="well mini-well margin-top-16">
             {{input type="text" class="form-control floating-label" placeholder="Filter tests" value=myTestsListFilter}}
 
-            <ul class="tags">
-                {{#if activeTags.length}}
+            {{#if activeCategories.length}}
+                <ul class="tags">
                     <div class="margin-top-8">
-                        <h5>TAGS</h5>
+                        <h5 class="small">CATEGORIES</h5>
                     </div>
-                {{/if}}
-                {{#each activeTags as |tag|}}
-                    <li class="tag" {{action 'toggleTagFilter' tag}}>{{tag}}</li>
-                {{/each}}
-            </ul>
+                    {{#each activeCategories as |category|}}
+                        <li class="tag category" {{action 'toggleCategoryFilter' category}}>{{category.name}}</li>
+                    {{/each}}
+                </ul>
+            {{/if}}
+            {{#if activeTags.length}}
+                <ul class="tags">
+
+                    <div class="margin-top-8">
+                        <h5 class="small">TAGS</h5>
+                    </div>
+                    {{#each activeTags as |tag|}}
+                        <li class="tag" {{action 'toggleTagFilter' tag}}>{{tag}}</li>
+                    {{/each}}
+                </ul>
+            {{/if}}
 
             {{#each myTestsListTypes as |listType|}}
                 <div class="radio radio-primary">
@@ -30,12 +41,15 @@
             {{test-card test=currentUser.srLatestTest parentController=this}}
         {{/if}}
         <section class="row margin-top-16">
-            <article class="col-md-3">
-                <h5>{{myTestsList.length}} {{pluralize-word 'test' currentUser.myTests.length}}</h5>
+            <article class="col-xs-3 col-sm-4">
+                <h5>{{myTestsList.length}} {{pluralize-word 'test' myTestsList.length}}</h5>
             </article>
-            <article class="col-md-3 pull-right">
+            <article class="col-xs-3 col-sm-4 col-fix-middle text-right">
+                <label for="my-tests-list-order" class="margin-top-8">Sort by</label>
+            </article>
+            <article class="col-xs-6 col-sm-4 col-fix-right pull-right">
                 {{view 'select' class="form-control pull-right" content=myTestsListOrders value=myTestsListOrder
-                optionLabelPath='content.label' optionValuePath='content'}}
+                optionLabelPath='content.label' optionValuePath='content' id="my-tests-list-order"}}
             </article>
         </section>
         {{#each myTestsList as |test|}}

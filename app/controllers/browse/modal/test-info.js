@@ -1,15 +1,7 @@
-import
-Ember
-from
-'ember';
+import Ember from 'ember';
+import CurrentUser from '../../../mixins/current-user';
 
-import
-CurrentUser
-from
-'../../../mixins/current-user';
-
-export default
-Ember.ObjectController.extend(CurrentUser, {
+export default Ember.ObjectController.extend(CurrentUser, {
     isCurrentUser: function () {
         if (!this.get('currentUser'))
             return false;
@@ -30,7 +22,7 @@ Ember.ObjectController.extend(CurrentUser, {
     }.observes('model.id'),
 
     isFollowing: function () {
-        if (!this.get('currentUser'))
+        if (!this.get('currentUser.following.length'))
             return false;
         return this.get('currentUser.following').contains(this.get('author.content'));
     }.property('currentUser.following.length', 'author.id')

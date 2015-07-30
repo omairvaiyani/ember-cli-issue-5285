@@ -43,7 +43,5 @@ export default Ember.Mixin.create({
     checkForSessionChanges: function() {
         if(this.get('applicationController.currentUser.id'))
             this.set('currentUser', this.get('applicationController.currentUser'));
-        else
-            this.set('currentUser', null);
     }.observes('applicationController.currentUser.id')
 });

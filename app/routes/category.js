@@ -1,31 +1,15 @@
-import
-Ember
-from
-'ember';
+import Ember from 'ember';
 
-export default
-Ember.Route.extend({
-    model: function (params, transition) {
+export default Ember.Route.extend({
+    model: function (params) {
         if(params.category_slug.toLowerCase() === "all")
             return {};
+        var recordArray = this.store.all('category').filterBy('slug', params.category_slug);
+        if(recordArray.objectAt(0))
+            return recordArray.objectAt(0);
+        else
+            console.error("category not found");
 
-        var category;
-
-        var where = {
-            "slug": params.category_slug
-        };
-        return this.store.findQuery('category',
-            {
-                where: JSON.stringify(where),
-                include: 'parent'
-            }
-        ).then(function (results) {
-                if (results.objectAt(0)) {
-                    return results.objectAt(0);
-                } else {
-                    return;
-                }
-            }.bind(this));
     },
     /*
      * Description and Prerender redied in CategoryController.pageIsLoadedCompletely
@@ -37,6 +21,9 @@ Ember.Route.extend({
             this.transitionTo('notFound');
             return;
         }
+
+        var topLevelCategories = this.store.all('category').filterBy('level', 1).sortBy('name');
+        controller.set('topLevelCategories', topLevelCategories);
         /*
          * These properties help avoid repetitive calls
          * to get childCategories for the same model.

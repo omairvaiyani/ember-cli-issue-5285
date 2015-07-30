@@ -2,7 +2,7 @@ import Ember from 'ember';
 import ParseHelper from '../utils/parse-helper';
 import CurrentUser from '../mixins/current-user';
 
-export default Ember.ObjectController.extend(CurrentUser, {
+export default Ember.Controller.extend(CurrentUser, {
     needs: 'application',
 
     applicationController: function () {
@@ -89,66 +89,43 @@ export default Ember.ObjectController.extend(CurrentUser, {
                 return;
             this.set('alreadyGotChildCategoriesForBrowseAll', true);
 
-            this.send('incrementLoadingItems');
-            var where = {
-                level: 1
-            };
-            this.store.findQuery('category', {
-                where: JSON.stringify(where),
-                order: 'name'
-            }).then(function (allTopLevelCategories) {
-                this.send('decrementLoadingItems');
-                this.set('childCategories', allTopLevelCategories);
-                /*
-                 * If there are categories to filter in the queryParams,
-                 * wait or those to filter the selectedCategories before
-                 * retrieving tests
-                 */
-                if (!this.get('categoryFilterSlugs.length')) {
-                    this.set('readyToGetTests', true);
-                }
-                /*
-                 * We wait for childCategories and selectedCategories to be set up
-                 * before filtering any out: if no queryParams are found
-                 * The 'filterTheseCategories' method adds all childCategories to
-                 * the selectedCategories array
-                 */
-                this.set('readyForFilter', true);
-            }.bind(this));
-            return;
+            /*
+             * If there are categories to filter in the queryParams,
+             * wait or those to filter the selectedCategories before
+             * retrieving tests
+             */
+            if (!this.get('categoryFilterSlugs.length')) {
+                this.set('readyToGetTests', true);
+            }
+            /*
+             * We wait for childCategories and selectedCategories to be set up
+             * before filtering any out: if no queryParams are found
+             * The 'filterTheseCategories' method adds all childCategories to
+             * the selectedCategories array
+             */
+            this.set('readyForFilter', true);
         }
         if (!this.get('model.id'))
             return;
         if (this.get('alreadyGotChildCategories'))
             return;
-        this.send('incrementLoadingItems');
         /*
          * Get this category's or categoryParent's child categories
          */
-        var where;
-        if (this.get('parent.id') && !this.get('hasChildren')) {
-            where = {
-                parent: ParseHelper.generatePointer(this.get('parent'), 'category')
-            };
-        } else if (this.get('hasChildren')) {
-            where = {
-                parent: ParseHelper.generatePointer(this.get('model'), 'category')
-            };
+        var parentId;
+        if (this.get('model.parent.id') && !this.get('model.hasChildren')) {
+            parentId = this.get('model.parent.id');
+        } else if (this.get('model.hasChildren')) {
+            parentId = this.get('model.id');
         } else {
-            this.send('decrementLoadingItems');
             this.set('readyToGetTests', true);
             this.set('alreadyGotChildCategories', true);
-            return this.set('childCategories', []);
+            return this.set('childCategories', new Ember.A());
         }
-        this.store.findQuery('category', {
-            where: JSON.stringify(where),
-            order: 'name'
-        }).then(function (childCategories) {
-            this.send('decrementLoadingItems');
-            this.set('childCategories', childCategories);
-            this.set('readyToGetTests', true);
-            this.set('alreadyGotChildCategories', true);
-        }.bind(this));
+        var childCategories = this.store.all('category').filterBy('parent.id', parentId).sortBy('name');
+        this.set('childCategories', childCategories);
+        this.set('readyToGetTests', true);
+        this.set('alreadyGotChildCategories', true);
     }.observes('model.id', 'browseAll'),
 
     readyToGetTests: false,
@@ -160,34 +137,55 @@ export default Ember.ObjectController.extend(CurrentUser, {
          * Get tests which belong to the parent category
          * AND any of the selected childCategories
          */
-        var where = {};
+        var queryOptions = [];
+
+        // ORDER
+        var orderField,
+            orderMethod = "descending";
+
+        if (this.get('order') === 'recent')
+            orderField = "createdAt";
+        if (this.get('order') === 'relevance')
+            orderField = "quality";
+
+        queryOptions.push({
+            method: orderMethod,
+            value: orderField
+        });
+
+        // SEARCH FILTER
         if (this.get('search.length')) {
             var stopWords = ParseHelper.stopWords,
                 tags = _.filter(this.get('search').toLowerCase().split(' '), function (w) {
                     return w.match(/^\w+$/) && !_.contains(stopWords, w);
                 });
-            where.tags = {
-                "$all": tags
-            };
+            queryOptions.push({
+                method: "containsAll",
+                key: "tags",
+                value: tags
+            });
         }
-        if (!this.get('browseAll') && this.get('hasChildren'))
-            where.category = {
-                "$in": ParseHelper.generatePointers(this.get('childCategories'))
-            };
-        else if (this.get('parent.id') || !this.get('hasChildren'))
-            where.category = ParseHelper.generatePointerFromIdAndClass(this.get('id'), 'category');
-
-        var order = this.get('order');
-        if (order === 'recent')
-            order = '-createdAt';
-        if (order === 'relevance')
-            order = '-quality';
-
-        this.store.findQuery('test', {
-            where: JSON.stringify(where),
-            order: order
-        })
-            .then(function (tests) {
+        // WHERE CATEGORY
+        if (!this.get('browseAll') && this.get('model.hasChildren')) {
+            queryOptions.push({
+                method: "containedIn",
+                key: "category",
+                value: ParseHelper.generatePointers(this.get('childCategories'))
+            });
+        } else if (this.get('model.parent.id') || !this.get('model.hasChildren')) {
+            queryOptions.push({
+                method: "equalTo",
+                key: "category",
+                value: ParseHelper.generatePointer(this.get('model'), 'category')
+            });
+        }
+        queryOptions.push({
+            method: "limit",
+            value: 20
+        });
+        ParseHelper.cloudFunction(this, 'getCommunityTests', {queryOptions: queryOptions})
+            .then(function (response) {
+                var tests = ParseHelper.extractRawPayload(this.store, 'test', response);
                 this.get('tests').clear();
                 this.get('tests').addObjects(tests);
                 this.send('decrementLoadingItems');
@@ -216,9 +214,9 @@ export default Ember.ObjectController.extend(CurrentUser, {
                 childCategoryText += " and more";
             }
             this.send('updatePageDescription', "Take MCQ tests in " + this.get('name') +
-            childCategoryText +
-            "! There are " + this.get('totalTests') +
-            " tests to choose from, or create your own!");
+                childCategoryText +
+                "! There are " + this.get('totalTests') +
+                " tests to choose from, or create your own!");
             this.send('prerenderReady');
         }
     }.observes('testsOnPage.length'),
@@ -226,17 +224,17 @@ export default Ember.ObjectController.extend(CurrentUser, {
     seoPageHeader: function () {
         var pageTitle;
 
-        pageTitle = this.get('name') + " MCQs";
+        pageTitle = this.get('model.name') + " MCQs";
         this.send('updatePageTitle', pageTitle);
         return pageTitle;
-    }.property('selectedCategories.length'),
+    }.property('model.name.length'),
 
     seoChildCategories: function () {
-        if (!this.get('childCategories.length') || !this.get('hasChildren'))
+        if (!this.get('childCategories.length') || !this.get('model.hasChildren'))
             return "";
         else {
             var seoString = "",
-                shuffledChildCategories = _.shuffle(this.get('childCategories.content')),
+                shuffledChildCategories = _.shuffle(this.get('childCategories')),
                 totalCategories = this.get('childCategories.length');
 
             if (totalCategories > 8)
@@ -254,6 +252,7 @@ export default Ember.ObjectController.extend(CurrentUser, {
 
     actions: {
         changeOrder: function (order) {
+            console.log("changeOrder");
             this.transitionTo({queryParams: {order: order}});
         },
 
@@ -264,6 +263,7 @@ export default Ember.ObjectController.extend(CurrentUser, {
              * Therefore, keep 'search' and 'searchTerm' as separate for the
              * getTests().observer
              */
+            console.log("searchTests");
             this.transitionTo({queryParams: {search: this.get('searchTerm'), page: 1}});
         },
 

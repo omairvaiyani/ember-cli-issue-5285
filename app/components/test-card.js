@@ -110,6 +110,10 @@ export default Ember.Component.extend({
 
         toggleTagFilter: function (tag) {
             this.get('parentController').send('toggleTagFilter', tag);
+        },
+
+        toggleCategoryFilter: function (category) {
+            this.get('parentController').send('toggleCategoryFilter', category);
         }
     }
 });

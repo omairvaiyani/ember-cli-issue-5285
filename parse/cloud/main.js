@@ -2267,6 +2267,54 @@ Parse.Cloud.define('getCommunityTest', function (request, response) {
 });
 
 /**
+ * @CloudFunction Get Community Tests
+ *
+ * Conducts a test query.
+ * Response is with questions,
+ * category and limited-author profile
+ * included.
+ *
+ * If test does not belong to user, author
+ * profile is minimised.
+ *
+ * @param {Array} queryOptions
+ * @return {Array<Test>}
+ */
+Parse.Cloud.define('getCommunityTests', function (request, response) {
+    var queryOptions = request.params.queryOptions,
+        query = new Parse.Query(Test);
+
+    query.notEqualTo('isObjectDeleted', true);
+    query.include('questions','author', 'category');
+
+
+    _.each(queryOptions, function (queryOption) {
+        if(queryOption.key && queryOption.value)
+            query[queryOption.method](queryOption.key, queryOption.value);
+        else if (queryOption.value)
+            query[queryOption.method](queryOption.value);
+        else if (queryOption.key)
+            query[queryOption.method](queryOption.key);
+    });
+    // Need this to get author.
+    Parse.Cloud.useMasterKey();
+
+    query.find().then(function (result) {
+        var tests = [];
+        // Query includes private tests in case the test
+        // belongs to the user. We check it manually here.
+        _.each(result, function (test) {
+            if(test.get('isPublic'))
+                tests.push(test);
+            // TODO limit user profile
+        });
+        response.success(tests);
+    }, function (error) {
+        response.error(error);
+    });
+});
+
+/**
  * @CloudFunction Save Test Attempt
  * Takes individual responses and saves each one,
  * storing the array of responses in a new attempt

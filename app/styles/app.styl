@@ -44,6 +44,19 @@ fontSizeS = 10px
 marginPrimary = 16px
 marginSecondary = 8px
 
+/*
+ * Gradient Mixin
+ */
+backgroundGradient(darken)
+  background darken(colorPrimary, darken)
+  background -moz-linear-gradient(left, darken(colorPrimary, darken) 0%, darken(colorSecondary, darken) 100%)
+  background -webkit-gradient(linear, left top, right top, color-stop(0%, darken(colorPrimary, darken)), color-stop(100%,  darken(colorSecondary, darken)))
+  background -webkit-linear-gradient(left, darken(colorPrimary, darken) 0%,  darken(colorSecondary, darken) 100%)
+  background -o-linear-gradient(left, darken(colorPrimary, darken) 0%,  darken(colorSecondary, darken) 100%)
+  background -ms-linear-gradient(left, darken(colorPrimary, darken) 0%,  darken(colorSecondary, darken) 100%)
+  background linear-gradient(to right, darken(colorPrimary, darken) 0%,  darken(colorSecondary, darken) 100%)
+
+
 body
   font-family 'Oxygen', "Helvetica Neue", Helvetica, Arial, sans-serif !important
   background-color colorBackground
@@ -621,9 +634,18 @@ input[type="range"]::-webkit-slider-thumb {
       color colorPrimary
     &.close-tag
       transform: rotate(45deg);
-
-
-
+  &.category
+    background-color colorSecondary
+    &::after
+      border-left-color colorSecondary
+    &:hover
+      background-color  alpha(colorSecondary, 0.85)
+      &::after
+        border-left-color alpha(colorSecondary, 0.85)
+    &.is-active
+      background-color darken(colorSecondary, 10)
+      &::after
+        border-left-color darken(colorSecondary, 10)
 
 .btn.fulfilled {
   background-color: green;
@@ -640,13 +662,7 @@ input[type="range"]::-webkit-slider-thumb {
   text-transform uppercase
   font-size 12px
   text-shadow: 0 0 1px rgba(0, 0, 0, 0.6);
-  background: colorPrimary;
-  background: -moz-linear-gradient(left, colorPrimary 0%, colorSecondary 100%);
-  background: -webkit-gradient(linear, left top, right top, color-stop(0%, colorPrimary), color-stop(100%, colorSecondary));
-  background: -webkit-linear-gradient(left, colorPrimary 0%, colorSecondary 100%);
-  background: -o-linear-gradient(left, colorPrimary 0%, colorSecondary 100%);
-  background: -ms-linear-gradient(left, colorPrimary 0%, colorSecondary 100%);
-  background: linear-gradient(to right, colorPrimary 0%, colorSecondary 100%);
+  backgroundGradient(0)
   .navbar-brand
     height 40px
     line-height 20px
@@ -817,7 +833,7 @@ hr.user-message-item-separator {
   margin-bottom: 16px;
   font-size: 20px;
   margin-top: -20px;
-  background: colorPrimary-700;
+  backgroundGradient(15)
 }
 
 @media (min-width: 768px) {
@@ -889,6 +905,20 @@ hr.user-message-item-separator {
 .action-bar-content {
   line-height: 20px;
 }
+
+.app-loading
+  position fixed
+  top 0
+  bottom 0
+  left 0
+  right 0
+  background darken(colorBackground, 3)
+  z-index 1
+  img
+    position absolute
+    height 150px
+    top: calc(50% - 150px)
+    left: calc(50% - 151.5px)
 
 .top-sticky {
   text-align: center;
@@ -1521,9 +1551,28 @@ hr.user-message-item-separator {
 }
 
 /* TEMPLATE - BROWSE */
+
 .category-container .card {
   min-height: 216px;
 }
+
+.category-list
+  li a
+    border-radius 0
+  li.active a.active
+    background-color colorPrimary
+    color lighten(colorPrimary-100, 15)
+  li.semi-active a.semi-active
+    background-color colorPrimary-400
+    color lighten(colorPrimary-100, 10)
+  ul.inner-list
+    list-style-type none
+    border-left 1px solid colorPrimary-800
+    padding-top 3px
+    padding-left 1px
+    li
+      padding 2px 4px
+
 
 .test-info-card
   .left

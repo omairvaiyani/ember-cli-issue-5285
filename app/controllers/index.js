@@ -36,9 +36,11 @@ export default Ember.Controller.extend(CurrentUser, {
      * drop down list.
      */
     myTestsListOrders: [
-        {value: 'title', label: "Alphabetical", reverse: false},
-        {value: 'createdAt', label: "Date Created", reverse: true},
-        {value: 'memoryStrength', label: "Memory", reverse: true}
+        {value: 'title', label: "Title A-Z", reverse: false},
+        {value: '-createdAt', label: "Newest first", reverse: true},
+        {value: 'createdAt', label: "Oldest first", reverse: false},
+        {value: 'memoryStrength', label: "Memory (Low - High)", reverse: false},
+        {value: '-memoryStrength', label: "Memory (High - Low)", reverse: true}
     ],
 
     /**
@@ -94,17 +96,27 @@ export default Ember.Controller.extend(CurrentUser, {
             return this.get('myTestsList').clear();
         finalList.addObjects(myTestsList);
 
-        // Tag filter, is separate from implicit filters
+        // Tag filter
         if (this.get('activeTags.length')) {
             var activeTags = this.get('activeTags');
             finalList = finalList.filter(function (test) {
-                var tagFound = false;
+                var matches = 0;
                 _.each(test.get('tags'), function (tag) {
-                    if (!tagFound && _.contains(activeTags, tag))
-                        tagFound = true;
+                    if (_.contains(activeTags, tag))
+                        matches++;
                 });
-                return tagFound;
+                return matches === activeTags.get('length');
             });
+        }
+
+
+        // Category filter
+        if (this.get('activeCategories.length')) {
+            var activeCategories = this.get('activeCategories');
+            finalList = finalList.filter(function (test) {
+                return this.get('activeCategories').contains(test.get('category.content')) ||
+                    this.get('activeCategories').contains(test.get('category.parent.content'));
+            }.bind(this));
         }
 
         // The finalList var allows us to filter
@@ -134,13 +146,19 @@ export default Ember.Controller.extend(CurrentUser, {
         Ember.run.debounce(this, this.myTestsListUpdate, 50);
     }.observes('currentUser.myTests.length', 'myTestsListType', 'myTestsListOrder', 'myTestsListFilter.length',
         'currentUser.myTests.@each.title.length', 'currentUser.myTests.@each.createdAt',
-        'currentUser.myTests.@each.memoryStrength', 'activeTags.length'),
+        'currentUser.myTests.@each.memoryStrength', 'activeTags.length', 'activeCategories.length'),
 
     /**
-     * @Property Active Tag
+     * @Property Active Tags
      * Used to filter tests on page by tag.
      */
     activeTags: [],
+
+    /**
+     * @Property Active Categories
+     * Used to filter tests on page by category.
+     */
+    activeCategories: [],
 
     actions: {
         /*
@@ -161,6 +179,19 @@ export default Ember.Controller.extend(CurrentUser, {
                 this.get('activeTags').removeObject(tag);
             else
                 this.get('activeTags').pushObject(tag);
+        },
+
+        toggleCategoryFilter: function (object) {
+            var category = object.get('content') ? object.get('content') : object;
+            if (!category)
+                return;
+
+            if (_.contains(this.get('activeCategories'), category)) {
+                this.get('activeCategories').removeObject(category);
+            } else {
+                this.get('activeCategories').pushObject(category);
+            }
+            category.set('isActive', _.contains(this.get('activeCategories'), category));
         }
     }
 });
