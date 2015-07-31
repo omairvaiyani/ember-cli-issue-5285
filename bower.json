@@ -22,6 +22,7 @@
     "moment-timezone": "~0.2.5",
     "tooltipster": "~3.3.0",
     "jstz": "entraigas/jstz",
-    "bootstrap-material-design": "~0.3.0"
+    "bootstrap-material-design": "~0.3.0",
+    "algoliasearch": "~3.7.5"
   }
 }
