@@ -67,7 +67,8 @@ Parse.Cloud.beforeSave(Test, function (request, response) {
         if (!test.isGenerated() && test.title() && user && !test.slug()) {
             promises.push(test.generateSlug(user));
         }
-    }
+    } else
+        test.set('totalQuestions', test.questions().length);
 
     if (!promises.length)
         return response.success();
@@ -87,13 +88,10 @@ Parse.Cloud.afterSave(Test, function (request) {
     var test = request.object;
 
     if (!test.existed()) {
-        // Add to Angolia
-        testIndex.addObject(test, test.id);
-    } else {
-        // Update to Angolia
-        test.objectID = test.id;
-        testIndex.saveObject(test);
+        // New test logic
     }
+    // Add/Update search index (async)
+    test.indexObject();
 });
 
 /**

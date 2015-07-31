@@ -175,7 +175,7 @@ export default {
         }
         // Ember uses 'id' as primaryKey.
         _.each(payload, function (object) {
-            object["id"] = object.objectId;
+            object["id"] = object.objectId ? object.objectId : object.objectID;
         });
 
 
@@ -239,6 +239,40 @@ export default {
             return loadedRecords[0];
         else
             return loadedRecords;
+    },
+
+    handleResponseForInitializeWebsiteForUser: function (store, currentUser, response) {
+        // Created Tests
+        if (response.createdTests) {
+            var createdTests = this.extractRawPayload(store, 'test', response.createdTests);
+            currentUser.get('createdTests').clear();
+            currentUser.get('createdTests').addObjects(createdTests);
+        }
+        // Saved Tests
+        if (response.savedTests) {
+            var savedTests = this.extractRawPayload(store, 'test', response.savedTests);
+            currentUser.get('savedTests').clear();
+            currentUser.get('savedTests').addObjects(savedTests);
+        }
+        // URs
+        if (response.uniqueResponses) {
+            var uniqueResponses = this.extractRawPayload(store, 'unique-response',
+                response.uniqueResponses);
+            currentUser.get('uniqueResponses').clear();
+            currentUser.get('uniqueResponses').addObjects(uniqueResponses);
+        }
+        // Education Cohort
+        if (response.educationCohort) {
+            var educationCohort = this.extractRawPayload(store, 'education-cohort',
+                response.educationCohort);
+            currentUser.set('educationCohort', educationCohort);
+        }
+        // SR Latest Test
+        if (response.srLatestTest) {
+            var srLatestTest = this.extractRawPayload(store, 'test',
+                response.srLatestTest);
+            currentUser.set('srLatestTest', srLatestTest);
+        }
     }
 
 }

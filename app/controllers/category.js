@@ -137,6 +137,7 @@ export default Ember.Controller.extend(CurrentUser, {
 
     readyToGetTests: false,
     getTests: function () {
+        return;
         if (!this.get('readyToGetTests'))
             return;
         this.send('incrementLoadingItems');
@@ -199,19 +200,36 @@ export default Ember.Controller.extend(CurrentUser, {
             }.bind(this));
     }.observes('model.id', 'readyToGetTests', 'order'),
 
+    searchTerm: "",
+
     getTestsNew: function () {
-        this.get('testIndex').search(this.get('searchTerm')).then(function (response) {
-            var tests = ParseHelper.extractRawPayload(this.store, 'test', response.hits);
-            this.get('tests').clear();
-            this.get('tests').addObjects(tests);
-        }.bind(this), function (error) {
-            console.dir(error);
-        });
+        var categoryFilter;
+        if(this.get('model.hasChildren')) {
+            categoryFilter = [];
+            this.get('childCategories').forEach(function (category) {
+               categoryFilter.push("category.objectId:"+category.get('id'));
+            });
+        } else
+            categoryFilter = "category.objectId:"+this.get('model.id');
+
+        this.get('testIndex').search(this.get('searchTerm'),
+            {
+                facets: "*",
+                facetFilters: [categoryFilter]
+            }).then(function (response) {
+                if(response.query !== this.get('searchTerm'))
+                    return;
+                var tests = ParseHelper.extractRawPayload(this.store, 'test', response.hits);
+                this.get('tests').clear();
+                this.get('tests').addObjects(tests);
+            }.bind(this), function (error) {
+                console.dir(error);
+            });
     },
 
     throttleGetTests: function () {
         Ember.run.debounce(this, this.getTestsNew, 200);
-    }.observes('searchTerm.length'),
+    }.observes('searchTerm.length', 'model.id', 'readyToGetTests'),
 
     testsOnPage: function () {
         if (!this.get('tests.length'))
@@ -273,7 +291,6 @@ export default Ember.Controller.extend(CurrentUser, {
 
     actions: {
         changeOrder: function (order) {
-            console.log("changeOrder");
             this.transitionTo({queryParams: {order: order}});
         },
 
@@ -284,7 +301,6 @@ export default Ember.Controller.extend(CurrentUser, {
              * Therefore, keep 'search' and 'searchTerm' as separate for the
              * getTests().observer
              */
-            console.log("searchTests");
             this.transitionTo({queryParams: {search: this.get('searchTerm'), page: 1}});
         },
 

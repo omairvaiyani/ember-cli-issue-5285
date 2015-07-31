@@ -43,33 +43,7 @@ export default {
                     // Categories
                     ParseHelper.extractRawPayload(store, 'category', response.categories);
 
-                    // Tests
-                    if (response.createdTests) {
-                        var createdTests = ParseHelper.extractRawPayload(store, 'test', response.createdTests);
-                        currentUser.get('createdTests').clear();
-                        currentUser.get('createdTests').addObjects(createdTests);
-                    }
-                    if (response.savedTests) {
-                        var savedTests = ParseHelper.extractRawPayload(store, 'test', response.savedTests);
-                        currentUser.get('savedTests').clear();
-                        currentUser.get('savedTests').addObjects(savedTests);
-                    }
-                    if (response.uniqueResponses) {
-                        var uniqueResponses = ParseHelper.extractRawPayload(store, 'unique-response',
-                            response.uniqueResponses);
-                        currentUser.get('uniqueResponses').clear();
-                        currentUser.get('uniqueResponses').addObjects(uniqueResponses);
-                    }
-                    if (response.educationCohort) {
-                        var educationCohort = ParseHelper.extractRawPayload(store, 'education-cohort',
-                            response.educationCohort);
-                        currentUser.set('educationCohort', educationCohort);
-                    }
-                    if (response.srLatestTest) {
-                        var srLatestTest = ParseHelper.extractRawPayload(store, 'test',
-                            response.srLatestTest);
-                        currentUser.set('srLatestTest', srLatestTest);
-                    }
+                    ParseHelper.handleResponseForInitializeWebsiteForUser(store, currentUser, response);
                 },
                 function (error) {
                     console.dir(error);

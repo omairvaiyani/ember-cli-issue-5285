@@ -89,7 +89,7 @@ Parse.Object.createFromJSON = function (payload, className) {
     }
     _.each(payload, function (object) {
         var parseObject = new Parse.Object(className);
-        if(object.id)
+        if (object.id)
             parseObject.id = object.id;
         _.each(_.pairs(object), function (pair) {
             var key = pair[0], value = pair[1];
@@ -159,6 +159,26 @@ Parse.User.prototype.setDefaults = function () {
     this.set('firstTimeLogin', true);
 
     return this;
+};
+/**
+ * @Property Minimal Profile
+ * This returns a user's profile without any
+ * sensitive data. Use this whenever sending
+ * a user object through CC or when indexing.
+ * @return {Object}
+ */
+Parse.User.prototype.minimalProfile = function () {
+    var object = this.toJSON(),
+        propertiesToRemove = ['ACL', 'authData', 'createdTests', 'devices', 'email', 'emailNotifications', 'emailVerified',
+            'fbEducation', 'followers', 'following', 'gender', 'savedTests', 'srCompletedAttempts', 'testAttempts',
+            'fbFriends', 'firstTimeLogin', 'isPremium', 'password', 'pushNotifications', 'receivePromotionalEmails',
+            'srActivated', 'srDoNotDisturbTimes', 'srLatestTest', 'srIntensityLevel', 'srNextDue', 'srNotifyByEmail',
+            'srNotifyByPush', 'stripeToken', 'timeZone', 'username', 'uniqueResponses', 'userEvents'];
+
+    _.each(propertiesToRemove, function (property) {
+        object[property] = undefined;
+    });
+    return object;
 };
 /**
  * @Function Generate Slug
@@ -238,9 +258,9 @@ Parse.User.prototype.fetchEducationCohort = function () {
     if (educationCohort) {
         var promise = educationCohort.fetch().then(function () {
             var promises = [];
-            if(educationCohort.studyField())
+            if (educationCohort.studyField())
                 promises.push(educationCohort.studyField().fetch());
-            if(educationCohort.institution())
+            if (educationCohort.institution())
                 promises.push(educationCohort.institution().fetch());
             return Parse.Promise.when(promises);
         }.bind(this)).then(function () {
@@ -248,7 +268,7 @@ Parse.User.prototype.fetchEducationCohort = function () {
         });
         return promise;
     } else
-       return Parse.Promise.as(null);
+        return Parse.Promise.as(null);
 };
 /**
  * @Function Fetch SR Latest Test
@@ -589,6 +609,25 @@ var Test = Parse.Object.extend("Test", {
         return ['author', 'category'];
     },
     /**
+     * @Function Index Object
+     * Converts this into an indexable object
+     * and saves it to the search index.
+     *
+     * Minimises test.author and removes ACL.
+     *
+     * @returns {Parse.Promise}
+     */
+    indexObject: function () {
+        var object = this.toJSON();
+        object.objectID = this.id;
+        object.ACL = undefined;
+        object._tags = this.tags();
+        return this.author().fetchIfNeeded().then(function (author) {
+            object.author = author.minimalProfile();
+            return testIndex.saveObject(object);
+        }.bind(this));
+    },
+    /**
      * @Property title
      * @returns {string}
      */
@@ -671,6 +710,14 @@ var Test = Parse.Object.extend("Test", {
     },
 
     /**
+     * @Property tags
+     * @return {Array}
+     */
+    tags: function () {
+        return this.get('tags');
+    },
+
+    /**
      * @Function Set Defaults
      * Adds 0, booleans and empty arrays to
      * default properties. This reduces
@@ -710,7 +757,7 @@ var Test = Parse.Object.extend("Test", {
             this.setACL(ACL);
         }
 
-        if(!this.get('tags') || !this.get('tags').length)
+        if (!this.get('tags') || !this.get('tags').length)
             this.set('tags', []);
 
         return this;
@@ -846,7 +893,7 @@ var Question = Parse.Object.extend("Question", {
             this.set(prop, 0);
         }.bind(this));
 
-        if(this.isPublic() !== false && this.isPublic() !== true)
+        if (this.isPublic() !== false && this.isPublic() !== true)
             this.set('isPublic', true);
 
         if (user) {
@@ -855,7 +902,7 @@ var Question = Parse.Object.extend("Question", {
             this.setACL(ACL);
         }
 
-        if(!this.get('tags') || !this.get('tags').length)
+        if (!this.get('tags') || !this.get('tags').length)
             this.set('tags', []);
         return this;
     },
@@ -1420,7 +1467,7 @@ var UniqueResponse = Parse.Object.extend("UniqueResponse", {
      */
     findWithUpdatedMemoryStrengths: function (query) {
         return query.find().then(function (uniqueResponses) {
-           return UniqueResponse.updateMemoryStrength(uniqueResponses);
+            return UniqueResponse.updateMemoryStrength(uniqueResponses);
         });
     },
 
@@ -1531,9 +1578,7 @@ var EducationCohort = Parse.Object.extend("EducationCohort", {
     studyField: function () {
         return this.get('studyField');
     }
-}, {
-
-});
+}, {});
 /****
  * -----
  * Institution
@@ -1589,9 +1634,7 @@ var Institution = Parse.Object.extend("Institution", {
     cover: function () {
         return this.get('cover');
     }
-}, {
-
-});
+}, {});
 
 /****
  * -----
@@ -1631,9 +1674,7 @@ var StudyField = Parse.Object.extend("StudyField", {
     pictureUrl: function () {
         return this.get('pictureURl');
     }
-}, {
-
-});// Concat source to main.js with 'cat source/*.js > cloud/main.js'
+}, {});// Concat source to main.js with 'cat source/*.js > cloud/main.js'
 
 var _ = require("underscore"),
     moment = require('cloud/moment-timezone-with-data.js'),
@@ -1882,7 +1923,8 @@ Parse.Cloud.beforeSave(Test, function (request, response) {
         if (!test.isGenerated() && test.title() && user && !test.slug()) {
             promises.push(test.generateSlug(user));
         }
-    }
+    } else
+        test.set('totalQuestions', test.questions().length);
 
     if (!promises.length)
         return response.success();
@@ -1902,13 +1944,10 @@ Parse.Cloud.afterSave(Test, function (request) {
     var test = request.object;
 
     if (!test.existed()) {
-        // Add to Angolia
-        testIndex.addObject(test, test.id);
-    } else {
-        // Update to Angolia
-        test.objectID = test.id;
-        testIndex.saveObject(test);
+        // New test logic
     }
+    // Add/Update search index (async)
+    test.indexObject();
 });
 
 /**

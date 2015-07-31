@@ -26,7 +26,7 @@ export default DS.Model.extend(ParseMixin, CurrentUser, {
     isSpacedRepetition: DS.attr('boolean'),
     isProfessional: DS.attr('boolean'),
     oldId: DS.attr('string'),
-
+    totalQuestions: DS.attr('number'),
 
     /**
      * @Property uniqueResponses

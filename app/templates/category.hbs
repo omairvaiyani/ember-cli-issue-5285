@@ -58,36 +58,34 @@
                     {{/if}}
                 </div>
 
-                {{#if childCategories.length}}
-                    <h5>Categories</h5>
+                <h5>Categories</h5>
 
-                    <ul class="nav nav-pills nav-stacked category-list">
-                        {{#each topLevelCategories itemController='category.item.parentCategory' as |parentCategory|}}
-                            {{#link-to 'category' parentCategory.model.slug tagName='li'
+                <ul class="nav nav-pills nav-stacked category-list">
+                    {{#each topLevelCategories itemController='category.item.parentCategory' as |parentCategory|}}
+                        {{#link-to 'category' parentCategory.model.slug tagName='li'
+                        classNameBindings="parentCategory.isSemiActive:semi-active"}}
+                            {{#link-to 'category' parentCategory.model.slug tagName='a'
                             classNameBindings="parentCategory.isSemiActive:semi-active"}}
-                                {{#link-to 'category' parentCategory.model.slug tagName='a'
-                                classNameBindings="parentCategory.isSemiActive:semi-active"}}
-                                    {{parentCategory.model.name}}
-                                    <small>({{parentCategory.model.totalTests}})</small>
-                                {{/link-to}}
-                                {{#if parentCategory.isActive}}
-                                    <ul class="inner-list nav nav-pills nav-stacked margin-left-16">
-                                        {{#each childCategories itemController='category.item.childCategory' as |category|}}
-                                            {{#link-to 'subcategory' parentCategory.model.slug
-                                            category.model.slug tagName='li'}}
-                                                {{#link-to 'subcategory' parentCategory.model.slug
-                                                category.model.slug tagName='a'}}
-                                                    {{category.model.name}}
-                                                    <small>({{category.model.totalTests}})</small>
-                                                {{/link-to}}
-                                            {{/link-to}}
-                                        {{/each}}
-                                    </ul>
-                                {{/if}}
+                                {{parentCategory.model.name}}
+                                <small>({{parentCategory.model.totalTests}})</small>
                             {{/link-to}}
-                        {{/each}}
-                    </ul>
-                {{/if}}
+                            {{#if parentCategory.isActive}}
+                                <ul class="inner-list nav nav-pills nav-stacked margin-left-16">
+                                    {{#each childCategories itemController='category.item.childCategory' as |category|}}
+                                        {{#link-to 'subcategory' parentCategory.model.slug
+                                        category.model.slug tagName='li'}}
+                                            {{#link-to 'subcategory' parentCategory.model.slug
+                                            category.model.slug tagName='a'}}
+                                                {{category.model.name}}
+                                                <small>({{category.model.totalTests}})</small>
+                                            {{/link-to}}
+                                        {{/link-to}}
+                                    {{/each}}
+                                </ul>
+                            {{/if}}
+                        {{/link-to}}
+                    {{/each}}
+                </ul>
             </div>
         </div>
         <div class="col-md-9 col-fix-right">

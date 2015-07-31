@@ -139,6 +139,18 @@ export default Ember.Controller.extend({
         this.set('loginMessage.connecting', '');
     }.observes('loginUser.email.length', 'loginUser.password.length'),
 
+    /**
+     * @Observes Manage Current Session
+     * If no currentUser, localStorage.sessionToken is removed
+     * and we set 'websiteNotInitialisedForUser' as true.
+     *
+     * If currentUser is found, sessionToken is set to
+     * localStorage and on the RestAdapter. Also,
+     * currentUser may be set in the initializer:session
+     * stage, therefore, the initialiseWebsiteForUser CC
+     * is not called. However, if user signs in after
+     * website load, then it is called.
+     */
     manageCurrentUserSession: function () {
         var currentUser = this.get('currentUser');
 
@@ -146,29 +158,20 @@ export default Ember.Controller.extend({
             localStorage.sessionToken = currentUser.get('sessionToken');
             var adapter = this.store.adapterFor(currentUser);
             adapter.headers['X-Parse-Session-Token'] = currentUser.get('sessionToken');
-            /*Parse.User.become(currentUser.get('sessionToken'))
-             .then(function (user) {
-             }, function (error) {
-             console.dir(error);
-             });*/
+
+            if(!this.get('websiteNotInitialisedForUser'))
+                return this.get('controllers.index').myTestsListUpdate();
+            ParseHelper.cloudFunction(this, 'initialiseWebsiteForUser', {}).then(function (response) {
+                ParseHelper.handleResponseForInitializeWebsiteForUser(this.store, currentUser, response);
+                this.get('controllers.index').myTestsListUpdate();
+                //EventTracker.profileUser(this.get('currentUser'));
+            }.bind(this));
+
         } else {
             // TODO Logout with REST API
-            /*if (Parse.User.current())
-             Parse.User.logOut();*/
             localStorage.clear();
+            this.set('websiteNotInitialisedForUser', true);
         }
-    }.observes('currentUser'),
-
-    /**
-     * @Observes
-     * Updates myTestsList after init:session
-     */
-    initializeCurrentUser: function () {
-        if (!this.get('currentUser')) {
-            return;
-        }
-        this.get('controllers.index').myTestsListUpdate();
-        //EventTracker.profileUser(this.get('currentUser'));
     }.observes('currentUser'),
 
     currentUserMessagesDidChange: function () {
