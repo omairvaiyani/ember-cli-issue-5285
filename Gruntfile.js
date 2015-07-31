@@ -86,7 +86,7 @@ module.exports = function (grunt) {
                 command: 'ember build --environment=development'
             },
             prod: {
-                command: 'ember build --environment=production'
+                command: 'ember build --environment=production --force'
             },
             parse: {
                 command: [
