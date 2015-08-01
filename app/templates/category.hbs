@@ -46,19 +46,30 @@
     <div class="row">
         <div class="col-md-3">
             <div class="card">
-                <h5>Search:</h5>
+                <h5>SEARCH FILTERS</h5>
+                {{#if activeCategories.length}}
+                    <ul class="tags">
+                        <div class="margin-top-8">
+                            <h5 class="small">CATEGORIES</h5>
+                        </div>
+                        {{#each activeCategories as |category|}}
+                            <li class="tag category" {{action 'toggleCategoryFilter' category}}>{{category.name}}</li>
+                        {{/each}}
+                    </ul>
+                {{/if}}
+                {{#if activeTags.length}}
+                    <ul class="tags">
 
-                <div class="search-box">
-                    {{input type='text' value=searchTerm placeholder='Type here to search' action='searchTests'
-                    classNames='form-control margin-bottom-16'}}
-                    {{#if loadingItems}}
-                        <div class="loading-spinner"></div>
-                    {{else}}
-                        <span class="glyphicon glyphicon-search" {{action 'searchTests'}}></span>
-                    {{/if}}
-                </div>
+                        <div class="margin-top-8">
+                            <h5 class="small">TAGS</h5>
+                        </div>
+                        {{#each activeTags as |tag|}}
+                            <li class="tag" {{action 'toggleTagFilter' tag}}>{{tag}}</li>
+                        {{/each}}
+                    </ul>
+                {{/if}}
 
-                <h5>Categories</h5>
+                <h5>ALL CATEGORIES</h5>
 
                 <ul class="nav nav-pills nav-stacked category-list">
                     {{#each topLevelCategories itemController='category.item.parentCategory' as |parentCategory|}}
@@ -91,20 +102,23 @@
         <div class="col-md-9 col-fix-right">
             <div class="card">
                 <div class="row">
-                    <div class="col-md-6">
-                        <!-- Order selection -->
-                        <div class="btn-group">
-                            <button type="button" class="btn btn-default dropdown-toggle text-capitalize"
-                                    data-toggle="dropdown">
-                                {{order}} <span class="caret"></span>
-                            </button>
-                            <ul class="dropdown-menu" role="menu">
-                                <li><a href="javascript:void(0)" {{action 'changeOrder' 'relevance'}}>Relevance</a></li>
-                                <li><a href="javascript:void(0)" {{action 'changeOrder' 'title'}}>Title</a></li>
-                                <li><a href="javascript:void(0)" {{action 'changeOrder' 'recent'}}>Recent</a></li>
-                            </ul>
+                    <article class="col-xs-12 col-sm-4">
+                        <div class="search-box">
+                            {{input type='text' value=searchTerm placeholder='Search' action='searchTests'
+                            classNames='form-control'}}
+                            {{#if loadingItems}}
+                                <div class="loading-spinner"></div>
+                            {{else}}
+                                <span class="fa fa-search"></span>
+                            {{/if}}
                         </div>
+                    </article>
+                    <div class="col-xs-12 col-sm-3 col-sm-push-5">
+                        <!-- Order selection -->
+                        {{view 'select' content=orderTypes optionLabelPath='content.label'
+                        optionValuePath='content.value' class="form-control"}}
                     </div>
+                    {{!--
                     <div class="col-md-6">
                         <!-- Pagination -->
                         <ul class="pagination pull-right">
@@ -131,6 +145,7 @@
                             </li>
                         </ul>
                     </div>
+                    --}}
                 </div>
             </div>
             {{#each testsOnPage as |test|}}

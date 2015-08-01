@@ -1,8 +1,9 @@
 import Ember from 'ember';
 import ParseHelper from '../utils/parse-helper';
 import CurrentUser from '../mixins/current-user';
+import TagsAndCats from '../mixins/tags-and-cats';
 
-export default Ember.Controller.extend(CurrentUser, {
+export default Ember.Controller.extend(CurrentUser,TagsAndCats, {
     needs: 'application',
 
     applicationController: function () {
@@ -79,8 +80,10 @@ export default Ember.Controller.extend(CurrentUser, {
         return pagesToShow;
     }.property('page', 'totalPages'),
 
-    tests: [],
+    tests: new Ember.A(),
     childCategories: null,
+    orderTypes: [{label:"Relevance", value:"quality"},{label:"Title A-Z", value:"title"},
+        {label:"Difficulty", value:"difficulty"}],
 
     /*
      * Gets all the child categories that belong
@@ -211,9 +214,10 @@ export default Ember.Controller.extend(CurrentUser, {
             });
         } else
             categoryFilter = "category.objectId:"+this.get('model.id');
-
+        console.log("Before search.");
         this.get('testIndex').search(this.get('searchTerm'),
             {
+                tagFilters: this.get('activeTags'),
                 facets: "*",
                 facetFilters: [categoryFilter]
             }).then(function (response) {
@@ -229,7 +233,7 @@ export default Ember.Controller.extend(CurrentUser, {
 
     throttleGetTests: function () {
         Ember.run.debounce(this, this.getTestsNew, 200);
-    }.observes('searchTerm.length', 'model.id', 'readyToGetTests'),
+    }.observes('searchTerm.length', 'activeTags.length', 'model.id', 'readyToGetTests'),
 
     testsOnPage: function () {
         if (!this.get('tests.length'))

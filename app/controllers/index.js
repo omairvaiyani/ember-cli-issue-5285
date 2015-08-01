@@ -1,7 +1,8 @@
 import Ember from 'ember';
 import CurrentUser from '../mixins/current-user';
+import TagsAndCats from '../mixins/tags-and-cats';
 
-export default Ember.Controller.extend(CurrentUser, {
+export default Ember.Controller.extend(CurrentUser,TagsAndCats, {
     /*
      * GUEST MODE
      */
@@ -148,18 +149,6 @@ export default Ember.Controller.extend(CurrentUser, {
         'currentUser.myTests.@each.title.length', 'currentUser.myTests.@each.createdAt',
         'currentUser.myTests.@each.memoryStrength', 'activeTags.length', 'activeCategories.length'),
 
-    /**
-     * @Property Active Tags
-     * Used to filter tests on page by tag.
-     */
-    activeTags: [],
-
-    /**
-     * @Property Active Categories
-     * Used to filter tests on page by category.
-     */
-    activeCategories: [],
-
     actions: {
         /*
          * GUEST MODE
@@ -167,31 +156,10 @@ export default Ember.Controller.extend(CurrentUser, {
         searchTests: function () {
             this.transitionToRoute('category', "all",
                 {queryParams: {search: this.get('searchTermForTests').toLowerCase()}});
-        },
+        }
         /*
          * USER MODE
          */
-        toggleTagFilter: function (tag) {
-            if (!tag)
-                return;
 
-            if (_.contains(this.get('activeTags'), tag))
-                this.get('activeTags').removeObject(tag);
-            else
-                this.get('activeTags').pushObject(tag);
-        },
-
-        toggleCategoryFilter: function (object) {
-            var category = object.get('content') ? object.get('content') : object;
-            if (!category)
-                return;
-
-            if (_.contains(this.get('activeCategories'), category)) {
-                this.get('activeCategories').removeObject(category);
-            } else {
-                this.get('activeCategories').pushObject(category);
-            }
-            category.set('isActive', _.contains(this.get('activeCategories'), category));
-        }
     }
 });
