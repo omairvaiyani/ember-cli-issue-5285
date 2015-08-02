@@ -36,6 +36,7 @@ export default Ember.Route.extend({
             controller.set('alreadyGotChildCategories', false);
             controller.set('readyToGetTests', false);
         }
+
         controller.set('model', model);
         controller.set('browseAll', !model.id);
     }

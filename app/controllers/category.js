@@ -3,7 +3,7 @@ import ParseHelper from '../utils/parse-helper';
 import CurrentUser from '../mixins/current-user';
 import TagsAndCats from '../mixins/tags-and-cats';
 
-export default Ember.Controller.extend(CurrentUser,TagsAndCats, {
+export default Ember.Controller.extend(CurrentUser, TagsAndCats, {
     needs: 'application',
 
     applicationController: function () {
@@ -81,9 +81,9 @@ export default Ember.Controller.extend(CurrentUser,TagsAndCats, {
     }.property('page', 'totalPages'),
 
     tests: new Ember.A(),
-    childCategories: null,
-    orderTypes: [{label:"Relevance", value:"quality"},{label:"Title A-Z", value:"title"},
-        {label:"Difficulty", value:"difficulty"}],
+    childCategories: new Ember.A(),
+    orderTypes: [{label: "Relevance", value: "quality"}, {label: "Title A-Z", value: "title"},
+        {label: "Difficulty", value: "difficulty"}],
 
     /*
      * Gets all the child categories that belong
@@ -99,24 +99,8 @@ export default Ember.Controller.extend(CurrentUser,TagsAndCats, {
                 return;
             this.set('alreadyGotChildCategoriesForBrowseAll', true);
 
-            /*
-             * If there are categories to filter in the queryParams,
-             * wait or those to filter the selectedCategories before
-             * retrieving tests
-             */
-            if (!this.get('categoryFilterSlugs.length')) {
-                this.set('readyToGetTests', true);
-            }
-            /*
-             * We wait for childCategories and selectedCategories to be set up
-             * before filtering any out: if no queryParams are found
-             * The 'filterTheseCategories' method adds all childCategories to
-             * the selectedCategories array
-             */
-            this.set('readyForFilter', true);
+            this.set('readyToGetTests', true);
         }
-        if (!this.get('model.id'))
-            return;
         if (this.get('alreadyGotChildCategories'))
             return;
         /*
@@ -133,7 +117,8 @@ export default Ember.Controller.extend(CurrentUser,TagsAndCats, {
             return this.set('childCategories', new Ember.A());
         }
         var childCategories = this.store.all('category').filterBy('parent.id', parentId).sortBy('name');
-        this.set('childCategories', childCategories);
+        this.get('childCategories').clear();
+        this.get('childCategories').addObjects(childCategories);
         this.set('readyToGetTests', true);
         this.set('alreadyGotChildCategories', true);
     }.observes('model.id', 'browseAll'),
@@ -207,25 +192,30 @@ export default Ember.Controller.extend(CurrentUser,TagsAndCats, {
 
     getTestsNew: function () {
         var categoryFilter;
-        if(this.get('model.hasChildren')) {
+        if (this.get('model.hasChildren')) {
             categoryFilter = [];
             this.get('childCategories').forEach(function (category) {
-               categoryFilter.push("category.objectId:"+category.get('id'));
+                categoryFilter.push("category.objectId:" + category.get('id'));
             });
         } else
-            categoryFilter = "category.objectId:"+this.get('model.id');
-        console.log("Before search.");
+            categoryFilter = "category.objectId:" + this.get('model.id');
         this.get('testIndex').search(this.get('searchTerm'),
             {
                 tagFilters: this.get('activeTags'),
                 facets: "*",
                 facetFilters: [categoryFilter]
             }).then(function (response) {
-                if(response.query !== this.get('searchTerm'))
+                if (response.query !== this.get('searchTerm'))
                     return;
                 var tests = ParseHelper.extractRawPayload(this.store, 'test', response.hits);
                 this.get('tests').clear();
                 this.get('tests').addObjects(tests);
+                // Algolia cache's results which should be great BUT
+                // Ember-Data removes the .id from payloads when extracting
+                // This causes an error on 'response.hits' cache as their
+                // 'id' has been removed.
+                this.get('testIndex').clearCache();
+                $("html, body").animate({scrollTop: 200}, "fast");
             }.bind(this), function (error) {
                 console.dir(error);
             });
@@ -233,7 +223,8 @@ export default Ember.Controller.extend(CurrentUser,TagsAndCats, {
 
     throttleGetTests: function () {
         Ember.run.debounce(this, this.getTestsNew, 200);
-    }.observes('searchTerm.length', 'activeTags.length', 'model.id', 'readyToGetTests'),
+    }.observes('searchTerm.length', 'activeTags.length', 'activeCategories.length',
+        'model.id', 'readyToGetTests'),
 
     testsOnPage: function () {
         if (!this.get('tests.length'))
@@ -293,6 +284,9 @@ export default Ember.Controller.extend(CurrentUser,TagsAndCats, {
         }
     }.property('childCategories.length'),
 
+    // Used by TagAndCat mixin when toggling categories
+    oneCategoryAtATime: true,
+
     actions: {
         changeOrder: function (order) {
             this.transitionTo({queryParams: {order: order}});
@@ -316,7 +310,31 @@ export default Ember.Controller.extend(CurrentUser,TagsAndCats, {
             if (this.get('loadingItems'))
                 this.decrementProperty('loadingItems');
             //this.send('decrementLoadingItems');
+        },
+
+
+        /**
+         * @Override TagsAndCatsMixin
+         * @Action Toggle Category Filter
+         * Only performs transitions based
+         * on active/inactive cats. Logic
+         * is further performed in SubcategoryRoute.setupController.
+         * @param {Category} object
+         */
+        toggleCategoryFilter: function (object) {
+            var category = object.get('content') ? object.get('content') : object;
+            if (!category)
+                return;
+
+            // Toggle on/off depending if found or not
+            if (_.contains(this.get('activeCategories'), category)) {
+                this.transitionTo('category', category.get('parent.slug'));
+            } else {
+                this.transitionTo('subcategory', category.get('parent.slug'), category.get('slug'));
+            }
+
         }
+
     }
 
 });

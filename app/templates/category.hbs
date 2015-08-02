@@ -46,11 +46,13 @@
     <div class="row">
         <div class="col-md-3">
             <div class="card">
-                <h5>SEARCH FILTERS</h5>
+                {{#if filterActive}}
+                    <h5>FILTERS</h5>
+                {{/if}}
                 {{#if activeCategories.length}}
                     <ul class="tags">
                         <div class="margin-top-8">
-                            <h5 class="small">CATEGORIES</h5>
+                            <h5 class="small">CATEGORY</h5>
                         </div>
                         {{#each activeCategories as |category|}}
                             <li class="tag category" {{action 'toggleCategoryFilter' category}}>{{category.name}}</li>
@@ -78,7 +80,6 @@
                             {{#link-to 'category' parentCategory.model.slug tagName='a'
                             classNameBindings="parentCategory.isSemiActive:semi-active"}}
                                 {{parentCategory.model.name}}
-                                <small>({{parentCategory.model.totalTests}})</small>
                             {{/link-to}}
                             {{#if parentCategory.isActive}}
                                 <ul class="inner-list nav nav-pills nav-stacked margin-left-16">
@@ -88,7 +89,6 @@
                                             {{#link-to 'subcategory' parentCategory.model.slug
                                             category.model.slug tagName='a'}}
                                                 {{category.model.name}}
-                                                <small>({{category.model.totalTests}})</small>
                                             {{/link-to}}
                                         {{/link-to}}
                                     {{/each}}
@@ -100,53 +100,51 @@
             </div>
         </div>
         <div class="col-md-9 col-fix-right">
-            <div class="card">
-                <div class="row">
-                    <article class="col-xs-12 col-sm-4">
-                        <div class="search-box">
-                            {{input type='text' value=searchTerm placeholder='Search' action='searchTests'
-                            classNames='form-control'}}
-                            {{#if loadingItems}}
-                                <div class="loading-spinner"></div>
-                            {{else}}
-                                <span class="fa fa-search"></span>
-                            {{/if}}
-                        </div>
-                    </article>
-                    <div class="col-xs-12 col-sm-3 col-sm-push-5">
-                        <!-- Order selection -->
-                        {{view 'select' content=orderTypes optionLabelPath='content.label'
-                        optionValuePath='content.value' class="form-control"}}
+            <div class="row">
+                <article class="col-xs-12 col-sm-4">
+                    <div class="search-box">
+                        {{input type='text' value=searchTerm placeholder='Search' action='searchTests'
+                        classNames='form-control'}}
+                        {{#if loadingItems}}
+                            <div class="loading-spinner"></div>
+                        {{else}}
+                            <span class="fa fa-search"></span>
+                        {{/if}}
                     </div>
-                    {{!--
-                    <div class="col-md-6">
-                        <!-- Pagination -->
-                        <ul class="pagination pull-right">
-                            <li {{bind-attr class='previousPage::disabled'}}>
-                                {{#if previousPage}}
-                                    {{#link-to (query-params page=previousPage)
-                                    tagName='a'}}Prev{{/link-to}}
-                                {{else}}
-                                    <a href="javascript:void(0)" {{action 'changePage' previousPage}}>Prev</a>
-                                {{/if}}
-                            </li>
-                            {{#each page in pagesInPagination}}
-                                {{#link-to (query-params page=page) tagName='li'}}
-                                    {{#link-to (query-params page=page) tagName='a'}}{{page}}{{/link-to}}
-                                {{/link-to}}
-                            {{/each}}
-                            <li {{bind-attr class='nextPage::disabled'}}>
-                                {{#if nextPage}}
-                                    {{#link-to (query-params page=nextPage)
-                                    tagName='a'}}Next{{/link-to}}
-                                {{else}}
-                                    <a href="javascript:void(0)" {{action 'changePage' nextPage}}>Next</a>
-                                {{/if}}
-                            </li>
-                        </ul>
-                    </div>
-                    --}}
+                </article>
+                <div class="col-xs-12 col-sm-3 col-sm-push-5">
+                    <!-- Order selection -->
+                    {{view 'select' content=orderTypes optionLabelPath='content.label'
+                    optionValuePath='content.value' class="form-control"}}
                 </div>
+                {{!--
+                <div class="col-md-6">
+                    <!-- Pagination -->
+                    <ul class="pagination pull-right">
+                        <li {{bind-attr class='previousPage::disabled'}}>
+                            {{#if previousPage}}
+                                {{#link-to (query-params page=previousPage)
+                                tagName='a'}}Prev{{/link-to}}
+                            {{else}}
+                                <a href="javascript:void(0)" {{action 'changePage' previousPage}}>Prev</a>
+                            {{/if}}
+                        </li>
+                        {{#each page in pagesInPagination}}
+                            {{#link-to (query-params page=page) tagName='li'}}
+                                {{#link-to (query-params page=page) tagName='a'}}{{page}}{{/link-to}}
+                            {{/link-to}}
+                        {{/each}}
+                        <li {{bind-attr class='nextPage::disabled'}}>
+                            {{#if nextPage}}
+                                {{#link-to (query-params page=nextPage)
+                                tagName='a'}}Next{{/link-to}}
+                            {{else}}
+                                <a href="javascript:void(0)" {{action 'changePage' nextPage}}>Next</a>
+                            {{/if}}
+                        </li>
+                    </ul>
+                </div>
+                --}}
             </div>
             {{#each testsOnPage as |test|}}
                 {{test-card test=test parentController=this}}

@@ -175,9 +175,10 @@ export default {
         }
         // Ember uses 'id' as primaryKey.
         _.each(payload, function (object) {
-            object["id"] = object.objectId ? object.objectId : object.objectID;
+            object.id = object.objectId ? object.objectId : object.id;
+            if(!object.id)
+                object.id = object.objectID;
         });
-
 
         var serializedObjects = serializer.extractArray(store,
             store.modelFor(type), {results: payload});
@@ -191,7 +192,6 @@ export default {
         store.modelFor(type).eachRelationship(function (key, relationship) {
             relationships.push(relationship);
         });
-
         if (relationships.length) {
             /*
              * This allows us to load included/embedded
