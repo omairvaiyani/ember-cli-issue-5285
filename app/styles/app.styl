@@ -84,6 +84,13 @@ body
   color #B0C0A4
   font-size large
 
+.icon-only-loader
+  height: 60px;
+  width: 47px;
+  background-image: url(/img/loading-white.gif);
+  background-size: cover;
+  margin: auto;
+  -webkit-filter: sepia(100%);
 
 .is-active
   color white
@@ -117,6 +124,14 @@ body
   input[type=range]
     margin-top 8px
     cursor pointer
+
+/* Fix for floating labels in material.css */
+.form-control-wrapper .form-control:focus~.floating-label,
+.form-control-wrapper .form-control:not(.empty)~.floating-label {
+  top: -10px;
+  font-size: 10px;
+  opacity: 1;
+}
 
 .memory-strength
   position relative
@@ -1001,42 +1016,9 @@ hr.user-message-item-separator {
   color: #95E5FF;
 }
 
-.guest-page-actions .search-box {
-  opacity: 0.8;
-}
-
-.guest-page-actions .search-box:hover,
-.guest-page-actions .search-box:active,
-.guest-page-actions .search-box:focus {
-  opacity: 1;
-}
-
-.guest-page-actions .search-box > input {
-  height: 50px;
-  width: 100%;
-  font-size: 22px;
-}
-
-@media (max-width: 400px) {
-  .guest-page-actions .search-box > input {
-    font-size: 18px;
-  }
-}
-
 /*
  * Hiding autocomplete until I fix it's position
  */
-.guest-page-actions .autocomplete-container {
-  display: none;
-}
-
-.guest-page-actions .search-box span {
-  top: 14px;
-}
-
-.guest-page-actions .glyphicon-search-large::before {
-  font-size: 22px;
-}
 
 .overlay-glass-pane {
   border-top: 1px solid rgba(255, 255, 255, 0.2);
@@ -1623,36 +1605,15 @@ hr.user-message-item-separator {
   }
 }
 
-.search-box {
-  position: relative;
-}
-
-.search-box input {
-  padding-right: 45px;
-  padding-left: 8px;
-}
-
-.search-box span {
-  position: absolute;
-  right: 16px;
-  top: 10px;
-  cursor: pointer;
-  opacity: 0.5;
-}
-
-.search-box > input:focus + span {
-  opacity: 1;
-}
-
-.search-box .loading-spinner {
-  position: absolute;
-  height: auto;
-  width: 20px;
-  top: 8px;
-  right: 8px;
-  bottom: 8px;
-  border-radius: 4px;
-}
+.search-box
+  span.search-icon
+    position: absolute;
+    top: 8px;
+    right: 8px;
+  span.search-icon, .floating-label
+      color colorPrimary-200
+  .form-control:focus ~ span.search-icon
+    color colorPrimary
 
 /* TEMPLATE - MODAL - TEST INFO */
 .test-info-modal .profile-image {

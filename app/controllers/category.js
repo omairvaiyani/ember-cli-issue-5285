@@ -124,73 +124,10 @@ export default Ember.Controller.extend(CurrentUser, TagsAndCats, {
     }.observes('model.id', 'browseAll'),
 
     readyToGetTests: false,
-    getTests: function () {
-        return;
-        if (!this.get('readyToGetTests'))
-            return;
-        this.send('incrementLoadingItems');
-        /*
-         * Get tests which belong to the parent category
-         * AND any of the selected childCategories
-         */
-        var queryOptions = [];
-
-        // ORDER
-        var orderField,
-            orderMethod = "descending";
-
-        if (this.get('order') === 'recent')
-            orderField = "createdAt";
-        if (this.get('order') === 'relevance')
-            orderField = "quality";
-
-        queryOptions.push({
-            method: orderMethod,
-            value: orderField
-        });
-
-        // SEARCH FILTER
-        if (this.get('search.length')) {
-            var stopWords = ParseHelper.stopWords,
-                tags = _.filter(this.get('search').toLowerCase().split(' '), function (w) {
-                    return w.match(/^\w+$/) && !_.contains(stopWords, w);
-                });
-            queryOptions.push({
-                method: "containsAll",
-                key: "tags",
-                value: tags
-            });
-        }
-        // WHERE CATEGORY
-        if (!this.get('browseAll') && this.get('model.hasChildren')) {
-            queryOptions.push({
-                method: "containedIn",
-                key: "category",
-                value: ParseHelper.generatePointers(this.get('childCategories'))
-            });
-        } else if (this.get('model.parent.id') || !this.get('model.hasChildren')) {
-            queryOptions.push({
-                method: "equalTo",
-                key: "category",
-                value: ParseHelper.generatePointer(this.get('model'), 'category')
-            });
-        }
-        queryOptions.push({
-            method: "limit",
-            value: 20
-        });
-        ParseHelper.cloudFunction(this, 'getCommunityTests', {queryOptions: queryOptions})
-            .then(function (response) {
-                var tests = ParseHelper.extractRawPayload(this.store, 'test', response);
-                this.get('tests').clear();
-                this.get('tests').addObjects(tests);
-                this.send('decrementLoadingItems');
-            }.bind(this));
-    }.observes('model.id', 'readyToGetTests', 'order'),
 
     searchTerm: "",
 
-    getTestsNew: function () {
+    getTests: function (fetchMore) {
         var categoryFilter;
         if (this.get('model.hasChildren')) {
             categoryFilter = [];
@@ -199,30 +136,52 @@ export default Ember.Controller.extend(CurrentUser, TagsAndCats, {
             });
         } else
             categoryFilter = "category.objectId:" + this.get('model.id');
-        this.get('testIndex').search(this.get('searchTerm'),
+        var page = 0;
+
+        if (fetchMore)
+            page = this.get('currentResultsPage') + 1;
+
+        return this.get('testIndex').search(this.get('searchTerm'),
             {
                 tagFilters: this.get('activeTags'),
-                facets: "*",
-                facetFilters: [categoryFilter]
+                facets: "category.objectId",
+                facetFilters: [categoryFilter],
+                hitsPerPage: 10,
+                page: page
             }).then(function (response) {
                 if (response.query !== this.get('searchTerm'))
                     return;
+                this.set('currentResultsPage', response.page);
+                if (response.page < (response.nbPages - 1))
+                    this.set('moreResultsToFetch', true);
+                else
+                    this.set('moreResultsToFetch', false);
+                this.set('totalResults', response.nbHits);
                 var tests = ParseHelper.extractRawPayload(this.store, 'test', response.hits);
-                this.get('tests').clear();
-                this.get('tests').addObjects(tests);
+
+
                 // Algolia cache's results which should be great BUT
                 // Ember-Data removes the .id from payloads when extracting
                 // This causes an error on 'response.hits' cache as their
                 // 'id' has been removed.
                 this.get('testIndex').clearCache();
-                $("html, body").animate({scrollTop: 200}, "fast");
+
+                if (!fetchMore) {
+                    this.get('tests').clear();
+                    this.get('tests').pushObjects(tests);
+                    $("html, body").animate({scrollTop: 215}, "fast");
+                } else {
+                    // New page will be appended by components/infinite-scroll
+                    // Check actions.fetchMore
+                    return tests;
+                }
             }.bind(this), function (error) {
                 console.dir(error);
             });
     },
 
     throttleGetTests: function () {
-        Ember.run.debounce(this, this.getTestsNew, 200);
+        Ember.run.debounce(this, this.getTests, 200);
     }.observes('searchTerm.length', 'activeTags.length', 'activeCategories.length',
         'model.id', 'readyToGetTests'),
 
@@ -333,6 +292,11 @@ export default Ember.Controller.extend(CurrentUser, TagsAndCats, {
                 this.transitionTo('subcategory', category.get('parent.slug'), category.get('slug'));
             }
 
+        },
+
+        fetchMore: function (callback) {
+            var promise = this.getTests(true);
+            callback(promise);
         }
 
     }

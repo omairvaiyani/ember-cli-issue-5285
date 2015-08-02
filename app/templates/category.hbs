@@ -100,16 +100,15 @@
             </div>
         </div>
         <div class="col-md-9 col-fix-right">
-            <div class="row">
+            <section class="row">
                 <article class="col-xs-12 col-sm-4">
                     <div class="search-box">
-                        {{input type='text' value=searchTerm placeholder='Search' action='searchTests'
-                        classNames='form-control'}}
-                        {{#if loadingItems}}
-                            <div class="loading-spinner"></div>
-                        {{else}}
-                            <span class="fa fa-search"></span>
-                        {{/if}}
+                        <div class="form-control-wrapper">
+                            {{input type="text" classNameBindings=":form-control searchTerm.length::empty" value=searchTerm}}
+                            <div class="floating-label">Search</div>
+                            <span class="material-input"></span>
+                            <span class="fa fa-search search-icon"></span>
+                        </div>
                     </div>
                 </article>
                 <div class="col-xs-12 col-sm-3 col-sm-push-5">
@@ -117,38 +116,26 @@
                     {{view 'select' content=orderTypes optionLabelPath='content.label'
                     optionValuePath='content.value' class="form-control"}}
                 </div>
-                {{!--
-                <div class="col-md-6">
-                    <!-- Pagination -->
-                    <ul class="pagination pull-right">
-                        <li {{bind-attr class='previousPage::disabled'}}>
-                            {{#if previousPage}}
-                                {{#link-to (query-params page=previousPage)
-                                tagName='a'}}Prev{{/link-to}}
-                            {{else}}
-                                <a href="javascript:void(0)" {{action 'changePage' previousPage}}>Prev</a>
-                            {{/if}}
-                        </li>
-                        {{#each page in pagesInPagination}}
-                            {{#link-to (query-params page=page) tagName='li'}}
-                                {{#link-to (query-params page=page) tagName='a'}}{{page}}{{/link-to}}
-                            {{/link-to}}
-                        {{/each}}
-                        <li {{bind-attr class='nextPage::disabled'}}>
-                            {{#if nextPage}}
-                                {{#link-to (query-params page=nextPage)
-                                tagName='a'}}Next{{/link-to}}
-                            {{else}}
-                                <a href="javascript:void(0)" {{action 'changePage' nextPage}}>Next</a>
-                            {{/if}}
-                        </li>
-                    </ul>
-                </div>
-                --}}
-            </div>
-            {{#each testsOnPage as |test|}}
+            </section>
+
+            <section class="row">
+                <article class="col-xs-12 margin-top-8">
+                    <small>
+                        {{#if totalResults}}
+                            Results: {{totalResults}}
+                        {{else}}
+                            No results{{#if searchTerm.length}} for '{{searchTerm}}'.{{/if}}
+                        {{/if}}
+                    </small>
+                </article>
+            </section>
+
+            {{#each tests as |test|}}
                 {{test-card test=test parentController=this}}
             {{/each}}
+            {{#infinite-scroll content=tests hasMore=moreResultsToFetch}}
+                <h5 class="text-center"><div class="icon-only-loader"></div></h5>
+            {{/infinite-scroll}}
         </div>
     </div>
 </div>
