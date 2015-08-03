@@ -2,7 +2,7 @@
     <div class="col-md-12">
         <div class="card action-card margin-top-16">
             {{#link-to 'user' user.slug
-            tagName='a'}}{{render 'profile-image' user}}{{/link-to}}
+            tagName='a'}}{{profile-picture user=user}}{{/link-to}}
 
             <div class="action-title">
                 <p>{{#link-to 'user' user.slug}}

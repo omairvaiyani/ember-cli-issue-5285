@@ -1,130 +1,142 @@
-{{#unless inSearchMode}}
-    <nav {{bind-attr class=":navbar :navbar-main navbarTransparent"}} role="navigation">
-        <div class="container">
-            <!-- Brand and toggle get grouped for better mobile display -->
-            <div class="navbar-header">
-                <button type="button" class="navbar-toggle" data-toggle="collapse"
-                        data-target="#bs-navbar-collapsing">
-                    <span class="sr-only">Toggle navigation</span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
-                {{#link-to 'index' tagName='a' classNames='navbar-brand navbar-brand-adjust'}}
-                    {{#if loadingItems}}
-                        <img src="img/loading-white.gif" height="45px" class="logo-icon"/>
-                    {{else}}
-                        <img src="img/logo-wide.png" height="45px" class="logo-icon"/>
-                    {{/if}}
-                {{/link-to}}
-            </div>
+<nav {{bind-attr class=":navbar :navbar-main navbarTransparent"}} role="navigation">
+    <div class="container">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#bs-navbar-collapsing">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            {{#link-to 'index' tagName='a' classNames='navbar-brand navbar-brand-adjust'}}
+                {{#if loadingItems}}
+                    <img src="img/loading-white.gif" height="45px" class="logo-icon"/>
+                {{else}}
+                    <img src="img/logo-wide.png" height="45px" class="logo-icon"/>
+                {{/if}}
+            {{/link-to}}
+        </div>
 
-            <!-- Collect the nav links, forms, and other content for toggling -->
-            <div class="collapse navbar-collapse" id="bs-navbar-collapsing">
-                <ul class="nav navbar-nav">
-                    {{#if currentUser}}
-                        {{#link-to 'create' tagName='li' title='MCQ Quiz Maker'}}
-                            {{#link-to 'create' tagName='a'}}
-                                Create
-                            {{/link-to}}
-                        {{/link-to}}
-                        {{#link-to 'index' tagName='li' title='My Quizzes'}}
-                            {{#link-to 'index' tagName='a'}}
-                                Practice
-                            {{/link-to}}
-                        {{/link-to}}
-                    {{/if}}
-                    {{#link-to 'browse' tagName='li' title='Search for quizzes'}}
-                        {{#link-to 'browse' tagName='a'}}
-                            Browse
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse" id="bs-navbar-collapsing">
+            <ul class="nav navbar-nav">
+                {{#if currentUser}}
+                    {{#link-to 'create' tagName='li' title='MCQ Quiz Maker'}}
+                        {{#link-to 'create' tagName='a'}}
+                            Create
                         {{/link-to}}
                     {{/link-to}}
-                    {{!--
-                    {{#link-to 'groups' tagName='li' title='Browse Groups'}}{{#link-to 'groups' tagName='a'}}
-                        Groups{{/link-to}}{{/link-to}}
-                    --}}
-                    <!-- About dropdown menu-->
-                    {{#unless currentUser}}
-                        <li class="dropdown">
-                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
-                               aria-expanded="false">
-                                About <span class="caret"></span></a>
-                            <ul class="dropdown-menu" role="menu">
-                                {{#link-to 'about.index' tagName='li' title='About us'}}
-                                    {{#link-to 'about.index' tagName='a'}}
-                                        Overview
-                                    {{/link-to}}
+                    {{#link-to 'index' tagName='li' title='My Quizzes'}}
+                        {{#link-to 'index' tagName='a'}}
+                            Practice
+                        {{/link-to}}
+                    {{/link-to}}
+                {{/if}}
+                {{#link-to 'browse' tagName='li' title='Search for quizzes'}}
+                    {{#link-to 'browse' tagName='a'}}
+                        Browse
+                    {{/link-to}}
+                {{/link-to}}
+                <!-- About dropdown menu-->
+                {{#unless currentUser}}
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                           aria-expanded="false">
+                            About <span class="caret"></span></a>
+                        <ul class="dropdown-menu" role="menu">
+                            {{#link-to 'about.index' tagName='li' title='About us'}}
+                                {{#link-to 'about.index' tagName='a'}}
+                                    Overview
                                 {{/link-to}}
-                                {{#link-to 'about.team' tagName='li' title='MyCQs Team'}}
-                                    {{#link-to 'about.team' tagName='a'}}
-                                        Team
-                                    {{/link-to}}
+                            {{/link-to}}
+                            {{#link-to 'about.team' tagName='li' title='MyCQs Team'}}
+                                {{#link-to 'about.team' tagName='a'}}
+                                    Team
                                 {{/link-to}}
-                                <li class="divider"></li>
-                                {{#link-to 'contact' tagName='li' title='Contact us'}}
-                                    {{#link-to 'contact' tagName='a'}}
-                                        Contact
-                                    {{/link-to}}
+                            {{/link-to}}
+                            <li class="divider"></li>
+                            {{#link-to 'contact' tagName='li' title='Contact us'}}
+                                {{#link-to 'contact' tagName='a'}}
+                                    Contact
                                 {{/link-to}}
-                                {{#link-to 'support' tagName='li' title='Support'}}
-                                    {{#link-to 'support' tagName='a'}}
-                                        Support
-                                    {{/link-to}}
+                            {{/link-to}}
+                            {{#link-to 'support' tagName='li' title='Support'}}
+                                {{#link-to 'support' tagName='a'}}
+                                    Support
                                 {{/link-to}}
-                            </ul>
-                        </li>
-                    {{/unless}}
+                            {{/link-to}}
+                        </ul>
+                    </li>
+                {{/unless}}
+            </ul>
+            <form {{bind-attr class=":navbar-form :navbar-left navbarSearchIsFocused:is-focused"}}
+                    role="search" id="navbar-search-container">
+                {{input type="text" class="form-control" value=navbarSearchTerm id='navbar-search-input'
+                focus-in='navbarSearchFocused' focus-out='navbarSearchBlurred'}}
+                {{#if navbarSearchIsFocused}}
+                    <span class="fa fa-close close-icon"></span>
+                {{else}}
+                    <span class="fa fa-search search-icon" {{action 'focusOnNavbarSearch'}}></span>
+                {{/if}}
+                {{#if navbarSearchIsFocused}}
+                    <div class="search-popdown">
+                        <div class="container-fluid">
+                            {{#unless navbarSearchTerm.length}}
+                                <p class="margin-top-8">Type to search...</p>
+                            {{else}}
+                                {{#if navbarSearchFetching}}
+                                    <div class="icon-only-loader margin-top-8 margin-bottom-8"></div>
+                                {{else}}
+                                    {{#unless navbarSearchTotalResults}}
+                                        <p class="margin-top-8">No results found.</p>
+                                    {{/unless}}
+                                {{/if}}
+                            {{/unless}}
 
-                </ul>
-                {{!--
-                <form class="navbar-form navbar-left" {{action 'activateSiteSearch'}} role="search">
-                    <input type="text" class="form-control col-lg-8" placeholder="SEARCH">
-                </form>
-                --}}
-                <ul class="nav navbar-nav navbar-right">
-                    {{#if currentUser}}
-                        {{partial 'application/navbar/user-messages'}}
-                        <!-- account actions -->
-                        {{partial 'application/navbar/current-user'}}
-                    {{else}}
-                        <li>
-                            <a href="javascript:void(0)" {{action 'openModal' 'application/modal/login'
-                            'application'}}>
-                                Log in
-                            </a>
-                        </li>
-                        <li>
-                            <a href="javascript:void(0)" {{action 'openModal' 'application/modal/register'
-                            'application'}}>
-                                Register
-                            </a>
-                        </li>
-                    {{/if}}
-                </ul>
-            </div>
-            <!-- /.navbar-collapse -->
-        </div>
-        <!-- /.container-fluid -->
-    </nav>
-{{else}}
-    <nav class="navbar navbar-main navbar-search" role="navigation">
-        <div class="container">
-            <section class="row">
-                <article class="col-sm-1">
-                    <button class="btn btn-success margin-top-8"  {{action 'deactivateSiteSearch'}}>
-                        <i class="fa fa-arrow-circle-o-left margin-right-8"></i>Back
-                    </button>
-                </article>
-                <article class="col-sm-11">
-                    <form class="navbar-form inline-block" role="search">
-                        <div class="form-control">
-                            <i class="fa fa-search margin-right-16 inline-block"></i>
-                            {{input type="text" class="inline-block no-border-input"
-                            placeholder="Search..." id='site-search-input' value=searchInputText}}
+                            {{#if navbarSearchTotalResults}}
+                                <section class="row margin-top-8 margin-bottom-16">
+                                    <article {{bind-attr class="navbarSearchResults.users.length:col-xs-6:col-xs-12"}}>
+                                        <h5>TESTS</h5>
+                                        {{#each navbarSearchResults.tests as |test|}}
+                                            {{test-card test=test parentController=this mini=true}}
+                                        {{/each}}
+                                    </article>
+                                    <article {{bind-attr class="navbarSearchResults.tests.length:col-xs-6:col-xs-12
+                                    navbarSearchResults.tests.length:col-fix-right"}}>
+                                        <h5>USERS</h5>
+                                        {{#each navbarSearchResults.users as |user|}}
+                                            {{render 'user/item/user' user}}
+                                        {{/each}}
+                                    </article>
+                                </section>
+                            {{/if}}
                         </div>
-                    </form>
-                </article>
-            </section>
+                    </div>
+                {{/if}}
+            </form>
+            <ul class="nav navbar-nav navbar-right">
+                {{#if currentUser}}
+                    {{partial 'application/navbar/user-messages'}}
+                    <!-- account actions -->
+                    {{partial 'application/navbar/current-user'}}
+                {{else}}
+                    <li>
+                        <a href="javascript:void(0)" {{action 'openModal' 'application/modal/login'
+                        'application'}}>
+                            Log in
+                        </a>
+                    </li>
+                    <li>
+                        <a href="javascript:void(0)" {{action 'openModal' 'application/modal/register'
+                        'application'}}>
+                            Register
+                        </a>
+                    </li>
+                {{/if}}
+            </ul>
         </div>
-    </nav>
-{{/unless}}
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container-fluid -->
+</nav>

@@ -90,7 +90,8 @@ body
   background-image: url(/img/loading-white.gif);
   background-size: cover;
   margin: auto;
-  -webkit-filter: sepia(100%);
+  -webkit-filter: invert(100%) opacity(0.3);
+  filter: invert(100%) opacity(0.3);
 
 .is-active
   color white
@@ -581,62 +582,61 @@ input[type="range"]::-webkit-slider-thumb {
   list-style: none;
   margin 4px 0 0 0
   overflow: hidden;
-  padding: 0;
+  padding: 0 8px;
   li
     float: left;
 
 .tag
   background: colorPrimary-400;
-  border-radius: 3px 0 0 3px;
-  color: whitesmoke;
-  display: inline-block;
-  height: 26px;
-  line-height: 26px;
-  padding: 0 20px 0 23px;
-  position: relative;
-  margin: 0 10px 10px 0;
+  white-space:nowrap;
+  position:relative;
+  margin:0 5px 0 10px;
+  displaY:inline-block;
+  height:26px;
+  border-radius: 0 5px 5px 0;
+  padding: 0 12px;
+  border: 1px solid colorPrimary-800;
+  color:whitesmoke;
+  line-height:23px;
   text-decoration: none;
   -webkit-transition: color 0.2s;
   cursor pointer
   &::before
-    background: white;
-    border-radius: 10px;
-    box-shadow: inset 0 1px rgba(0, 0, 0, 0.25);
-    content: '';
-    height: 6px;
-    left: 10px;
-    position: absolute;
-    width: 6px;
-    top: 10px;
-  &::after
-    background: white;
-    border-bottom: 13px solid transparent;
-    border-left: 10px solid colorPrimary-400;
-    border-top: 13px solid transparent;
-    content: '';
-    position: absolute;
-    right: 0;
-    top: 0;
+    position:absolute;
+    background: colorPrimary-400;
+    content:"\25CF";
+    color:white;
+    text-shadow: 0 0 1px #aaa;
+    font-size:12px;
+    line-height:13px;
+    text-indent:6px;
+    top:3px;
+    left:-10px;
+    width: 18px;
+    height: 18px;
+    transform: rotate(45deg);
+    border-left:1px solid colorPrimary-800;
+    border-bottom:1px solid colorPrimary-700;
   &:hover
-    background-color: colorPrimary-500
+    background: colorPrimary-500
     color: white;
-    &::after
-      border-left-color: colorPrimary-500
+    &::before
+      background: colorPrimary-500
   &.is-active
-    background-color: colorPrimary-600
+    background: colorPrimary-600
     color: white;
-    &::after
-      border-left-color: colorPrimary-600;
+    &::before
+      background: colorPrimary-600;
   &.default
-    background-color lighten(grey, 40)
+    background lighten(grey, 40)
     color lighten(grey, 15)
-    &::after
-      border-left-color  lighten(grey, 40)
+    &::before
+      background  lighten(grey, 40)
     &:hover
-      background-color  lighten(grey, 38)
+      background  lighten(grey, 38)
       color lighten(grey, 10)
-      &::after
-        border-left-color  lighten(grey, 38)
+      &::before
+        background  lighten(grey, 38)
   input[type=text]
     background transparent
     border none
@@ -650,17 +650,17 @@ input[type="range"]::-webkit-slider-thumb {
     &.close-tag
       transform: rotate(45deg);
   &.category
-    background-color colorSecondary
-    &::after
-      border-left-color colorSecondary
+    background colorSecondary
+    &::before
+      background colorSecondary
     &:hover
-      background-color  alpha(colorSecondary, 0.85)
-      &::after
-        border-left-color alpha(colorSecondary, 0.85)
+      background  lighten(colorSecondary, 10)
+      &::before
+        background lighten(colorSecondary, 10)
     &.is-active
-      background-color darken(colorSecondary, 10)
-      &::after
-        border-left-color darken(colorSecondary, 10)
+      background darken(colorSecondary, 10)
+      &::before
+        background darken(colorSecondary, 10)
 
 .btn.fulfilled {
   background-color: green;
@@ -676,7 +676,7 @@ input[type="range"]::-webkit-slider-thumb {
   color white !important
   text-transform uppercase
   font-size 12px
-  text-shadow: 0 0 1px rgba(0, 0, 0, 0.6);
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.1);
   backgroundGradient(0)
   .navbar-brand
     height 40px
@@ -686,8 +686,8 @@ input[type="range"]::-webkit-slider-thumb {
   background-color transparent !important
 
 .navbar-nav > li > a
-  padding-top 15px !important
-  padding-bottom 15px !important
+  padding-top 16px !important
+  padding-bottom 14px !important
 
 .navbar-default.navbar .dropdown-menu li > a, .navbar.navbar .dropdown-menu li > a
   text-shadow 0 0 0
@@ -710,20 +710,51 @@ input[type="range"]::-webkit-slider-thumb {
 // Navbar search current
 
 .navbar-form
-  margin-top 9px !important
+  margin-top 8px !important
+  position relative
   .form-control
-    width 100%
-    background-color transparent !important
-    input
-      width calc(100% - 34px)
-    &::-webkit-input-placeholder
-      color white
-    &::-moz-placeholder
-      color white
-    &:-moz-placeholder
-      color white
-    &:-ms-input-placeholder
-      color white
+    background-color darken(colorPrimary-300, 10)
+    width 100px
+    border-radius: 4px;
+    background-image none
+    padding 8px 24px 8px 8px
+    color colorPrimary-600 !important
+    transition width 0.2s
+    &:hover
+      background-color colorPrimary-300
+  span
+    position: absolute;
+    right: 24px;
+    top: 9px;
+    font-size: 16px;
+    cursor pointer
+  &.is-focused
+    .form-control
+      width 250px
+      background-color white
+      color black !important
+    span
+      color black
+
+.search-popdown
+  background: #edeff0;
+  color black
+  border-radius: 3px;
+  border: 1px solid #d6dadc;
+  border-bottom-color: #c4c9cc;
+  box-shadow: 0 1px 6px rgba(0,0,0,.15);
+  overflow: hidden;
+  overflow-y scroll
+  position: absolute;
+  left: 15px;
+  top: 42px;
+  width: 500px;
+  min-height 115px
+  max-height 280px
+  z-index: 20;
+  -webkit-transform: translate3d(0,0,0);
+  h5
+    margin-bottom 0
 
 @media (min-width: 768px) {
   .navbar-right {
@@ -734,8 +765,8 @@ input[type="range"]::-webkit-slider-thumb {
 
 .navbar-right
   li > a.navbar-right-adjust
-    padding-top 10px !important
-    padding-bottom 12px !important
+    padding-top 11px !important
+    padding-bottom 11px !important
   li.navbar-messages > a
     padding-top 17px !important
     padding-bottom 13px !important
@@ -1581,6 +1612,35 @@ hr.user-message-item-separator {
       position absolute
       bottom marginPrimary
       right marginPrimary
+  &.mini
+    height 100px
+    overflow hidden
+    padding marginSecondary
+    box-shadow none
+    transition all 0.2s
+    cursor pointer
+    .title
+      font-size 10px
+    ul
+      margin-left 40px
+    .card-fade
+      background: -webkit-linear-gradient(top,rgba(240,240,240,0) 0,rgba(240,240,240,0) 50%,#f0f0f0 85%,#f0f0f0 100%);
+      background: linear-gradient(to bottom,rgba(240,240,240,0) 0,rgba(240,240,240,0) 50%,#f0f0f0 85%,#f0f0f0 100%);
+      bottom: 0;
+      left: 0;
+      position: absolute;
+      right: 0;
+      top: 0;
+      z-index: 2;
+      transition opacity 0.2s
+    &:hover
+      box-shadow 0 1px 2px -1px rgba(0,0,0,.8)
+      height inherit
+      .title
+        font-size 12px
+        font-weight bold
+      .card-fade
+        opacity 0
 
 .btn-group
   box-shadow none !important

@@ -46,6 +46,8 @@ Parse.Cloud.afterSave(Parse.User, function (request) {
         Parse.Cloud.useMasterKey();
         user.save();
     }
+    // Add/Update search index (async)
+    user.indexObject();
 });
 
 /**

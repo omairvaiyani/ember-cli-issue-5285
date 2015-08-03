@@ -14,6 +14,13 @@ export default Ember.Controller.extend({
      * - Send preliminary title to ApplicationRoute.updateTitle()
      */
     currentPathDidChange: function () {
+        // Blurring here to allow the user to navigate
+        // between search results and the modal view,
+        // without blur. But, when they eventually
+        // click on a test/user, the route change
+        // will ensure this input focus is not leaked.
+        this.send('navbarSearchHardBlur');
+
         if (window.prerenderReady) {
             if (this.get('currentPath') !== 'search')
                 this.send('deactivateSiteSearch');
@@ -115,11 +122,6 @@ export default Ember.Controller.extend({
         window.scrollTo(0, 0);
     }.observes('currentPath', 'currentUser'),
 
-    /*
-     * Search in Navbar
-     */
-    searchInputText: "",
-
     loadingItems: 0,
 
     currentUser: null,
@@ -159,7 +161,7 @@ export default Ember.Controller.extend({
             var adapter = this.store.adapterFor(currentUser);
             adapter.headers['X-Parse-Session-Token'] = currentUser.get('sessionToken');
 
-            if(!this.get('websiteNotInitialisedForUser'))
+            if (!this.get('websiteNotInitialisedForUser'))
                 return this.get('controllers.index').myTestsListUpdate();
             ParseHelper.cloudFunction(this, 'initialiseWebsiteForUser', {}).then(function (response) {
                 ParseHelper.handleResponseForInitializeWebsiteForUser(this.store, currentUser, response);
@@ -243,6 +245,70 @@ export default Ember.Controller.extend({
         confirmPassword: ""
     },
 
+    /*
+     * Search in Navbar
+     */
+    searchClient: function () {
+        return algoliasearch("ONGKY2T0Y8", "8553807a02b101962e7bfa8c811fd105");
+    }.property(),
+
+    navbarSearchTerm: "",
+    navbarSearchResults: {tests: new Ember.A(), users: new Ember.A()},
+
+    performNavbarSearch: function () {
+        var queries = [],
+            testQuery = {
+                indexName: "Test",
+                query: this.get('navbarSearchTerm'),
+                params: {
+                    hitsPerPage: 5
+                }
+            },
+            userQuery = {
+                indexName: "User",
+                query: this.get('navbarSearchTerm'),
+                params: {
+                    hitsPerPage: 5
+                }
+            };
+        queries.push(testQuery);
+        queries.push(userQuery);
+        this.get('searchClient').search(queries).then(function (response) {
+            var testResponse = response.results[0],
+                userResponse = response.results[1],
+                tests = ParseHelper.extractRawPayload(this.store, 'test', testResponse.hits),
+                users = ParseHelper.extractRawPayload(this.store, 'parse-user', userResponse.hits);
+
+            // Algolia cache's results which should be great BUT
+            // Ember-Data removes the .id from payloads when extracting
+            // This causes an error on 'response.hits' cache as their
+            // 'id' has been removed.
+            this.get('searchClient').clearCache();
+
+            this.set('navbarSearchTotalResults', testResponse.nbHits + userResponse.nbHits);
+
+            this.get('navbarSearchResults.tests').clear();
+            this.get('navbarSearchResults.tests').addObjects(tests);
+
+            this.get('navbarSearchResults.users').clear();
+            this.get('navbarSearchResults.users').addObjects(users);
+
+            this.set('navbarSearchFetching', false);
+        }.bind(this));
+    },
+
+    throttleNavbarSearch: function () {
+        this.set('navbarSearchFetching', this.get('navbarSearchTerm.length') > 0);
+
+        if(!this.get('navbarSearchTerm.length')) {
+            this.get('navbarSearchResults.tests').clear();
+            this.get('navbarSearchResults.users').clear();
+            this.set('navbarSearchTotalResults', 0);
+            return;
+        }
+        Ember.run.debounce(this, this.performNavbarSearch, 200);
+    }.observes('navbarSearchTerm.length'),
+
     actions: {
         incrementLoadingItems: function () {
             this.incrementProperty('loadingItems');
@@ -277,6 +343,45 @@ export default Ember.Controller.extend({
                 window.document.title = window.document.title.substr(window.document.title.indexOf(" ") + 1);
         },
 
+        // Called from the search icon
+        focusOnNavbarSearch: function () {
+            $('#navbar-search-input').focus();
+        },
+
+        // input focus-in action
+        navbarSearchFocused: function () {
+            this.set('navbarSearchIsFocused', true);
+        },
+
+        // By click outside the input or results (includes the X span)
+        navbarSearchBlurred: function () {
+            // Set up a jQuery function to hide the input
+            // if clicked outside the form-control or
+            // the popdown results div, or the X span.
+            if (!this.get('jqueryNavbarSearchHiderSet')) {
+                $(document).mouseup(function (e) {
+                    var container = $("#navbar-search-container"),
+                        modal = $("#myModal");
+                    if (!container.is(e.target) && !modal.is(e.target)
+                        && (_.contains(e.target.classList, "close-icon") ||
+                        (container.has(e.target).length === 0 &&
+                        modal.has(e.target).length === 0)
+                        )) {
+                        this.send('navbarSearchHardBlur');
+                    }
+                }.bind(this));
+                this.set('jqueryNavbarSearchHiderSet', true);
+            }
+        },
+
+        // called by actions.navbarSearchBlurred
+        // or currentPathChange
+        navbarSearchHardBlur: function () {
+            this.set('navbarSearchIsFocused', false);
+            this.set('navbarSearchTerm', "");
+            $('#navbar-search-input').blur();
+        },
+
         searchItemClicked: function (object, className) {
             if (className === 'test')
                 this.transitionToRoute('testInfo', object.slug);
@@ -287,7 +392,7 @@ export default Ember.Controller.extend({
         changePassword: function (callback) {
             if (this.get('changePassword.newPassword') !== this.get('changePassword.confirmPassword')) {
                 this.send('addNotification', 'error', 'Error!', "Your new passwords do not match.");
-                if(callback)
+                if (callback)
                     callback(new Parse.Promise.error());
                 return;
             }

@@ -181,6 +181,17 @@ Parse.User.prototype.minimalProfile = function () {
     return object;
 };
 /**
+ * @Property Index Object
+ * Minimises user and indexes it for search
+ * @return {Parse.Promise}
+ */
+Parse.User.prototype.indexObject = function () {
+    var object = this.minimalProfile();
+    object.objectID = this.id;
+    return userIndex.saveObject(object);
+};
+
+/**
  * @Function Generate Slug
  * Creates a slug locally then
  * calls @verifySlug to query
@@ -1902,6 +1913,8 @@ Parse.Cloud.afterSave(Parse.User, function (request) {
         Parse.Cloud.useMasterKey();
         user.save();
     }
+    // Add/Update search index (async)
+    user.indexObject();
 });
 
 /**

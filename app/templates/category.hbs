@@ -3,7 +3,7 @@
         {{#if browseAll}}
             <h1>Browse</h1>
 
-            <h4>Search from thousands of mcq tests in MyCQs.</h4>
+            <h4>Search from thousands of mcq tests in Synap.</h4>
         {{else}}
             <div class='inline-block svg-icon-white'>
                 {{#unless model.hasChildren}}
@@ -15,11 +15,7 @@
                 {{/unless}}
             </div>
             <h1 class="inline-block">{{seoPageHeader}}</h1>
-
-            <h4>Search from over {{math-round model.totalTests 10}}
-                {{#if model.secondaryName}}{{model.secondaryName}}{{else}}{{model.name}}{{/if}} mcqs
-                {{#if seoChildCategories.length}} on
-                    a range of subjects such as {{seoChildCategories}}{{/if}}.</h4>
+            <h4> {{seoPageDescription}}</h4>
         {{/if}}
     </div>
 </div>
@@ -43,7 +39,7 @@
             {{/link-to}}
         {{/if}}
     </ol>
-    <div class="row">
+    <div class="row" id="top-of-results">
         <div class="col-md-3">
             <div class="card">
                 {{#if filterActive}}
@@ -82,17 +78,19 @@
                                 {{parentCategory.model.name}}
                             {{/link-to}}
                             {{#if parentCategory.isActive}}
-                                <ul class="inner-list nav nav-pills nav-stacked margin-left-16">
-                                    {{#each childCategories itemController='category.item.childCategory' as |category|}}
-                                        {{#link-to 'subcategory' parentCategory.model.slug
-                                        category.model.slug tagName='li'}}
+                                {{#if childCategories.length}}
+                                    <ul class="inner-list nav nav-pills nav-stacked margin-left-16">
+                                        {{#each childCategories itemController='category.item.childCategory' as |category|}}
                                             {{#link-to 'subcategory' parentCategory.model.slug
-                                            category.model.slug tagName='a'}}
-                                                {{category.model.name}}
+                                            category.model.slug tagName='li'}}
+                                                {{#link-to 'subcategory' parentCategory.model.slug
+                                                category.model.slug tagName='a'}}
+                                                    {{category.model.name}}
+                                                {{/link-to}}
                                             {{/link-to}}
-                                        {{/link-to}}
-                                    {{/each}}
-                                </ul>
+                                        {{/each}}
+                                    </ul>
+                                {{/if}}
                             {{/if}}
                         {{/link-to}}
                     {{/each}}
@@ -114,7 +112,7 @@
                 <div class="col-xs-12 col-sm-3 col-sm-push-5">
                     <!-- Order selection -->
                     {{view 'select' content=orderTypes optionLabelPath='content.label'
-                    optionValuePath='content.value' class="form-control"}}
+                    optionValuePath='content' class="form-control" value=order}}
                 </div>
             </section>
 
@@ -134,7 +132,7 @@
                 {{test-card test=test parentController=this}}
             {{/each}}
             {{#infinite-scroll content=tests hasMore=moreResultsToFetch}}
-                <h5 class="text-center"><div class="icon-only-loader"></div></h5>
+                <div class="icon-only-loader margin-top-8 margin-bottom-8"></div>
             {{/infinite-scroll}}
         </div>
     </div>

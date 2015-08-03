@@ -11,79 +11,31 @@ export default Ember.Controller.extend(CurrentUser, TagsAndCats, {
     }.property('controllers'),
 
     init: function () {
-        // algolia Search API
-        var algoliaClient = algoliasearch("ONGKY2T0Y8", "8553807a02b101962e7bfa8c811fd105"),
-            testIndex = algoliaClient.initIndex('Test');
-        this.set('testIndex', testIndex);
+        // Set initial order (which search index slave to use)
+        // See Algolia tutorials
+        this.set('order', this.get('orderTypes')[0]);
     },
 
-    loadingItems: 0,
+    searchClient: function () {
+        return this.get('applicationController.searchClient');
+    }.property('applicationController.searchClient'),
 
-    queryParams: ['page', 'order', 'search'],
-
-    /*
-     * Query paramaters
-     */
-
-    page: 1,
-
-    order: 'relevance',
-
-    search: '',
-
-    /*
-     * Query: Pagination
-     */
-
-    limit: 10,
-
-    skip: function () {
-        return (this.get('page') * 10) - this.get('limit');
-    }.property('page', 'limit'),
-
-    previousPage: function () {
-        return this.get('page') - 1;
-    }.property('page'),
-
-    nextPage: function () {
-        if (this.get('page') < this.get('totalPages'))
-            return this.get('page') + 1;
-        else
-            return false;
-    }.property('page', 'totalPages'),
-
-    totalPages: function () {
-        var totalPages = Math.round(this.get('tests.length') / this.get('limit'));
-        if (!totalPages) return 1;
-        else return totalPages;
-    }.property('tests.length', 'limit'),
-
-    pagesInPagination: function () {
-        var pagesToShow = [];
-        if (this.get('page') < 4 || this.get('totalPages') < 6) {
-            for (var i = 1; i < 6; i++) {
-                if (i > this.get('totalPages'))
-                    break;
-                pagesToShow.push(i);
-            }
-        } else {
-            for (var i = (this.get('page') - 2); i < (this.get('page') + 2); i++) {
-                if (i > this.get('totalPages'))
-                    break;
-                pagesToShow.push(i);
-            }
+    testIndex: function () {
+        if (this.get('order.value') === 'relevance') {
+            return this.get('searchClient').initIndex('Test');
+        } else if (this.get('order.value') === 'title') {
+            return this.get('searchClient').initIndex('Test_title(ASC)');
         }
-        if (pagesToShow.indexOf(1) === -1)
-            pagesToShow.insertAt(0, 1);
-        if (pagesToShow.indexOf(this.get('totalPages')) === -1)
-            pagesToShow.push(this.get('totalPages'));
-        return pagesToShow;
-    }.property('page', 'totalPages'),
+    }.property('order'),
+
+    order: null,
+
+    orderTypes: [{label: "Relevance", value: "relevance"}, {label: "Title A-Z", value: "title"},
+        {label: "Difficulty", value: "difficulty"}],
 
     tests: new Ember.A(),
+
     childCategories: new Ember.A(),
-    orderTypes: [{label: "Relevance", value: "quality"}, {label: "Title A-Z", value: "title"},
-        {label: "Difficulty", value: "difficulty"}],
 
     /*
      * Gets all the child categories that belong
@@ -129,6 +81,7 @@ export default Ember.Controller.extend(CurrentUser, TagsAndCats, {
 
     getTests: function (fetchMore) {
         var categoryFilter;
+
         if (this.get('model.hasChildren')) {
             categoryFilter = [];
             this.get('childCategories').forEach(function (category) {
@@ -169,7 +122,9 @@ export default Ember.Controller.extend(CurrentUser, TagsAndCats, {
                 if (!fetchMore) {
                     this.get('tests').clear();
                     this.get('tests').pushObjects(tests);
-                    $("html, body").animate({scrollTop: 215}, "fast");
+                    $('html, body').animate({
+                        scrollTop: $("#top-of-results").offset().top - 16
+                    }, 500);
                 } else {
                     // New page will be appended by components/infinite-scroll
                     // Check actions.fetchMore
@@ -182,46 +137,48 @@ export default Ember.Controller.extend(CurrentUser, TagsAndCats, {
 
     throttleGetTests: function () {
         Ember.run.debounce(this, this.getTests, 200);
-    }.observes('searchTerm.length', 'activeTags.length', 'activeCategories.length',
+    }.observes('searchTerm.length', 'activeTags.length', 'activeCategories.length', 'testIndex',
         'model.id', 'readyToGetTests'),
-
-    testsOnPage: function () {
-        if (!this.get('tests.length'))
-            return;
-        return this.get('tests').slice(this.get('skip'), this.get('skip') + this.get('limit'));
-    }.property('tests.length', 'order', 'skip'),
 
     /*
      * Sets a semantic page description for SEO.
      */
-    setPageDescription: function () {
-        if (this.get('testsOnPage.length') || !window.prerenderReady) {
-            var childCategoryText = "";
-            if (this.get('childCategories.length')) {
-                if (this.get('childCategories').objectAt(0))
-                    childCategoryText += ": " + this.get('childCategories').objectAt(0).get('name');
-                if (this.get('childCategories').objectAt(1))
-                    childCategoryText += ", " + this.get('childCategories').objectAt(1).get('name');
-                if (this.get('childCategories').objectAt(2))
-                    childCategoryText += ", " + this.get('childCategories').objectAt(2).get('name');
-                childCategoryText += " and more";
-            }
-            this.send('updatePageDescription', "Take MCQ tests in " + this.get('name') +
-                childCategoryText +
-                "! There are " + this.get('totalTests') +
-                " tests to choose from, or create your own!");
-            this.send('prerenderReady');
-        }
-    }.observes('testsOnPage.length'),
-
+    /**
+     * @Property SEO Page Header
+     * Seen in the header, optimised for SEO.
+     */
     seoPageHeader: function () {
         var pageTitle;
 
-        pageTitle = this.get('model.name') + " MCQs";
+        pageTitle = Em.getWithDefault(this.get('model'), 'secondaryName', this.get('model.name')) + " MCQs";
         this.send('updatePageTitle', pageTitle);
         return pageTitle;
     }.property('model.name.length'),
 
+    /**
+     * @Property SEO Page Description
+     * Seen in the sub-header, optimised for SEO.
+     */
+    seoPageDescription: function () {
+        var totalTests = this.get('model.totalTests');
+        if(totalTests > 100)
+            totalTests = "over "  + (Math.floor(totalTests / 10) * 10);
+        var description = "Search from " + totalTests + " ";
+        description += Em.getWithDefault(this.get('model'), 'secondaryName', this.get('model.name')).toLowerCase() + " mcqs";
+        if (this.get('seoChildCategories.length')) {
+            description += " on a range of topics such as " + this.get('seoChildCategories');
+        }
+        description += ".";
+        return description;
+    }.property('model.name.length'),
+
+
+    /**
+     * @Property SEO Child Categories
+     * Used by seoPageDescription and setMetaPageDescription.
+     * A random assortment from the childCategories, optimised
+     * for SEO.
+     */
     seoChildCategories: function () {
         if (!this.get('childCategories.length') || !this.get('model.hasChildren'))
             return "";
@@ -234,44 +191,45 @@ export default Ember.Controller.extend(CurrentUser, TagsAndCats, {
                 totalCategories = 8;
 
             for (var i = 0; i < totalCategories; i++) {
+                if(shuffledChildCategories[i].get('name') === "Other")
+                    continue;
+                var name = shuffledChildCategories[i].get('secondaryName');
+                if(!name)
+                    name = shuffledChildCategories[i].get('name');
+                name = name.toLowerCase();
                 if (i < (totalCategories - 1))
-                    seoString += shuffledChildCategories[i].get('name') + ", ";
+                    seoString += name + ", ";
                 else
-                    seoString = seoString.slice(0, -2) + " and " + shuffledChildCategories[i].get('name');
+                    seoString = seoString.slice(0, -2) + " and " + name;
             }
             return seoString;
         }
     }.property('childCategories.length'),
 
-    // Used by TagAndCat mixin when toggling categories
-    oneCategoryAtATime: true,
+    /**
+     * @Function Set Meta Page Description
+     * Only seen by search engines.
+     */
+    setMetaPageDescription: function () {
+        if (this.get('tests.length') || !window.prerenderReady) {
+            var childCategoryText = "";
+            if (this.get('childCategories.length')) {
+                if (this.get('childCategories').objectAt(0))
+                    childCategoryText += "" + this.get('childCategories').objectAt(0).get('name').toLowerCase();
+                if (this.get('childCategories').objectAt(1))
+                    childCategoryText += ", " + this.get('childCategories').objectAt(1).get('name').toLowerCase();
+                if (this.get('childCategories').objectAt(2))
+                    childCategoryText += ", " + this.get('childCategories').objectAt(2).get('name').toLowerCase();
+                childCategoryText += " and more";
+            }
+            this.send('updatePageDescription', "Take MCQs in " + childCategoryText +
+                "! There are " + this.get('model.totalTests') +
+                " tests to choose from, or create your own quizzes for free!");
+            this.send('prerenderReady');
+        }
+    }.observes('tests.length'),
 
     actions: {
-        changeOrder: function (order) {
-            this.transitionTo({queryParams: {order: order}});
-        },
-
-        searchTests: function () {
-            /*
-             * Do not want to getTests() every time the searchTerm value is update
-             * We only want to make a query when the user explicitly presses enter
-             * Therefore, keep 'search' and 'searchTerm' as separate for the
-             * getTests().observer
-             */
-            this.transitionTo({queryParams: {search: this.get('searchTerm'), page: 1}});
-        },
-
-        incrementLoadingItems: function () {
-            this.incrementProperty('loadingItems');
-        },
-
-        decrementLoadingItems: function () {
-            if (this.get('loadingItems'))
-                this.decrementProperty('loadingItems');
-            //this.send('decrementLoadingItems');
-        },
-
-
         /**
          * @Override TagsAndCatsMixin
          * @Action Toggle Category Filter
