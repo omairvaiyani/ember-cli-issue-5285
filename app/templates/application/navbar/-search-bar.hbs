@@ -1,0 +1,49 @@
+<form {{bind-attr class=":navbar-form :navbar-left navbarSearchIsFocused:is-focused"}}
+        role="search" id="navbar-search-container">
+    {{input type="text" class="form-control" value=navbarSearchTerm id='navbar-search-input'
+    focus-in='navbarSearchFocused' focus-out='navbarSearchBlurred'}}
+    {{#if navbarSearchIsFocused}}
+        <span class="fa fa-close close-icon"></span>
+    {{else}}
+        <span class="fa fa-search search-icon" {{action 'focusOnNavbarSearch'}}></span>
+    {{/if}}
+    {{#if navbarSearchIsFocused}}
+        <div {{bind-attr class=":search-popdown navbarSearchDual:dual"}}>
+            <div class="container-fluid">
+                {{#unless navbarSearchTerm.length}}
+                    <p class="margin-top-8">Type to search...</p>
+                {{else}}
+                    {{#if navbarSearchFetching}}
+                        <div class="icon-only-loader margin-top-8 margin-bottom-8"></div>
+                    {{else}}
+                        {{#unless navbarSearchTotalResults}}
+                            <p class="margin-top-8">No results found.</p>
+                        {{/unless}}
+                    {{/if}}
+                {{/unless}}
+
+                {{#if navbarSearchTotalResults}}
+                    <section class="row margin-top-8 margin-bottom-16">
+                        {{#if navbarSearchResults.tests.length}}
+                            <article {{bind-attr class="navbarSearchResults.users.length:col-xs-6:col-xs-12"}}>
+                                <h5>TESTS</h5>
+                                {{#each navbarSearchResults.tests as |test|}}
+                                    {{test-card test=test parentController=this mini=true}}
+                                {{/each}}
+                            </article>
+                        {{/if}}
+                        {{#if navbarSearchResults.users.length}}
+                            <article {{bind-attr class="navbarSearchResults.tests.length:col-xs-6:col-xs-12
+                                    navbarSearchResults.tests.length:col-fix-right"}}>
+                                <h5>USERS</h5>
+                                {{#each navbarSearchResults.users as |user|}}
+                                    {{user-card user=user parentController=this mini=true}}
+                                {{/each}}
+                            </article>
+                        {{/if}}
+                    </section>
+                {{/if}}
+            </div>
+        </div>
+    {{/if}}
+</form>

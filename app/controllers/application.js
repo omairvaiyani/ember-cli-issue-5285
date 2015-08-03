@@ -309,6 +309,10 @@ export default Ember.Controller.extend({
         Ember.run.debounce(this, this.performNavbarSearch, 200);
     }.observes('navbarSearchTerm.length'),
 
+    navbarSearchDual: function () {
+        return this.get('navbarSearchResults.tests.length') && this.get('navbarSearchResults.users.length');
+    }.property('navbarSearchResults.tests.length', 'navbarSearchResults.users.length'),
+
     actions: {
         incrementLoadingItems: function () {
             this.incrementProperty('loadingItems');

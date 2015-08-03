@@ -4,48 +4,20 @@
             <div {{bind-attr class=":card :test-info-card :margin-top-16"}}>
                 <div class="left inline-top">
                     <h4>
-                        {{test.title}}
+                        {{user.name}}
                     </h4>
 
                     <p class="small margin-bottom-8">
-                        {{test.totalQuestions}} {{pluralize-word 'question' test.totalQuestions}}
+                        {{user.numberOfTestsCreated}} {{pluralize-word 'test' user.numberOfTestsCreated}}
                     </p>
 
-                    <p class="margin-bottom-8">{{text-preview test.description 120}}</p>
-
-                    <ul class="tags">
-                        {{#if test.category}}
-                            <li {{bind-attr class=":tag :category test.category.isActive"}}
-                                {{action 'toggleCategoryFilter' test.category}}>{{test.category.name}}
-                            </li>
-                        {{/if}}
-                        {{#each test.tags itemController="component.testCard.item.tag" as |tag|}}
-                            <li {{bind-attr class=":tag tag.isActive"}} {{action 'toggleTagFilter' tag.model}}>{{tag.model}}</li>
-                        {{/each}}
-                    </ul>
+                    <p class="margin-bottom-8">Education Cohort Details</p>
                 </div>
 
                 <div class="right inline-top">
-                    {{#if showMemoryStrength}}
-                        <div class="memory-strength inline-top margin-right-16">
-                            {{#tool-tipster title="Memory Strength" class='inline-block'}}
-                                <div class="brain-bulb-fill" {{bind-attr style=memoryStrengthMeterStyle}}></div>
-                                <div class="grey-fill" {{bind-attr style=memoryStrengthMeterInverseStyle}}/>
-                                <img {{bind-attr src=memoryStrengthSrc}} />
-                                <label>
-                                    {{test.memoryStrength}}
-                                </label>
-                            {{/tool-tipster}}
-                        </div>
-                    {{/if}}
-                    {{#if showSRIcon}}
-                        <div class="inline-top">
-                            <img src="/img/brain-bulb-small-gradient.png" height="50px"/>
-                        </div>
-                    {{/if}}
                     {{#if showProfilePicture}}
                         <div class="author inline-top">
-                            {{profile-picture user=test.author}}
+                            {{profile-picture user=user}}
                         </div>
                     {{/if}}
 
@@ -86,37 +58,20 @@
                 </div>
             </div>
         {{else}}
-            <div {{bind-attr class=":card :test-info-card :margin-top-16 mini"}}
-                {{action 'openModal' 'browse/modal/test-info' 'browse.modal.testInfo' test}}>
+            <div {{bind-attr class=":card :test-info-card :margin-top-16 mini"}}>
                 <div class="card-fade"></div>
                 <div class="mini">
-                    <p class="title">{{test.title}}</p>
-                    <p class="subtitle">by {{test.author.name}}</p>
                     <div class="container-fluid">
                         <section class="row">
-                            <article class="col-xs-8 col-fix-right">
-                                <ul class="tags text-center">
-                                    {{#if test.category}}
-                                        <li {{bind-attr class=":tag :category test.category.isActive"}}>{{test.category.name}}
-                                        </li>
-                                    {{/if}}
-                                </ul>
-                            </article>
                             <article class="col-xs-4 col-fix-right">
-                                <p class="small text-right margin-top-8">
-                                    {{test.totalQuestions}} {{pluralize-word 'mcq' test.totalQuestions}}
-                                </p>
+                                {{profile-picture user=user}}
+                            </article>
+                            <article class="col-xs-8 col-fix-right">
+                                <p class="title">{{user.name}}</p>
                             </article>
                         </section>
                         <section class="row">
                             <article class="col-xs-12 col-fix-right">
-                                <ul class="tags">
-                                    {{#each test.tags itemController="component.testCard.item.tag" as |tag|}}
-                                        <li {{bind-attr class=":tag tag.isActive"}}>
-                                            {{tag.model}}
-                                        </li>
-                                    {{/each}}
-                                </ul>
                             </article>
                         </section>
                     </div>
