@@ -104,14 +104,14 @@
                         {{day.label}}
                     </article>
                     {{#each day.slots as |slot slotIndex|}}
-                    <article class="col-sm-2">
-                        <div class="togglebutton togglebutton-info">
-                            <label {{action 'toggleSlot' slotIndex dayIndex}}>
-                                {{input type="checkbox" checked=slot.active}}
-                                <span class="toggle"></span>
-                            </label>
-                        </div>
-                    </article>
+                        <article class="col-sm-2">
+                            <div class="togglebutton togglebutton-info">
+                                <label {{action 'toggleSlot' slotIndex dayIndex}}>
+                                    {{input type="checkbox" checked=slot.active}}
+                                    <span class="toggle"></span>
+                                </label>
+                            </div>
+                        </article>
                     {{/each}}
                 </section>
             {{/each}}

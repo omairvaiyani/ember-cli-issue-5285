@@ -3,8 +3,6 @@ import CurrentUser from '../../mixins/current-user';
 import ParseHelper from '../../utils/parse-helper';
 
 export default Ember.Controller.extend(CurrentUser, {
-    needs: ['application'],
-
     preparingSpacedRepetition: false,
 
     daysOfTheWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],

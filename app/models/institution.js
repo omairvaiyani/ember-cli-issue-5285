@@ -7,5 +7,14 @@ export default DS.Model.extend(ParseMixin, {
     facebookId: DS.attr('string'),
     fbObject: DS.attr(),
     pictureUrl: DS.attr('string'),
-    cover: DS.attr()
+    cover: DS.attr(),
+
+    url: function () {
+        if(this.get('fbObject.url'))
+            return this.get('fbObject.url');
+        else if (this.get('facebookId'))
+            return "https://facebook.com/" + this.get('facebookId');
+        else
+            return "javascript:void(0)";
+    }.property('facebookId', 'fbObject.url')
 });

@@ -27,6 +27,7 @@ export default DS.Model.extend(ParseMixin, CurrentUser, {
     isProfessional: DS.attr('boolean'),
     oldId: DS.attr('string'),
     totalQuestions: DS.attr('number'),
+    difficulty: DS.attr('number', {defaultValue: 50}),
 
     /**
      * @Property uniqueResponses
@@ -61,5 +62,23 @@ export default DS.Model.extend(ParseMixin, CurrentUser, {
             memoryStrength = 0;
 
         return memoryStrength;
-    }.property('uniqueResponses.@each.memoryStrength')
+    }.property('uniqueResponses.@each.memoryStrength'),
+
+
+    memoryStrengthMeterStyle: function () {
+        var height = this.get('memoryStrength');
+        return "height:" + height + "%;";
+    }.property('memoryStrength'),
+
+    memoryStrengthMeterInverseStyle: function () {
+        var height = this.get('memoryStrength');
+        return "height:" + (100 - height) + "%;";
+    }.property('memoryStrength'),
+
+    memoryStrengthSrc: function () {
+        if (this.get('memoryStrength') === 100)
+            return "/img/brain-bulb-small-gradient.png";
+        else
+            return "/img/brain-bulb-small-mask.png";
+    }.property('memoryStrength')
 });

@@ -119,6 +119,7 @@ Parse.Object.prototype.fetchIfNeeded = function () {
     // if the object is fetched or not.
     if (!this.createdAt) {
         // This works.
+        Parse.Cloud.useMasterKey();
         return this.fetch();
     } else {
         // This hasn't been tested yet
@@ -188,7 +189,22 @@ Parse.User.prototype.minimalProfile = function () {
 Parse.User.prototype.indexObject = function () {
     var object = this.minimalProfile();
     object.objectID = this.id;
-    return userIndex.saveObject(object);
+    // If the user does not have an educationCohort set,
+    // the promise will be a synchronous null instead of an error.
+    this.fetchEducationCohort().then(function (educationCohort) {
+        if (educationCohort) {
+            // This converts embedded records to pointers
+            object.educationCohort = educationCohort.toJSON();
+            // Therefore, we have to define them like this:
+            if (educationCohort.studyField())
+                object.educationCohort.studyField = educationCohort.studyField().toJSON();
+            if (educationCohort.institution())
+                object.educationCohort.institution = educationCohort.institution().toJSON();
+            // ACLs are only present on the main record
+            object.educationCohort.ACL = undefined;
+        }
+        return userIndex.saveObject(object);
+    });
 };
 
 /**
@@ -728,6 +744,39 @@ var Test = Parse.Object.extend("Test", {
         return this.get('tags');
     },
 
+
+    /**
+     * @Property averageScore
+     * @return {Integer}
+     */
+    averageScore: function () {
+        return this.get('averageScore');
+    },
+
+    /**
+     * @Property averageUniqueScore
+     * @return {Integer}
+     */
+    averageUniqueScore: function () {
+        return this.get('averageUniqueScore');
+    },
+
+    /**
+     * @Property numberOfAttempts
+     * @return {Integer}
+     */
+    numberOfAttempts: function () {
+        return this.get('numberOfAttempts');
+    },
+
+    /**
+     * @Property numberOfUniqueAttempts
+     * @return {Integer}
+     */
+    numberOfUniqueAttempts: function () {
+        return this.get('numberOfUniqueAttempts');
+    },
+
     /**
      * @Function Set Defaults
      * Adds 0, booleans and empty arrays to
@@ -853,7 +902,7 @@ var Question = Parse.Object.extend("Question", {
      * @returns {integer}
      */
     numberOfResponses: function () {
-        return this.get('numberOfResponses');
+        return this.get('numberOfResponses') ? this.get('numberOfResponses') : 0;
     },
 
     /**
@@ -861,9 +910,41 @@ var Question = Parse.Object.extend("Question", {
      * @returns {integer}
      */
     numberOfCorrectResponses: function () {
-        return this.get('numberOfCorrectResponses');
+        return this.get('numberOfCorrectResponses') ? this.get('numberOfCorrectResponses') : 0;
     },
 
+    /**
+     * @Property percentOfCorrectResponses
+     * @returns {integer}
+     */
+    percentOfCorrectResponses: function () {
+        return this.get('percentOfCorrectResponses') ? this.get('percentOfCorrectResponses') : 0;
+    },
+
+
+    /**
+     * @Property numberOfUniqueResponses
+     * @returns {integer}
+     */
+    numberOfUniqueResponses: function () {
+        return this.get('numberOfUniqueResponses') ? this.get('numberOfUniqueResponses') : 0;
+    },
+
+    /**
+     * @Property numberOfCorrectUniqueResponses
+     * @returns {integer}
+     */
+    numberOfCorrectUniqueResponses: function () {
+        return this.get('numberOfCorrectUniqueResponses') ? this.get('numberOfCorrectUniqueResponses') : 0;
+    },
+
+    /**
+     * @Property percentOfCorrectUniqueResponses
+     * @returns {integer}
+     */
+    percentOfCorrectUniqueResponses: function () {
+        return this.get('percentOfCorrectUniqueResponses') ? this.get('percentOfCorrectUniqueResponses') : 0;
+    },
 
     /**
      * @Property options
@@ -879,6 +960,48 @@ var Question = Parse.Object.extend("Question", {
      */
     isPublic: function () {
         return this.get('isPublic');
+    },
+
+    /**
+     * @Property difficulty
+     * @returns {number}
+     */
+    difficulty: function () {
+        return this.get('difficulty') ? this.get('difficulty') : 50;
+    },
+
+    /**
+     * @Function Add New Response Stats
+     * Num responses, correct responses,
+     * difficulty, etc.
+     * @param {Boolean} isCorrect
+     * @param {Boolean} isFirst
+     * @returns {Question}
+     */
+    addNewResponseStats: function (isCorrect, isFirst) {
+        // All response stats
+        this.increment('numberOfResponses');
+        if (isCorrect)
+            this.increment('numberOfCorrectResponses');
+        var percentOfCorrectResponses = Math.round((this.numberOfCorrectResponses() / this.numberOfResponses()) * 100);
+        this.set('percentOfCorrectResponses', percentOfCorrectResponses);
+
+        if (isFirst) {
+            // Unique response stats
+            this.increment('numberOfUniqueResponses');
+            if (isCorrect)
+                this.increment('numberOfCorrectUniqueResponses');
+            var percentOfCorrectUniqueResponses = Math.round(
+                (this.numberOfCorrectUniqueResponses() / this.numberOfUniqueResponses()) * 100);
+            this.set('percentOfCorrectUniqueResponses', percentOfCorrectUniqueResponses);
+        }
+        // Difficulty = 100 - average(%correct AND 3x %uniqueCorrect)
+        // In plain terms, give uniqueResponses 3x the weight.
+        if (this.percentOfCorrectUniqueResponses() > 0) {
+            var difficultyModifier = Math.round((percentOfCorrectResponses + (percentOfCorrectUniqueResponses * 3)) / 4);
+            this.set('difficulty', 100 - difficultyModifier);
+        } else
+            this.set('difficulty', 100 - percentOfCorrectResponses);
     },
 
     /**
@@ -1104,8 +1227,10 @@ var Attempt = Parse.Object.extend("Attempt", {
      * @returns {Attempt}
      */
     setDefaults: function () {
-        var timeTaken = moment(this.timeCompleted()).diff(moment(this.timeStarted()), 'second');
-        this.set('timeTaken', timeTaken);
+        if (this.timeCompleted() && this.timeStarted()) {
+            var timeTaken = moment(this.timeCompleted()).diff(moment(this.timeStarted()), 'second');
+            this.set('timeTaken', timeTaken);
+        }
 
         var ACL = new Parse.ACL();
         if (this.user()) {
@@ -1380,7 +1505,7 @@ var UniqueResponse = Parse.Object.extend("UniqueResponse", {
      * ACL if user:
      * {user: read}
      * else
-     * {public: read}
+     * No need for a public UR.
      * @params {Parse.User} user
      * @returns {UniqueResponse}
      */
@@ -1388,11 +1513,8 @@ var UniqueResponse = Parse.Object.extend("UniqueResponse", {
         var ACL = new Parse.ACL();
         if (user) {
             ACL.setReadAccess(user, true);
-        } else {
-            ACL.setPublicReadAccess(true);
+            this.setACL(ACL);
         }
-        this.setACL(ACL);
-
         return this;
     },
 

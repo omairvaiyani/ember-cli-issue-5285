@@ -23,6 +23,7 @@
     "tooltipster": "~3.3.0",
     "jstz": "entraigas/jstz",
     "bootstrap-material-design": "~0.3.0",
-    "algoliasearch": "~3.7.5"
+    "algoliasearch": "~3.7.5",
+    "jquery-knob": "1.2.11"
   }
 }

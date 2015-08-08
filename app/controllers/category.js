@@ -16,22 +16,30 @@ export default Ember.Controller.extend(CurrentUser, TagsAndCats, {
         this.set('order', this.get('orderTypes')[0]);
     },
 
+    queryParams: ['searchTerm'],
+
     searchClient: function () {
         return this.get('applicationController.searchClient');
     }.property('applicationController.searchClient'),
 
     testIndex: function () {
-        if (this.get('order.value') === 'relevance') {
-            return this.get('searchClient').initIndex('Test');
-        } else if (this.get('order.value') === 'title') {
-            return this.get('searchClient').initIndex('Test_title(ASC)');
+        switch(this.get('order.value')) {
+            case "relevance":
+                return this.get('searchClient').initIndex('Test');
+                break;
+            case "title":
+                return this.get('searchClient').initIndex('Test_title(ASC)');
+                break;
+            case "difficulty":
+                return this.get('searchClient').initIndex('Test_difficulty(DESC)');
+                break;
         }
     }.property('order'),
 
     order: null,
 
     orderTypes: [{label: "Relevance", value: "relevance"}, {label: "Title A-Z", value: "title"},
-        {label: "Difficulty", value: "difficulty"}],
+        {label: "Difficulty (Hardest first)", value: "difficulty"}],
 
     tests: new Ember.A(),
 
@@ -42,7 +50,7 @@ export default Ember.Controller.extend(CurrentUser, TagsAndCats, {
      * to the parent model category.
      */
     getChildCategories: function () {
-        if (this.get('browseAll')) {
+        if (this.get('model.browseAll')) {
             /*
              * Avoid repetitive calls from property changes
              * Reset on model change in route
@@ -73,7 +81,7 @@ export default Ember.Controller.extend(CurrentUser, TagsAndCats, {
         this.get('childCategories').addObjects(childCategories);
         this.set('readyToGetTests', true);
         this.set('alreadyGotChildCategories', true);
-    }.observes('model.id', 'browseAll'),
+    }.observes('model.id', 'model.browseAll'),
 
     readyToGetTests: false,
 
@@ -87,7 +95,7 @@ export default Ember.Controller.extend(CurrentUser, TagsAndCats, {
             this.get('childCategories').forEach(function (category) {
                 categoryFilter.push("category.objectId:" + category.get('id'));
             });
-        } else
+        } else if (this.get('model.id')) // Other wise don't include a category filter
             categoryFilter = "category.objectId:" + this.get('model.id');
         var page = 0;
 
@@ -122,8 +130,11 @@ export default Ember.Controller.extend(CurrentUser, TagsAndCats, {
                 if (!fetchMore) {
                     this.get('tests').clear();
                     this.get('tests').pushObjects(tests);
+                    var topOfResultsFlag =  $("#top-of-results");
+                    if(!topOfResultsFlag)
+                        return;
                     $('html, body').animate({
-                        scrollTop: $("#top-of-results").offset().top - 16
+                        scrollTop: topOfResultsFlag.offset().top - 16
                     }, 500);
                 } else {
                     // New page will be appended by components/infinite-scroll
@@ -145,24 +156,28 @@ export default Ember.Controller.extend(CurrentUser, TagsAndCats, {
      */
     /**
      * @Property SEO Page Header
-     * Seen in the header, optimised for SEO.
+     * Seen in the browser, page title and optimised for SEO.
      */
     seoPageHeader: function () {
         var pageTitle;
-
-        pageTitle = Em.getWithDefault(this.get('model'), 'secondaryName', this.get('model.name')) + " MCQs";
+        if (this.get('model.id'))
+            pageTitle = Em.getWithDefault(this.get('model'), 'secondaryName', this.get('model.name')) + " MCQs";
+        else
+            pageTitle = "Browse";
         this.send('updatePageTitle', pageTitle);
         return pageTitle;
-    }.property('model.name.length'),
+    }.property('model'),
 
     /**
      * @Property SEO Page Description
      * Seen in the sub-header, optimised for SEO.
      */
     seoPageDescription: function () {
+        if(!this.get('model.id'))
+            return "";
         var totalTests = this.get('model.totalTests');
-        if(totalTests > 100)
-            totalTests = "over "  + (Math.floor(totalTests / 10) * 10);
+        if (totalTests > 100)
+            totalTests = "over " + (Math.floor(totalTests / 10) * 10);
         var description = "Search from " + totalTests + " ";
         description += Em.getWithDefault(this.get('model'), 'secondaryName', this.get('model.name')).toLowerCase() + " mcqs";
         if (this.get('seoChildCategories.length')) {
@@ -170,7 +185,7 @@ export default Ember.Controller.extend(CurrentUser, TagsAndCats, {
         }
         description += ".";
         return description;
-    }.property('model.name.length'),
+    }.property('model.id'),
 
 
     /**
@@ -180,7 +195,7 @@ export default Ember.Controller.extend(CurrentUser, TagsAndCats, {
      * for SEO.
      */
     seoChildCategories: function () {
-        if (!this.get('childCategories.length') || !this.get('model.hasChildren'))
+        if (!this.get('model.id') || !this.get('childCategories.length') || !this.get('model.hasChildren'))
             return "";
         else {
             var seoString = "",
@@ -191,10 +206,10 @@ export default Ember.Controller.extend(CurrentUser, TagsAndCats, {
                 totalCategories = 8;
 
             for (var i = 0; i < totalCategories; i++) {
-                if(shuffledChildCategories[i].get('name') === "Other")
+                if (shuffledChildCategories[i].get('name') === "Other")
                     continue;
                 var name = shuffledChildCategories[i].get('secondaryName');
-                if(!name)
+                if (!name)
                     name = shuffledChildCategories[i].get('name');
                 name = name.toLowerCase();
                 if (i < (totalCategories - 1))
@@ -211,7 +226,7 @@ export default Ember.Controller.extend(CurrentUser, TagsAndCats, {
      * Only seen by search engines.
      */
     setMetaPageDescription: function () {
-        if (this.get('tests.length') || !window.prerenderReady) {
+        if (this.get('model.id') && (this.get('tests.length') || !window.prerenderReady)) {
             var childCategoryText = "";
             if (this.get('childCategories.length')) {
                 if (this.get('childCategories').objectAt(0))
@@ -226,8 +241,11 @@ export default Ember.Controller.extend(CurrentUser, TagsAndCats, {
                 "! There are " + this.get('model.totalTests') +
                 " tests to choose from, or create your own quizzes for free!");
             this.send('prerenderReady');
+        } else {
+            this.send('updatePageDescription', "Search from 1000s of free MCQs here on Synap, or create your own!");
+            this.send('prerenderReady');
         }
-    }.observes('tests.length'),
+    }.observes('model.id'),
 
     actions: {
         /**

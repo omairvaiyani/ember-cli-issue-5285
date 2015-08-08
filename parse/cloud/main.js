@@ -119,6 +119,7 @@ Parse.Object.prototype.fetchIfNeeded = function () {
     // if the object is fetched or not.
     if (!this.createdAt) {
         // This works.
+        Parse.Cloud.useMasterKey();
         return this.fetch();
     } else {
         // This hasn't been tested yet
@@ -188,7 +189,22 @@ Parse.User.prototype.minimalProfile = function () {
 Parse.User.prototype.indexObject = function () {
     var object = this.minimalProfile();
     object.objectID = this.id;
-    return userIndex.saveObject(object);
+    // If the user does not have an educationCohort set,
+    // the promise will be a synchronous null instead of an error.
+    this.fetchEducationCohort().then(function (educationCohort) {
+        if (educationCohort) {
+            // This converts embedded records to pointers
+            object.educationCohort = educationCohort.toJSON();
+            // Therefore, we have to define them like this:
+            if (educationCohort.studyField())
+                object.educationCohort.studyField = educationCohort.studyField().toJSON();
+            if (educationCohort.institution())
+                object.educationCohort.institution = educationCohort.institution().toJSON();
+            // ACLs are only present on the main record
+            object.educationCohort.ACL = undefined;
+        }
+        return userIndex.saveObject(object);
+    });
 };
 
 /**
@@ -728,6 +744,39 @@ var Test = Parse.Object.extend("Test", {
         return this.get('tags');
     },
 
+
+    /**
+     * @Property averageScore
+     * @return {Integer}
+     */
+    averageScore: function () {
+        return this.get('averageScore');
+    },
+
+    /**
+     * @Property averageUniqueScore
+     * @return {Integer}
+     */
+    averageUniqueScore: function () {
+        return this.get('averageUniqueScore');
+    },
+
+    /**
+     * @Property numberOfAttempts
+     * @return {Integer}
+     */
+    numberOfAttempts: function () {
+        return this.get('numberOfAttempts');
+    },
+
+    /**
+     * @Property numberOfUniqueAttempts
+     * @return {Integer}
+     */
+    numberOfUniqueAttempts: function () {
+        return this.get('numberOfUniqueAttempts');
+    },
+
     /**
      * @Function Set Defaults
      * Adds 0, booleans and empty arrays to
@@ -853,7 +902,7 @@ var Question = Parse.Object.extend("Question", {
      * @returns {integer}
      */
     numberOfResponses: function () {
-        return this.get('numberOfResponses');
+        return this.get('numberOfResponses') ? this.get('numberOfResponses') : 0;
     },
 
     /**
@@ -861,9 +910,41 @@ var Question = Parse.Object.extend("Question", {
      * @returns {integer}
      */
     numberOfCorrectResponses: function () {
-        return this.get('numberOfCorrectResponses');
+        return this.get('numberOfCorrectResponses') ? this.get('numberOfCorrectResponses') : 0;
     },
 
+    /**
+     * @Property percentOfCorrectResponses
+     * @returns {integer}
+     */
+    percentOfCorrectResponses: function () {
+        return this.get('percentOfCorrectResponses') ? this.get('percentOfCorrectResponses') : 0;
+    },
+
+
+    /**
+     * @Property numberOfUniqueResponses
+     * @returns {integer}
+     */
+    numberOfUniqueResponses: function () {
+        return this.get('numberOfUniqueResponses') ? this.get('numberOfUniqueResponses') : 0;
+    },
+
+    /**
+     * @Property numberOfCorrectUniqueResponses
+     * @returns {integer}
+     */
+    numberOfCorrectUniqueResponses: function () {
+        return this.get('numberOfCorrectUniqueResponses') ? this.get('numberOfCorrectUniqueResponses') : 0;
+    },
+
+    /**
+     * @Property percentOfCorrectUniqueResponses
+     * @returns {integer}
+     */
+    percentOfCorrectUniqueResponses: function () {
+        return this.get('percentOfCorrectUniqueResponses') ? this.get('percentOfCorrectUniqueResponses') : 0;
+    },
 
     /**
      * @Property options
@@ -879,6 +960,48 @@ var Question = Parse.Object.extend("Question", {
      */
     isPublic: function () {
         return this.get('isPublic');
+    },
+
+    /**
+     * @Property difficulty
+     * @returns {number}
+     */
+    difficulty: function () {
+        return this.get('difficulty') ? this.get('difficulty') : 50;
+    },
+
+    /**
+     * @Function Add New Response Stats
+     * Num responses, correct responses,
+     * difficulty, etc.
+     * @param {Boolean} isCorrect
+     * @param {Boolean} isFirst
+     * @returns {Question}
+     */
+    addNewResponseStats: function (isCorrect, isFirst) {
+        // All response stats
+        this.increment('numberOfResponses');
+        if (isCorrect)
+            this.increment('numberOfCorrectResponses');
+        var percentOfCorrectResponses = Math.round((this.numberOfCorrectResponses() / this.numberOfResponses()) * 100);
+        this.set('percentOfCorrectResponses', percentOfCorrectResponses);
+
+        if (isFirst) {
+            // Unique response stats
+            this.increment('numberOfUniqueResponses');
+            if (isCorrect)
+                this.increment('numberOfCorrectUniqueResponses');
+            var percentOfCorrectUniqueResponses = Math.round(
+                (this.numberOfCorrectUniqueResponses() / this.numberOfUniqueResponses()) * 100);
+            this.set('percentOfCorrectUniqueResponses', percentOfCorrectUniqueResponses);
+        }
+        // Difficulty = 100 - average(%correct AND 3x %uniqueCorrect)
+        // In plain terms, give uniqueResponses 3x the weight.
+        if (this.percentOfCorrectUniqueResponses() > 0) {
+            var difficultyModifier = Math.round((percentOfCorrectResponses + (percentOfCorrectUniqueResponses * 3)) / 4);
+            this.set('difficulty', 100 - difficultyModifier);
+        } else
+            this.set('difficulty', 100 - percentOfCorrectResponses);
     },
 
     /**
@@ -1104,8 +1227,10 @@ var Attempt = Parse.Object.extend("Attempt", {
      * @returns {Attempt}
      */
     setDefaults: function () {
-        var timeTaken = moment(this.timeCompleted()).diff(moment(this.timeStarted()), 'second');
-        this.set('timeTaken', timeTaken);
+        if (this.timeCompleted() && this.timeStarted()) {
+            var timeTaken = moment(this.timeCompleted()).diff(moment(this.timeStarted()), 'second');
+            this.set('timeTaken', timeTaken);
+        }
 
         var ACL = new Parse.ACL();
         if (this.user()) {
@@ -1380,7 +1505,7 @@ var UniqueResponse = Parse.Object.extend("UniqueResponse", {
      * ACL if user:
      * {user: read}
      * else
-     * {public: read}
+     * No need for a public UR.
      * @params {Parse.User} user
      * @returns {UniqueResponse}
      */
@@ -1388,11 +1513,8 @@ var UniqueResponse = Parse.Object.extend("UniqueResponse", {
         var ACL = new Parse.ACL();
         if (user) {
             ACL.setReadAccess(user, true);
-        } else {
-            ACL.setPublicReadAccess(true);
+            this.setACL(ACL);
         }
-        this.setACL(ACL);
-
         return this;
     },
 
@@ -1954,10 +2076,13 @@ Parse.Cloud.beforeSave(Test, function (request, response) {
  *
  */
 Parse.Cloud.afterSave(Test, function (request) {
-    var test = request.object;
+    var test = request.object,
+        promises = [];
 
     if (!test.existed()) {
         // New test logic
+    } else {
+        // Existing test logic
     }
     // Add/Update search index (async)
     test.indexObject();
@@ -1979,9 +2104,6 @@ Parse.Cloud.beforeSave(Question, function (request, response) {
         question.setDefaults(user);
     }
 
-    if (!promises.length)
-        return response.success();
-
     Parse.Promise.when(promises).then(function () {
         response.success();
     }, function (error) {
@@ -1998,21 +2120,40 @@ Parse.Cloud.beforeSave(Question, function (request, response) {
  */
 Parse.Cloud.beforeSave(Attempt, function (request, response) {
     var attempt = request.object,
-        user = request.user,
         promises = [];
 
     if (attempt.isNew()) {
         attempt.setDefaults();
     }
 
-    if (!promises.length)
-        return response.success();
-
     Parse.Promise.when(promises).then(function () {
         response.success();
     }, function (error) {
         response.error(error);
     });
+});
+
+
+/**
+ * @afterSave Attempt
+ *
+ * New Attempt:
+ * - Set task for test stats to be updated
+ *
+ */
+Parse.Cloud.afterSave(Attempt, function (request) {
+    var attempt = request.object,
+        promises = [];
+
+    if (!attempt.existed()) {
+        // Test stats will be updated within 15 minutes
+        var mainPromise = taskCreator('Statistics', 'updateTestStatsAfterAttempt',
+            {}, [attempt.test(), attempt.questions()]);
+
+        promises.push(mainPromise);
+    }
+
+    Parse.Promise.when(promises);
 });
 
 /**
@@ -2024,15 +2165,47 @@ Parse.Cloud.beforeSave(Attempt, function (request, response) {
  */
 Parse.Cloud.beforeSave(Response, function (request, response) {
     var responseObject = request.object,
-        user = request.user,
         promises = [];
 
     if (responseObject.isNew()) {
         responseObject.setDefaults();
     }
 
-    if (!promises.length)
-        return response.success();
+    Parse.Promise.when(promises).then(function () {
+        response.success();
+    }, function (error) {
+        response.error(error);
+    });
+});
+
+/**
+ * @beforeSave UniqueResponse
+ *
+ * New UniqueResponse:
+ * - Update response.question with unique stats
+ * Else if new response is added:
+ * - Update response.question with non-unique stats
+ */
+Parse.Cloud.beforeSave(UniqueResponse, function (request, response) {
+    var uniqueResponse = request.object,
+        user = request.user,
+        promises = [];
+
+    //  We only want to update question stats when new response is added.
+    //  URs can be saved during background jobs, therefore, check dirtyKeys
+    //  number of responses has changed.
+    if (_.contains(uniqueResponse.dirtyKeys(), "numberOfResponses")) {
+        uniqueResponse.setDefaults(user);
+
+        var questionPromise = uniqueResponse.question().fetchIfNeeded()
+            .then(function (question) {
+                if (question) {
+                    question.addNewResponseStats(uniqueResponse.latestResponseIsCorrect(), uniqueResponse.isNew());
+                    return question.save(null, {useMasterKey: true});
+                }
+            });
+        promises.push(questionPromise);
+    }
 
     Parse.Promise.when(promises).then(function () {
         response.success();
@@ -3049,7 +3222,8 @@ function taskCreator(taskType, taskAction, taskParameters, taskObjects) {
 // Available actions are defined here and link to their function.
 var WorkActions = {
     srCycle: srCycleTask,
-    notifyUserForSR: notifyUserForSRTask
+    notifyUserForSR: notifyUserForSRTask,
+    updateTestStatsAfterAttempt: updateTestStatsAfterAttemptTask
 };
 /**
  * @Task SR Cycle
@@ -3131,7 +3305,7 @@ function srCycleTask(task) {
                     test.set('category', spacedRepetitionCategory);
                     var daysOfTheWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
                         title = daysOfTheWeek[scheduleForSR.time.day()];
-                    title += " "+scheduleForSR.slot.label.camelCaseToNormal() + " test";
+                    title += " " + scheduleForSR.slot.label.camelCaseToNormal() + " test";
                     var humanDate = scheduleForSR.time.format("Do of MMMM, YYYY");
                     test.set('description', "This test was created and sent to you on " + humanDate);
                     test.set('title', title);
@@ -3167,8 +3341,9 @@ function srCycleTask(task) {
                     // upon schedule.
                     var innerPromises = [];
                     innerPromises.push(user.save());
-                    innerPromises.push(taskCreator('SpacedRepetition', 'notifyUserForSR',
-                        {scheduledTime: scheduleForSR.time.toDate()}, [test]));
+                    // TODO uncomment the notifyUser taskCreator and actually write code for notifications.
+                    //innerPromises.push(taskCreator('SpacedRepetition', 'notifyUserForSR',
+                    //    {scheduledTime: scheduleForSR.time.toDate()}, [test]));
                     return Parse.Promise.when(innerPromises);
                 });
             perUserPromises.push(perUserPromise);
@@ -3196,6 +3371,63 @@ function notifyUserForSRTask(task) {
         'taskClaimed': 1
     };
     return task.save(changes, {useMasterKey: true});
+}
+
+function updateTestStatsAfterAttemptTask(task, params, objects) {
+    Parse.Cloud.useMasterKey();
+    var test = objects[0],
+        questionPointers = objects[1],
+        questionQuery = new Parse.Query(Question);
+
+    questionQuery.containedIn("objectId", _.map(questionPointers, function (questionPointer) {
+        return questionPointer.id;
+    }));
+
+    return questionQuery.find().then(function (questions) {
+
+        test.increment('numberOfAttempts');
+        // The test.averageScore is not the average attempt score on the test,
+        // rather, it's the tally of average correctness in its individual
+        // questions - this allows flexibility should the questions be moved
+        // between tests.
+        var questionPercentOfCorrectnessTally = 0,
+            questionPercentOfUniqueCorrectnessTally = 0,
+            numberOfUniqueResponsesTally = 0,
+            totalDifficulty = 0;
+
+        _.each(questions, function (question) {
+            questionPercentOfCorrectnessTally += question.percentOfCorrectResponses();
+            questionPercentOfUniqueCorrectnessTally += question.percentOfCorrectUniqueResponses();
+            numberOfUniqueResponsesTally += question.numberOfUniqueResponses();
+            totalDifficulty += question.difficulty();
+        });
+
+        test.set('averageScore', Math.round(questionPercentOfCorrectnessTally / questions.length));
+
+        // Similarly, test.averageUniqueScore is based upon that of its questions
+        // NOTE, it does not matter if this current attempt is unique or not.
+        // We are simply updating the test attributes with the real info from the questions.
+        test.set('averageUniqueScore', Math.round(questionPercentOfUniqueCorrectnessTally / questions.length));
+
+        // Following from what is mentioned above, we can take the average of the
+        // questions.@each.numberOfUniqueResponses to set the tests.numberOfUniqueResponses.
+        test.set('numberOfUniqueAttempts', Math.round(numberOfUniqueResponsesTally / questions.length));
+
+        // Average difficulty of questions. Default difficulty for each question is 50.
+        test.set('difficulty', Math.round(totalDifficulty / questions.length));
+
+        // MasterKey is needed due to the Test's ACLs, even request.user === author.
+        return test.save(null, {useMasterKey: true});
+    }).then(function () {
+        var changes = {
+            'taskStatus': 'done',
+            'taskMessage': '',
+            'taskClaimed': 1
+        };
+        return task.save(changes, {useMasterKey: true});
+    }, function (error) {
+        console.error(JSON.stringify(error));
+    });
 }
 
 /**

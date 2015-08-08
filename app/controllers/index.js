@@ -2,7 +2,7 @@ import Ember from 'ember';
 import CurrentUser from '../mixins/current-user';
 import TagsAndCats from '../mixins/tags-and-cats';
 
-export default Ember.Controller.extend(CurrentUser,TagsAndCats, {
+export default Ember.Controller.extend(CurrentUser, TagsAndCats, {
     /*
      * GUEST MODE
      */
@@ -38,10 +38,12 @@ export default Ember.Controller.extend(CurrentUser,TagsAndCats, {
      */
     myTestsListOrders: [
         {value: 'title', label: "Title A-Z", reverse: false},
-        {value: '-createdAt', label: "Newest first", reverse: true},
-        {value: 'createdAt', label: "Oldest first", reverse: false},
-        {value: 'memoryStrength', label: "Memory (Low - High)", reverse: false},
-        {value: '-memoryStrength', label: "Memory (High - Low)", reverse: true}
+        {value: 'memoryStrength', label: "Memory (Weakest first)", reverse: false},
+        {value: 'memoryStrength', label: "Memory (Strongest first)", reverse: true},
+        {value: 'difficulty', label: "Difficulty (Easiest first)", reverse: false},
+        {value: 'difficulty', label: "Difficulty (Hardest first)", reverse: true},
+        {value: 'createdAt', label: "Newest first", reverse: true},
+        {value: 'createdAt', label: "Oldest first", reverse: false}
     ],
 
     /**
@@ -50,9 +52,12 @@ export default Ember.Controller.extend(CurrentUser,TagsAndCats, {
      * title vs. createdAt etc.
      */
     myTestsListOrder: function () {
-        if(localStorage.myTestsListOrder)
-            return _.where(this.get('myTestsListOrders'),
-                {value: localStorage.getObject('myTestsListOrder').value})[0];
+        if (localStorage.myTestsListOrder)
+            return _.findWhere(this.get('myTestsListOrders'),
+                {
+                    value: localStorage.getObject('myTestsListOrder').value,
+                    reverse: localStorage.getObject('myTestsListOrder').reverse
+                });
         else
             return this.get('myTestsListOrders')[0];
     }.property(),
@@ -63,7 +68,7 @@ export default Ember.Controller.extend(CurrentUser,TagsAndCats, {
      * If set, it will be set by init on next load.
      */
     storeMyTestsListOrderLocally: function () {
-        localStorage.setObject('myTestsListOrder',this.get('myTestsListOrder'));
+        localStorage.setObject('myTestsListOrder', this.get('myTestsListOrder'));
     }.observes('myTestsListOrder'),
 
     /**
@@ -123,16 +128,26 @@ export default Ember.Controller.extend(CurrentUser,TagsAndCats, {
         // The finalList var allows us to filter
         // this list only if needed, separating concerns.
         if (this.get('myTestsListFilter.length')) {
-            var regex = new RegExp(this.get('myTestsListFilter').trim().toLowerCase(), 'gi'),
-                finalList = finalList.filter(function (test) {
-                    return test.get('title').toLowerCase().match(regex)
-                        || (test.get('description.length') && test.get('description').toLowerCase().match(regex));
-                });
+            var regex = new RegExp(this.get('myTestsListFilter').trim().toLowerCase(), 'gi');
+            finalList = finalList.filter(function (test) {
+                return test.get('title').toLowerCase().match(regex)
+                    || (test.get('description.length') && test.get('description').toLowerCase().match(regex));
+            });
         }
 
-        var sortedOrderedAndFilteredList = finalList.sortBy(this.get('myTestsListOrder.value'));
+        var sortedOrderedAndFilteredList = finalList.sortBy('title');
+
+        // Secondary order of title, unless primary is title.
+        // E.g. if order is by difficulty, matching tests will
+        // then have been ordered by title.
+        // TODO figure out how to avoid secondary order of title being reversed.
+        if (this.get('myTestsListOrder.value') !== 'title')
+            sortedOrderedAndFilteredList = sortedOrderedAndFilteredList
+                .sortBy(this.get('myTestsListOrder.value'), 'title');
+
         if (this.get('myTestsListOrder.reverse'))
-            sortedOrderedAndFilteredList = sortedOrderedAndFilteredList.reverse();
+            sortedOrderedAndFilteredList = sortedOrderedAndFilteredList.reverseObjects();
+
         this.get('myTestsList').clear();
         this.get('myTestsList').addObjects(sortedOrderedAndFilteredList);
     },

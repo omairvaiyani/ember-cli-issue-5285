@@ -1,48 +1,63 @@
-<!-- Author info -->
-<h4>AUTHOR</h4>
-{{#link-to 'user' model.author.slug tagName="a"}}{{profile-picture user=model.author}}{{/link-to}}
-<div class="author-info inline-block">
-    <p>{{#link-to 'user' model.author.slug tagName="a"}}{{model.author.name}}{{/link-to}}</p>
+<div class="container-fluid">
 
-    <p>{{model.author.numberOfFollowers}} followers</p>
-    {{#if currentUser}}
-        {{#unless isCurrentUser}}
-            {{#if isFollowing}}
-                <p><a href="javascript:void(0)" {{action 'unfollowUser' model.author.content}}>Following</a></p>
-            {{else}}
-                <p><a href="javascript:void(0)" {{action 'followUser' model.author.content}}>Follow</a></p>
-            {{/if}}
-        {{/unless}}
-    {{/if}}
+    {{!-- Questions | Difficulty | Memory --}}
+    <section class="row">
+        {{!-- Questions --}}
+        <article class="col-sm-4 margin-bottom-16">
+            <h2 class="text-center" style="height:45px;">{{model.totalQuestions}}</h2>
+            <h5 class="text-center">QUESTIONS</h5>
+        </article>
+
+        {{!-- Difficulty --}}
+        <article class="col-sm-4 col-fix-middle margin-bottom-16">
+           {{difficulty-indicator difficulty=model.difficulty}}
+            <h5 class="text-center">DIFFICULTY</h5>
+        </article>
+
+        {{!-- Memory --}}
+        <article class="col-sm-4 col-fix-right text-center margin-bottom-16">
+            <h3 class="text-center no-margin" style="height:65px;">
+                {{#tool-tipster title="Memory Strength" class='inline-block memory-strength'}}
+                    <span class="brain-bulb-fill" {{bind-attr style=model.memoryStrengthMeterStyle}}></span>
+                    <span class="grey-fill" {{bind-attr style=model.memoryStrengthMeterInverseStyle}}></span>
+                    <img {{bind-attr src=model.memoryStrengthSrc}} />
+                {{/tool-tipster}}
+            </h3>
+            <h5 class="text-center">MEMORY</h5>
+        </article>
+    </section>
+
+    {{!-- Category | Tags --}}
+    <section class="row margin-bottom-16">
+        <article class="col-xs-12">
+            <ul class="tags text-center">
+                {{!-- Category --}}
+                {{#if model.category}}
+                    <li {{bind-attr class=":tag :category model.category.isActive"}}
+                        {{action 'toggleCategoryFilter' model.category}}>
+                        {{model.category.distinctName}}
+                    </li>
+                {{/if}}
+                {{!-- Tags --}}
+                {{#each model.tags itemController="component.testCard.item.tag" as |tag|}}
+                    <li {{bind-attr class=":tag tag.isActive"}} {{action 'toggleTagFilter' tag.model}}>
+                        {{tag.model}}
+                    </li>
+                {{/each}}
+            </ul>
+        </article>
+    </section>
+
+    {{!-- Author | Description --}}
+    <section class="row">
+        <article class="col-sm-6">
+            {{user-card user=model.author mini=true parentController=this}}
+        </article>
+        <article class="col-sm-6">
+            <blockquote>
+                <p class="small">{{model.description}}</p>
+            </blockquote>
+        </article>
+    </section>
+
 </div>
-
-<hr>
-<h4>CATEGORY</h4>
-
-<p>
-    {{#if model.category.parentCategorySlug}}
-        {{#link-to 'category' model.category.parentCategorySlug}}
-            {{model.category.parentCategoryName}}
-        {{/link-to}} /
-        {{#link-to 'subcategory' model.category.parentCategorySlug model.category.slug}}
-            {{model.category.name}}
-        {{/link-to}}
-    {{else}}
-        {{#link-to 'category' model.category.slug}}{{model.category.name}}{{/link-to}}
-    {{/if}}
-</p>
-
-{{#if model.description.length}}
-    <hr>
-    <h4>TEST DESCRIPTION</h4>
-
-    <p>{{model.description}}</p>
-{{/if}}
-<hr>
-<h4>STATS</h4>
-
-<p>{{model.questions.length}} <strong>multiple choice {{pluralize-word "question" model.questions.length ""}}</strong></p>
-
-<p>{{math-round averageScore 2}}% community average</p>
-
-<p class="margin-bottom-16">{{numberOfAttempts}} community {{pluralize-word "attempt" numberOfAttempts ""}}</p>

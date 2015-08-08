@@ -1,9 +1,9 @@
 <div class="mycqs-page-header">
     <div class="container">
-        {{#if browseAll}}
-            <h1>Browse</h1>
+        {{#if model.browseAll}}
+            <h1>{{seoPageHeader}}</h1>
 
-            <h4>Search from thousands of mcq tests in Synap.</h4>
+            <h4>Search from thousands of MCQ tests in Synap.</h4>
         {{else}}
             <div class='inline-block svg-icon-white'>
                 {{#unless model.hasChildren}}
@@ -15,7 +15,7 @@
                 {{/unless}}
             </div>
             <h1 class="inline-block">{{seoPageHeader}}</h1>
-            <h4> {{seoPageDescription}}</h4>
+            <h4>{{seoPageDescription}}</h4>
         {{/if}}
     </div>
 </div>

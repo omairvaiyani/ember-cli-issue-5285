@@ -163,10 +163,16 @@ export default Ember.Controller.extend({
 
             if (!this.get('websiteNotInitialisedForUser'))
                 return this.get('controllers.index').myTestsListUpdate();
+            else
+                this.send('incrementLoadingItems');
             ParseHelper.cloudFunction(this, 'initialiseWebsiteForUser', {}).then(function (response) {
                 ParseHelper.handleResponseForInitializeWebsiteForUser(this.store, currentUser, response);
                 this.get('controllers.index').myTestsListUpdate();
                 //EventTracker.profileUser(this.get('currentUser'));
+            }.bind(this), function (error) {
+                console.dir(error);
+            }).then(function () {
+                this.send('decrementLoadingItems');
             }.bind(this));
 
         } else {
@@ -285,7 +291,8 @@ export default Ember.Controller.extend({
             // 'id' has been removed.
             this.get('searchClient').clearCache();
 
-            this.set('navbarSearchTotalResults', testResponse.nbHits + userResponse.nbHits);
+            this.set('navbarSearchTotalTestResults', testResponse.nbHits);
+            this.set('navbarSearchTotalUserResults', userResponse.nbHits);
 
             this.get('navbarSearchResults.tests').clear();
             this.get('navbarSearchResults.tests').addObjects(tests);
@@ -300,14 +307,24 @@ export default Ember.Controller.extend({
     throttleNavbarSearch: function () {
         this.set('navbarSearchFetching', this.get('navbarSearchTerm.length') > 0);
 
-        if(!this.get('navbarSearchTerm.length')) {
+        if (!this.get('navbarSearchTerm.length')) {
             this.get('navbarSearchResults.tests').clear();
             this.get('navbarSearchResults.users').clear();
-            this.set('navbarSearchTotalResults', 0);
+            this.set('navbarSearchTotalTestResults', 0);
+            this.set('navbarSearchTotalUserResults', 0);
             return;
         }
         Ember.run.debounce(this, this.performNavbarSearch, 200);
     }.observes('navbarSearchTerm.length'),
+
+    navbarSearchTotalTestResults: 0,
+    navbarSearchTotalUserResults: 0,
+    navbarSearchTotalResults: function () {
+        return this.get('navbarSearchTotalTestResults') + this.get('navbarSearchTotalUserResults');
+    }.property('navbarSearchTotalTestResults', 'navbarSearchTotalUserResults'),
+    navbarSearchMoreTestsToShow: function () {
+        return this.get('navbarSearchTotalTestResults') > this.get('navbarSearchResults.tests.length');
+    }.property('navbarSearchTotalTestResults', 'navbarSearchResults.tests.length'),
 
     navbarSearchDual: function () {
         return this.get('navbarSearchResults.tests.length') && this.get('navbarSearchResults.users.length');
@@ -368,8 +385,8 @@ export default Ember.Controller.extend({
                         modal = $("#myModal");
                     if (!container.is(e.target) && !modal.is(e.target)
                         && (_.contains(e.target.classList, "close-icon") ||
-                        (container.has(e.target).length === 0 &&
-                        modal.has(e.target).length === 0)
+                            (container.has(e.target).length === 0 &&
+                            modal.has(e.target).length === 0)
                         )) {
                         this.send('navbarSearchHardBlur');
                     }
@@ -384,6 +401,13 @@ export default Ember.Controller.extend({
             this.set('navbarSearchIsFocused', false);
             this.set('navbarSearchTerm', "");
             $('#navbar-search-input').blur();
+        },
+
+        navbarSearchTakeToBrowseForResults: function () {
+            this.transitionTo('category', "all",
+                {
+                    queryParams: {searchTerm: this.get('navbarSearchTerm')}
+                });
         },
 
         searchItemClicked: function (object, className) {

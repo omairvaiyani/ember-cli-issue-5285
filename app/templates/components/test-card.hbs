@@ -1,7 +1,7 @@
 <div class="row">
     <div class="col-xs-12">
         {{#unless mini}}
-            <div {{bind-attr class=":card :test-info-card :margin-top-16"}}>
+            <div {{bind-attr class=":card :list-card :margin-top-16"}}>
                 <div class="left inline-top">
                     <h4>
                         {{test.title}}
@@ -16,11 +16,14 @@
                     <ul class="tags">
                         {{#if test.category}}
                             <li {{bind-attr class=":tag :category test.category.isActive"}}
-                                {{action 'toggleCategoryFilter' test.category}}>{{test.category.name}}
+                                {{action 'toggleCategoryFilter' test.category}}>
+                                {{test.category.distinctName}}
                             </li>
                         {{/if}}
                         {{#each test.tags itemController="component.testCard.item.tag" as |tag|}}
-                            <li {{bind-attr class=":tag tag.isActive"}} {{action 'toggleTagFilter' tag.model}}>{{tag.model}}</li>
+                            <li {{bind-attr class=":tag tag.isActive"}} {{action 'toggleTagFilter' tag.model}}>
+                                {{tag.model}}
+                            </li>
                         {{/each}}
                     </ul>
                 </div>
@@ -29,9 +32,9 @@
                     {{#if showMemoryStrength}}
                         <div class="memory-strength inline-top margin-right-16">
                             {{#tool-tipster title="Memory Strength" class='inline-block'}}
-                                <div class="brain-bulb-fill" {{bind-attr style=memoryStrengthMeterStyle}}></div>
-                                <div class="grey-fill" {{bind-attr style=memoryStrengthMeterInverseStyle}}/>
-                                <img {{bind-attr src=memoryStrengthSrc}} />
+                                <div class="brain-bulb-fill" {{bind-attr style=test.memoryStrengthMeterStyle}}></div>
+                                <div class="grey-fill" {{bind-attr style=test.memoryStrengthMeterInverseStyle}}></div>
+                                <img {{bind-attr src=test.memoryStrengthSrc}} />
                                 <label>
                                     {{test.memoryStrength}}
                                 </label>
@@ -86,18 +89,21 @@
                 </div>
             </div>
         {{else}}
-            <div {{bind-attr class=":card :test-info-card :margin-top-16 mini"}}
+            <div {{bind-attr class=":card :list-card :margin-top-16 mini"}}
                 {{action 'openModal' 'browse/modal/test-info' 'browse.modal.testInfo' test}}>
                 <div class="card-fade"></div>
                 <div class="mini">
                     <p class="title">{{test.title}}</p>
+
                     <p class="subtitle">by {{test.author.name}}</p>
+
                     <div class="container-fluid">
                         <section class="row">
                             <article class="col-xs-8 col-fix-right">
                                 <ul class="tags text-center">
                                     {{#if test.category}}
-                                        <li {{bind-attr class=":tag :category test.category.isActive"}}>{{test.category.name}}
+                                        <li {{bind-attr class=":tag :category test.category.isActive"}}>
+                                            {{test.category.distinctName}}
                                         </li>
                                     {{/if}}
                                 </ul>

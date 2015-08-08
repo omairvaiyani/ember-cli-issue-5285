@@ -3,13 +3,10 @@ import Ember from 'ember';
 export default Ember.Route.extend({
     model: function (params) {
         if(params.category_slug.toLowerCase() === "all")
-            return {};
+            return {browseAll: true};
         var recordArray = this.store.all('category').filterBy('slug', params.category_slug);
         if(recordArray.objectAt(0))
             return recordArray.objectAt(0);
-        else
-            console.error("category not found");
-
     },
     /*
      * Description and Prerender redied in CategoryController.pageIsLoadedCompletely

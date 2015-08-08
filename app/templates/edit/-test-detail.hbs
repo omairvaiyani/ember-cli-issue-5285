@@ -39,11 +39,13 @@
         </div>
     {{/if}}
 {{else}}
-    {{#if model.category.parent}}
-        <div {{action 'removeCategory' model.category.parent}}
-                class="tag category-edit">{{model.category.parent.name}}</div>
-    {{/if}}
-    <div {{action 'removeCategory' model.category}} class="tag category-edit">{{model.category.name}}</div>
+    <ul class="tags margin-bottom-8">
+        {{#if model.category.parent}}
+            <li {{action 'removeCategory' model.category.parent}}
+                    class="tag category">{{model.category.parent.name}}</li>
+        {{/if}}
+        <li {{action 'removeCategory' model.category}} class="tag category">{{model.category.name}}</li>
+    </ul>
 {{/unless}}
 <div class="row">
     <div class="col-md-12">

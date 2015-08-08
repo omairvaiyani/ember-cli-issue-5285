@@ -54,6 +54,7 @@
   },
   "dependencies": {
     "algoliasearch": "^3.7.5",
+    "ember-cli-knob": "^0.1.2",
     "phantomjs": "^1.9.16"
   }
 }

@@ -37,8 +37,19 @@
                                     navbarSearchResults.tests.length:col-fix-right"}}>
                                 <h5>USERS</h5>
                                 {{#each navbarSearchResults.users as |user|}}
-                                    {{user-card user=user parentController=this mini=true}}
+                                    {{#link-to 'user.index' user.slug tagName="div"}}
+                                        {{user-card user=user parentController=this mini=true}}
+                                    {{/link-to}}
                                 {{/each}}
+                            </article>
+                        {{/if}}
+                    </section>
+                    <section class="row">
+                        {{#if navbarSearchMoreTestsToShow}}
+                            <article {{bind-attr class="navbarSearchResults.users.length:col-xs-6:col-xs-12"}}>
+                                <p class="linkify text-center" {{action 'navbarSearchTakeToBrowseForResults'}}>
+                                    Show all tests ({{navbarSearchTotalTestResults}})
+                                </p>
                             </article>
                         {{/if}}
                     </section>

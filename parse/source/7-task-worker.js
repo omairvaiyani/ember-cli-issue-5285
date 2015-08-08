@@ -41,7 +41,8 @@ function taskCreator(taskType, taskAction, taskParameters, taskObjects) {
 // Available actions are defined here and link to their function.
 var WorkActions = {
     srCycle: srCycleTask,
-    notifyUserForSR: notifyUserForSRTask
+    notifyUserForSR: notifyUserForSRTask,
+    updateTestStatsAfterAttempt: updateTestStatsAfterAttemptTask
 };
 /**
  * @Task SR Cycle
@@ -123,7 +124,7 @@ function srCycleTask(task) {
                     test.set('category', spacedRepetitionCategory);
                     var daysOfTheWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
                         title = daysOfTheWeek[scheduleForSR.time.day()];
-                    title += " "+scheduleForSR.slot.label.camelCaseToNormal() + " test";
+                    title += " " + scheduleForSR.slot.label.camelCaseToNormal() + " test";
                     var humanDate = scheduleForSR.time.format("Do of MMMM, YYYY");
                     test.set('description', "This test was created and sent to you on " + humanDate);
                     test.set('title', title);
@@ -159,8 +160,9 @@ function srCycleTask(task) {
                     // upon schedule.
                     var innerPromises = [];
                     innerPromises.push(user.save());
-                    innerPromises.push(taskCreator('SpacedRepetition', 'notifyUserForSR',
-                        {scheduledTime: scheduleForSR.time.toDate()}, [test]));
+                    // TODO uncomment the notifyUser taskCreator and actually write code for notifications.
+                    //innerPromises.push(taskCreator('SpacedRepetition', 'notifyUserForSR',
+                    //    {scheduledTime: scheduleForSR.time.toDate()}, [test]));
                     return Parse.Promise.when(innerPromises);
                 });
             perUserPromises.push(perUserPromise);
@@ -188,6 +190,63 @@ function notifyUserForSRTask(task) {
         'taskClaimed': 1
     };
     return task.save(changes, {useMasterKey: true});
+}
+
+function updateTestStatsAfterAttemptTask(task, params, objects) {
+    Parse.Cloud.useMasterKey();
+    var test = objects[0],
+        questionPointers = objects[1],
+        questionQuery = new Parse.Query(Question);
+
+    questionQuery.containedIn("objectId", _.map(questionPointers, function (questionPointer) {
+        return questionPointer.id;
+    }));
+
+    return questionQuery.find().then(function (questions) {
+
+        test.increment('numberOfAttempts');
+        // The test.averageScore is not the average attempt score on the test,
+        // rather, it's the tally of average correctness in its individual
+        // questions - this allows flexibility should the questions be moved
+        // between tests.
+        var questionPercentOfCorrectnessTally = 0,
+            questionPercentOfUniqueCorrectnessTally = 0,
+            numberOfUniqueResponsesTally = 0,
+            totalDifficulty = 0;
+
+        _.each(questions, function (question) {
+            questionPercentOfCorrectnessTally += question.percentOfCorrectResponses();
+            questionPercentOfUniqueCorrectnessTally += question.percentOfCorrectUniqueResponses();
+            numberOfUniqueResponsesTally += question.numberOfUniqueResponses();
+            totalDifficulty += question.difficulty();
+        });
+
+        test.set('averageScore', Math.round(questionPercentOfCorrectnessTally / questions.length));
+
+        // Similarly, test.averageUniqueScore is based upon that of its questions
+        // NOTE, it does not matter if this current attempt is unique or not.
+        // We are simply updating the test attributes with the real info from the questions.
+        test.set('averageUniqueScore', Math.round(questionPercentOfUniqueCorrectnessTally / questions.length));
+
+        // Following from what is mentioned above, we can take the average of the
+        // questions.@each.numberOfUniqueResponses to set the tests.numberOfUniqueResponses.
+        test.set('numberOfUniqueAttempts', Math.round(numberOfUniqueResponsesTally / questions.length));
+
+        // Average difficulty of questions. Default difficulty for each question is 50.
+        test.set('difficulty', Math.round(totalDifficulty / questions.length));
+
+        // MasterKey is needed due to the Test's ACLs, even request.user === author.
+        return test.save(null, {useMasterKey: true});
+    }).then(function () {
+        var changes = {
+            'taskStatus': 'done',
+            'taskMessage': '',
+            'taskClaimed': 1
+        };
+        return task.save(changes, {useMasterKey: true});
+    }, function (error) {
+        console.error(JSON.stringify(error));
+    });
 }
 
 /**

@@ -38,6 +38,7 @@
             </ol>
         </article>
     </section>
+
     <section class="row">
         <article class="col-md-9 margin-bottom-16">
             <section class="row">
@@ -69,7 +70,8 @@
                             </div>
                             <div class="row margin-bottom-16">
                                 <div class="col-md-12">
-                                    <span class="question-stem"><strong>Q{{currentQuestionNumber}}</strong> {{currentQuestion.stem}}</span>
+                                    <span class="question-stem"><strong>Q{{currentQuestionNumber}}</strong>
+                                        {{currentQuestion.stem}}</span>
                                 </div>
                             </div>
 
@@ -94,49 +96,7 @@
                                         {{action 'confirmFinish'}}>Finish
                                     </button>
                                 </div>
-                                <div class="col-md-12 text-center">
-                                    <a href="javascript:void(0)">
-                                        <i class="fa fa-print" {{action 'readyToPrint'}}></i>
-                                    </a>
-                                </div>
                             </div>
-                        </div>
-                        <div id="printView" style="display:none;">
-                            <h3>MyCQs - A social learning network</h3>
-                            <h4>
-                                <small>https://mycqs.com</small>
-                            </h4>
-                            <h4>{{model.title}} -
-                                <small class="margin-bottom-16">{{model.category.name}} written by {{model.author.name}}</small>
-                            </h4>
-                            {{#each shuffledQuestions as |question|}}
-                                <div class="row margin-bottom-16">
-                                    <div class="col-md-12">
-                            <span class="question-stem"><strong>Q{{math-helper _view.contentIndex '+' 1}}</strong>
-                                {{question.stem}}</span>
-                                    </div>
-                                </div>
-
-                                {{#each question.shuffledOptions as |option|}}
-                                    <div class="row">
-                                        <div {{bind-attr class=":col-md-12"}}>
-                                            <span class="option-label margin-right-16">{{alphabetise-index _view.contentIndex}}</span>
-                                            <span class="phrase">{{option.phrase}}</span>
-                                        </div>
-                                    </div>
-                                {{/each}}
-                                <hr>
-                            {{/each}}
-                            <p class="margin-top-16">Correct Answers</p>
-
-                            <div style="transform: rotate(180deg);">
-                                {{#each shuffledQuestions as |question|}}
-                                    Q{{question.itemNumber}}-{{alphabetise-index question.correctOptionIndex}}
-                                    <p class="small">{{question.feedback}}</p>
-                                {{/each}}
-                            </div>
-
-                            <small>Copyright 2014 MyLabs Ltd. All rights reserved. https://mycqs.com</small>
                         </div>
                     {{else}}
                         <div class="card text-center">

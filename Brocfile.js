@@ -102,12 +102,21 @@ app.import('bower_components/css-toggle-switch/dist/toggle-switch.css');
  * JS TIMEZONE DETECT
  */
 app.import('bower_components/jstz/jstz.js');
+
 /*
  * ALGOLIA SEARCH
  */
 app.import({
     development: 'bower_components/algoliasearch/dist/algoliasearch.js',
     production: 'bower_components/algoliasearch/dist/algoliasearch.min.js'
+});
+
+/*
+ * jQuery KNOB
+ */
+app.import({
+    development: 'bower_components/jquery-knob/js/jquery.knob.js',
+    production: 'bower_components/jquery-knob/dist/jquery.knob.min.js'
 });
 
 module.exports = app.toTree();

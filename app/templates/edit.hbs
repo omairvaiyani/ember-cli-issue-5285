@@ -17,15 +17,14 @@
                     </article>
                     <article class="col-md-5">
                         {{#if model.category}}
-                            <div class="tags">
+                            <ul class="tags margin-bottom-8">
                                 {{#if model.category.parent}}
-
-                                    <div {{action 'removeCategory' model.category.parent}}
-                                            class="tag category-edit">{{model.category.parent.name}}</div>
+                                    <li {{action 'removeCategory' model.category.parent}}
+                                            class="tag category">{{model.category.parent.name}}</li>
                                 {{/if}}
-                                <div {{action 'removeCategory' model.category}}
-                                        class="tag category-edit">{{model.category.name}}</div>
-                            </div>
+                                <li {{action 'removeCategory' model.category}}
+                                        class="tag category">{{model.category.name}}</li>
+                            </ul>
                         {{else}}
                             <div class="row">
                                 <div class="col-md-12 margin-bottom-16">

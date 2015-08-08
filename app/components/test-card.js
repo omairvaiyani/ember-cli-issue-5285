@@ -71,23 +71,6 @@ export default Ember.Component.extend({
             && this.get('parentController.currentUser.savedTests').contains(this.get('test'));
     }.property('isCurrentUserTheAuthor', 'parentController.currentUser.savedTests.length'),
 
-    memoryStrengthMeterStyle: function () {
-        var height = this.get('test.memoryStrength');
-        return "height:" + height + "%;";
-    }.property('memoryStrength'),
-
-    memoryStrengthMeterInverseStyle: function () {
-        var height = this.get('test.memoryStrength');
-        return "height:" + (100 - height) + "%;";
-    }.property('memoryStrength'),
-
-    memoryStrengthSrc: function () {
-        if (this.get('test.memoryStrength') === 100)
-            return "/img/brain-bulb-small-gradient.png";
-        else
-            return "/img/brain-bulb-small-mask.png";
-    }.property('test.memoryStrength'),
-
     actions: {
         deleteTest: function () {
             // TODO handle this properly

@@ -37,7 +37,7 @@ export default {
             }.bind(this)).then(function (response) {
                     // Config
                     var parseConfig = response.config;
-                    container.register('config:parse', parseConfig, {instantiate: false, singleton: true});
+                    container.register('config:parse', parseConfig.attributes, {instantiate: false, singleton: true});
                     container.injection('controller:application', 'parseConfig', 'config:parse');
 
                     // Categories
@@ -55,7 +55,7 @@ export default {
             ParseHelper.cloudFunction(this, 'initialiseWebsiteForUser', {}).then(function (response) {
                 // Config
                 var parseConfig = response.config;
-                container.register('config:parse', parseConfig, {instantiate: false, singleton: true});
+                container.register('config:parse', parseConfig.attributes, {instantiate: false, singleton: true});
                 container.injection('controller:application', 'parseConfig', 'config:parse');
 
                 // Categories

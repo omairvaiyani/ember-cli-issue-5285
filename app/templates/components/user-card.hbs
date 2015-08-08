@@ -1,7 +1,7 @@
 <div class="row">
     <div class="col-xs-12">
         {{#unless mini}}
-            <div {{bind-attr class=":card :test-info-card :margin-top-16"}}>
+            <div {{bind-attr class=":card :list-card :margin-top-16"}}>
                 <div class="left inline-top">
                     <h4>
                         {{user.name}}
@@ -11,7 +11,19 @@
                         {{user.numberOfTestsCreated}} {{pluralize-word 'test' user.numberOfTestsCreated}}
                     </p>
 
-                    <p class="margin-bottom-8">Education Cohort Details</p>
+                    {{#if user.educationCohort.currentYear}}
+                        <p><i class="fa fa-group margin-right-8"></i>{{user.educationCohort.currentYear}}</p>
+                    {{/if}}
+                    {{#if user.educationCohort.studyField}}
+                        <p><i class="fa fa-book margin-right-8"></i><a
+                            {{bind-attr href=user.educationCohort.studyField.url}}
+                                target="_blank">{{user.educationCohort.studyField.name}}</a></p>
+                    {{/if}}
+                    {{#if user.educationCohort.institution}}
+                        <p><i class="fa fa-university margin-right-8"></i><a
+                            {{bind-attr href=user.educationCohort.institution.url}}
+                                target="_blank">{{user.educationCohort.institution.name}}</a></p>
+                    {{/if}}
                 </div>
 
                 <div class="right inline-top">
@@ -58,22 +70,29 @@
                 </div>
             </div>
         {{else}}
-            <div {{bind-attr class=":card :test-info-card :margin-top-16 mini"}}>
+            <div class="card list-card margin-top-16 mini">
                 <div class="card-fade"></div>
-                <div class="mini">
-                    <div class="container-fluid">
-                        <section class="row">
-                            <article class="col-xs-4 col-fix-right">
-                                {{profile-picture user=user}}
-                            </article>
-                            <article class="col-xs-8 col-fix-right">
-                                <p class="title">{{user.name}}</p>
-                            </article>
-                        </section>
-                        <section class="row">
-                            <article class="col-xs-12 col-fix-right">
-                            </article>
-                        </section>
+                <div class="text-nowrap">
+                    <div class="inline-block margin-right-8">
+                        {{profile-picture user=user}}
+                    </div>
+                    <div class="inline-block">
+                        <p class="title no-margin">{{#link-to 'user.index' user.slug}}{{user.name}}{{/link-to}}</p>
+                        {{#if user.educationCohort.currentYear}}
+                            <p class="no-margin small">
+                                <i class="fa fa-group fa-fw"></i>&nbsp; {{user.educationCohort.currentYear}}
+                            </p>
+                        {{/if}}
+                        {{#if user.educationCohort.studyField}}
+                            <p class="no-margin small">
+                                <i class="fa fa-book fa-fw"></i>&nbsp; {{user.educationCohort.studyField.name}}
+                            </p>
+                        {{/if}}
+                        {{#if user.educationCohort.institution}}
+                            <p class="no-margin small">
+                                <i class="fa fa-university fa-fw"></i>&nbsp; {{user.educationCohort.institution.name}}
+                            </p>
+                        {{/if}}
                     </div>
                 </div>
             </div>
