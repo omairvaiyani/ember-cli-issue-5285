@@ -55,18 +55,24 @@ Parse.Object.generatePointer = function (className, objectId) {
 /**
  * @Function Generate Pointers
  * @param {string} className
- * @param {Array<String>} objectIds
+ * @param {Array<String> || Array<Parse.Object>} objectIds
  * @returns {Array}
  */
 Parse.Object.generatePointers = function (className, objectIds) {
     var pointers = [];
     if (!objectIds || !objectIds.length)
         return pointers;
-    else {
-        _.each(objectIds, function (objectId) {
-            pointers.push(Parse.Object.generatePointer(className, objectId));
+
+    if (typeof objectIds[0] === "object") {
+        // The function has received objects instead, turn it into objectIds.
+        objectIds = _.map(objectIds, function (object) {
+            return object.id ? object.id : object.objectId;
         });
     }
+
+    _.each(objectIds, function (objectId) {
+        pointers.push(Parse.Object.generatePointer(className, objectId));
+    });
     return pointers;
 };
 /**
@@ -371,6 +377,65 @@ Parse.User.prototype.addUniqueResponses = function (responses) {
         return Parse.Promise.as(uniqueResponses);
     }.bind(this));
 };
+
+/**
+ * @Function Estimate Memory Strengths for Tests
+ *
+ * Fetches tests from given pointers. Fetches
+ * ALL uniqueResponses by user (reasonable limit).
+ *
+ * Matches URs with test to see how likely it is
+ * that the user has answered similar questions
+ * and has some memory of the knowledge tested.
+ *
+ * Current matches:
+ * - Category (1pt/per match)
+ * - Tag (1pt/per match)
+ *
+ * @param {*<Test>} tests (array of pointers)
+ * @return {Array<Integer, Test>}
+ */
+Parse.User.prototype.estimateMemoryStrengthForTests = function (tests) {
+    // Fetch tests from testPointers that had no URs
+    var testQuery = new Parse.Query(Test);
+    testQuery.containedIn("objectId", _.map(tests, function (pointer) {
+        return pointer.id;
+    }));
+
+    // Fetch all URs for User for memory estimation.
+    var allURQuery = this.uniqueResponses().query();
+    allURQuery.include('test');
+    allURQuery.limit(1000);
+
+    return Parse.Promise.when([testQuery.find(), allURQuery.find()])
+        .then(function (tests, uniqueResponses) {
+            var estimatedMemoryStrengths = [];
+
+            _.each(tests, function (test) {
+                var estimatedMemoryStrength = 0;
+
+                // Category matching
+                estimatedMemoryStrength += _.filter(uniqueResponses, function (uniqueResponse) {
+                    return uniqueResponse.test().category().id === test.category().id;
+                }).length;
+
+                // Tag matching
+                estimatedMemoryStrength += _.filter(uniqueResponses, function (uniqueResponse) {
+                    var tagMatched = false;
+                    _.each(test.tags(), function (tag) {
+                        if (!tagMatched)
+                            if (_.contains(uniqueResponse.test().tags(), tag))
+                                tagMatched = true;
+                    });
+                    return tagMatched;
+                }).length;
+
+                estimatedMemoryStrengths.push({test: test, estimatedMemoryStrength: estimatedMemoryStrength});
+            });
+            return Parse.Promise.as(estimatedMemoryStrengths);
+        });
+};
+
 /**
  * @Property name
  * @returns {string}
@@ -2351,6 +2416,51 @@ Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
 });
 
 /**
+ * @CloudFunction Get Memory Strength for Tests
+ * You can send an array of tests, test pointers or test objectIds.
+ * @param {Array<Test> || Array<pointers> || Array<String>} tests
+ */
+Parse.Cloud.define('getMemoryStrengthForTests', function (request, response) {
+    var user = request.user,
+        tests = request.params.tests;
+
+    if (!user || !tests || !tests.length)
+        return response.error("You must be logged in and send tests.");
+
+    var urQuery = user.uniqueResponses().query(),
+        testPointers = Parse.Object.generatePointers('Test', tests),
+        uniqueResponses = response;
+
+    urQuery.containedIn('test', testPointers);
+    urQuery.limit(1000);
+
+    Parse.Cloud.useMasterKey();
+    UniqueResponse.findWithUpdatedMemoryStrengths(urQuery).then(function (response) {
+        uniqueResponses = response;
+        var testIdsWithUrs = [];
+
+        _.each(uniqueResponses, function (uniqueResponse) {
+            testIdsWithUrs.push(uniqueResponse.test().id);
+        });
+
+        testIdsWithUrs = _.uniq(testIdsWithUrs);
+
+        var testsWithoutURs = _.filter(tests, function (test) {
+            return !_.contains(testIdsWithUrs, test.id);
+        });
+
+        return user.estimateMemoryStrengthForTests(testsWithoutURs);
+    }).then(function (estimatedMemoryStrengths) {
+        response.success({
+            estimates: estimatedMemoryStrengths,
+            uniqueResponses: uniqueResponses
+        });
+    }, function (error) {
+        response.error(error);
+    });
+});
+
+/**
  * @CloudFunction Create New Test
  * Parse.Cloud.beforeSave does not
  * allow custom response parameters.
@@ -2467,6 +2577,7 @@ Parse.Cloud.define('newUserEvent', function (request, response) {
  });*/
 
 /**
+ * // TODO, this needs a revision
  * @CloudFunction Get Community Test
  *
  * Fetches a test that is not locally stored
@@ -2515,6 +2626,7 @@ Parse.Cloud.define('getCommunityTest', function (request, response) {
 });
 
 /**
+ * @Deprecated, using Search Index instead.
  * @CloudFunction Get Community Tests
  *
  * Conducts a test query.
@@ -2533,11 +2645,11 @@ Parse.Cloud.define('getCommunityTests', function (request, response) {
         query = new Parse.Query(Test);
 
     query.notEqualTo('isObjectDeleted', true);
-    query.include('questions','author', 'category');
+    query.include('questions', 'author', 'category');
 
 
     _.each(queryOptions, function (queryOption) {
-        if(queryOption.key && queryOption.value)
+        if (queryOption.key && queryOption.value)
             query[queryOption.method](queryOption.key, queryOption.value);
         else if (queryOption.value)
             query[queryOption.method](queryOption.value);
@@ -2552,7 +2664,7 @@ Parse.Cloud.define('getCommunityTests', function (request, response) {
         // Query includes private tests in case the test
         // belongs to the user. We check it manually here.
         _.each(result, function (test) {
-            if(test.get('isPublic'))
+            if (test.get('isPublic'))
                 tests.push(test);
             // TODO limit user profile
         });
@@ -2833,7 +2945,7 @@ Parse.Cloud.define('createOrUpdateStudyField', function (request, response) {
  * function. You must confirm the details with the user
  * on client-side and call createOrGetEducationCohort.
  * @param {Object} educationHistory
- * @return {Instituion, StudyField, Integer} educationalInstitution, studyField, graduationYear
+ * @return {Institution, StudyField, Integer} educationalInstitution, studyField, graduationYear
  */
 Parse.Cloud.define('setEducationCohortUsingFacebook', function (request, response) {
     Parse.Cloud.useMasterKey();

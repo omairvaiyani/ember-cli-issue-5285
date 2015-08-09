@@ -2,8 +2,10 @@ import Ember from 'ember';
 import ParseHelper from '../utils/parse-helper';
 import CurrentUser from '../mixins/current-user';
 import TagsAndCats from '../mixins/tags-and-cats';
+import SortBy from '../mixins/sort-by';
+import EstimateMemoryStrength from '../mixins/estimate-memory-strength';
 
-export default Ember.Controller.extend(CurrentUser, TagsAndCats, {
+export default Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, EstimateMemoryStrength, {
     needs: 'application',
 
     applicationController: function () {
@@ -11,10 +13,11 @@ export default Ember.Controller.extend(CurrentUser, TagsAndCats, {
     }.property('controllers'),
 
     init: function () {
-        // Set initial order (which search index slave to use)
-        // See Algolia tutorials
-        this.set('order', this.get('orderTypes')[0]);
+        this.get('listOrders').insertAt(0, {value: "relevance", label: "Relevance", reverse: true});
     },
+
+    // Needed for SortByMixin
+    localStorageId: 'browseTests',
 
     queryParams: ['searchTerm'],
 
@@ -23,7 +26,8 @@ export default Ember.Controller.extend(CurrentUser, TagsAndCats, {
     }.property('applicationController.searchClient'),
 
     testIndex: function () {
-        switch(this.get('order.value')) {
+        // TODO add more indices to match listOrders
+        switch (this.get('listOrder.value')) {
             case "relevance":
                 return this.get('searchClient').initIndex('Test');
                 break;
@@ -33,13 +37,11 @@ export default Ember.Controller.extend(CurrentUser, TagsAndCats, {
             case "difficulty":
                 return this.get('searchClient').initIndex('Test_difficulty(DESC)');
                 break;
+            default:
+                return this.get('searchClient').initIndex('Test');
+                break;
         }
-    }.property('order'),
-
-    order: null,
-
-    orderTypes: [{label: "Relevance", value: "relevance"}, {label: "Title A-Z", value: "title"},
-        {label: "Difficulty (Hardest first)", value: "difficulty"}],
+    }.property('listOrder'),
 
     tests: new Ember.A(),
 
@@ -130,8 +132,8 @@ export default Ember.Controller.extend(CurrentUser, TagsAndCats, {
                 if (!fetchMore) {
                     this.get('tests').clear();
                     this.get('tests').pushObjects(tests);
-                    var topOfResultsFlag =  $("#top-of-results");
-                    if(!topOfResultsFlag)
+                    var topOfResultsFlag = $("#top-of-results");
+                    if (!topOfResultsFlag)
                         return;
                     $('html, body').animate({
                         scrollTop: topOfResultsFlag.offset().top - 16
@@ -173,7 +175,7 @@ export default Ember.Controller.extend(CurrentUser, TagsAndCats, {
      * Seen in the sub-header, optimised for SEO.
      */
     seoPageDescription: function () {
-        if(!this.get('model.id'))
+        if (!this.get('model.id'))
             return "";
         var totalTests = this.get('model.totalTests');
         if (totalTests > 100)

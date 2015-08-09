@@ -1,8 +1,10 @@
 import Ember from 'ember';
 import CurrentUser from '../mixins/current-user';
 import TagsAndCats from '../mixins/tags-and-cats';
+import SortBy from '../mixins/sort-by';
+import EstimateMemoryStrength from '../mixins/estimate-memory-strength';
 
-export default Ember.Controller.extend(CurrentUser, TagsAndCats, {
+export default Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, EstimateMemoryStrength, {
     /*
      * GUEST MODE
      */
@@ -10,6 +12,9 @@ export default Ember.Controller.extend(CurrentUser, TagsAndCats, {
     /*
      * HOME MODE
      */
+    // Needed for SortByMixin
+    localStorageId: "myTests",
+
     /**
      * @Property
      * For the User to select what tests
@@ -29,47 +34,6 @@ export default Ember.Controller.extend(CurrentUser, TagsAndCats, {
     myTestsListType: function () {
         return this.get('myTestsListTypes')[0];
     }.property(),
-
-    /**
-     * @Property
-     * For the User to order the tests
-     * on the my tests list by the select
-     * drop down list.
-     */
-    myTestsListOrders: [
-        {value: 'title', label: "Title A-Z", reverse: false},
-        {value: 'memoryStrength', label: "Memory (Weakest first)", reverse: false},
-        {value: 'memoryStrength', label: "Memory (Strongest first)", reverse: true},
-        {value: 'difficulty', label: "Difficulty (Easiest first)", reverse: false},
-        {value: 'difficulty', label: "Difficulty (Hardest first)", reverse: true},
-        {value: 'createdAt', label: "Newest first", reverse: true},
-        {value: 'createdAt', label: "Oldest first", reverse: false}
-    ],
-
-    /**
-     * @Property
-     * The selected sorting method, e.g. by
-     * title vs. createdAt etc.
-     */
-    myTestsListOrder: function () {
-        if (localStorage.myTestsListOrder)
-            return _.findWhere(this.get('myTestsListOrders'),
-                {
-                    value: localStorage.getObject('myTestsListOrder').value,
-                    reverse: localStorage.getObject('myTestsListOrder').reverse
-                });
-        else
-            return this.get('myTestsListOrders')[0];
-    }.property(),
-
-    /**
-     * @Property
-     * Stores the list order on the client browser
-     * If set, it will be set by init on next load.
-     */
-    storeMyTestsListOrderLocally: function () {
-        localStorage.setObject('myTestsListOrder', this.get('myTestsListOrder'));
-    }.observes('myTestsListOrder'),
 
     /**
      * @Property
@@ -141,11 +105,11 @@ export default Ember.Controller.extend(CurrentUser, TagsAndCats, {
         // E.g. if order is by difficulty, matching tests will
         // then have been ordered by title.
         // TODO figure out how to avoid secondary order of title being reversed.
-        if (this.get('myTestsListOrder.value') !== 'title')
+        if (this.get('listOrder.value') !== 'title')
             sortedOrderedAndFilteredList = sortedOrderedAndFilteredList
-                .sortBy(this.get('myTestsListOrder.value'), 'title');
+                .sortBy(this.get('listOrder.value'), 'title');
 
-        if (this.get('myTestsListOrder.reverse'))
+        if (this.get('listOrder.reverse'))
             sortedOrderedAndFilteredList = sortedOrderedAndFilteredList.reverseObjects();
 
         this.get('myTestsList').clear();
@@ -160,7 +124,7 @@ export default Ember.Controller.extend(CurrentUser, TagsAndCats, {
      */
     myTestsListThrottle: function () {
         Ember.run.debounce(this, this.myTestsListUpdate, 50);
-    }.observes('currentUser.myTests.length', 'myTestsListType', 'myTestsListOrder', 'myTestsListFilter.length',
+    }.observes('currentUser.myTests.length', 'myTestsListType', 'listOrder', 'myTestsListFilter.length',
         'currentUser.myTests.@each.title.length', 'currentUser.myTests.@each.createdAt',
         'currentUser.myTests.@each.memoryStrength', 'activeTags.length', 'activeCategories.length'),
 

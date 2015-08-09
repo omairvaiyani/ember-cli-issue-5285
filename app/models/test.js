@@ -39,7 +39,7 @@ export default DS.Model.extend(ParseMixin, CurrentUser, {
         return this.store.filter('unique-response', function (uniqueResponse) {
             return uniqueResponse.get('test.id') === this.get('id');
         }.bind(this));
-    }.property('questions.length'),
+    }.property(),
 
     /**
      * @Property memoryStrength
@@ -59,11 +59,33 @@ export default DS.Model.extend(ParseMixin, CurrentUser, {
         if (totalMemoryCount > 0)
             memoryStrength = Math.floor(totalMemoryCount / this.get('uniqueResponses.length'));
         else
-            memoryStrength = 0;
+            memoryStrength = this.get('estimatedMemoryStrength');
 
         return memoryStrength;
-    }.property('uniqueResponses.@each.memoryStrength'),
+    }.property('uniqueResponses.@each.memoryStrength', 'estimatedMemoryStrength'),
 
+    /**
+     * @Property Estimated Memory Strength
+     * This is calculated without URs,
+     * and is done by way of CC function.
+     * It is defaulted to 0 and set upon
+     * CC response.
+     */
+    estimatedMemoryStrength: 0,
+
+    /**
+     * @Property Memory Strength Data has been Fetched
+     * This is a temporarily computed-property.
+     * If URs are found, it will automatically set to true.
+     * Else, if CC has been checked for an estimate,
+     * the CC callback function must override this
+     * property to true - this will avoid further
+     * fetching of test memory strength data until
+     * the app reloads.
+     */
+    memoryStrengthDataHasBeenFetched: function () {
+        return this.get('uniqueResponses.length') > 0;
+    }.property('uniqueResponses.length'),
 
     memoryStrengthMeterStyle: function () {
         var height = this.get('memoryStrength');
@@ -81,4 +103,5 @@ export default DS.Model.extend(ParseMixin, CurrentUser, {
         else
             return "/img/brain-bulb-small-mask.png";
     }.property('memoryStrength')
+
 });

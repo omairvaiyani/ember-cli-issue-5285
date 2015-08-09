@@ -137,6 +137,51 @@ Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
 });
 
 /**
+ * @CloudFunction Get Memory Strength for Tests
+ * You can send an array of tests, test pointers or test objectIds.
+ * @param {Array<Test> || Array<pointers> || Array<String>} tests
+ */
+Parse.Cloud.define('getMemoryStrengthForTests', function (request, response) {
+    var user = request.user,
+        tests = request.params.tests;
+
+    if (!user || !tests || !tests.length)
+        return response.error("You must be logged in and send tests.");
+
+    var urQuery = user.uniqueResponses().query(),
+        testPointers = Parse.Object.generatePointers('Test', tests),
+        uniqueResponses = response;
+
+    urQuery.containedIn('test', testPointers);
+    urQuery.limit(1000);
+
+    Parse.Cloud.useMasterKey();
+    UniqueResponse.findWithUpdatedMemoryStrengths(urQuery).then(function (response) {
+        uniqueResponses = response;
+        var testIdsWithUrs = [];
+
+        _.each(uniqueResponses, function (uniqueResponse) {
+            testIdsWithUrs.push(uniqueResponse.test().id);
+        });
+
+        testIdsWithUrs = _.uniq(testIdsWithUrs);
+
+        var testsWithoutURs = _.filter(tests, function (test) {
+            return !_.contains(testIdsWithUrs, test.id);
+        });
+
+        return user.estimateMemoryStrengthForTests(testsWithoutURs);
+    }).then(function (estimatedMemoryStrengths) {
+        response.success({
+            estimates: estimatedMemoryStrengths,
+            uniqueResponses: uniqueResponses
+        });
+    }, function (error) {
+        response.error(error);
+    });
+});
+
+/**
  * @CloudFunction Create New Test
  * Parse.Cloud.beforeSave does not
  * allow custom response parameters.
@@ -253,6 +298,7 @@ Parse.Cloud.define('newUserEvent', function (request, response) {
  });*/
 
 /**
+ * // TODO, this needs a revision
  * @CloudFunction Get Community Test
  *
  * Fetches a test that is not locally stored
@@ -301,6 +347,7 @@ Parse.Cloud.define('getCommunityTest', function (request, response) {
 });
 
 /**
+ * @Deprecated, using Search Index instead.
  * @CloudFunction Get Community Tests
  *
  * Conducts a test query.
@@ -319,11 +366,11 @@ Parse.Cloud.define('getCommunityTests', function (request, response) {
         query = new Parse.Query(Test);
 
     query.notEqualTo('isObjectDeleted', true);
-    query.include('questions','author', 'category');
+    query.include('questions', 'author', 'category');
 
 
     _.each(queryOptions, function (queryOption) {
-        if(queryOption.key && queryOption.value)
+        if (queryOption.key && queryOption.value)
             query[queryOption.method](queryOption.key, queryOption.value);
         else if (queryOption.value)
             query[queryOption.method](queryOption.value);
@@ -338,7 +385,7 @@ Parse.Cloud.define('getCommunityTests', function (request, response) {
         // Query includes private tests in case the test
         // belongs to the user. We check it manually here.
         _.each(result, function (test) {
-            if(test.get('isPublic'))
+            if (test.get('isPublic'))
                 tests.push(test);
             // TODO limit user profile
         });
@@ -619,7 +666,7 @@ Parse.Cloud.define('createOrUpdateStudyField', function (request, response) {
  * function. You must confirm the details with the user
  * on client-side and call createOrGetEducationCohort.
  * @param {Object} educationHistory
- * @return {Instituion, StudyField, Integer} educationalInstitution, studyField, graduationYear
+ * @return {Institution, StudyField, Integer} educationalInstitution, studyField, graduationYear
  */
 Parse.Cloud.define('setEducationCohortUsingFacebook', function (request, response) {
     Parse.Cloud.useMasterKey();

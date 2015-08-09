@@ -55,18 +55,24 @@ Parse.Object.generatePointer = function (className, objectId) {
 /**
  * @Function Generate Pointers
  * @param {string} className
- * @param {Array<String>} objectIds
+ * @param {Array<String> || Array<Parse.Object>} objectIds
  * @returns {Array}
  */
 Parse.Object.generatePointers = function (className, objectIds) {
     var pointers = [];
     if (!objectIds || !objectIds.length)
         return pointers;
-    else {
-        _.each(objectIds, function (objectId) {
-            pointers.push(Parse.Object.generatePointer(className, objectId));
+
+    if (typeof objectIds[0] === "object") {
+        // The function has received objects instead, turn it into objectIds.
+        objectIds = _.map(objectIds, function (object) {
+            return object.id ? object.id : object.objectId;
         });
     }
+
+    _.each(objectIds, function (objectId) {
+        pointers.push(Parse.Object.generatePointer(className, objectId));
+    });
     return pointers;
 };
 /**
@@ -371,6 +377,65 @@ Parse.User.prototype.addUniqueResponses = function (responses) {
         return Parse.Promise.as(uniqueResponses);
     }.bind(this));
 };
+
+/**
+ * @Function Estimate Memory Strengths for Tests
+ *
+ * Fetches tests from given pointers. Fetches
+ * ALL uniqueResponses by user (reasonable limit).
+ *
+ * Matches URs with test to see how likely it is
+ * that the user has answered similar questions
+ * and has some memory of the knowledge tested.
+ *
+ * Current matches:
+ * - Category (1pt/per match)
+ * - Tag (1pt/per match)
+ *
+ * @param {*<Test>} tests (array of pointers)
+ * @return {Array<Integer, Test>}
+ */
+Parse.User.prototype.estimateMemoryStrengthForTests = function (tests) {
+    // Fetch tests from testPointers that had no URs
+    var testQuery = new Parse.Query(Test);
+    testQuery.containedIn("objectId", _.map(tests, function (pointer) {
+        return pointer.id;
+    }));
+
+    // Fetch all URs for User for memory estimation.
+    var allURQuery = this.uniqueResponses().query();
+    allURQuery.include('test');
+    allURQuery.limit(1000);
+
+    return Parse.Promise.when([testQuery.find(), allURQuery.find()])
+        .then(function (tests, uniqueResponses) {
+            var estimatedMemoryStrengths = [];
+
+            _.each(tests, function (test) {
+                var estimatedMemoryStrength = 0;
+
+                // Category matching
+                estimatedMemoryStrength += _.filter(uniqueResponses, function (uniqueResponse) {
+                    return uniqueResponse.test().category().id === test.category().id;
+                }).length;
+
+                // Tag matching
+                estimatedMemoryStrength += _.filter(uniqueResponses, function (uniqueResponse) {
+                    var tagMatched = false;
+                    _.each(test.tags(), function (tag) {
+                        if (!tagMatched)
+                            if (_.contains(uniqueResponse.test().tags(), tag))
+                                tagMatched = true;
+                    });
+                    return tagMatched;
+                }).length;
+
+                estimatedMemoryStrengths.push({test: test, estimatedMemoryStrength: estimatedMemoryStrength});
+            });
+            return Parse.Promise.as(estimatedMemoryStrengths);
+        });
+};
+
 /**
  * @Property name
  * @returns {string}

@@ -71,6 +71,17 @@ export default Ember.Component.extend({
             && this.get('parentController.currentUser.savedTests').contains(this.get('test'));
     }.property('isCurrentUserTheAuthor', 'parentController.currentUser.savedTests.length'),
 
+    /**
+     * @Observes Check if Memory Strength Data has been Fetched
+     * This means we have no URs to calculate MS, and so far,
+     * we have not made a call to CC to fetch URs or
+     * estimate MS.
+     */
+    checkIfMemoryStrengthDataHasBeenFetched: function () {
+        if (this.get('currentUser') && !this.get('test.memoryStrengthDataHasBeenFetched'))
+            this.send('fetchMemoryStrengthData');
+    }.observes('test.uniqueResponses.length'),
+
     actions: {
         deleteTest: function () {
             // TODO handle this properly
@@ -97,6 +108,10 @@ export default Ember.Component.extend({
 
         toggleCategoryFilter: function (category) {
             this.get('parentController').send('toggleCategoryFilter', category);
+        },
+
+        fetchMemoryStrengthData: function () {
+            this.get('parentController').send('fetchMemoryStrengthDataForTest', this.get('test'));
         }
     }
 });
