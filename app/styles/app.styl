@@ -480,85 +480,64 @@ input[type="range"]::-webkit-slider-thumb {
   z-index: 1051; /*must be highest element on page*/
 }
 
-.notification {
+.notification
   opacity: 0;
   position: absolute;
-  right: 10px;
+  right: -310px;
   width: 300px;
   height: 65px;
-  padding: 5px 10px 5px 45px;
-  border: 2px solid transparent;
-  border-radius: 10px;
-  background-color: colorPrimary-800;
-  color: white
+  padding: 5px 10px 5px 40px;
+  border: 2px solid black;
+  border-radius: 4px;
+  background-color: white;
+  color: black
   font-size: 12px;
-  text-shadow: 1px 1px 3px rgb(0, 0, 0);
-  box-shadow: 0px 0px 15px -5px rgb(0, 0, 0);
-  transition: opacity 0.3s ease-out, top 0.3s ease-out, right 0.3s ease-out;
-}
+  box-shadow: 0 0 15px -5px rgb(0, 0, 0);
+  transition: opacity 0.3s ease-out, top 0.3s ease-out, right 0.3s ease-out
+  cursor default
+  white-space nowrap
+  &.is-opaque
+    opacity 0.95
+  &.closed
+    display none
+  &.notification-warning
+    opacity 1
+  .icon
+    position: absolute;
+    top: 9px;
+    left: 9px;
+    font-size: 26px;
+    color colorPrimary
+  .title
+    font-size 14px
+    font-weight bold
+    overflow: hidden;
+    text-overflow: ellipsis;
+  .close-notification
+    display: none;
+    position: absolute;
+    top: 4px;
+    right: 8px;
+    font-size: 18px;
+    cursor: pointer;
+    text-decoration: none;
+    color: black
+  .notification-confirm
+    position: absolute;
+    right: 12px;
+    bottom: 5px;
+    span
+      color black
+      &.negative
+        margin-right marginSecondary
+      &.positive
+        color colorPrimary
+  &:hover
+    opacity 1
+    border-color colorPrimary-800
+    .close-notification
+      display block
 
-.notification-warning {
-  background-color: rgba(136, 13, 13, 0.85);
-}
-
-.notification.is-opaque {
-  opacity: 1;
-}
-
-.notification:hover {
-  border-color: rgb(255, 255, 255);
-}
-
-.notification.closed {
-  display: none;
-}
-
-.notification .icon {
-  position: absolute;
-  top: 9px;
-  left: 9px;
-  font-size: 26px;
-}
-
-.notification .close-notification {
-  display: none;
-  position: absolute;
-  top: 4px;
-  right: 8px;
-  font-size: 22px;
-  cursor: pointer;
-  text-decoration: none;
-  color: rgb(255, 255, 255);
-}
-
-.notification:hover .close-notification {
-  display: block;
-}
-
-.notification-confirm {
-  position: absolute;
-  right: 12px;
-  bottom: 5px;
-}
-
-.notification-confirm a {
-  color: white;
-  font-size: 14px;
-}
-
-.notification-confirm a:hover {
-  text-decoration: none;
-  color: rgb(215, 238, 213);
-}
-
-.notification-warning .notification-confirm a:hover {
-  text-decoration: none;
-  color: rgba(255, 189, 189, 1);
-}
-
-.notification-confirm .confirm-negative {
-  margin-right: 8px;
-}
 
 .tag.category-edit {
   background: dodgerblue;

@@ -3,8 +3,11 @@ import CurrentUser from '../mixins/current-user';
 import TagsAndCats from '../mixins/tags-and-cats';
 import SortBy from '../mixins/sort-by';
 import EstimateMemoryStrength from '../mixins/estimate-memory-strength';
+import DeleteTest from '../mixins/delete-test';
+import ParseHelper from '../utils/parse-helper';
 
-export default Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, EstimateMemoryStrength, {
+
+export default Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, EstimateMemoryStrength, DeleteTest, {
     /*
      * GUEST MODE
      */
@@ -12,8 +15,8 @@ export default Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, Estimat
     /*
      * HOME MODE
      */
-    // Needed for SortByMixin
-    localStorageId: "myTests",
+    // Needed by SortByMixin and TestCardComponent
+    controllerId: "myTests",
 
     /**
      * @Property
@@ -135,10 +138,16 @@ export default Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, Estimat
         searchTests: function () {
             this.transitionToRoute('category', "all",
                 {queryParams: {search: this.get('searchTermForTests').toLowerCase()}});
-        }
+        },
         /*
          * USER MODE
          */
+        testDeleted: function () {
+            // If a user filtered to find a test to delete, clear the filter.
+            if(!this.get('myTestsList.length') && this.get('myTestsListFilter.length')) {
+                this.set('myTestsListFilter', "");
+            }
+        }
 
     }
 });

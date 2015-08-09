@@ -1,7 +1,8 @@
 import Ember from 'ember';
 import CurrentUser from '../../../mixins/current-user';
+import EstimateMemoryStrength from '../../../mixins/estimate-memory-strength';
 
-export default Ember.ObjectController.extend(CurrentUser, {
+export default Ember.ObjectController.extend(CurrentUser, EstimateMemoryStrength, {
     isCurrentUser: function () {
         if (!this.get('currentUser'))
             return false;

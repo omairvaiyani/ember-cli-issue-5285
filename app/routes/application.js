@@ -531,7 +531,7 @@ export default Ember.Route.extend({
          * @param type {String} classification; used for which icon to show
          * @param title {String} leading text
          * @param message {String} supporting text
-         * @param confirm {Object} controller, callbackAction, positive, negative
+         * @param confirm {Object} controller, callbackAction, positive, negative, returnItem
          */
         addNotification: function (type, title, message, confirm) {
             var notification = Ember.Object.create({

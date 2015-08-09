@@ -23,11 +23,11 @@ export default Ember.Mixin.create({
      * title vs. createdAt etc.
      */
     listOrder: function () {
-        if (localStorage.getObject(this.get('localStorageId') + "ListOrder"))
+        if (localStorage.getObject(this.get('controllerId') + "ListOrder"))
             return _.findWhere(this.get('listOrders'),
                 {
-                    value: localStorage.getObject(this.get('localStorageId') + "ListOrder").value,
-                    reverse: localStorage.getObject(this.get('localStorageId') + "ListOrder").reverse
+                    value: localStorage.getObject(this.get('controllerId') + "ListOrder").value,
+                    reverse: localStorage.getObject(this.get('controllerId') + "ListOrder").reverse
                 });
         else
             return this.get('listOrders')[0];
@@ -39,7 +39,7 @@ export default Ember.Mixin.create({
      * If set, it will be set by init on next load.
      */
     storeMyTestsListOrderLocally: function () {
-        localStorage.setObject(this.get('localStorageId') + 'ListOrder', this.get('listOrder'));
+        localStorage.setObject(this.get('controllerId') + 'ListOrder', this.get('listOrder'));
     }.observes('listOrder')
 
 });

@@ -1,24 +1,24 @@
 {{#if view.isSRSNotification}}
     <img src="img/srs-icon.png" class="circular-image" style="height:30px;width:30px;margin-left: -37px;margin-right: 4px;"/>
 {{else}}
-    <i class="icon glyphicon {{unbound view.iconType}}"></i>
+    <i class="icon fa {{unbound view.iconType}}"></i>
 {{/if}}
 <a class="close-notification" {{action "close" target="view"}}>
-    <i class="icon-remove glyphicon glyphicon-remove-sign"></i>
+    <i class="icon-remove fa fa-close"></i>
 </a>
-<strong>
+<p class="title no-margin">
     {{view.content.title}}
-</strong>
-<p>
+</p>
+<p class="small message">
     {{view.content.message}}
 </p>
 {{#if view.content.confirm}}
     <div class="notification-confirm">
-        <a href='' class="confirm-negative" {{action 'confirmCallback' false target='view'}}>
+        <span class="linkify negative" {{action 'confirmCallback' false target='view'}}>
             {{view.content.confirm.negative}}
-        </a>
-        <a href='' class="confirm-positive" {{action 'confirmCallback' true target='view'}}>
+        </span>
+        <span class="linkify positive" {{action 'confirmCallback' true target='view'}}>
             {{view.content.confirm.positive}}
-        </a>
+        </span>
     </div>
 {{/if}}

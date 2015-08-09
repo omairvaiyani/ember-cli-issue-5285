@@ -19,9 +19,6 @@ Parse.Cloud.beforeSave(Parse.User, function (request, response) {
         promises.push(user.generateSlug());
     }
 
-    if (!promises.length)
-        return response.success();
-
     Parse.Promise.when(promises).then(function () {
         response.success();
     }, function (error) {
@@ -72,9 +69,6 @@ Parse.Cloud.beforeSave(Test, function (request, response) {
     } else
         test.set('totalQuestions', test.questions().length);
 
-    if (!promises.length)
-        return response.success();
-
     Parse.Promise.when(promises).then(function () {
         response.success();
     }, function (error) {
@@ -87,16 +81,21 @@ Parse.Cloud.beforeSave(Test, function (request, response) {
  *
  */
 Parse.Cloud.afterSave(Test, function (request) {
-    var test = request.object,
-        promises = [];
+    var test = request.object;
 
     if (!test.existed()) {
         // New test logic
     } else {
         // Existing test logic
     }
-    // Add/Update search index (async)
-    test.indexObject();
+    if(test.isPublic()) {
+        // Add/Update search index (async)
+        test.indexObject();
+    } else {
+        // Deletes object from index
+        // TODO set flag on object that have been index, to avoid deleting non-indexed objs.
+        test.deleteIndexObject();
+    }
 });
 
 /**

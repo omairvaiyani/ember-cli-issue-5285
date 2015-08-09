@@ -2,8 +2,9 @@ import Ember from 'ember';
 import CurrentUser from '../mixins/current-user';
 import EventTracker from '../utils/event-tracker';
 import ParseHelper from '../utils/parse-helper';
+import DeleteTest from '../mixins/delete-test';
 
-export default Ember.Controller.extend(CurrentUser, {
+export default Ember.Controller.extend(CurrentUser, DeleteTest, {
     needs: ['application', 'editQuestion', 'join'],
 
     isTestDirty: function () {
@@ -205,21 +206,8 @@ export default Ember.Controller.extend(CurrentUser, {
                 }.bind(this));
         },
 
-        /*
-         * Sets a delete flag
-         * Cloud code sets no read/write ACL
-         * .deleteRecord() only removes the record from Ember Data
-         */
-        deleteTest: function () {
-            this.get('model').set('isObjectDeleted', true);
-            this.get('model').save().then(function (model) {
-                this.send('addNotification', 'deleted', "Test deleted!", model.get('title') + " was deleted successfully.");
-                this.get('currentUser.tests').removeObject(this.get('model'));
-                model.deleteRecord();
-            }.bind(this));
-
-            this.send('closeModal');
-            this.transitionToRoute('index');
+        testDeleted: function () {
+            this.transitionTo('index');
         },
 
         toggleQuestionListCheckboxes: function () {

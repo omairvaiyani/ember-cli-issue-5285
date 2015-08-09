@@ -26,8 +26,18 @@ export default Ember.Component.extend({
         return this.get('test.isSpacedRepetition');
     }.property('test.isSpacedRepetition'),
 
+    /**
+     * @Property Show Delete
+     * True if:
+     * - Test author is currentUser AND,
+     * - Test is not generated AND,
+     * - Parent Controller is not browseTests
+     *
+     * @returns {boolean}
+     */
     showDelete: function () {
-        return this.get('isCurrentUserTheAuthor') && !this.get('test.isGenerated');
+        return this.get('isCurrentUserTheAuthor') && !this.get('test.isGenerated') &&
+            this.get('parentController.controllerId') !== "browseTests";
     }.property('isCurrentUserTheAuthor', 'test.isGenerated'),
 
     showEdit: function () {
@@ -84,9 +94,7 @@ export default Ember.Component.extend({
 
     actions: {
         deleteTest: function () {
-            // TODO handle this properly
-            //this.get('parentController').send('deleteTest', this.get('test'));
-            this.get('test').destroyRecord();
+            this.get('parentController').send('alertToDeleteTest', this.get('test'));
         },
 
         saveTest: function () {

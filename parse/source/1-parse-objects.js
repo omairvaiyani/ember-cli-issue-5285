@@ -133,6 +133,23 @@ Parse.Object.prototype.fetchIfNeeded = function () {
         return Parse.Promise.as(this);
     }
 };
+/**
+ * @Function Delete Index Object
+ * Removes search index of object
+ * @returns {Parse.Promise<Parse.Object>}
+ */
+Parse.Object.prototype.deleteIndexObject = function () {
+    var index;
+    switch(this.className) {
+        case "Test":
+            index = testIndex;
+            break;
+        case "User":
+            index = userIndex;
+            break;
+    }
+    return index.deleteObject(this.id);
+};
 /****
  * ----------
  * Parse.User

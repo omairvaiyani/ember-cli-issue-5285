@@ -84,16 +84,25 @@ export default Ember.View.extend({
             column = Math.floor(index / unitsPerColumn),
             row = index % unitsPerColumn;
 
-        if (index === -1) {
-            // Wasn't in the list, don't care.
-            return '';
-        }
 
         var topPx = row * unitHeight,
             rightPx = column * unitWidth;
 
+        if (!this.get('isOpaque') || !this.get('easeIn')) {
+            // This timeout allows the initial position of the element to be set.
+            // Afterward, the new position will be set by the code below,
+            // thus the CSS transition animation can take place.
+            setTimeout(function () {
+                if (this.get('isOpaque'))
+                    this.set('easeIn', true);
+            }.bind(this), 10);
+
+            // Initial element position.
+            return "top: " + topPx + "px;";
+        }
+
         return 'top: ' + topPx + 'px; right: ' + rightPx + 'px;';
-    }.property('controller.notifications.@each.closed'),
+    }.property('controller.notifications.@each.closed', 'easeIn', 'isOpaque'),
 
     /**
      * @property {String} fontawesome class for the icon
@@ -101,34 +110,34 @@ export default Ember.View.extend({
     iconType: function () {
         var type = this.get('content.type'),
             hash = {
-                'welcome': 'glyphicon glyphicon-bullhorn',
-                'profile': 'glyphicon glyphicon-user',
-                'saved': 'glyphicon-floppy-saved',
-                'deleted': 'glyphicon-trash',
-                'unsavedChanges': 'glyphicon-warning-sign',
-                'success': 'fa fa-check-square-o',
-                'warning': 'fa fa-exclamation',
-                'error': 'fa fa-exclamation',
-                'alert': 'fa fa-exclamation',
-                'facebook': 'fa fa-facebook',
-                'create': 'glyphicon-pencil',
+                'welcome': 'fa-bullhorn',
+                'profile': 'fa-user',
+                'saved': 'fa-floppy-o',
+                'save': 'fa-floppy-o',
+                'deleted': 'fa-trash-o',
+                'delete': 'fa-trash-o',
+                'trash': 'fa-trash-o',
+                'success': 'fa-check-square-o',
+                'warning': 'fa-exclamation',
+                'unsavedChanges': 'fa-exclamation',
+                'error': 'fa-exclamation',
+                'alert': 'fa-exclamation',
+                'facebook': 'fa-facebook',
+                'create': 'fa-pencil-square-o',
                 'srs': 'srs',
                 'srs-error': 'srs-error',
-                'points': 'fa fa-gamepad'
+                'points': 'fa-gamepad'
             };
         return hash[type] || '';
     }.property('content.type'),
 
     isSRSNotification: function () {
-        if (this.get('iconType') === "srs" || this.get('iconType') === "srs-error")
-            return true;
-        else
-            return false;
+        return this.get('iconType') === "srs" || this.get('iconType') === "srs-error";
     }.property('iconType.length'),
 
     /**
      * @property notificationWarning
-     * @returns {Bool}
+     * @returns {boolean}
      * If true notification will
      * look red.
      */
@@ -136,6 +145,8 @@ export default Ember.View.extend({
         switch (this.get('content.type')) {
             case 'unsavedChanges':
             case 'deleted':
+            case 'delete':
+            case 'trash':
             case 'warning':
             case 'srs-error':
             case 'premium-error':
@@ -154,21 +165,29 @@ export default Ember.View.extend({
          * Action handler - "close" the notification
          */
         close: function () {
+            if (this.get('content.confirm') && !this.get('content.confirm.responded')) {
+                this.send('confirmCallback', false);
+                return;
+            }
+
             this.set('isOpaque', false);
             setTimeout(function () {
                 this.set('content.closed', true);
                 clearTimeout(this.get('timeoutId'));
-                if (this.get('content.confirm')) {
-                    this.get('content.confirm.controller').send(this.get('content.confirm.callbackAction'), false);
-                }
-            }.bind(this), 300);
+            }.bind(this), 450);
         },
 
         confirmCallback: function (isPositive) {
-            this.get('content.confirm.controller').send(this.get('content.confirm.callbackAction'), isPositive,
-                this.get('content.confirm.returnItem'));
-            this.set('content.confirm', null);
+            // Begin dismissing the notification first
+            // This allows the UX thread to work without load.
+            this.set('content.confirm.responded', true);
             this.send('close');
+
+            setTimeout(function () {
+                // Begin confirmation action on given controller.
+                this.get('content.confirm.controller').send(this.get('content.confirm.callbackAction'), isPositive,
+                    this.get('content.confirm.returnItem'));
+            }.bind(this), 350);
         }
     }
 });

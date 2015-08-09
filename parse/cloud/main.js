@@ -133,6 +133,23 @@ Parse.Object.prototype.fetchIfNeeded = function () {
         return Parse.Promise.as(this);
     }
 };
+/**
+ * @Function Delete Index Object
+ * Removes search index of object
+ * @returns {Parse.Promise<Parse.Object>}
+ */
+Parse.Object.prototype.deleteIndexObject = function () {
+    var index;
+    switch(this.className) {
+        case "Test":
+            index = testIndex;
+            break;
+        case "User":
+            index = userIndex;
+            break;
+    }
+    return index.deleteObject(this.id);
+};
 /****
  * ----------
  * Parse.User
@@ -2073,9 +2090,6 @@ Parse.Cloud.beforeSave(Parse.User, function (request, response) {
         promises.push(user.generateSlug());
     }
 
-    if (!promises.length)
-        return response.success();
-
     Parse.Promise.when(promises).then(function () {
         response.success();
     }, function (error) {
@@ -2126,9 +2140,6 @@ Parse.Cloud.beforeSave(Test, function (request, response) {
     } else
         test.set('totalQuestions', test.questions().length);
 
-    if (!promises.length)
-        return response.success();
-
     Parse.Promise.when(promises).then(function () {
         response.success();
     }, function (error) {
@@ -2141,16 +2152,21 @@ Parse.Cloud.beforeSave(Test, function (request, response) {
  *
  */
 Parse.Cloud.afterSave(Test, function (request) {
-    var test = request.object,
-        promises = [];
+    var test = request.object;
 
     if (!test.existed()) {
         // New test logic
     } else {
         // Existing test logic
     }
-    // Add/Update search index (async)
-    test.indexObject();
+    if(test.isPublic()) {
+        // Add/Update search index (async)
+        test.indexObject();
+    } else {
+        // Deletes object from index
+        // TODO set flag on object that have been index, to avoid deleting non-indexed objs.
+        test.deleteIndexObject();
+    }
 });
 
 /**
@@ -2576,6 +2592,57 @@ Parse.Cloud.define('newUserEvent', function (request, response) {
  });
  });*/
 
+/**
+ * @CloudFunction Delete Objects
+ *
+ * For certain types of objects,
+ * we do not want to permanently
+ * remove the object from our server,
+ * therefore, we'll set a flag
+ * and masterkey only ACLs.
+ *
+ * Rest will simply be destroyed.
+ *
+ * @param {string} className
+ * @param {Array} objects (pointers)
+ * @return {*}
+ */
+Parse.Cloud.define('deleteObjects', function (request, response) {
+    var objectPointers = request.params.objects,
+        className = request.params.className,
+        user = request.user,
+        promise;
+
+    if (!className || !objectPointers.length || !user)
+        return response.error("Send className and object pointer. And be logged in.");
+
+    var objectQuery = new Parse.Query(className);
+    objectQuery.containedIn("objectId", _.map(objectPointers, function (pointer) {
+        return pointer.id;
+    }));
+
+    switch (className) {
+        case "Test":
+        case "Question":
+            promise = objectQuery.each(function (object) {
+                object.set('isObjectDeleted', true);
+                object.set('isPublic', false);
+                object.setACL(new Parse.ACL());
+                return object.save();
+            });
+            break;
+        default:
+            promise = objectQuery.each(function (object) {
+                return object.destroy();
+            });
+            break;
+    }
+    promise.then(function () {
+        response.success();
+    }, function (error) {
+       response.error(error);
+    });
+});
 /**
  * // TODO, this needs a revision
  * @CloudFunction Get Community Test

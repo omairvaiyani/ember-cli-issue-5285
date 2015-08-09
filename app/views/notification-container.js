@@ -1,9 +1,6 @@
 import Ember from 'ember';
 
-import
-NotificationView
-from
-'./application/notification';
+import NotificationView from './application/notification';
 
 export default Ember.CollectionView.extend({
     /**

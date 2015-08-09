@@ -16,8 +16,8 @@ export default Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, Estimat
         this.get('listOrders').insertAt(0, {value: "relevance", label: "Relevance", reverse: true});
     },
 
-    // Needed for SortByMixin
-    localStorageId: 'browseTests',
+    // Needed by SortByMixin and TestCardComponent
+    controllerId: 'browseTests',
 
     queryParams: ['searchTerm'],
 
