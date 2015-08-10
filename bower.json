@@ -15,7 +15,7 @@
     "bootstrap": "~3.2.0",
     "moment": "^2.10.0",
     "underscore": "~1.7.0",
-    "parse-js-sdk": "~1.4.0",
+    "parse-js-sdk": "^1.4.2",
     "font-awesome": "~4.2.0",
     "css-toggle-switch": "~2.1.6",
     "numeral": "~1.5.3",
