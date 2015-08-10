@@ -94,7 +94,7 @@ export default Ember.Component.extend({
 
     actions: {
         deleteTest: function () {
-            this.get('parentController').send('alertToDeleteTest', this.get('test'));
+            this.get('parentController').send('deleteTest', this.get('test'));
         },
 
         saveTest: function () {

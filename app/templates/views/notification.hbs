@@ -12,13 +12,21 @@
 <p class="small message">
     {{view.content.message}}
 </p>
+
 {{#if view.content.confirm}}
-    <div class="notification-confirm">
-        <span class="linkify negative" {{action 'confirmCallback' false target='view'}}>
+    <div class="notification-action">
+        <button class="btn btn-sm no-margin negative" {{action 'confirmCallback' false target='view'}}>
             {{view.content.confirm.negative}}
-        </span>
-        <span class="linkify positive" {{action 'confirmCallback' true target='view'}}>
+        </button>
+        <button class="btn btn-sm no-margin positive" {{action 'confirmCallback' true target='view'}}>
             {{view.content.confirm.positive}}
-        </span>
+        </button>
+    </div>
+{{/if}}
+{{#if view.content.undo}}
+    <div class="notification-action">
+        <button class="btn btn-sm no-margin positive" {{action 'undoCallback' true target='view'}}>
+            UNDO
+        </button>
     </div>
 {{/if}}

@@ -301,7 +301,7 @@ export default Ember.Route.extend({
                 return user.reload();
             }.bind(this)).then(function () {
                     this.send('decrementLoadingItems');
-                    if(this.get('currentUser.firstTimeLogin')) {
+                    if (this.get('currentUser.firstTimeLogin')) {
                         this.set('currentUser.firstTimeLogin', false);
                         this.set('applicationController.redirectAfterLoginToRoute', 'join.personalise');
                         this.set('applicationController.redirectAfterLoginToController', 'join');
@@ -526,21 +526,39 @@ export default Ember.Route.extend({
         },
 
         /**
+         * @Action Add Notification
+         *
          * Action handler for creating a new notification.
          * Could be called from elsewhere throughout the application.
-         * @param type {String} classification; used for which icon to show
-         * @param title {String} leading text
-         * @param message {String} supporting text
-         * @param confirm {Object} controller, callbackAction, positive, negative, returnItem
+         *
+         * @param {Object} notificationObject
+         * {
+         *       type {String} classification; used for which icon to show
+         *       title {String} leading text
+         *       message {String} supporting text
+         *       confirm {Object} {controller, callbackAction, positive, negative, returnItem}
+         *       undo {Object} {controller, callbackAction, returnItem}
+         *  }
+         *  Examples:
+         *  // Standard
+         *  {type: "success", title:"Question added!", message:"You now have 4 questions."}
+         *  `No response`
+         *
+         *  // Confirm
+         *  {type: "delete", title:"Are you sure you?", message:"",
+         *      confirm: {controller: this, callbackAction: "deleteObject", positive: "DELETE",
+         *      negative: "CANCEL", returnItem: test}}
+         *  callbackAction `True | False, returnItem`
+         *
+         *  // Undo (finalAction is called if User does NOT press undo)
+         *   {type: "delete", title:"Test deleted.", message:"Cardiology Test.",
+         *      undo: {controller: this, finalAction: "deleteObject", returnItem: test}}
+         *  callbackAction `True | False, returnItem` <-- True means UNDO CHANGES
+         *
          */
-        addNotification: function (type, title, message, confirm) {
-            var notification = Ember.Object.create({
-                type: type,
-                title: title,
-                message: message,
-                confirm: confirm,
-                closed: false
-            });
+        addNotification: function (notificationObject) {
+            var notification = Ember.Object.create(notificationObject);
+
             this.get('applicationController.notifications').pushObject(notification);
         },
 
@@ -549,10 +567,13 @@ export default Ember.Route.extend({
                 return;
             var userEvent = ParseHelper.extractRawPayload(this.store, 'user-event', payload.userEvent);
             this.get('currentUser').reload().then(function () {
-                this.send('addNotification', 'points',
-                    '+' + userEvent.get('pointsTransacted') + "XP | " + userEvent.get('label'),
-                    'Total: ' + this.get('currentUser.points') +
-                    "xp / " + this.get('currentUser.level.title'));
+                var notification = {
+                    type: "points",
+                    title: '+' + userEvent.get('pointsTransacted') + "XP | " + userEvent.get('label'),
+                    message:  "Total: " + this.get('currentUser.points') +
+                    "xp / " + this.get('currentUser.level.title')
+                };
+                this.send('addNotification', notification);
             }.bind(this));
         },
 

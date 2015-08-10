@@ -2,9 +2,9 @@ import Ember from 'ember';
 import CurrentUser from '../mixins/current-user';
 import EventTracker from '../utils/event-tracker';
 import ParseHelper from '../utils/parse-helper';
-import DeleteTest from '../mixins/delete-test';
+import DeleteWithUndo from '../mixins/delete-with-undo';
 
-export default Ember.Controller.extend(CurrentUser, DeleteTest, {
+export default Ember.Controller.extend(CurrentUser, DeleteWithUndo, {
     needs: ['application', 'editQuestion', 'join'],
 
     isTestDirty: function () {
@@ -124,14 +124,25 @@ export default Ember.Controller.extend(CurrentUser, DeleteTest, {
         },
 
         checkTest: function (callback) {
-            var error = false;
+            var error = false,
+                notification;
 
             if (!this.get('model.title.length')) {
-                this.send('addNotification', 'warning', 'Title not set!', 'You must set a title for the test!');
+                notification = {
+                    type: "warning",
+                    title: "Title not set!",
+                    message: "'You must set a title for the test!'"
+                };
+                this.send('addNotification', notification);
                 error = true;
             }
             if (!this.get('model.category.content')) {
-                this.send('addNotification', 'warning', 'Category not set!', 'You must set a category!');
+                notification = {
+                    type: "warning",
+                    title: "Category not set!",
+                    message: "'You must set a category for the test!'"
+                };
+                this.send('addNotification', notification);
                 error = true;
             }
             if (this.get('inJoinProcess')) {
@@ -206,36 +217,97 @@ export default Ember.Controller.extend(CurrentUser, DeleteTest, {
                 }.bind(this));
         },
 
-        testDeleted: function () {
+        /**
+         * @Action Delete Test
+         * Relays call to DeleteWithUndo mixin.
+         */
+        deleteTest: function () {
+            this.send('deleteObject', {
+                object: this.get('model'), array: this.get('currentUser.createdTests'),
+                title: "Test deleted!", message: this.get('model.title')
+            });
             this.transitionTo('index');
-        },
-
-        toggleQuestionListCheckboxes: function () {
-            this.toggleProperty('showQuestionListCheckBoxes');
         },
 
         /**
          * @Action Delete Question
-         * - Only un-linking question from test
-         * - Not actually deleting question from
-         * server
-         * @param {DS.Model} question
+         * Relays call to DeleteWithUndo mixin.
+         *
+         * @param {Object} question
+         * @param {Boolean} isCurrent
          */
-        deleteQuestion: function (question) {
-            this.get('model.questions').removeObject(question);
-            this.get('model').save();
-            this.transitionToRoute('edit.index');
-            this.send('addNotification', 'deleted', 'Question deleted!', 'Your test is up to date!');
+        deleteQuestion: function (question, isCurrent) {
+            this.send('deleteObject', {
+                object: question, array: this.get('model.questions'),
+                title: "Question deleted!", message: question.get('stem'),
+                isCurrent: isCurrent
+            });
+            if (isCurrent)
+                this.transitionTo('edit.index');
+        },
+
+        postObjectDelete: function (returnItem) {
+            if (returnItem.type === "test") {
+
+            } else if (returnItem.type === "question") {
+                this.get('model').save();
+            }
+        },
+
+        /**
+         * @Action Undo Object Delete
+         * Relayed from DeleteWithUndo mixin.
+         *
+         * IF TEST
+         * - The user will have been sent to IndexRoute. Bring them back.
+         *
+         * IF QUESTION
+         * - IF isCurrent, transition back to editing it.
+         */
+        undoObjectDelete: function (returnItem, error) {
+            if (returnItem.type === "test") {
+                this.transitionTo('edit.index', returnItem.object.get('slug'));
+            } else if (returnItem.type === "question") {
+                if(returnItem.isCurrent)
+                    this.transitionTo('editQuestion', returnItem.object.id);
+            }
         },
 
         finishedEditing: function () {
             var callback = function (isSaved) {
                 if (isSaved)
-                    this.transitionToRoute('testInfo', this.get('model.slug'));
+                    this.transitionTo('testInfo', this.get('model.slug'));
             }.bind(this);
             this.send('saveTest', callback);
         },
 
+        /**
+         * ADDING AND REMOVING TAGS
+         */
+        startAddingNewTag: function () {
+            this.set('addingTag', true);
+            setTimeout(function () {
+                Ember.$("#new-tag").focus();
+            }, 150);
+        },
+
+        completeAddingTag: function () {
+            if (this.get('newTag.length')) {
+                this.get('model.tags').pushObject(this.get('newTag'));
+                this.set('newTag', "");
+            }
+            this.set('addingTag', false);
+        },
+
+        removeTag: function (tag) {
+            this.get('model.tags').removeObject(tag);
+        },
+
+        /**
+         * @Action Go to Join Step
+         * @param {String} step
+         * @param callback
+         */
         goToJoinStep: function (step, callback) {
             if (step === 'create' || step === 'addQuestions') {
                 // create and addQuestions are not handled by the JoinController.
@@ -255,25 +327,6 @@ export default Ember.Controller.extend(CurrentUser, DeleteTest, {
                 }
             } else
                 this.get('joinController').send('goToJoinStep', step); // clears other steps
-        },
-
-        startAddingNewTag: function () {
-            this.set('addingTag', true);
-            setTimeout(function () {
-                Ember.$("#new-tag").focus();
-            }, 150);
-        },
-
-        completeAddingTag: function () {
-            if (this.get('newTag.length')) {
-                this.get('model.tags').pushObject(this.get('newTag'));
-                this.set('newTag', "");
-            }
-            this.set('addingTag', false);
-        },
-
-        removeTag: function (tag) {
-            this.get('model.tags').removeObject(tag);
         }
     }
 

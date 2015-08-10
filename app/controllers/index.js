@@ -3,11 +3,11 @@ import CurrentUser from '../mixins/current-user';
 import TagsAndCats from '../mixins/tags-and-cats';
 import SortBy from '../mixins/sort-by';
 import EstimateMemoryStrength from '../mixins/estimate-memory-strength';
-import DeleteTest from '../mixins/delete-test';
+import DeleteWithUndo from '../mixins/delete-with-undo';
 import ParseHelper from '../utils/parse-helper';
 
 
-export default Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, EstimateMemoryStrength, DeleteTest, {
+export default Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, EstimateMemoryStrength, DeleteWithUndo, {
     /*
      * GUEST MODE
      */
@@ -139,14 +139,28 @@ export default Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, Estimat
             this.transitionToRoute('category', "all",
                 {queryParams: {search: this.get('searchTermForTests').toLowerCase()}});
         },
+
         /*
          * USER MODE
          */
-        testDeleted: function () {
-            // If a user filtered to find a test to delete, clear the filter.
-            if(!this.get('myTestsList.length') && this.get('myTestsListFilter.length')) {
-                this.set('myTestsListFilter', "");
+        deleteTest: function (test) {
+          this.send('deleteObject', {array: this.get('currentUser.createdTests'), object: test,
+          title: "Test deleted!", message: test.get('title')});
+        },
+
+        // Callback from DeleteWithUndoMixin
+        preObjectDelete: function (returnItem) {
+            if(returnItem.type === "test") {
+                // If a user filtered to find a test to delete, clear the filter.
+                if(this.get('myTestsList.length') === 1 && this.get('myTestsListFilter.length')) {
+                    this.set('myTestsListFilter', "");
+                }
             }
+        },
+
+        undoObjectDelete: function (returnItem, error) {
+            // Called if object delete is undo'd,
+            // TODO see if scrolling to test helps
         }
 
     }

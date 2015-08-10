@@ -66,8 +66,16 @@ Parse.Cloud.beforeSave(Test, function (request, response) {
         if (!test.isGenerated() && test.title() && user && !test.slug()) {
             promises.push(test.generateSlug(user));
         }
-    } else
+    } else {
+        // Existing test
+
         test.set('totalQuestions', test.questions().length);
+
+        // If publicity has changed to private, remove from search index.
+        if (!test.isPublic()) {
+            promises.push(test.deleteIndexObject());
+        }
+    }
 
     Parse.Promise.when(promises).then(function () {
         response.success();
@@ -88,13 +96,9 @@ Parse.Cloud.afterSave(Test, function (request) {
     } else {
         // Existing test logic
     }
-    if(test.isPublic()) {
+    if (test.isPublic()) {
         // Add/Update search index (async)
         test.indexObject();
-    } else {
-        // Deletes object from index
-        // TODO set flag on object that have been index, to avoid deleting non-indexed objs.
-        test.deleteIndexObject();
     }
 });
 

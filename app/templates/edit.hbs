@@ -57,8 +57,8 @@
                     </article>
                     <article class="col-md-5">
                         <div class="textarea-holder">
-                            {{textarea value=model.description class="form-control" placeholder="Help other's understand
-                        what this test is about."}}
+                            {{textarea value=model.description class="form-control"
+                            placeholder="Help other's understand what this test is about."}}
                         </div>
                     </article>
                 </section>
@@ -91,7 +91,7 @@
                             </label>
                         </div>
                         <div class="btn-group">
-                            <button class="btn btn-flat btn-icon margin-right-8" {{action 'alertToDeleteTest' model}}>
+                            <button class="btn btn-flat btn-icon margin-right-8" {{action 'deleteTest' model}}>
                                 <i class="mdi-action-delete"></i>
                             </button>
                             <button class="btn btn-primary" {{action 'finishedEditing'}}>
@@ -118,8 +118,8 @@
                                 {{#link-to 'editQuestion' question.model}}
                                     Q{{friendly-index index}}: {{question.model.stem}}
                                 {{/link-to}}
-                                <i class="fa fa-minus-circle" {{action 'deleteQuestion' question.model}}
-                                   title="Delete this question"></i>
+                                <i class="fa fa-minus-circle" {{action 'deleteQuestion'
+                                question.model question.isCurrent}} title="Delete this question"></i>
                             </div>
                         {{/link-to}}
                     {{/each}}

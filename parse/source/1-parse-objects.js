@@ -140,7 +140,7 @@ Parse.Object.prototype.fetchIfNeeded = function () {
  */
 Parse.Object.prototype.deleteIndexObject = function () {
     var index;
-    switch(this.className) {
+    switch (this.className) {
         case "Test":
             index = testIndex;
             break;
@@ -876,7 +876,8 @@ var Test = Parse.Object.extend("Test", {
      */
     setDefaults: function () {
         var numberProps = ["quality", "averageScore",
-            "averageUniqueScore", "numberOfAttempts", "numberOfUniqueAttempts"];
+            "averageUniqueScore", "numberOfAttempts", "numberOfUniqueAttempts",
+            "totalQuestions"];
 
         _.each(numberProps, function (prop) {
             this.set(prop, 0);
