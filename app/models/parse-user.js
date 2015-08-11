@@ -1,12 +1,13 @@
 import Ember from 'ember';
 import DS from 'ember-data';
 import ParseMixin from '../mixins/ember-parse-mixin';
+import ParseUserModel from 'ember-parse-adapter/models/parse-user';
 
 /**
  * Parse User object implementation
  * @type {DS.Model}
  */
-var ParseUser =  DS.Model.extend(ParseMixin, {
+var ParseUser =  ParseUserModel.extend(ParseMixin, {
     /*
      * Account
      */
@@ -159,7 +160,7 @@ var ParseUser =  DS.Model.extend(ParseMixin, {
     }.property('createdTests.length', 'savedTests.length')
 });
 
-ParseUser.reopenClass({
+ParseUserModel.reopenClass({
 
     requestPasswordReset: function (email) {
         var adapter = this.get('store').adapterFor(this);
@@ -171,7 +172,7 @@ ParseUser.reopenClass({
         );
     },
 
-    login: function (store, data) {
+    loginDeprecated: function (store, data) {
         if (Ember.isEmpty(this.typeKey)) {
             throw new Error('Parse login must be called on a model fetched via store.modelFor');
         }
@@ -195,7 +196,7 @@ ParseUser.reopenClass({
      * - Changed adapter.buildURL() to send "signup" as the param
      * - This is intercepted by pathForType, which is also modified by Omair
      */
-    signup: function (store, data) {
+    signupDeprecated: function (store, data) {
         if (Ember.isEmpty(this.typeKey)) {
             throw new Error('Parse signup must be called on a model fetched via store.modelFor');
         }
@@ -216,6 +217,7 @@ ParseUser.reopenClass({
         );
     },
 
+    // KEEP THIS!
     validateSessionToken: function (store, sessionToken) {
         if (Ember.isEmpty(this.typeKey)) {
             throw new Error('Parse login must be called on a model fetched via store.modelFor');
@@ -224,11 +226,10 @@ ParseUser.reopenClass({
         var adapter = store.adapterFor(model);
         adapter.headers['X-Parse-Session-Token'] = sessionToken;
         var serializer = store.serializerFor(model);
-        return adapter.ajax(adapter.buildURL("users/me"), "GET", {data: {}}).then(
+        return adapter.ajax("https://api.parse.com/1/users/me", "GET", {data: {}}).then(
             function (response) {
                 serializer.normalize(model, response);
-                var record = store.push(model, response);
-                return record;
+                return store.push(model, response);
             },
             function (response) {
                 return Ember.RSVP.reject(response.responseJSON);

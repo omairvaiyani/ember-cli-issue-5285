@@ -26,10 +26,10 @@ export default {
             var ParseUser = store.modelFor('parse-user'),
                 currentUser;
 
-            ParseUser.validateSessionToken(store, sessionToken).then(function (user) {
-                if (!user)
-                    return;
-                currentUser = user;
+            ParseUser.validateSessionToken(store, sessionToken).then(function (response) {
+                if (!(currentUser = response))
+                    return new Parse.Promise().error("No Current User found.");
+
                 application.register('user:current', currentUser, {instantiate: false, singleton: true});
                 application.inject('controller:application', 'currentUser', 'user:current');
 

@@ -1,4 +1,3 @@
-import EmberParseAdapter from '../adapters/parse';
 
 export default {
     after: "ember-data",
@@ -13,6 +12,6 @@ export default {
      * @param application
      */
     initialize: function (container, application) {
-        EmberParseAdapter.setupContainer(container);
+        //EmberParseAdapter.setupContainer(container);
     }
 };

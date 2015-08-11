@@ -1,11 +1,4 @@
-import config from './../config/environment';
-import EmberParseAdapter from '../adapters/parse';
+import adapter from 'ember-parse-adapter/adapters/application';
 
-/*
- * Parse Initialzed in app.js
- */
-export default EmberParseAdapter.Adapter.extend({
-    applicationId: config.parse.appId,
-    restApiId: config.parse.restKey,
-    javascriptId: config.parse.jsKey
-});
+/** @module adapters/application */
+export default adapter;

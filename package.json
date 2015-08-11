@@ -36,6 +36,12 @@
     "ember-cli-uglify": "^1.0.1",
     "ember-data": "1.0.0-beta.17",
     "ember-export-application-global": "^1.0.2",
+    "ember-parse-adapter": "0.5.3"
+  },
+  "dependencies": {
+    "algoliasearch": "^3.7.5",
+    "ember-cli-knob": "^0.1.2",
+    "phantomjs": "^1.9.16",
     "ember-google-map": "0.0.8",
     "ember-infinite-scroll": "0.2.4",
     "ember-radio-buttons": "^2.1.0",
@@ -51,10 +57,5 @@
     "grunt-s3": "^0.2.0-alpha.3",
     "grunt-shell": "^1.1.1",
     "stripe": "^2.9.0"
-  },
-  "dependencies": {
-    "algoliasearch": "^3.7.5",
-    "ember-cli-knob": "^0.1.2",
-    "phantomjs": "^1.9.16"
   }
 }

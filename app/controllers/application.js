@@ -1,6 +1,5 @@
 import Ember from 'ember';
 import ParseHelper from '../utils/parse-helper';
-import EmberParseAdapter from '../adapters/parse';
 import ExpandingSearch from '../utils/expanding-search';
 import EventTracker from '../utils/event-tracker';
 import config from './../config/environment';
@@ -155,8 +154,8 @@ export default Ember.Controller.extend({
      */
     manageCurrentUserSession: function () {
         var currentUser = this.get('currentUser');
-
         if (currentUser) {
+
             localStorage.sessionToken = currentUser.get('sessionToken');
             var adapter = this.store.adapterFor(currentUser);
             adapter.headers['X-Parse-Session-Token'] = currentUser.get('sessionToken');
@@ -165,6 +164,7 @@ export default Ember.Controller.extend({
                 return this.get('controllers.index').myTestsListUpdate();
             else
                 this.send('incrementLoadingItems');
+
             ParseHelper.cloudFunction(this, 'initialiseWebsiteForUser', {}).then(function (response) {
                 ParseHelper.handleResponseForInitializeWebsiteForUser(this.store, currentUser, response);
                 this.get('controllers.index').myTestsListUpdate();

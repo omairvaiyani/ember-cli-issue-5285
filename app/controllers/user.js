@@ -2,7 +2,6 @@
 import Ember from 'ember';
 import CurrentUser from '../mixins/current-user';
 import ParseHelper from '../utils/parse-helper';
-import EmberParseAdapter from '../adapters/parse';
 
 export default Ember.ObjectController.extend(CurrentUser, {
     loading: {
@@ -318,12 +317,12 @@ export default Ember.ObjectController.extend(CurrentUser, {
                 this.set('model.name', this.get('temporaryChanges.name'));
             this.send('incrementLoadingItems');
             if (this.get('temporaryChanges.profileImageURL.length')) {
-                var profilePicture = new EmberParseAdapter.File(this.get('temporaryChanges.profilePicture').name(),
+                var profilePicture = new this.store.adapterFor('parse-user').File(this.get('temporaryChanges.profilePicture').name(),
                     this.get('temporaryChanges.profilePicture').url());
                 this.set('profilePicture', profilePicture);
             }
             if (this.get('temporaryChanges.coverImageURL.length')) {
-                var coverPicture = new EmberParseAdapter.File(this.get('temporaryChanges.coverPicture').name(),
+                var coverPicture = new this.store.adapterFor('parse-user').File(this.get('temporaryChanges.coverPicture').name(),
                     this.get('temporaryChanges.coverPicture').url());
                 this.set('coverImage', coverPicture);
             }

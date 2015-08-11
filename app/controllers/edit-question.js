@@ -1,6 +1,5 @@
 import Ember from 'ember';
 import validateQuestion from '../utils/validate-question';
-import EmberParseAdapter from '../adapters/parse';
 import ParseHelper from '../utils/parse-helper';
 import CurrentUser from '../mixins/current-user';
 /*
@@ -215,7 +214,7 @@ export default Ember.Controller.extend(CurrentUser, {
                  */
                 var parseFile = new Parse.File('image.jpg', {base64: this.get('imageFile.base64')});
                 return parseFile.save().then(function (image) {
-                    var image = new EmberParseAdapter.File(image.name(), image.url());
+                    var image = new this.store.adapterFor('parse-user').File(image.name(), image.url());
                     this.set('model.image', image);
                     return this.get('model').save();
                 }.bind(this)).
@@ -266,7 +265,7 @@ export default Ember.Controller.extend(CurrentUser, {
             if (this.get('imageFile.base64.length')) {
                 var parseFile = new Parse.File('image.jpg', {base64: this.get('imageFile.base64')});
                 return parseFile.save().then(function (image) {
-                    var image = new EmberParseAdapter.File(image.name(), image.url());
+                    var image = new this.store.adapterFor('parse-user').File(image.name(), image.url());
                     this.set('model.image', image);
                     return this.get('model').save();
                 }.bind(this)).then(function () {
