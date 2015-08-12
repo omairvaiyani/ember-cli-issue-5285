@@ -2,6 +2,8 @@ import StringHelper from '../utils/string-helper';
 
 export default {
     generatePointer: function (object, className) {
+        if(!object)
+            return "";
         if (!className)
             className = object.constructor.typeKey;
         if (className === "parseUser")
@@ -254,6 +256,12 @@ export default {
             currentUser.get('savedTests').clear();
             currentUser.get('savedTests').addObjects(savedTests);
         }
+        // Latest Test Attempts
+        if (response.latestTestAttempts) {
+            var latestTestAttempts = this.extractRawPayload(store, 'attempt',
+                response.latestTestAttempts);
+            currentUser.set('latestTestAttempts', latestTestAttempts);
+        }
         // URs
         if (response.uniqueResponses) {
             var uniqueResponses = this.extractRawPayload(store, 'unique-response',
@@ -272,6 +280,13 @@ export default {
             var srLatestTest = this.extractRawPayload(store, 'test',
                 response.srLatestTest);
             currentUser.set('srLatestTest', srLatestTest);
+        }
+
+        // SR All Tests
+        if (response.srAllTests) {
+            var srAllTests = this.extractRawPayload(store, 'test',
+                response.srAllTests);
+            currentUser.set('srAllTests', srAllTests);
         }
     }
 

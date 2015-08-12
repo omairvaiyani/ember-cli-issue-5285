@@ -1,9 +1,5 @@
 import DS from 'ember-data';
-
-import
-ParseMixin
-from
-'../mixins/ember-parse-mixin';
+import ParseMixin from '../mixins/ember-parse-mixin';
 
 export default DS.Model.extend(ParseMixin, {
     stem: DS.attr('string', {defaultValue:""}),
@@ -17,6 +13,7 @@ export default DS.Model.extend(ParseMixin, {
     difficulty: DS.attr('number'),
     tags: DS.attr(),
     isPublic: DS.attr('boolean'),
+
     parseClassName: function() {
         return "Question";
     }

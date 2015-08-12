@@ -9,6 +9,8 @@
 
                     <p class="small margin-bottom-8">
                         {{test.totalQuestions}} {{pluralize-word 'question' test.totalQuestions}}
+                        {{#if test.latestAttempt}} | Last attempt {{test.latestAttempt.score}}%
+                            {{simple-date test.latestAttempt.createdAt}}{{/if}}
                     </p>
 
                     <p class="margin-bottom-8">{{text-preview test.description 120}}</p>
@@ -75,12 +77,14 @@
                                         <li><a href="javascript:void(0)" {{action 'shareTest'}}>Share</a></li>
                                     {{/if}}
                                     {{#if showDelete}}
-                                        <li class="divider"></li>
                                         <li><a href="javascript:void(0)" {{action 'deleteTest'}}>Delete</a></li>
                                     {{/if}}
                                     {{#if showRemove}}
-                                        <li class="divider"></li>
                                         <li><a href="javascript:void(0)" {{action 'removeTest'}}>Remove</a></li>
+                                    {{/if}}
+                                    {{#if showDismiss}}
+                                        <li><a href="javascript:void(0)" {{action 'dismissLatestSRTest'}}>Dismiss</a>
+                                        </li>
                                     {{/if}}
                                 </ul>
                             </div>

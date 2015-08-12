@@ -5,6 +5,16 @@ export default Ember.Mixin.create({
     //objectId: DS.attr('string'),
     createdAt: DS.attr('date'),
     updatedAt: DS.attr('date'),
+
+    /**
+     * @Deprecated
+     *
+     *
+     * @param recordType
+     * @param property
+     * @param parentRecord
+     * @returns {*}
+     */
     getIncludedProperty: function (recordType, property, parentRecord) {
         if(!parentRecord)
             return this.get('_data.'+recordType+"."+property);
@@ -12,6 +22,16 @@ export default Ember.Mixin.create({
             return this.get('_data.' + parentRecord + "._data." + recordType + "." + property);
         }
     },
+
+    /**
+     * @Deprecated
+     *
+     *
+     * @param recordType
+     * @param property
+     * @param parentRecord
+     * @returns {*}
+     */
     getUserProfileImageUrl: function (relationshipName) {
         if (this.get('_data.'+relationshipName+'._data.profilePicture.url')) {
             return this.get('_data.'+relationshipName+'._data.profilePicture.secureUrl');

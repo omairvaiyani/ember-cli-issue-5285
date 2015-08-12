@@ -161,6 +161,14 @@ export default Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, Estimat
         undoObjectDelete: function (returnItem, error) {
             // Called if object delete is undo'd,
             // TODO see if scrolling to test helps
+        },
+
+        dismissLatestSRTest: function () {
+            this.send('addNotification',
+                {type: "clock", title: "Test dismissed for now", message: "You can still take it later."});
+
+            this.set('currentUser.srLatestTestDismissed', true);
+            this.get('currentUser').save();
         }
 
     }

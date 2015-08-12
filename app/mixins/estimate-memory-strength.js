@@ -17,7 +17,8 @@ export default Ember.Mixin.create({
                 // For tests without URs, we have estimated memory strengths
                 _.each(response.estimates, function (object) {
                     var test = this.get('testsToFigureOutMemoryStrengthFor').findBy('id', object.test.objectId);
-                    test.set('estimatedMemoryStrength', object.estimatedMemoryStrength);
+                    if (test)
+                        test.set('estimatedMemoryStrength', object.estimatedMemoryStrength);
                 }.bind(this));
 
                 // This automatically triggers tests.@each.uniqueResponses to update from data store.
@@ -25,7 +26,8 @@ export default Ember.Mixin.create({
 
                 // This stops the test-card component from asking to fetch memory strength data again.
                 this.get('testsToFigureOutMemoryStrengthFor').forEach(function (test) {
-                    test.set('memoryStrengthDataHasBeenFetched', true);
+                    if (test)
+                        test.set('memoryStrengthDataHasBeenFetched', true);
                 });
 
                 this.get('testsToFigureOutMemoryStrengthFor').clear();

@@ -12,9 +12,12 @@
  * - Send all categories
  * If currentUser
  * - EducationCohort
- * - Created tests
- * - Saved tests
- * - Unique responses
+ * - Created tests (limit 200)
+ * - Saved tests (limit 200)
+ * - Unique responses (limit 1000)
+ * - srLatestTest
+ * - srAllTests (limit 10)
+ * - latestTestAttempts (limit 400)
  */
 Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
     var user = request.user,
@@ -67,8 +70,9 @@ Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
         // Perform the query, then update memoryStrength + save
         promises.push(UniqueResponse.findWithUpdatedMemoryStrengths(uniqueResponsesQuery));
 
-        if (user.srLatestTest())
+        if (user.srLatestTest()) {
             promises.push(user.fetchSRLatestTest());
+        }
 
         // Seems to be a limit of 6 parallel promises
     }
@@ -88,24 +92,33 @@ Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
                 if (user.educationCohort())
                     promises.push(user.fetchEducationCohort());
 
+                var srAllTestsQuery = user.srAllTests().query();
+                srAllTestsQuery.descending('createdAt');
+                srAllTestsQuery.limit(10);
+                promises.push(srAllTestsQuery.find());
+
+                var latestTestAttemptsQuery = user.latestTestAttempts().query();
+                // Get latest scores for all myTests list tests AND latest SR test
+                var testsToGetLatestAttemptsFor = createdTests.concat(savedTests);
+                if(srLatestTest)
+                    testsToGetLatestAttemptsFor.push(srLatestTest);
+
+                latestTestAttemptsQuery.containedIn('test', testsToGetLatestAttemptsFor);
+                latestTestAttemptsQuery.limit(400);
+                latestTestAttemptsQuery.descending("createdAt");
+                promises.push(latestTestAttemptsQuery.find());
+
                 return Parse.Promise.when(promises);
             }
-        }).then(function (educationCohort) {
+        }).then(function (educationCohort, srAllTests, latestTestAttempts) {
             result.educationCohort = educationCohort;
+            result.srAllTests = srAllTests;
+            result.latestTestAttempts = latestTestAttempts;
             /* var messagesQuery = new Parse.Query("Message");
              messagesQuery.equalTo('to', user);
              messagesQuery.descending("createdAt");
              messagesQuery.limit(5);
              promises.push(messages = messagesQuery.find());
-
-             var attemptsQuery = new Parse.Query("Attempt");
-             attemptsQuery.equalTo('user', user);
-             attemptsQuery.descending("createdAt");
-             attemptsQuery.equalTo('isProcessed', true);
-             attemptsQuery.exists('test');
-             attemptsQuery.include('test');
-             attemptsQuery.limit(50);
-             promises.push(attempts = attemptsQuery.find());
 
              var followersQuery = user.relation("followers").query();
              promises.push(followers = followersQuery.find());
@@ -143,20 +156,43 @@ Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
  */
 Parse.Cloud.define('getMemoryStrengthForTests', function (request, response) {
     var user = request.user,
-        tests = request.params.tests;
+        tests = request.params.tests,
+        uniqueResponses;
 
     if (!user || !tests || !tests.length)
         return response.error("You must be logged in and send tests.");
 
-    var urQuery = user.uniqueResponses().query(),
-        testPointers = Parse.Object.generatePointers('Test', tests),
-        uniqueResponses = response;
+    // Get Tests first
+    var testQuery = new Parse.Query(Test),
+        testIds;
 
-    urQuery.containedIn('test', testPointers);
-    urQuery.limit(1000);
+    if (typeof tests[0] === "string")
+        testIds = tests;
+    else
+        testIds = _.map(tests, function (test) {
+            return test.id;
+        });
 
-    Parse.Cloud.useMasterKey();
-    UniqueResponse.findWithUpdatedMemoryStrengths(urQuery).then(function (response) {
+    testQuery.containedIn("objectId", testIds);
+    testQuery.find().then(function (tests) {
+        var questionPointers = [];
+
+        _.each(tests, function (test) {
+            if (test.questions()) {
+                _.each(test.questions(), function (question) {
+                    questionPointers.push(question);
+                });
+            }
+        });
+
+        var urQuery = user.uniqueResponses().query();
+
+        urQuery.containedIn('question', questionPointers);
+        urQuery.limit(1000);
+
+        Parse.Cloud.useMasterKey();
+        return UniqueResponse.findWithUpdatedMemoryStrengths(urQuery);
+    }).then(function (response) {
         uniqueResponses = response;
         var testIdsWithUrs = [];
 
@@ -179,6 +215,7 @@ Parse.Cloud.define('getMemoryStrengthForTests', function (request, response) {
     }, function (error) {
         response.error(error);
     });
+
 });
 
 /**
@@ -345,7 +382,7 @@ Parse.Cloud.define('deleteObjects', function (request, response) {
     promise.then(function () {
         response.success();
     }, function (error) {
-       response.error(error);
+        response.error(error);
     });
 });
 /**
@@ -509,7 +546,7 @@ Parse.Cloud.define('addOrRemoveRelation', function (request, response) {
     var user = request.user,
         parentObjectClass = request.params.parentObjectClass,
         parentObjectId = request.params.parentObjectId,
-        parentObject = new Parse.Object(parentObjectClass),
+        parentObject = new Parse.Object(parekntObjectClass),
         relationKey = request.params.relationKey,
         isTaskToAdd = request.params.isTaskToAdd,
         childObjectClass = request.params.childObjectClass,
@@ -834,12 +871,11 @@ Parse.Cloud.define('activateSpacedRepetitionForUser', function (request, respons
                 "slots": []
             };
             _.each(dailySlots, function (slot) {
+                // Set which slots should be active by default
                 var daySlot = _.clone(slot);
-                if (((dayName === "Thursday" || dayName === "Friday") && slot.label === "evening") ||
-                    ((dayName === "Saturday" || dayName === "Sunday") && slot.label === "morning"))
-                    daySlot.active = true;
-                else
-                    daySlot.active = false;
+                daySlot.active = ((dayName === "Thursday" || dayName === "Friday") && slot.label === "evening") ||
+                    ((dayName === "Saturday" || dayName === "Sunday") && slot.label === "morning");
+
                 day.slots.push(daySlot);
             });
             doNotDisturbTimes.push(day);

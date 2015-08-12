@@ -133,7 +133,8 @@ function srCycleTask(task) {
                         scheduleForSR.time.year() + "-" + scheduleForSR.slot.label);
 
                     var questions = [],
-                        testTags = [];
+                        testTags = [],
+                        totalDifficulty = 0;
                     // Though we want mostly questions with the user's lowest memoryStrengths,
                     // we don't want to be completely linear and predictable.
                     // By shuffling the lowest ~60, and then taking the first [maxQuestions],
@@ -141,6 +142,7 @@ function srCycleTask(task) {
                     _.each(_.shuffle(uniqueResponses), function (uniqueResponse, index) {
                         if (index < srIntensityLevel.maxQuestions) {
                             questions.push(uniqueResponse.get('question'));
+                            totalDifficulty += uniqueResponse.question().difficulty();
                             _.each(uniqueResponse.get('question').get('tags'), function (tag) {
                                 if (!_.contains(testTags, tag))
                                     testTags.push(tag);
@@ -148,12 +150,16 @@ function srCycleTask(task) {
                         }
                     });
                     test.set('questions', questions);
+                    test.set('totalQuestions', questions.length);
+                    test.set('difficulty', Math.round(totalDifficulty / test.totalQuestions()));
                     test.set('tags', testTags);
                     return test.save();
                 }).then(function (test) {
                     if (!test)
                         return;
                     user.set('srLatestTest', test);
+                    user.set('srLatestTestDismissed', false);
+                    user.srAllTests().add(test);
                     testsGenerated++;
 
                     // Save user and create a task for the user to be notified

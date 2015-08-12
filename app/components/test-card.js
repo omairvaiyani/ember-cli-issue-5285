@@ -11,8 +11,8 @@ export default Ember.Component.extend({
 
     showMenuOverFlow: function () {
         return this.get('showDelete') || this.get('showEdit') || this.get('showShare') ||
-            this.get('showSave') || this.get('showRemove');
-    }.property('showDelete', 'showEdit', 'showShare', 'showSave', 'showRemove'),
+            this.get('showSave') || this.get('showRemove') || this.get('showDismiss');
+    }.property('showDelete', 'showEdit', 'showShare', 'showSave', 'showRemove', 'showDismiss'),
 
     showProfilePicture: function () {
         return !this.get('test.isGenerated');
@@ -71,6 +71,18 @@ export default Ember.Component.extend({
     }.property('isCurrentUserTheAuthor', 'isTestSaved', 'test.isGenerated'),
 
     /**
+     * @Property Show Dismiss
+     * True if:
+     * - Explicitly told (isLatestSRTest)
+     *
+     * @returns {boolean}
+     */
+    showDismiss: function () {
+        return this.get('isLatestSRTest');
+    }.property('isLatestSRTest'),
+
+
+    /**
      * @Property Is Test Saved
      * Dictates the showSave and showRemove properties.
      */
@@ -103,6 +115,10 @@ export default Ember.Component.extend({
 
         removeTest: function () {
             this.get('parentController').send('removeCommunityTest', this.get('test'));
+        },
+
+        dismissLatestSRTest: function () {
+            this.get('parentController').send('dismissLatestSRTest');
         },
 
         openModal: function () {

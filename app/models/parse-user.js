@@ -11,6 +11,7 @@ var ParseUser =  ParseUserModel.extend(ParseMixin, {
     /*
      * Account
      */
+    password: null,
     username: DS.attr('string'),
     email: DS.attr('string'),
     emailVerified: DS.attr('boolean'),
@@ -99,9 +100,10 @@ var ParseUser =  ParseUserModel.extend(ParseMixin, {
     /*
      * Interactions
      */
-    testAttempts: DS.attr(),
-    followers: DS.attr(),
-    following: DS.attr(),
+    testAttempts: new Ember.A(),
+    latestTestAttempts: new Ember.A(),
+    followers: new Ember.A(),
+    following: new Ember.A(),
 
     /*
      * Spaced Repetition
@@ -109,14 +111,15 @@ var ParseUser =  ParseUserModel.extend(ParseMixin, {
     // No need for this as test is set manually after cloud function fetches
     // This stops ember-data from trying to fetch it AND its questions separately
     //srLatestTest:  DS.belongsTo('test', {async: true}),
-    srCompletedAttempts: DS.attr(),
-    srNextDue: DS.attr('parse-date'),
+    srNextDue: DS.attr('date'),
     uniqueResponses: new Ember.A(),
     srActivated: DS.attr('boolean'),
     srIntensityLevel: DS.attr('number'),
     srNotifyByEmail: DS.attr('boolean'),
     srNotifyByPush: DS.attr('boolean'),
     srDoNotDisturbTimes: DS.attr(),
+    srLatestTestDismissed: DS.attr('boolean'),
+    srCompletedAttempts: new Ember.A(),
 
     /*
      * Stats

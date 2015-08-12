@@ -38,7 +38,9 @@
     </article>
     <article class="col-md-9 col-fix-right">
         {{#if currentUser.srLatestTest}}
-            {{test-card test=currentUser.srLatestTest parentController=this}}
+            {{#unless currentUser.srLatestTestDismissed}}
+                {{test-card test=currentUser.srLatestTest parentController=this isLatestSRTest=true}}
+            {{/unless}}
         {{/if}}
         <section class="row margin-top-16">
             <article class="col-xs-3 col-sm-4">

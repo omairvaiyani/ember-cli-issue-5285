@@ -342,6 +342,8 @@ Parse.User.prototype.fetchSRLatestTest = function () {
         });
     } else
         promise.resolve(null);
+
+    return promise;
 };
 /**
  * @Function Add Unique Responses
@@ -503,11 +505,39 @@ Parse.User.prototype.educationCohort = function () {
     return this.get('educationCohort');
 };
 /**
+ * @Property testAttempts
+ * @returns {Parse.Relation<Attempt>}
+ */
+Parse.User.prototype.testAttempts = function () {
+    return this.relation('testAttempts');
+};
+/**
+ * @Property latestTestAttempts
+ * @returns {Parse.Relation<Attempt>}
+ */
+Parse.User.prototype.latestTestAttempts = function () {
+    return this.relation('latestTestAttempts');
+};
+/**
  * @Property srLatestTest
  * @returns {Test}
  */
 Parse.User.prototype.srLatestTest = function () {
     return this.get('srLatestTest');
+};
+/**
+ * @Property srAllTests
+ * @returns {Parse.Relation<Test>}
+ */
+Parse.User.prototype.srAllTests = function () {
+    return this.relation('srAllTests');
+};
+/**
+ * @Property srCompletedAttempts
+ * @returns {Parse.Relation<Attempt>}
+ */
+Parse.User.prototype.srCompletedAttempts = function () {
+    return this.relation('srCompletedAttempts');
 };
 /****
  * ---------
@@ -860,6 +890,22 @@ var Test = Parse.Object.extend("Test", {
     },
 
     /**
+     * @Property totalQuestions
+     * @return {Integer}
+     */
+    totalQuestions: function () {
+        return this.get('totalQuestions');
+    },
+
+    /**
+     * @Property isSpacedRepetition
+     * @return {Boolean}
+     */
+    isSpacedRepetition: function () {
+        return this.get('isSpacedRepetition');
+    },
+
+    /**
      * @Function Set Defaults
      * Adds 0, booleans and empty arrays to
      * default properties. This reduces
@@ -891,8 +937,11 @@ var Test = Parse.Object.extend("Test", {
                 this.set(prop, false);
         }.bind(this));
 
-        if (!this.get('questions'))
+        if (!this.questions())
             this.set('questions', []);
+        else {
+            this.set('totalQuestions', this.questions().length);
+        }
 
         if (this.author()) {
             var ACL = new Parse.ACL(this.author());
@@ -1307,13 +1356,18 @@ var Attempt = Parse.Object.extend("Attempt", {
      * else
      * {public: read}
      *
-     * @returns {Attempt}
+     * Set if attempt is for a SR test.
+     *
+     * @returns {Parse.Promise<Attempt>}
      */
     setDefaults: function () {
         if (this.timeCompleted() && this.timeStarted()) {
             var timeTaken = moment(this.timeCompleted()).diff(moment(this.timeStarted()), 'second');
             this.set('timeTaken', timeTaken);
         }
+
+        if (this.score())
+            this.set('score', Math.round(this.score()));
 
         var ACL = new Parse.ACL();
         if (this.user()) {
@@ -1323,7 +1377,10 @@ var Attempt = Parse.Object.extend("Attempt", {
         }
         this.setACL(ACL);
 
-        return this;
+        return this.test().fetchIfNeeded().then(function (test) {
+            this.set('isSpacedRepetition', test.isSpacedRepetition());
+            return this;
+        }.bind(this));
     }
 }, {});
 

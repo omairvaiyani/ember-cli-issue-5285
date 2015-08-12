@@ -1,8 +1,7 @@
 import DS from 'ember-data';
 import ParseMixin from '../mixins/ember-parse-mixin';
-import CurrentUser from '../mixins/current-user';
 
-export default DS.Model.extend(ParseMixin, CurrentUser, {
+export default DS.Model.extend(ParseMixin, {
     title: DS.attr('string'),
     author: DS.belongsTo('parse-user', {defaultValue: null, async: true}),
     category: DS.belongsTo('category', {defaultValue: null, async: true}),
@@ -24,6 +23,19 @@ export default DS.Model.extend(ParseMixin, CurrentUser, {
     totalQuestions: DS.attr('number'),
     difficulty: DS.attr('number', {defaultValue: 50}),
 
+
+    /**
+     * @Property Latest Attempts
+     * Loops through all locally stored attempts
+     * Finds ones that matches this test
+     * and returns the latest one.
+     */
+    latestAttempt: function () {
+        var attempts = this.store.all('attempt'),
+            latestAttempts = attempts.filterBy('test.id', this.get('id')).sortBy('createdAt').reverse();
+        return latestAttempts.objectAt(0);
+    }.property(),
+
     /**
      * @Property uniqueResponses
      * Locally set by filtering
@@ -32,9 +44,18 @@ export default DS.Model.extend(ParseMixin, CurrentUser, {
      */
     uniqueResponses: function () {
         return this.store.filter('unique-response', function (uniqueResponse) {
-            return uniqueResponse.get('test.id') === this.get('id');
+            return _.contains(this.get('questionIds'), uniqueResponse.get('question.id'));
         }.bind(this));
-    }.property(),
+    }.property('questionIds.length'),
+
+    // Needed for uniqueResponses
+    questionIds: function () {
+        var questionIds = [];
+        this.get('questions').forEach(function (question) {
+            questionIds.push(question.get('id'));
+        });
+        return questionIds;
+    }.property('questions.@each.id'),
 
     /**
      * @Property memoryStrength

@@ -137,7 +137,7 @@ Parse.Cloud.beforeSave(Attempt, function (request, response) {
         promises = [];
 
     if (attempt.isNew()) {
-        attempt.setDefaults();
+        promises.push(attempt.setDefaults());
     }
 
     Parse.Promise.when(promises).then(function () {
@@ -153,18 +153,45 @@ Parse.Cloud.beforeSave(Attempt, function (request, response) {
  *
  * New Attempt:
  * - Set task for test stats to be updated
- *
+ * - Update user attempts relations
  */
 Parse.Cloud.afterSave(Attempt, function (request) {
     var attempt = request.object,
+        user = request.user,
         promises = [];
 
     if (!attempt.existed()) {
         // Test stats will be updated within 15 minutes
-        var mainPromise = taskCreator('Statistics', 'updateTestStatsAfterAttempt',
+        var taskCreatorPromise = taskCreator('Statistics', 'updateTestStatsAfterAttempt',
             {}, [attempt.test(), attempt.questions()]);
 
-        promises.push(mainPromise);
+        var userUpdatePromise = attempt.test().fetchIfNeeded().then(function (test) {
+            // All Spaced Rep attempts go here
+            if (test.isSpacedRepetition())
+                user.srCompletedAttempts().add(attempt);
+            // All other non-generated attempts go here
+            else if (!test.isGenerated())
+                user.testAttempts().add(attempt);
+
+            // Find previous 'latestTestAttempts' for this test+user
+            var latestAttemptsQuery = user.latestTestAttempts().query();
+            latestAttemptsQuery.equalTo('test', test);
+            return latestAttemptsQuery.find();
+        }).then(function (previousAttempts) {
+            // Ideally, there should be 0 or 1 previousAttempts.
+            // But if a bug caused multiple previousAttempts on the
+            // same test, we'll make sure they're removed in this
+            // instance.
+            _.each(previousAttempts, function (previousAttempt) {
+                user.latestTestAttempts().remove(previousAttempt);
+            });
+            // Add this new attempt as the latest
+            user.latestTestAttempts().add(attempt);
+            user.save();
+        });
+
+        promises.push(taskCreatorPromise);
+        promises.push(userUpdatePromise);
     }
 
     Parse.Promise.when(promises);

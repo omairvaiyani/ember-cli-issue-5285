@@ -21,8 +21,12 @@ export default {
         var sessionToken = localStorage.sessionToken,
             store = container.lookup('store:main');
         this.store = store;
+
         application.deferReadiness();
+
         if (sessionToken) {
+            // Try to validate session token
+
             var ParseUser = store.modelFor('parse-user'),
                 currentUser;
 
@@ -46,12 +50,18 @@ export default {
                     ParseHelper.handleResponseForInitializeWebsiteForUser(store, currentUser, response);
                 },
                 function (error) {
+                    // TODO if this is called due to the sessionToken being expired,
+                    // We have not been able to get categories and config. Code
+                    // needs refactoring.
+
                     console.dir(error);
                 }).then(function () {
                     $("#appLoading").hide();
                     application.advanceReadiness();
                 });
         } else {
+            // Session not available, simply load categories and config.
+
             ParseHelper.cloudFunction(this, 'initialiseWebsiteForUser', {}).then(function (response) {
                 // Config
                 var parseConfig = response.config;

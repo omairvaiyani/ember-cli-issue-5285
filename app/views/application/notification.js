@@ -135,7 +135,8 @@ export default Ember.View.extend({
                 'create': 'fa-pencil-square-o',
                 'srs': 'srs',
                 'srs-error': 'srs-error',
-                'points': 'fa-gamepad'
+                'points': 'fa-gamepad',
+                'clock': 'fa-clock-o'
             };
         return hash[type] || '';
     }.property('content.type'),

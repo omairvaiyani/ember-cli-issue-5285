@@ -1,0 +1,12 @@
+<section class="row">
+    <article class="col-md-3">
+        <div class="well mini-well margin-top-16">
+            <h3>Progress</h3>
+        </div>
+    </article>
+    <article class="col-md-9 col-fix-right">
+        {{#each currentUser.srAllTests as |test|}}
+            {{test-card test=test parentController=this}}
+        {{/each}}
+    </article>
+</section>

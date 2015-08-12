@@ -40,92 +40,10 @@
                 <div role="tabpanel" class="tab-pane" id="overview">Overview tiles will go here</div>
                 <div role="tabpanel" class="tab-pane" id="activities">Activity list will go here</div>
                 <div role="tabpanel" class="tab-pane active" id="my-tests">{{partial 'index/user/my-tests'}}</div>
-                <div role="tabpanel" class="tab-pane" id="my-progress">3</div>
+                <div role="tabpanel" class="tab-pane" id="my-progress">{{partial 'index/user/my-progress'}}</div>
             </div>
 
         </div>
-
-        {{!--
-        <div class="row">
-            <div class="col-md-6">
-                <ul class="nav nav-tabs">
-                    <li role="presentation" class="active"><a href="#">Activities</a></li>
-                    <li role="presentation"><a href="#">My Tests</a></li>
-                    <li role="presentation"><a href="#">My Progress</a></li>
-                </ul>
-                <div class="card home-navigation">
-                    <button {{bind-attr class='homeIsActivities:current'}}
-                        {{action 'changeHomeNavigation' 'activities'}}>Activities
-                    </button>
-                    <button {{bind-attr class='homeIsTests:current'}}
-                        {{action 'changeHomeNavigation' 'tests'}}>My Tests
-                    </button>
-                    <button {{bind-attr class='homeIsAttempts:current'}}
-                        {{action 'changeHomeNavigation' 'attempts'}}>My Progress
-                    </button>
-                    {{#if homeIsTests}}
-                        <!-- Order selection -->
-                        <div class="order-tests btn-group pull-right">
-                            <button type="button" class="btn btn-default dropdown-toggle text-capitalize"
-                                    data-toggle="dropdown">
-                                {{orderTests}} <span class="caret"></span>
-                            </button>
-                            <ul class="dropdown-menu" role="menu">
-                                <li>
-                                    <a href="javascript:void(0)" {{action 'changeOrderOfTests' 'title'}}>Title</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0)" {{action 'changeOrderOfTests' 'recent'}}>Recent</a>
-                                </li>
-                                <li><a href="javascript:void(0)" {{action 'changeOrderOfTests' 'categorical'}}>Categorical</a>
-                                </li>
-                            </ul>
-                        </div>
-                    {{/if}}
-                </div>
-                <div class="row">
-                    <div class="col-md-12">
-                        {{#if homeIsActivities}}
-                            {{#each userAction in followingActions}}
-                                {{partial "user/item/action-card"}}
-                            {{/each}}
-                        {{/if}}
-                        {{#if homeIsTests}}
-                            {{#if testsAreOrderedByTitle}}
-                                {{#each testsOrderedByTitle itemController='user/item/test'}}
-                                    {{partial "user/item/test-card"}}
-                                {{/each}}
-                            {{/if}}
-                            {{#if testsAreOrderedByDate}}
-                                {{#each testsOrderedByDate itemController='user/item/test'}}
-                                    {{partial "user/item/test-card"}}
-                                {{/each}}
-                            {{/if}}
-                            {{#if testsAreOrderedByCategory}}
-                                {{#each testsOrderedByCategory}}
-                                    <div class="card margin-top-16"><p class="lead">{{name}} ({{tests.length}})</p>
-                                    </div>
-                                    {{#each tests itemController='user/item/test'}}
-                                        {{partial "user/item/test-card"}}
-                                    {{/each}}
-                                {{/each}}
-                            {{/if}}
-                        {{/if}}
-                        {{#if homeIsAttempts}}
-                            {{#each attempt in currentUser.attempts}}
-                                {{render "user/item/-attempt-card" attempt}}
-                            {{/each}}
-                        {{/if}}
-                        {{#if homeIsGroups}}
-                            {{#each group in currentUser.groups}}
-                                {{partial "groups/item/-group-card"}}
-                            {{/each}}
-                        {{/if}}
-                    </div>
-                </div>
-            </div>
-        </div>
-        --}}
     </div>
 </div>
 <div class="margin-bottom-16"></div>
