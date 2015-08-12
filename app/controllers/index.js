@@ -4,10 +4,12 @@ import TagsAndCats from '../mixins/tags-and-cats';
 import SortBy from '../mixins/sort-by';
 import EstimateMemoryStrength from '../mixins/estimate-memory-strength';
 import DeleteWithUndo from '../mixins/delete-with-undo';
+import ProgressCharts from '../mixins/progress-charts';
 import ParseHelper from '../utils/parse-helper';
 
 
-export default Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, EstimateMemoryStrength, DeleteWithUndo, {
+export default
+Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, EstimateMemoryStrength, DeleteWithUndo, ProgressCharts, {
     /*
      * GUEST MODE
      */
@@ -17,6 +19,48 @@ export default Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, Estimat
      */
     // Needed by SortByMixin and TestCardComponent
     controllerId: "myTests",
+
+    /**
+     * @Property Navigation Tabs
+     */
+    navigationTabs: function () {
+        var navigationTabs = new Ember.A();
+        _.each([{value: "overview", title: "Overview", active: false},
+                {value: "activities", title: "Activities", active: false},
+                {value: "tests", title: "Tests", active: false, partial: "index/user/my-tests"},
+                {value: "progress", title: "Progress", active: false, partial: "index/user/my-progress"}],
+            function (tabData) {
+                navigationTabs.pushObject(Ember.Object.create(tabData));
+            });
+        return navigationTabs;
+    }.property(),
+
+    setDefaultNavigationTab: function () {
+        if (localStorage.getItem(this.get('controllerId') + 'NavigationTab')) {
+            var navigationTab = this.get('navigationTabs').findBy('value',
+                localStorage.getItem(this.get('controllerId') + 'NavigationTab'));
+            this.send('switchTab', navigationTab);
+        } else {
+            this.get('navigationTabs').findBy('value', 'tests').set('active', true);
+        }
+    }.on('init'),
+
+    navigationTabDidSwitch: function () {
+        var onProgressTab = false;
+
+        this.get('navigationTabs').forEach(function (tab) {
+            if (tab.get('value') === 'progress' && tab.get('active'))
+                onProgressTab = true;
+        });
+
+        if (!onProgressTab)
+            this.send('closeChart');
+        else {
+            setTimeout(function () {
+                this.send('createChart');
+            }.bind(this), 500);
+        }
+    }.observes('navigationTabs.@each.active'),
 
     /**
      * @Property
@@ -143,16 +187,26 @@ export default Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, Estimat
         /*
          * USER MODE
          */
+        switchTab: function (tab) {
+            this.get('navigationTabs').forEach(function (o) {
+                o.set('active', false);
+            });
+            tab.set('active', true);
+            localStorage.setItem(this.get('controllerId') + 'NavigationTab', tab.get('value'));
+        },
+
         deleteTest: function (test) {
-          this.send('deleteObject', {array: this.get('currentUser.createdTests'), object: test,
-          title: "Test deleted!", message: test.get('title')});
+            this.send('deleteObject', {
+                array: this.get('currentUser.createdTests'), object: test,
+                title: "Test deleted!", message: test.get('title')
+            });
         },
 
         // Callback from DeleteWithUndoMixin
         preObjectDelete: function (returnItem) {
-            if(returnItem.type === "test") {
+            if (returnItem.type === "test") {
                 // If a user filtered to find a test to delete, clear the filter.
-                if(this.get('myTestsList.length') === 1 && this.get('myTestsListFilter.length')) {
+                if (this.get('myTestsList.length') === 1 && this.get('myTestsListFilter.length')) {
                     this.set('myTestsListFilter', "");
                 }
             }

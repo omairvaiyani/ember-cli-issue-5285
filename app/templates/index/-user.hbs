@@ -21,26 +21,22 @@
 
             <!-- Nav tabs -->
             <ul class="nav nav-tabs" role="tablist">
-                <li role="presentation">
-                    <a href="#overview" aria-controls="overview" role="tab" data-toggle="tab">Overview</a>
-                </li>
-                <li role="presentation">
-                    <a href="#activities" aria-controls="activities" role="tab" data-toggle="tab">Activities</a>
-                </li>
-                <li role="presentation" class="active">
-                    <a href="#my-tests" aria-controls="my-tests" role="tab" data-toggle="tab">Tests</a>
-                </li>
-                <li role="presentation">
-                    <a href="#my-progress" aria-controls="my-progress" role="tab" data-toggle="tab">Progress</a>
-                </li>
+                {{#each navigationTabs as |tab|}}
+                    <li role="presentation" {{bind-attr class="tab.active"}}>
+                        <a href="javascript:void(0)" role="tab" data-toggle="tab" {{action "switchTab" tab}}>
+                            {{tab.title}}
+                        </a>
+                    </li>
+                {{/each}}
             </ul>
 
             <!-- Tab panes -->
             <div class="tab-content">
-                <div role="tabpanel" class="tab-pane" id="overview">Overview tiles will go here</div>
-                <div role="tabpanel" class="tab-pane" id="activities">Activity list will go here</div>
-                <div role="tabpanel" class="tab-pane active" id="my-tests">{{partial 'index/user/my-tests'}}</div>
-                <div role="tabpanel" class="tab-pane" id="my-progress">{{partial 'index/user/my-progress'}}</div>
+                {{#each navigationTabs as |tab|}}
+                    <div role="tabpanel" {{bind-attr class=":tab-pane tab.active"}}>
+                        {{partial tab.partial}}
+                    </div>
+                {{/each}}
             </div>
 
         </div>

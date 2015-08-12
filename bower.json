@@ -24,6 +24,8 @@
     "jstz": "entraigas/jstz",
     "bootstrap-material-design": "~0.3.0",
     "algoliasearch": "~3.7.5",
-    "jquery-knob": "1.2.11"
+    "jquery-knob": "1.2.11",
+    "chartjs": "1.0.2",
+    "moment-range": "~2.0.3"
   }
 }

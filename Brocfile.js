@@ -60,7 +60,7 @@ app.import({
     production: 'bower_components/font-awesome/css/font-awesome.min.css'
 });
 /*
- * MOMENT with Timezones
+ * MOMENT with Timezones and Range
  */
 app.import({
     development: 'bower_components/moment/moment.js',
@@ -69,6 +69,10 @@ app.import({
 app.import({
     development: 'bower_components/moment-timezone/builds/moment-timezone-with-data.js',
     production: 'bower_components/moment-timezone/builds/moment-timezone-with-data.min.js'
+});
+app.import({
+    development: 'bower_components/moment-range/dist/moment-range.js',
+    production: 'bower_components/moment-range/dist/moment-range.min.js'
 });
 
 /*

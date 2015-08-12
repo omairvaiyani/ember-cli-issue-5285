@@ -1,7 +1,18 @@
+<section class="row margin-top-16">
+    <article class="col-xs-10 col-xs-push-1 col-fix-middle" id="recentAttemptsChartHolder">
+        {{#if showRecentAttemptsChart}}
+            {{ember-chart type='Line' data=recentAttemptsChartData width=recentAttemptsChartWidth
+            options=recentAttemptChartOptions height=300}}
+            <ul class="progress-chart-legends">
+                <li>Average Daily Score</li>
+            </ul>
+        {{/if}}
+    </article>
+</section>
 <section class="row">
     <article class="col-md-3">
         <div class="well mini-well margin-top-16">
-            <h3>Progress</h3>
+            <h4>Progress</h4>
         </div>
     </article>
     <article class="col-md-9 col-fix-right">
