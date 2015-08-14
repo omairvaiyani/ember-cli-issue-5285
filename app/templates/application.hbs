@@ -1,7 +1,62 @@
-{{partial 'navigation-bar'}}
-{{render 'views/action-bar'}}
+<div id="st-container" class="st-container st-effect-3">
+    <!-- content push wrapper -->
+    <div class="st-pusher">
+        <!--
+            example menus
+            these menus will be under the push wrapper
+        -->
+        <nav class="st-menu st-effect-3" id="menu-3">
+            <h2 class="icon icon-lab">Synap</h2>
+            <ul>
+                {{#if currentUser}}
+                    {{#link-to 'create' tagName='li' title='MCQ Quiz Maker'}}
+                        {{#link-to 'create' tagName='a'}}
+                            Create
+                        {{/link-to}}
+                    {{/link-to}}
+                    {{#link-to 'index' tagName='li' title='My Quizzes'}}
+                        {{#link-to 'index' tagName='a'}}
+                            Practice
+                        {{/link-to}}
+                    {{/link-to}}
+                {{/if}}
+                {{#link-to 'browse' tagName='li' title='Search for quizzes'}}
+                    {{#link-to 'browse' tagName='a'}}
+                        Browse
+                    {{/link-to}}
+                {{/link-to}}
+                {{#if currentUser}}
+                    {{partial 'application/navbar/current-user'}}
+                {{else}}
+                    <li>
+                        <a href="javascript:void(0)" {{action 'openModal' 'application/modal/login'
+                        'application'}}>
+                            Log in
+                        </a>
+                    </li>
+                    <li>
+                        <a href="javascript:void(0)" {{action 'openModal' 'application/modal/register'
+                        'application'}}>
+                            Register
+                        </a>
+                    </li>
+                {{/if}}
+            </ul>
+        </nav>
 
-{{outlet}}
+        <div class="st-content">
+            <div class="st-content-inner">
+                <div class="codrops-top clearfix">
+                    {{partial 'navigation-bar'}}
+                </div>
+
+                {{outlet}}
+
+            </div>
+        </div>
+    </div>
+</div>
+{{#sliding-menu}}{{/sliding-menu}}
 {{view 'notification-container'}}
 
 {{#modal-dialog}}

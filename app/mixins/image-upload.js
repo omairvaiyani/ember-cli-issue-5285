@@ -1,5 +1,5 @@
 import Ember from 'ember';
-import EmberParseAdapter from '../adapters/parse';
+import EmberParseAdapter from 'ember-parse-adapter/adapters/application';
 import ParseHelper from '../utils/parse-helper';
 
 export default Ember.Mixin.create({
@@ -65,7 +65,7 @@ export default Ember.Mixin.create({
             this.send('incrementLoadingItems');
             return ParseHelper.uploadFile(this, 'image.jpg', {base64: this.get('imageFile.base64')})
                 .then(function (image) {
-                    var image = new EmberParseAdapter.File(image.name, image.url);
+                    var image = Ember.Object.create({name:image.name, url:image.url});
                     this.send('decrementLoadingItems');
                     this.send('saveUploadedImage', image);
                 }.bind(this), function (error) {

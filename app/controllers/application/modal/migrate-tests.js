@@ -187,8 +187,8 @@ export default Ember.Controller.extend(CurrentUser, {
                 // Add them to user's createdTests
                 this.get('currentUser.createdTests').pushObjects(tests);
                 // Notify user of completed task
-                this.send('addNotification', 'success', "Migration complete!",
-                    "We have added " + tests.get('length') + " of your tests!");
+                this.send('addNotification', {type:'success', title:"Migration complete!",
+                    message:"We have added " + tests.get('length') + " of your tests!"});
 
                 this.send('cleanUpModalAndDismiss');
             }.bind(this), function (error) {

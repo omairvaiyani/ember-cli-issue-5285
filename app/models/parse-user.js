@@ -40,13 +40,13 @@ var ParseUser =  ParseUserModel.extend(ParseMixin, {
     fbid: DS.attr('string'),
     gender: DS.attr('string'),
     timeZone: DS.attr('string'),
-    profilePicture: DS.attr('parse-file'),
+    profilePicture: DS.attr('file'),
     profileImageURL: function () {
         if (this.get('profilePicture') && this.get('profilePicture.url')) {
-            return this.get('profilePicture.secureUrl');
+            return this.get('profilePicture.secureUrl') ? this.get('profilePicture.secureUrl') :
+                this.get('profilePicture.url');
         } else if (this.get('fbid')) {
             return "https://graph.facebook.com/"+this.get('fbid')+"/picture?height=250&type=square";
-            //return "https://res.cloudinary.com/mycqs/image/facebook/c_thumb,e_improve,g_faces:center,250/" + this.get('fbid');
         } else {
             return "https://d3uzzgmigql815.cloudfront.net/img/silhouette.png";
         }

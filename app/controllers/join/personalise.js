@@ -15,8 +15,6 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
         if (this.get('currentUser.fbid')) {
             this.send('setEducationHistoryFromFacebook');
         }
-        if (this.get('currentUser'))
-            this.set('currentUser.educationCohort', null);
         this.setProfileImage();
     }.on('init'),
 

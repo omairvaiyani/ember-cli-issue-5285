@@ -270,10 +270,11 @@ export default {
             currentUser.get('uniqueResponses').addObjects(uniqueResponses);
         }
         // Education Cohort
-        if (response.educationCohort) {
+        if (response.educationCohort && response.educationCohort.length) {
             var educationCohort = this.extractRawPayload(store, 'education-cohort',
                 response.educationCohort);
-            currentUser.set('educationCohort', educationCohort);
+            if(educationCohort)
+                currentUser.set('educationCohort', educationCohort);
         }
         // SR Latest Test
         if (response.srLatestTest) {

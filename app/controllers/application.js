@@ -1,8 +1,6 @@
 import Ember from 'ember';
 import ParseHelper from '../utils/parse-helper';
-import ExpandingSearch from '../utils/expanding-search';
 import EventTracker from '../utils/event-tracker';
-import config from './../config/environment';
 
 export default Ember.Controller.extend({
     needs: ['index', 'user', 'test', 'category'],
@@ -31,6 +29,7 @@ export default Ember.Controller.extend({
 
         if (!path)
             return;
+
         this.send('closeModal');
         var user;
         this.set('navbarTransparent', false);
@@ -204,24 +203,35 @@ export default Ember.Controller.extend({
     newUser: {
         name: '',
         email: '',
-        password: '',
-        confirmPassword: ''
+        password: ''
     },
 
+    // Deprecated
     signUpValidationErrors: {
-        name: false,
-        email: false,
-        password: false,
-        confirmPassword: false
+        name: "",
+        email: "",
+        password: "",
+        signUp: ""
     },
+
+    /**
+     * @Property Sign Up Validation has Errors
+     * Needed by ApplicationRoute.actions.signUp
+     * @return {Boolean}
+     */
+    signUpValidationHasErrors: function () {
+        return this.get('signUpValidationErrors.name.length') || this.get('signUpValidationErrors.email.length')
+        || this.get('signUpValidationErrors.password.length');
+    }.property('signUpValidationErrors.name.length', 'signUpValidationErrors.email.length',
+        'signUpValidationErrors.password.length'),
 
     resetSignUpValidationErrors: function () {
-        this.set('signUpValidationErrors.name', false);
-        this.set('signUpValidationErrors.email', false);
-        this.set('signUpValidationErrors.password', false);
-        this.set('signUpValidationErrors.confirmPassword', false);
+        this.set('signUpValidationErrors.name', "");
+        this.set('signUpValidationErrors.email', "");
+        this.set('signUpValidationErrors.password', "");
+        this.set('signUpValidationErrors.signUp', "");
     }.observes('newUser.name.length', 'newUser.email.length',
-        'newUser.password.length', 'newUser.confirmPassword.length'),
+        'newUser.password.length'),
 
     /**
      * @property {Array} The array of app-wide notifications

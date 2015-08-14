@@ -181,6 +181,7 @@ Parse.User.prototype.setDefaults = function () {
 
     this.set('isPremium', false);
     this.set('firstTimeLogin', true);
+    this.set('level', Level.getFirstLevel());
 
     return this;
 };
@@ -1797,6 +1798,11 @@ var Level = Parse.Object.extend("Level", {
         return this.get('pointsToLevelUp');
     }
 }, {
+    getFirstLevel: function () {
+        var level = new Level();
+        level.id = "sj4HXERITO";
+        return level;
+    },
     /**
      * @Function Get Next Level
      * Fetches the next level up.

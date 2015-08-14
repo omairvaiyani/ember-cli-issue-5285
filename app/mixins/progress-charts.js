@@ -3,29 +3,46 @@ import ParseHelper from '../utils/parse-helper';
 
 export default Ember.Mixin.create({
 
-    recentAttempts: new Ember.A(),
+    /**
+     * @Property Recent Attempts
+     *
+     * Takes the currentUser's testAttempts and
+     * returns the last 8 days worth, sorted by
+     * createdAt (ASC).
+     */
+    recentAttempts: function () {
+        if (!this.get('currentUser.testAttempts'))
+            return new Ember.A();
 
-    getRecentAttemptsData: function () {
-        if (this.get('recentAttempts.length'))
-            return this.set('showRecentAttemptsChart', true);
-
-        var where = {
-            "user": ParseHelper.generatePointer(this.get('currentUser'), "_User"),
-            "createdAt": {
-                "$gte": moment().startOf("day").subtract(8, "d").toDate().toISOString()
-            }
-        };
-        ParseHelper.findQuery(this, 'attempt', {where: where}).then(function (attempts) {
-            this.get('recentAttempts').clear();
-            this.get('recentAttempts').addObjects(attempts.sortBy('createdAt'));
-
-            this.set('showRecentAttemptsChart', true);
-        }.bind(this));
-    },
+        return this.get('currentUser.testAttempts').filter(function (attempt) {
+            return moment().startOf("day").diff(moment(attempt.get('createdAt')), "days") < 8;
+        }).sortBy("createdAt");
+    }.property('currentUser.testAttempts.length'),
 
     recentAttemptsChartData: function () {
+        var chartInfo = {labels: [], datasets: []};
+        // Prepare labels
+        for (var i = 0; i < 7; i++) {
+            chartInfo.labels.push(moment().startOf("day").subtract(i, "days").format("dddd"));
+        }
+
+        // Prepare datasets
+        var averageDailyScoreDataSet =
+        {
+            label: "Average Daily Score",
+            fillColor: "rgba(231, 58, 61, 0.2)",
+            strokeColor: "rgba(231, 58, 61,1)",
+            pointColor: "rgba(231, 58, 61,1)",
+            pointStrokeColor: "#fff",
+            pointHighlightFill: "#fff",
+            pointHighlightStroke: "rgba(229, 56, 69,1)",
+            data: []
+        };
+        chartInfo.datasets.push(averageDailyScoreDataSet);
+
         if (!this.get('recentAttempts.length'))
-            return {labels: [], datasets: []};
+            return chartInfo;
+
         // Set up the date range
         var earliestDate = this.get('recentAttempts.firstObject').get('createdAt'),
             latestDate = this.get('recentAttempts.lastObject').get('createdAt'),
@@ -33,16 +50,16 @@ export default Ember.Mixin.create({
             today = moment().startOf("day");
 
         // Set up the x-axis (days)
-        var labels = [],
-            dailyAverageScores = [];
+        chartInfo.labels = [];
+        var dailyAverageScores = [];
 
 
         dateRange.by('days', function (day) {
             // Set up labels
             if (today.diff(day, "d") === 0)
-                labels.push("Today");
+                chartInfo.labels.push("Today");
             else
-                labels.push(day.format("dddd"));
+                chartInfo.labels.push(day.format("dddd"));
             var attempts = this.get('recentAttempts').filter(function (attempt) {
                 return moment(attempt.get('createdAt')).startOf("day")
                         .diff(day.startOf("day"), "days") === 0;
@@ -59,22 +76,9 @@ export default Ember.Mixin.create({
             else
                 dailyAverageScores.push(Math.round(totalScore / attempts.length));
         }.bind(this));
+        averageDailyScoreDataSet.data = dailyAverageScores;
 
-        // Add data to datasets
-        var datasets = [
-            {
-                label: "Average Daily Score",
-                fillColor: "rgba(231, 58, 61, 0.2)",
-                strokeColor: "rgba(231, 58, 61,1)",
-                pointColor: "rgba(231, 58, 61,1)",
-                pointStrokeColor: "#fff",
-                pointHighlightFill: "#fff",
-                pointHighlightStroke: "rgba(229, 56, 69,1)",
-                data: dailyAverageScores
-            }
-        ];
-
-        return {labels: labels, datasets: datasets};
+        return chartInfo;
     }.property('recentAttempts.length'),
 
     recentAttemptsChartWidth: 800,
@@ -87,7 +91,7 @@ export default Ember.Mixin.create({
     actions: {
         createChart: function () {
             this.set('recentAttemptsChartWidth', $("#recentAttemptsChartHolder").width());
-            this.getRecentAttemptsData();
+            this.set('showRecentAttemptsChart', true);
         },
         closeChart: function () {
             this.set('showRecentAttemptsChart', false);

@@ -4,7 +4,6 @@
  * Contact: omair@mylabs.io
  * Copyright myLabs Ltd 2014
  */
-@import "material.css"
 
 colorPrimary = #e73a3d
 colorPrimary-50 = #FDEBEC
@@ -56,6 +55,9 @@ backgroundGradient(darken)
   background -ms-linear-gradient(left, darken(colorPrimary, darken) 0%,  darken(colorSecondary, darken) 100%)
   background linear-gradient(to right, darken(colorPrimary, darken) 0%,  darken(colorSecondary, darken) 100%)
 
+
+@import "addons/sliding-menu"
+@import "material.css"
 
 body
   font-family 'Oxygen', "Helvetica Neue", Helvetica, Arial, sans-serif !important
@@ -117,10 +119,14 @@ body
   height 38px
 
 .btn-facebook
-  width 80%
-  padding 8px
+  padding marginSecondary marginPrimary
   font-size small
   color white !important
+
+@media (max-width 350px)
+  .btn-facebook
+    font-size 10px
+    margin marginSecondary
 
 .btn-facebook:hover, .btn-facebook:focus
   color white
@@ -143,6 +149,10 @@ body
     cursor pointer
 
 /* Fix for floating labels in material.css */
+.form-control-wrapper .form-control~.floating-label
+  opacity 0.9
+  color colorPrimary
+
 .form-control-wrapper .form-control:focus~.floating-label,
 .form-control-wrapper .form-control:not(.empty)~.floating-label {
   top: -10px;
@@ -682,6 +692,16 @@ input[type="range"]::-webkit-slider-thumb {
     height 40px
     line-height 20px
 
+@media (max-width: 1198px)
+  .navbar .navbar-brand
+    padding 15px
+    height 40px
+
+@media (max-width: 767px)
+  .navbar .navbar-brand
+    position: absolute;
+    left: calc(50% - 60px);
+
 .navbar-transparent
   background-color transparent !important
 
@@ -1006,6 +1026,7 @@ hr.user-message-item-separator {
 /* Login Modal */
 .sign-up-validation {
   padding-top: 6px;
+  font-size small
 }
 
 .sign-up-validation > span {
@@ -1014,7 +1035,7 @@ hr.user-message-item-separator {
 
 .login-connecting-error {
   padding: 4px;
-  margin: 0px;
+  margin: 0
   float: right;
 }
 
@@ -1190,11 +1211,13 @@ hr.user-message-item-separator {
 /* TEMPLATE - PROGRESS */
 ul.progress-chart-legends
   margin-top marginPrimary
+  padding-left marginPrimary
+  list-style-type none
   li
     background colorPrimary-400
     color white
     padding 4px 8px
-    border-radius 4px 8px
+    border-radius 2px 8px
     cursor pointer
     max-width 150px
     text-align center

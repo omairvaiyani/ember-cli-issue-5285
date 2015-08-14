@@ -142,27 +142,17 @@ export default Ember.Route.extend({
         },
 
         signUp: function (callback) {
-            var applicationController = this.get('applicationController');
-            var name = applicationController.get('newUser.name'),
+            var applicationController = this.get('applicationController'),
+                name = applicationController.get('newUser.name'),
                 email = applicationController.get('newUser.email'),
-                password = applicationController.get('newUser.password'),
-                errors = false;
+                password = applicationController.get('newUser.password');
 
-            if (!FormValidation.name(name.trim())) {
-                applicationController.set('signUpValidationErrors.name', true);
-                errors = true;
-            }
-            if (!FormValidation.email(email.trim())) {
-                applicationController.set('signUpValidationErrors.email', true);
-                errors = true;
-            }
-            if (!FormValidation.password(password)) {
-                applicationController.set('signUpValidationErrors.password', true);
-                errors = true;
-            }
-            if (!errors) {
+            applicationController.set('signUpValidationErrors.name', FormValidation.name(name.trim()));
+            applicationController.set('signUpValidationErrors.email', FormValidation.email(email.trim()));
+            applicationController.set('signUpValidationErrors.password', FormValidation.password(password.trim()));
+            if (!applicationController.get('signUpValidationHasErrors')) {
                 var data = {
-                    name: name.trim(),
+                    name: name.capitalize().trim(),
                     username: email.trim(),
                     email: email.trim(),
                     signUpSource: 'Web',
@@ -170,11 +160,11 @@ export default Ember.Route.extend({
                 };
                 this.send('registerUser', data, callback);
             } else if (callback) {
-                callback();
+                callback(new Parse.Promise().resolve());
             }
         },
 
-        login: function () {
+        login: function (callback) {
             this.send('incrementLoadingItems');
 
             var controller = this.controllerFor('application');
@@ -187,31 +177,32 @@ export default Ember.Route.extend({
                     password: password
                 };
 
-            controller.set('loginMessage.connecting', "Logging in...");
-
-            ParseUser.login(this.store, data)
+            var promise = ParseUser.login(this.store, data)
                 .then(
                 function (user) {
                     controller.set('currentUser', user);
-                    controller.set('loginMessage.connecting', null);
-                    this.send('decrementLoadingItems');
                     this.send('closeModal');
                     this.send('redirectAfterLogin');
                 }.bind(this),
 
                 function (error) {
-                    this.send('decrementLoadingItems');
                     console.dir(error);
                     if (error.code === Parse.Error.OBJECT_NOT_FOUND)
-                        controller.set('loginMessage.error', "Incorrect credentials!");
+                        controller.set('loginMessage.error', "Email and password do not match");
                     else if (error.code === Parse.Error.EMAIL_MISSING)
-                        controller.set('loginMessage.error', "Please type in your email!");
+                        controller.set('loginMessage.error', "Please type in your email");
                     else if (error.code === Parse.Error.PASSWORD_MISSING)
-                        controller.set('loginMessage.error', "Please type in your password!");
+                        controller.set('loginMessage.error', "Please type in your password");
+                    else if (error.error)
+                        controller.set('loginMessage.error', error.error.capitalize());
                     else
-                        controller.set('loginMessage.error', "Error " + error.code);
-                    controller.set('loginMessage.connecting', null);
+                        controller.set('loginMessage.error', "Something went wrong! " + error.code);
+                }.bind(this)).then(function () {
+                    this.send('decrementLoadingItems');
                 }.bind(this));
+
+            if (callback)
+                callback(promise);
         },
 
         /**
@@ -300,18 +291,25 @@ export default Ember.Route.extend({
                 this.get('applicationController').set('currentUser', user);
                 return user.reload();
             }.bind(this)).then(function () {
-                    this.send('decrementLoadingItems');
-                    if (this.get('currentUser.firstTimeLogin')) {
-                        this.set('currentUser.firstTimeLogin', false);
+                    if (this.get('applicationController.currentUser.firstTimeLogin')) {
+                        this.set('applicationController.currentUser.firstTimeLogin', false);
                         this.set('applicationController.redirectAfterLoginToRoute', 'join.personalise');
                         this.set('applicationController.redirectAfterLoginToController', 'join');
                     }
                     this.send('redirectAfterLogin');
                 }.bind(this),
                 function (error) {
-                    this.send('decrementLoadingItems');
-                    console.log("Error with ParseUser.signup() in: signUpAuthorisedFacebookUser");
+                    console.log("Error with ParseUser.signup() in: registerUser");
                     console.dir(error);
+
+                    if (error.code === Parse.Error.USERNAME_TAKEN || error.code === Parse.Error.EMAIL_TAKEN)
+                        this.get('applicationController').set('signUpValidationErrors.email', "Email taken.");
+                    else if (error.error)
+                        this.get('applicationController').set('signUpValidationErrors.signUp', error.error.capitalize());
+                    else
+                        this.get('applicationController').set('signUpValidationErrors.signUp', "Something went wrong!");
+                }.bind(this)).then(function () {
+                    this.send('decrementLoadingItems');
                 }.bind(this));
 
             if (callback)
@@ -339,7 +337,7 @@ export default Ember.Route.extend({
             controller.set('loginMessage.connecting', "Sending request...");
 
             Parse.Cloud.run('resetPasswordRequest', {email: email}, {
-                success: function (response) {
+                success: function () {
                     controller.set('loginMessage.connecting', "Reset email sent!");
                     this.set('allowPasswordResetRequest', false);
                     setTimeout(function () {
@@ -350,6 +348,7 @@ export default Ember.Route.extend({
                     }.bind(this), 60000);
                 }.bind(this),
                 error: function (error) {
+                    console.dir(error);
                     if (error.message == Parse.Error.EMAIL_NOT_FOUND)
                         controller.set('loginMessage.error', "Email not found!");
                     else
@@ -557,6 +556,9 @@ export default Ember.Route.extend({
          *
          */
         addNotification: function (notificationObject) {
+            if (typeof notificationObject !== "object")
+                return console.dir("ERROR, notification requires object - " + JSON.stringify(arguments));
+
             var notification = Ember.Object.create(notificationObject);
 
             this.get('applicationController.notifications').pushObject(notification);
@@ -570,7 +572,7 @@ export default Ember.Route.extend({
                 var notification = {
                     type: "points",
                     title: '+' + userEvent.get('pointsTransacted') + "XP | " + userEvent.get('label'),
-                    message:  "Total: " + this.get('currentUser.points') +
+                    message: "Total: " + this.get('currentUser.points') +
                     "xp / " + this.get('currentUser.level.title')
                 };
                 this.send('addNotification', notification);
