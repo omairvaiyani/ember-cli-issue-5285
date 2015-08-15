@@ -26,8 +26,6 @@
     "algoliasearch": "~3.7.5",
     "jquery-knob": "1.2.11",
     "chartjs": "1.0.2",
-    "moment-range": "~2.0.3",
-    "hammerjs": "~2.0.4",
-    "sidebartransitions": "codrops/sidebartransitions"
+    "moment-range": "~2.0.3"
   }
 }

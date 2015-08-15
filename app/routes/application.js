@@ -402,8 +402,13 @@ export default Ember.Route.extend({
             return myModal.modal('show');
         },
 
+        // Called when explicitly closing modal
+        // Or, every time the route changes.
         closeModal: function () {
             $('#myModal').modal('hide');
+            if ($('#sidebar').hasClass('open')) {
+                $(".sidebar-toggle").click(); // Closes sidebar on route change.
+            }
             return this.disconnectOutlet({
                 outlet: 'modal',
                 parentView: 'application'

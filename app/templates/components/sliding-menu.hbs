@@ -1,1 +1,113 @@
-{{yield}}
+<div class="sidebar-overlay"></div>
+
+<nav id="sidebar" class="sidebar sidebar-colored sidebar-stacked">
+    <div class="sidebar-header">
+        <div class="top-bar"></div>
+
+        {{#if currentUser}}
+            <div class="sidebar-image">
+                {{profile-picture user=currentUser}}
+            </div>
+            <a data-toggle="dropdown" class="sidebar-brand" href="#settings-dropdown">
+                {{currentUser.name}}
+                <b class="caret"></b>
+            </a>
+        {{else}}
+            <div class="sidebar-image">
+                {{#link-to 'index'}}
+                    <img src="img/logo-wide.png" height="50px"/>
+                {{/link-to}}
+            </div>
+
+            <button class="btn btn-facebook" {{action 'facebookConnect'}}>
+                <i class="fa fa-facebook margin-right-8"></i>Signup
+            </button>
+        {{/if}}
+    </div>
+    <ul class="nav sidebar-nav">
+        {{#if currentUser}}
+            <li class="dropdown" id="sidebar-dropdown-adjust">
+                <ul id="settings-dropdown" class="dropdown-menu">
+                    {{#link-to 'user.index' currentUser.slug tagName='li' title='Profile'}}
+                        {{#link-to 'user.index' tagName='a'}}
+                            Profile
+                        {{/link-to}}
+                    {{/link-to}}
+                    {{#link-to 'settings.index' tagName='li' title='Settings'}}
+                        {{#link-to 'settings.index' tagName='a'}}
+                            Settings
+                        {{/link-to}}
+                    {{/link-to}}
+                    <li>
+                        <a href="" {{action "logout"}}>
+                            Log out
+                        </a>
+                    </li>
+                </ul>
+            </li>
+
+            {{#link-to 'create' tagName='li' title='MCQ Quiz Maker'}}
+                {{#link-to 'create' tagName='a'}}
+                    <i class="sidebar-icon fa fa-fw fa-pencil-square-o"></i>Create
+                {{/link-to}}
+            {{/link-to}}
+            {{#link-to 'index' tagName='li' title='My Quizzes'}}
+                {{#link-to 'index' tagName='a'}}
+                    <i class="sidebar-icon fa fa-fw fa-clipboard"></i>Practice
+                {{/link-to}}
+            {{/link-to}}
+        {{else}}
+            <li>
+                <a href="javascript:void(0)" {{action 'openModal' 'application/modal/login' 'application'}}>
+                    <i class="sidebar-icon fa fa-fw fa-user"></i>Log in
+                </a>
+            </li>
+            <li>
+                <a href="javascript:void(0)" {{action 'openModal' 'application/modal/register' 'application'}}>
+                    <i class="sidebar-icon fa fa-fw fa-sign-in"></i>Register
+                </a>
+            </li>
+        {{/if}}
+        {{#link-to 'browse' tagName='li' title='Search for quizzes'}}
+            {{#link-to 'browse' tagName='a'}}
+                <i class="sidebar-icon fa fa-fw fa-globe"></i>Browse
+            {{/link-to}}
+        {{/link-to}}
+        <li class="divider"></li>
+        {{#unless currentUser}}
+            <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                   aria-expanded="false">
+                    About <span class="caret"></span></a>
+                <ul class="dropdown-menu" role="menu">
+                    {{#link-to 'about.index' tagName='li' title='About us'}}
+                        {{#link-to 'about.index' tagName='a'}}
+                            Overview
+                        {{/link-to}}
+                    {{/link-to}}
+                    {{#link-to 'about.team' tagName='li' title='MyCQs Team'}}
+                        {{#link-to 'about.team' tagName='a'}}
+                            Team
+                        {{/link-to}}
+                    {{/link-to}}
+                    <li class="divider"></li>
+                    {{#link-to 'contact' tagName='li' title='Contact us'}}
+                        {{#link-to 'contact' tagName='a'}}
+                            Contact
+                        {{/link-to}}
+                    {{/link-to}}
+                    {{#link-to 'support' tagName='li' title='Support'}}
+                        {{#link-to 'support' tagName='a'}}
+                            Support
+                        {{/link-to}}
+                    {{/link-to}}
+                </ul>
+            </li>
+        {{/unless}}
+    </ul>
+</nav>
+<div class="wrapper">
+    <div class="constructor">
+        {{yield}}
+    </div>
+</div>

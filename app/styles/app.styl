@@ -56,7 +56,7 @@ backgroundGradient(darken)
   background linear-gradient(to right, darken(colorPrimary, darken) 0%,  darken(colorSecondary, darken) 100%)
 
 
-@import "addons/sliding-menu"
+@import "addons/material-sidebar"
 @import "material.css"
 
 body
@@ -700,7 +700,7 @@ input[type="range"]::-webkit-slider-thumb {
 @media (max-width: 767px)
   .navbar .navbar-brand
     position: absolute;
-    left: calc(50% - 60px);
+    left: calc(50% - 45px);
 
 .navbar-transparent
   background-color transparent !important
@@ -2323,8 +2323,11 @@ body {
 #body-wrap {
   min-height: 100%;
   position: relative;
-  padding-bottom: 156px;
+  padding-bottom: 200px;
 }
+@media (min-width: 992px)
+  #body-wrap
+    padding-bottom 150px
 
 .footer
   position: absolute;

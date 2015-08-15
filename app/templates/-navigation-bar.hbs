@@ -2,15 +2,12 @@
     <div class="container">
         <!-- Brand and toggle get grouped for better mobile display -->
         <div class="navbar-header">
-            <div id="st-trigger-effects">
-                <button type="button" class="navbar-toggle pull-left" data-toggle="collapse"
-                        data-effect="st-effect-3">
-                    <span class="sr-only">Toggle navigation</span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
-            </div>
+            <button type="button" class="navbar-toggle sidebar-toggle pull-left">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
             {{#link-to 'index' tagName='a' classNames='navbar-brand navbar-brand-adjust'}}
                 {{#if loadingItems}}
                     <img src="img/loading-white.gif" height="45px" class="logo-icon"/>
