@@ -123,10 +123,4 @@ app.import({
     production: 'bower_components/jquery-knob/dist/jquery.knob.min.js'
 });
 
-/*
- * Sidebar Transitions
- */
-// Main JS file now a component in app. components/sliding-menu
-app.import('bower_components/sidebartransitions/js/classie.js');
-
 module.exports = app.toTree();
