@@ -1,0 +1,47 @@
+<div class="form-control-wrapper onboarding-floatingInput">
+    {{input type="text" value=user.studying
+    classNameBindings=":form-control user.studying.length::empty :input-lg"}}
+    <div class="floating-label">I am studying</div>
+    <span class="material-input"></span>
+</div>
+{{#unless user.studyingAt.length}}
+    <div class="button-list">
+        <button class="btn btn-primary" {{action 'studyingAt' 'university'}}>
+            At University or College
+        </button>
+        <button class="btn btn-primary" {{action 'studyingAt' 'company'}}>
+            At a Company
+        </button>
+        <button class="btn btn-primary" {{action 'studyingAt' 'school'}}>
+            At School
+        </button>
+        <button class="btn btn-primary" {{action 'studyingAt' 'home'}}>
+            From Home
+        </button>
+    </div>
+{{else}}
+    <br>
+    {{#if showPlaceOfStudyInput}}
+        <div class="form-control-wrapper onboarding-floatingInput margin-top-16">
+            {{input type="text" value=user.placeOfStudy id="onboarding-placeOfStudy"
+            classNameBindings=":form-control user.placeOfStudy.length::empty :input-lg"}}
+            <div class="floating-label">Name of <span class="text-capitalize">{{user.studyingAt}}</span></div>
+            <span class="material-input"></span>
+        </div>
+        <br>
+    {{/if}}
+    {{#if showStudyYearPicker}}
+        <div class="form-control-wrapper onboarding-floatingInput margin-top-16">
+            {{view 'select'
+            class='form-control input-lg'
+            content=studyYearsToChooseFrom
+            optionValuePath="content"
+            optionLabelPath="content"
+            selection=user.studyYear
+            prompt="Select what year you are in"
+            }}
+            <div class="floating-label">Year of study</div>
+            <span class="material-input"></span>
+        </div>
+    {{/if}}
+{{/unless}}

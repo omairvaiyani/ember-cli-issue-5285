@@ -639,12 +639,12 @@ input[type="range"]::-webkit-slider-thumb {
       background: colorPrimary-600;
   &.default
     background lighten(grey, 40)
-    color lighten(grey, 15)
+    color lighten(black, 15)
     &::before
       background  lighten(grey, 40)
     &:hover
       background  lighten(grey, 38)
-      color lighten(grey, 10)
+      color lighten(black, 10)
       &::before
         background  lighten(grey, 38)
   input[type=text]
@@ -1045,9 +1045,6 @@ hr.user-message-item-separator {
 
 /* TEMPLATE - INDEX/GUEST */
 /*
- * Main parallax image
- * - Total height 600px
- * - Visible height 550px
  */
 
 .mycqs-page-header.index-page {
@@ -1071,33 +1068,57 @@ hr.user-message-item-separator {
   background: -ms-linear-gradient(left, colorPrimary 0%, colorSecondary 100%);
   background: linear-gradient(to right, colorPrimary 0%, colorSecondary 100%);
 }
-
-/*
- * Pushes relative elements
- * to the bottom 170px of
- * the main parallax image
- */
-.guest-page-actions {
+.guest-page-actions
   margin-top: 350px;
   height: 200px;
-  overflow: hidden;
-}
+  .btn
+    font-size: 14px;
+    background-color: alpha(white, 0.75) !important
+    color black !important
+    border: 2px solid;
+    width 100%
+    transition margin-top 0.4s
+    &:hover, &.focus
+      background-color alpha(white, 0.95) !important
+      color: #95E5FF;
+    &.focus
+      margin-top -44px
 
-.guest-page-actions .btn
-  width: 100%;
-  font-size: 22px;
-  background-color: alpha(white, 0.75) !important
-  color black !important
-  border: 2px solid;
-  margin-top: 114px
-  &:hover
-    background-color alpha(white, 0.95) !important
-
-.guest-page-actions .btn:hover {
-  background-color: rgba(5, 116, 116, 0.65);
-  color: #95E5FF;
-}
-
+.onboarding-firstSection
+  .onboarding-floatingInput
+    input
+      color: white;
+      font-size 20px
+      &:focus
+        background-image linear-gradient(black,transparent),linear-gradient(#d2d2d2,#d2d2d2)
+    .form-control~.floating-label, .form-control:focus~.floating-label
+      color white
+      top 0
+    .form-control~.floating-label
+      font-size 20px
+    .form-control:focus~.floating-label, .form-control:not(.empty)~.floating-label
+      font-size 14px
+      top -20px
+    .input-action
+      position absolute
+      top 14px
+      right 8px
+      cursor pointer
+      &:hover
+        color colorPrimary
+  .onboarding-studyExamples
+    color:white;
+    font-size:12px;
+    &.invisible
+      visibility none
+    span
+      background-color: lightcoral;
+      padding: 1px 3px;
+      border-radius: 3px;
+      margin-right: 4px;
+      margin-bottom: marginSecondary
+      display inline-block
+      cursor: pointer;
 /*
  * Hiding autocomplete until I fix it's position
  */
@@ -1628,6 +1649,67 @@ ul.progress-chart-legends
   padding: 9px 8px 8px 8px;
 }
 
+/* TEMPLATE - ONBOARDING */
+.onboarding-well
+  position fixed
+  height 70%
+  top 15%
+  max-width 800px
+  width 100%
+  left calc(50% - 400px)
+  border-radius 4px 12px !important
+  .form-control
+    color black !important
+  .form-control~.floating-label, .form-control:focus~.floating-label
+    color black !important
+  .button-list
+    .btn
+      width 100%
+  .onboarding-well-footer
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 55px;
+    background-color: rgba(0,0,0,0.1);
+    border-radius: 0 0 4px 12px;
+
+@media (max-width 991px)
+  .onboarding-well
+    width 80%
+    left 10%
+
+@media (max-width 767px)
+  .onboarding-well
+    width 90%
+    left 5%
+
+.onboarding.progress
+    position: fixed;
+    max-width 800px
+    bottom 0
+    height 40px
+    width 100%
+    left calc(50% - 400px)
+    border-radius 4px 12px
+    .progress-type
+      position: absolute;
+      left: 0;
+      font-weight: 800;
+      padding: 3px 30px 2px 10px;
+      color: rgb(255, 255, 255);
+      background-color: rgba(25, 25, 25, 0.2);
+      bottom: 0;
+      top: 0;
+      line-height: 2.35;
+    .progress-completed
+      position: absolute;
+      right: 0;
+      font-weight: 800;
+      padding: 3px 10px 2px;
+      bottom: 0;
+      top: 0;
+      line-height: 2.35;
 /* TEMPLATE - BROWSE */
 
 .category-container .card {

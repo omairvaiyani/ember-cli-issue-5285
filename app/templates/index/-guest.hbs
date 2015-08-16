@@ -2,22 +2,39 @@
     <div class="container relative-container">
         <div style="max-width: 500px;" class="margin-bottom-16">
 
-        <h1 class="margin-top-16">study smart, not hard.</h1>
+            <h1 class="margin-top-16">study smart, not hard.</h1>
 
-        <h3>Synap knows what you should be studying and when, intelligently optimising your revision
-            so you can learn more in less time.</h3>
+            <h3>Synap knows what you should be studying and when, intelligently optimising your revision
+                so you can learn more in less time.</h3>
         </div>
     </div>
 </div>
-<div class="guest-page-actions margin-bottom-16">
+<div class="guest-page-actions onboarding-firstSection margin-bottom-16">
     <div class="container">
-        <div class="row">
-            <div class="col-sm-push-3 col-sm-6 create-column text-center margin-top-16">
-                {{#link-to 'join' tagName='a' classNames='btn btn-info'}}
-                    Get Started
-                {{/link-to}}
-            </div>
-        </div>
+        <section class="row">
+            <article class="col-xs-10 col-xs-offset-1 col-sm-6 col-sm-offset-3 col-md-4 col-md-offset-4">
+                <div class="form-control-wrapper onboarding-floatingInput">
+                    {{input type="text" value=onboardingFirstInput id="onboarding-firstInput"
+                    classNameBindings=":form-control onboardingFirstInput.length::empty"
+                    action="onboardingFirstCTA"}}
+                    <div class="floating-label">I am studying</div>
+                    <span class="material-input"></span>
+                </div>
+                <div class="onboarding-studyExamples margin-top-8 text-center">
+                    {{#each onboardingStudyExamples as |example|}}
+                        <span {{action 'onboardingFillFirstInput' example}}>{{example}}</span>
+                    {{/each}}
+                    <small class="inline-block">or type just about anything else</small>
+                </div>
+            </article>
+        </section>
+        <section class="row">
+            <article class="col-xs-10 col-xs-offset-1 col-sm-6 col-sm-offset-3 col-md-4 col-md-offset-4">
+                <button class='btn btn-info' id="onboarding-firstCTA" {{action "onboardingFirstCTA"}}>
+                    Optimize my learning
+                </button>
+            </article>
+        </section>
     </div>
 </div>
 

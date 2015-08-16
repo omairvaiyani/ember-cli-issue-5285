@@ -415,6 +415,22 @@ export default Ember.Route.extend({
             });
         },
 
+        minimalNavbar: function () {
+            this.set('applicationController.minimalNavbar', true);
+        },
+
+        hideFooter: function () {
+            this.set('applicationController.footerHidden', true);
+        },
+
+        fullNavbar: function () {
+            this.set('applicationController.minimalNavbar', false);
+        },
+
+        showFooter: function () {
+            this.set('applicationController.footerHidden', false);
+        },
+
         followUser: function (user) {
             var currentUser = this.get('currentUser');
             currentUser.incrementProperty('numberFollowing');

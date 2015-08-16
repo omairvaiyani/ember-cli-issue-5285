@@ -13,6 +13,35 @@ Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, EstimateMemoryStrength
     /*
      * GUEST MODE
      */
+    onboardUser: function () {
+        return Ember.Object.create({
+            studying: "", studyingAt: "", placeOfStudy: "", studyYear: "",
+            moduleTags: new Ember.A()
+        });
+    }.property(),
+
+    onboardingFirstInput: "",
+    onboardingStudyExamples: ["Finance", "Medicine", "for Work", "Aviation", "A-Levels", "Spanish"],
+    onboardingFirstInputSetFocus: function () {
+        var _this = this;
+        setTimeout(function () {
+            if (!_this.get('currentUser'))
+                $("#onboarding-firstInput").focus();
+        }, 800);
+    }.on('init'),
+
+    onboardingFirstCTAFocus: function () {
+        if (!this.get('onboardingFirstInput.length')) {
+            $("#onboarding-firstCTA").removeClass("focus");
+            $(".onboarding-studyExamples").removeClass("invisible");
+        } else {
+            $("#onboarding-firstCTA").addClass("focus");
+            $(".onboarding-studyExamples").addClass("invisible");
+        }
+    },
+    onboardingFirstCTAFocusAfterTyping: function () {
+        Ember.run.debounce(this, this.onboardingFirstCTAFocus, 450);
+    }.observes('onboardingFirstInput.length'),
 
     /*
      * HOME MODE
@@ -267,9 +296,15 @@ Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, EstimateMemoryStrength
         /*
          * GUEST MODE
          */
-        searchTests: function () {
-            this.transitionToRoute('category', "all",
-                {queryParams: {search: this.get('searchTermForTests').toLowerCase()}});
+        onboardingFillFirstInput: function (example) {
+            this.set('onboardingFirstInput', example);
+            this.onboardingFirstCTAFocus();
+        },
+
+        onboardingFirstCTA: function () {
+            // Begin on boarding
+            this.set('onboardUser.studying', this.get('onboardingFirstInput'));
+            this.transitionTo("onboarding");
         },
 
         /*
@@ -282,7 +317,7 @@ Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, EstimateMemoryStrength
             tab.set('active', true);
             localStorage.setItem(this.get('controllerId') + 'NavigationTab', tab.get('value'));
 
-            switch(tab.value) {
+            switch (tab.value) {
                 case "overview":
 
                     break;
@@ -303,11 +338,11 @@ Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, EstimateMemoryStrength
         },
 
         fetchTestAttempts: function (user) {
-            if(!user)
+            if (!user)
                 user = this.get('currentUser');
-            if(!user)
+            if (!user)
                 return console.log("Error, index.actions.fetchTestAttempts - no user or currentUser.");
-            if(user.get('testAttempts.length'))
+            if (user.get('testAttempts.length'))
                 return console.log("Test attempts already fetched for user.");
 
             var where = {
@@ -317,7 +352,7 @@ Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, EstimateMemoryStrength
                 }
             };
             ParseHelper.findQuery(this, 'attempt', {where: where}).then(function (attempts) {
-                if(user) {
+                if (user) {
                     user.get('testAttempts').clear();
                     user.get('testAttempts').addObjects(attempts.sortBy('createdAt'));
                 }
