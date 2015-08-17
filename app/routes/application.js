@@ -421,6 +421,7 @@ export default Ember.Route.extend({
 
         hideFooter: function () {
             this.set('applicationController.footerHidden', true);
+            $("#body-wrap").addClass("no-padding-bottom");
         },
 
         fullNavbar: function () {
@@ -429,6 +430,7 @@ export default Ember.Route.extend({
 
         showFooter: function () {
             this.set('applicationController.footerHidden', false);
+            $("#body-wrap").removeClass("no-padding-bottom");
         },
 
         followUser: function (user) {

@@ -196,7 +196,7 @@ export default Ember.Controller.extend(CurrentUser, {
 
             window.scrollTo(0, 0);
             this.send("refreshRoute");
-            this.set('isPublic', this.get('test.isPublic'));
+            this.set('model.isPublic', this.get('test.isPublic'));
             this.set('model.tags', this.get('test.tags'));
             /*
              * If user added an image,

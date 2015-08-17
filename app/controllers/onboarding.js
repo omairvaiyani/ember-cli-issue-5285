@@ -1,4 +1,5 @@
 import Ember from 'ember';
+import ParseHelper from '../utils/parse-helper';
 
 export default Ember.Controller.extend({
     needs: ['index'],
@@ -29,7 +30,7 @@ export default Ember.Controller.extend({
 
     currentStepComplete: function () {
         return this.get(this.get('currentStep') + 'StepComplete');
-    }.property('studyingAtStepComplete', 'currentStep'),
+    }.property('studyingAtStepComplete', 'moduleTagsStepComplete', 'currentStep'),
 
     showAlert: function () {
         if (this.get('currentStep') === "moduleTags")
@@ -72,14 +73,37 @@ export default Ember.Controller.extend({
      * Module Tags
      */
     focusOnNewModuleTagInput: function () {
-        if (this.get('currentStep') === "moduleTags") {
-            setTimeout(function () {
-                var input = $("#onboarding-addNewModuleTag");
-                if (input)
-                    input.focus();
-            }, 150);
-        }
+        if (this.get('currentStep') !== "moduleTags")
+            return;
+        setTimeout(function () {
+            var input = $("#onboarding-addNewModuleTag");
+            if (input)
+                input.focus();
+        }, 150);
     }.observes('currentStep.length'),
+
+    getEducationCohortAndModuleTags: function () {
+        if (this.get('currentStep') !== "moduleTags")
+            return;
+
+        ParseHelper.cloudFunction(this, 'getEducationCohort', {
+            studyFieldName: this.get('user.studying'),
+            institutionName: this.get('user.placeOfStudy'),
+            currentYear: this.get('user.studyYear')
+        }).then(function (response) {
+            var educationCohort = ParseHelper.extractRawPayload(this.store, 'education-cohort', response);
+            this.set('user.educationCohort', educationCohort);
+            if (educationCohort.get('moduleTags.length'))
+                this.get('user.moduleTags').addObjects(educationCohort.get('moduleTags'));
+        }.bind(this), function (error) {
+            console.dir(error);
+        });
+
+    }.observes('currentStep.length'),
+
+    moduleTagsStepComplete: function () {
+        return this.get('user.moduleTags.length');
+    }.property('user.moduleTags.length'),
 
     actions: {
         studyingAt: function (studyingAt) {

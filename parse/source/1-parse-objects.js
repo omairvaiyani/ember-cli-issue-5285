@@ -1165,7 +1165,6 @@ var Question = Parse.Object.extend("Question", {
 
         if (user) {
             var ACL = new Parse.ACL(user);
-            ACL.setPublicReadAccess(this.isPublic());
             this.setACL(ACL);
         }
 

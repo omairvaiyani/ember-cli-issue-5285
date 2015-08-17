@@ -1650,48 +1650,42 @@ ul.progress-chart-legends
 }
 
 /* TEMPLATE - ONBOARDING */
-.onboarding-well
-  position fixed
-  height 70%
-  top 15%
-  max-width 800px
-  width 100%
-  left calc(50% - 400px)
-  border-radius 4px 12px !important
-  .form-control
-    color black !important
-  .form-control~.floating-label, .form-control:focus~.floating-label
-    color black !important
-  .button-list
-    .btn
-      width 100%
-  .onboarding-well-footer
+.onboarding-container
+  position: fixed;
+  top: 50px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  .onboarding-well
     position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 55px;
-    background-color: rgba(0,0,0,0.1);
-    border-radius: 0 0 4px 12px;
-
-@media (max-width 991px)
-  .onboarding-well
-    width 80%
-    left 10%
-
-@media (max-width 767px)
-  .onboarding-well
-    width 90%
-    left 5%
-
-.onboarding.progress
-    position: fixed;
-    max-width 800px
-    bottom 0
-    height 40px
-    width 100%
-    left calc(50% - 400px)
-    border-radius 4px 12px
+    width auto
+    top 0
+    right 0
+    left 0
+    height: calc(100% - 50px);
+    .form-control
+      color black !important
+    .form-control~.floating-label, .form-control:focus~.floating-label
+      color black !important
+    .button-list
+      .btn
+        width 100%
+    .onboarding-well-footer
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 55px;
+      background-color: rgba(0,0,0,0.1);
+  .onboarding.progress
+    position: absolute;
+    bottom -8px
+    height: 38px;
+    background-color: rgba(0,0,0,.1);
+    right 0
+    left 0
+    line-height: 2.7;
+    padding-bottom 0
     .progress-type
       position: absolute;
       left: 0;
@@ -1702,6 +1696,7 @@ ul.progress-chart-legends
       bottom: 0;
       top: 0;
       line-height: 2.35;
+      border-radius: 4px 12px;
     .progress-completed
       position: absolute;
       right: 0;
@@ -1710,6 +1705,34 @@ ul.progress-chart-legends
       bottom: 0;
       top: 0;
       line-height: 2.35;
+
+@media (min-width 768px)
+  .onboarding-container
+    position relative
+    height 580px
+    top 0
+    .onboarding-well, .onboarding.progress
+      width 80%
+      left 10%
+      border-radius: 4px 12px!important;
+      max-width: 800px;
+    .onboarding-well
+      height: 450px;
+      .onboarding-well-footer
+        border-radius: 0 0 4px 12px;
+    .onboarding-progress
+      top: 500px;
+      bottom inherit
+
+@media (min-width 992px)
+  .onboarding-container
+    .onboarding-well
+      top: 20px;
+      width: 100%;
+      left: calc(50% - 400px);
+    .onboarding.progress
+      width 100%
+      left calc(50% - 400px)
 /* TEMPLATE - BROWSE */
 
 .category-container .card {
@@ -2402,14 +2425,18 @@ body {
   height: 100%;
 }
 
-#body-wrap {
+#body-wrap
   min-height: 100%;
   position: relative;
   padding-bottom: 200px;
-}
+  &.no-padding-bottom
+    padding-bottom 0
+
 @media (min-width: 992px)
   #body-wrap
     padding-bottom 150px
+    &.no-padding-bottom
+      padding-bottom 0
 
 .footer
   position: absolute;

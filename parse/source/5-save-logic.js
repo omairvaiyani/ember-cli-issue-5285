@@ -71,9 +71,17 @@ Parse.Cloud.beforeSave(Test, function (request, response) {
 
         test.set('totalQuestions', test.questions().length);
 
-        // If publicity has changed to private, remove from search index.
-        if (!test.isPublic()) {
-            promises.push(test.deleteIndexObject());
+        if (_.contains(test.dirtyKeys, "isPublic")) {
+            // publicity has change
+            _.each(test.questions(), function (question) {
+                // may need to set this as a task?
+                question.set('isPublic', test.isPublic());
+                question.save();
+            });
+            // If publicity has changed to private, remove from search index.
+            if (!test.isPublic()) {
+                promises.push(test.deleteIndexObject());
+            }
         }
     }
 
@@ -117,6 +125,10 @@ Parse.Cloud.beforeSave(Question, function (request, response) {
     if (question.isNew()) {
         question.setDefaults(user);
     }
+    // Update ACL each time.
+    var ACL = question.getACL();
+    ACL.setPublicReadAccess(question.isPublic());
+    question.setACL(ACL);
 
     Parse.Promise.when(promises).then(function () {
         response.success();

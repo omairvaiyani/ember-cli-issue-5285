@@ -400,7 +400,7 @@ export default Ember.ObjectController.extend(CurrentUser, {
                 facebookId = object.id;
             else
                 facebookId = object.facebookId;
-            ParseHelper.cloudFunction(this,'createOrUpdateEducationalInstitution', {
+            ParseHelper.cloudFunction(this,'createOrUpdateInstitution', {
                 name: object.name,
                 facebookId: facebookId,
                 type: object.category // from facebook // TODO need non-facebook input
