@@ -1,48 +1,57 @@
 <div class="container onboarding-container">
-    <div class="well onboarding-well">
+    <div class="well well-sm onboarding-well">
         <div class="container-fluid onboarding-firstSection">
             <section class="row">
                 <h3 class="text-center margin-bottom-16">{{onboardingStepTitle}}</h3>
             </section>
             <section class="row margin-top-16">
-                <article class="col-sm-3">
-                    {{#if showAlert}}
-                        <div class="alert alert-success alert-dismissible" role="alert">
-                            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
-                                    aria-hidden="true">&times;</span></button>
-                            <strong>Why do I need to add these?</strong><br>
-                            <small>Adding some modules (subjects) will keep you organised and motivated.
-                                Plus, we can send you relevant tests based on hundreds of others who have a similar
-                                studies
-                                to yours.
-                            </small>
-                        </div>
-                    {{/if}}
-                </article>
-                <article class="col-sm-6">
-                    {{partial currentStepPartial}}
-                </article>
+                {{partial currentStepPartial}}
             </section>
         </div>
         <div class="onboarding-well-footer">
-            {{#if currentStepComplete}}
-                <button class="btn btn-primary pull-right margin-right-8" {{action "continueToNextStep"}}>
-                    Continue
-                </button>
-            {{else}}
-                <button class="btn btn-default pull-right margin-right-8">
-                    Skip
+            {{#if showBack}}
+                <button class="btn btn-default margin-left-8" {{action "goToPreviousStep"}}>
+                    Go Back
                 </button>
             {{/if}}
+
+            {{#if onFinalStep}}
+                {{#if currentStepComplete}}
+                    {{#unless registrationComplete}}
+                        {{async-button class="btn btn-primary pull-right margin-right-8" default="Check my details"
+                        pending="Checking..." rejected="Error!" reset=true success="Great!" id="onboarding-registerWithEmail"
+                        action="registerUserWithEmail"}}
+                    {{else}}
+                        <button class="btn btn-primary pull-right margin-right-8" {{action "finishOnboarding"}}>
+                            Ready to Start
+                        </button>
+                    {{/unless}}
+                {{else}}
+                    <button class="btn btn-danger pull-right margin-right-8" disabled>
+                        Check my details
+                    </button>
+                {{/if}}
+            {{else}}
+                {{#if currentStepComplete}}
+                    <button class="btn btn-primary pull-right margin-right-8" {{action "continueToNextStep"}}>
+                        Continue
+                    </button>
+                {{else}}
+                    <button class="btn btn-default pull-right margin-right-8" {{action "continueToNextStep"}}>
+                        Skip
+                    </button>
+                {{/if}}
+            {{/if}}
+
         </div>
     </div>
 
     <div class="progress onboarding">
-        <div class="progress-bar" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100"
-             style="width: 5%;">
-            <span class="sr-only">5% Complete</span>
+        <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100"
+             {{bind-attr style=studyOptimizationBarStyle}}>
+            <span class="sr-only">{{studyOptimizationProgress}}% Complete</span>
         </div>
         <span class="progress-type">STUDY OPTIMIZATION</span>
-        <span class="progress-completed">5%</span>
+        <span class="progress-completed">{{studyOptimizationProgress}}%</span>
     </div>
 </div>

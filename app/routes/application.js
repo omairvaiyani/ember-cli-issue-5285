@@ -289,12 +289,20 @@ export default Ember.Route.extend({
 
             var promise = ParseUser.signup(this.store, data).then(function (user) {
                 this.get('applicationController').set('currentUser', user);
+                // Sometimes sessionToken isn't added to the adapter by ApplicationController.manageSessionToken
+                // This ensures that user.reload() works properly:
+                var adapter = this.store.adapterFor("parse-user");
+                Ember.set(adapter, 'headers.X-Parse-Session-Token', user.get('sessionToken'));
                 return user.reload();
             }.bind(this)).then(function () {
                     if (this.get('applicationController.currentUser.firstTimeLogin')) {
                         this.set('applicationController.currentUser.firstTimeLogin', false);
-                        this.set('applicationController.redirectAfterLoginToRoute', 'join.personalise');
-                        this.set('applicationController.redirectAfterLoginToController', 'join');
+                        // If .redirect is set, this is called from new onboarding process
+                        if(!this.get('applicationController.redirect')) {
+                            // Else, they are in the old process
+                            this.set('applicationController.redirectAfterLoginToRoute', 'join.personalise');
+                            this.set('applicationController.redirectAfterLoginToController', 'join');
+                        }
                     }
                     this.send('redirectAfterLogin');
                 }.bind(this),
@@ -357,7 +365,12 @@ export default Ember.Route.extend({
             });
         },
 
+        // @Deprecated - Being replaced by redirectRoute
         redirectAfterLogin: function () {
+            if(this.get('applicationController.redirect'))
+                return this.send('redirectRoute');
+
+            // Old code, still in action.
             if (this.get('applicationController.redirectAfterLoginToRoute')) {
                 this.transitionTo(this.get('applicationController.redirectAfterLoginToRoute'));
                 if (this.get('applicationController.redirectAfterLoginToController'))
@@ -369,6 +382,39 @@ export default Ember.Route.extend({
                 this.set('applicationController.redirectAfterLoginToRoute', null);
             } else
                 this.transitionTo('index');
+        },
+
+        /**
+         * @Action Set Redirect
+         * Takes an object which defines:
+         * - route (where to transition to)
+         * - controller (context)
+         * - returnAction (what to call on the controller)
+         * @param {Object} redirect
+         */
+        setRedirect: function (redirect) {
+            this.set('applicationController.redirect', redirect);
+        },
+
+        /**
+         * @Action Redirect Route
+         * If called, we check if a redirect object
+         * is set on the ApplicationController.
+         * If set
+         * - transition to given route and/OR
+         * - call returnAction on given controller
+         * @returns {boolean}
+         */
+        redirectRoute: function () {
+            // New code, replacing redirectAfterLogin
+            var redirect = this.get('applicationController.redirect');
+            if (redirect) {
+                if (redirect.get('route'))
+                    this.transitionTo(redirect.get('route'));
+                if (redirect.get('controller') && redirect.get('returnAction'))
+                    redirect.get('controller').send(redirect.get('returnAction'));
+                this.set('applicationController.redirect', null);
+            }
         },
 
         /**

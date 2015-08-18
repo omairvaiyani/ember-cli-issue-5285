@@ -68,17 +68,18 @@ Parse.Cloud.beforeSave(Test, function (request, response) {
         }
     } else {
         // Existing test
-
         test.set('totalQuestions', test.questions().length);
 
-        if (_.contains(test.dirtyKeys, "isPublic")) {
-            // publicity has change
+        if (_.contains(test.dirtyKeys(), "isPublic")) {
+            // publicity has changed, so update that on
+            // the questions within the test.
             _.each(test.questions(), function (question) {
-                // may need to set this as a task?
+                // Not setting this up as task as users
+                // might toggle publicity too quickly.
                 question.set('isPublic', test.isPublic());
                 question.save();
             });
-            // If publicity has changed to private, remove from search index.
+            // If publicity is now private, remove from search index.
             if (!test.isPublic()) {
                 promises.push(test.deleteIndexObject());
             }

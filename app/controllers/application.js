@@ -154,11 +154,9 @@ export default Ember.Controller.extend({
     manageCurrentUserSession: function () {
         var currentUser = this.get('currentUser');
         if (currentUser) {
-
             localStorage.sessionToken = currentUser.get('sessionToken');
-            var adapter = this.store.adapterFor(currentUser);
-            adapter.headers['X-Parse-Session-Token'] = currentUser.get('sessionToken');
-
+            var adapter = this.store.adapterFor("parse-user");
+            Ember.set(adapter, 'headers.X-Parse-Session-Token', currentUser.get('sessionToken'));
             if (!this.get('websiteNotInitialisedForUser'))
                 return this.get('controllers.index').myTestsListUpdate();
             else
@@ -206,7 +204,6 @@ export default Ember.Controller.extend({
         password: ''
     },
 
-    // Deprecated
     signUpValidationErrors: {
         name: "",
         email: "",

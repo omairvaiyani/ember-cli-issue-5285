@@ -770,7 +770,7 @@ Parse.Cloud.define('createOrUpdateInstitution', function (request, response) {
             if ((!institution.get('facebookId') || !institution.get('facebookId').length) &&
                 facebookId) {
                 institution.set('facebookId', facebookId);
-                return institution.save();
+                return institution.save(null, {useMasterKey: true});
             } else
                 return institution;
         } else {
@@ -779,6 +779,9 @@ Parse.Cloud.define('createOrUpdateInstitution', function (request, response) {
             institution.set('type', type);
             if (facebookId)
                 institution.set('facebookId', facebookId);
+            var ACL = new Parse.ACL();
+            ACL.setPublicReadAccess(true);
+            institution.setACL(ACL);
             return institution.save();
         }
     }).then(function () {
@@ -828,13 +831,16 @@ Parse.Cloud.define('createOrUpdateStudyField', function (request, response) {
                     changesMade = true;
                 }
                 if (changesMade)
-                    return studyField.save();
+                    return studyField.save(null, {useMasterKey: true});
                 else
                     return studyField;
             } else {
                 studyField = new StudyField();
                 studyField.set('name', name);
                 studyField.set('facebookId', facebookId);
+                var ACL = new Parse.ACL();
+                ACL.setPublicReadAccess(true);
+                studyField.setACL(ACL);
                 return studyField.save();
             }
         }).then(function () {

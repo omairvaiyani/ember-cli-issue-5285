@@ -64,8 +64,8 @@ export default Ember.Mixin.create({
             //var parseFile = new Parse.File('image.jpg', {base64: this.get('imageFile.base64')});
             this.send('incrementLoadingItems');
             return ParseHelper.uploadFile(this, 'image.jpg', {base64: this.get('imageFile.base64')})
-                .then(function (image) {
-                    var image = Ember.Object.create({name:image.name, url:image.url});
+                .then(function (response) {
+                    var image = Ember.Object.create({name:response.name, url:response.url});
                     this.send('decrementLoadingItems');
                     this.send('saveUploadedImage', image);
                 }.bind(this), function (error) {

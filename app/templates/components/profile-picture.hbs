@@ -1,3 +1,8 @@
-{{#link-to 'user.index' user.slug}}
-    {{view 'profile-image' user=user}}
-{{/link-to}}
+{{#unless doNotLink}}
+    {{#link-to 'user.index' user.slug}}
+        {{view 'profile-image' user=user height=height width=width}}
+    {{/link-to}}
+{{else}}
+    {{view 'profile-image' user=user height=height width=width}}
+{{/unless}}
+

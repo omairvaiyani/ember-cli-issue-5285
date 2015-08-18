@@ -1030,7 +1030,7 @@ hr.user-message-item-separator {
 }
 
 .sign-up-validation > span {
-  padding: 6px;
+  padding: 1px;
 }
 
 .login-connecting-error {
@@ -1665,8 +1665,11 @@ ul.progress-chart-legends
     height: calc(100% - 50px);
     .form-control
       color black !important
+      .input
+        font-size 16px
     .form-control~.floating-label, .form-control:focus~.floating-label
       color black !important
+      font-size 16px
     .button-list
       .btn
         width 100%
@@ -1692,11 +1695,11 @@ ul.progress-chart-legends
       font-weight: 800;
       padding: 3px 30px 2px 10px;
       color: rgb(255, 255, 255);
-      background-color: rgba(25, 25, 25, 0.2);
+      text-shadow: 0 1px 8px #000;
       bottom: 0;
       top: 0;
       line-height: 2.35;
-      border-radius: 4px 12px;
+      border-radius: 4px 0 0 12px;;
     .progress-completed
       position: absolute;
       right: 0;
@@ -1714,15 +1717,15 @@ ul.progress-chart-legends
     .onboarding-well, .onboarding.progress
       width 80%
       left 10%
-      border-radius: 4px 12px!important;
       max-width: 800px;
     .onboarding-well
-      height: 450px;
+      height: 485px;
+      border-radius: 12px!important;
       .onboarding-well-footer
-        border-radius: 0 0 4px 12px;
-    .onboarding-progress
-      top: 500px;
-      bottom inherit
+        border-radius: 0 0 12px 12px;
+    .onboarding.progress
+      bottom -16px
+      border-radius: 4px 12px!important;
 
 @media (min-width 992px)
   .onboarding-container

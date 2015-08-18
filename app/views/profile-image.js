@@ -10,9 +10,14 @@ export default Ember.View.extend({
     attributeBindings: ['style'],
 
     style: function () {
-        var url = this.get('user.profileImageURL');
-
+        var url = this.get('user.profileImageURL'),
+            style = "";
         if (url)
-            return "background-image:url(" + url + ");";
+             style += "background-image:url(" + url + ");";
+        if(this.get('height'))
+            style += "height:"+this.get('height')+"px;";
+        if(this.get('width'))
+            style += "width:"+this.get('width')+"px;";
+        return style;
     }.property('user')
 });

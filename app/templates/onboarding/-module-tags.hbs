@@ -1,0 +1,27 @@
+<article class="col-sm-8 col-sm-offset-2 col-md-6 col-md-offset-3">
+    <div class="study-profile">
+        {{#if user.studying}}
+            <h5 class="margin-bottom-8"><i class="fa fa-fw fa-book margin-right-8"></i>{{user.studying}}</h5>
+        {{/if}}
+        {{#if user.placeOfStudy}}
+            <h5 class="margin-bottom-8"><i class="fa fa-fw fa-university margin-right-8"></i>{{user.placeOfStudy}}</h5>
+        {{/if}}
+        {{#if user.studyYear}}
+            <h5 class="margin-bottom-8"><i class="fa fa-fw fa-group margin-right-8"></i>{{user.studyYear}}</h5>
+        {{/if}}
+        <hr>
+        <h5><strong>Modules</strong></h5>
+        <ul class="tags margin-bottom-16">
+            {{#each user.moduleTags as |tag index|}}
+                <li class="tag">{{tag}}<i class="fa fa-fw fa-close" {{action "removeModuleTag" index}}></i></li>
+            {{/each}}
+            <li class="tag default">
+                {{input type="text" value=newModuleTag action="addNewModuleTag" placeholder="Module name"
+                id="onboarding-addNewModuleTag"}}
+                <i {{bind-attr class=":fa :fa-fw :fa-plus :add-tag newModuleTag.length::close-tag"}}
+                    {{action 'addNewModuleTag'}}></i>
+            </li>
+        </ul>
+    </div>
+</article>
+

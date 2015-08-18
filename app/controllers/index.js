@@ -14,7 +14,7 @@ Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, EstimateMemoryStrength
      * GUEST MODE
      */
     onboardUser: function () {
-        return Ember.Object.create({
+        return this.store.createRecord('parse-user', {
             studying: "", studyingAt: "", placeOfStudy: "", studyYear: "",
             moduleTags: new Ember.A()
         });
