@@ -55,26 +55,28 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
     studyOptimizationProgress: function () {
         var progress = 0,
             user = this.get('user');
-        if(user.get('studying.length'))
+        if (user.get('studying.length'))
             progress += 14;
-        if(user.get('studyingAt.length'))
+        if (user.get('studyingAt.length'))
             progress += 8;
-        if(user.get('placeOfStudy.length'))
+        if (user.get('placeOfStudy.length'))
             progress += 10;
-        if(user.get('studyYear.length'))
+        if (user.get('studyYear.length'))
             progress += 10;
-        if(user.get('moduleTags.length')) {
+        if (user.get('moduleTags.length')) {
             progress += 8;
-            if(user.get('moduleTags.length') > 2)
+            if (user.get('moduleTags.length') > 2)
                 progress += 4;
-            if(user.get('moduleTags.length') > 4)
+            if (user.get('moduleTags.length') > 4)
                 progress += 4;
         }
-        if(user.get('srActivated'))
+        if (user.get('srActivated'))
             progress += 25;
+        if (this.get('registrationComplete'))
+            progress += 17;
         return progress;
     }.property('user.studying.length', 'user.studyingAt.length', 'user.placeOfStudy.length',
-        'user.studyYear.length', 'user.moduleTags.length', 'user.srActivated'),
+        'user.studyYear.length', 'user.moduleTags.length', 'user.srActivated', 'registrationComplete'),
 
     studyOptimizationBarStyle: function () {
         return "width:" + this.get('studyOptimizationProgress') + "%;";
@@ -146,6 +148,11 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
         if (this.get('currentStep') !== "moduleTags")
             return;
 
+        if (!this.get('user.studying') && !this.get('user.placeOfStudy'))
+            return;
+
+        this.set('fetchingModuleTags', true);
+        this.send('incrementLoadingItems');
         ParseHelper.cloudFunction(this, 'getEducationCohort', {
             studyFieldName: this.get('user.studying'),
             institutionName: this.get('user.placeOfStudy'),
@@ -157,7 +164,10 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
                 this.get('user.moduleTags').addObjects(educationCohort.get('moduleTags'));
         }.bind(this), function (error) {
             console.dir(error);
-        });
+        }).then(function () {
+            this.set('fetchingModuleTags', false);
+            this.send('decrementLoadingItems');
+        }.bind(this));
 
     }.observes('currentStep.length'),
 
@@ -175,12 +185,9 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
     /*
      * Profile Setup
      */
-    signUpValidationErrors: {
-        name: "",
-        email: "",
-        password: "",
-        signUp: ""
-    },
+    signUpValidationErrors: function () {
+        return this.get('controllers.application.signUpValidationErrors')
+    }.property('controllers.application.signUpValidationErrors'),
 
     profileSetupStepComplete: function () {
         if (this.get('registrationComplete'))

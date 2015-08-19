@@ -12,15 +12,19 @@
         <hr>
         <h5><strong>Modules</strong></h5>
         <ul class="tags margin-bottom-16">
-            {{#each user.moduleTags as |tag index|}}
-                <li class="tag">{{tag}}<i class="fa fa-fw fa-close" {{action "removeModuleTag" index}}></i></li>
-            {{/each}}
-            <li class="tag default">
-                {{input type="text" value=newModuleTag action="addNewModuleTag" placeholder="Module name"
-                id="onboarding-addNewModuleTag"}}
-                <i {{bind-attr class=":fa :fa-fw :fa-plus :add-tag newModuleTag.length::close-tag"}}
-                    {{action 'addNewModuleTag'}}></i>
-            </li>
+            {{#if fetchingModuleTags}}
+                <h5 class="text-center">Fetching Modules...</h5>
+            {{else}}
+                {{#each user.moduleTags as |tag index|}}
+                    <li class="tag">{{tag}}<i class="fa fa-fw fa-close" {{action "removeModuleTag" index}}></i></li>
+                {{/each}}
+                <li class="tag default">
+                    {{input type="text" value=newModuleTag action="addNewModuleTag" placeholder="Module name"
+                    id="onboarding-addNewModuleTag"}}
+                    <i {{bind-attr class=":fa :fa-fw :fa-plus :add-tag newModuleTag.length::close-tag"}}
+                        {{action 'addNewModuleTag'}}></i>
+                </li>
+            {{/if}}
         </ul>
     </div>
 </article>

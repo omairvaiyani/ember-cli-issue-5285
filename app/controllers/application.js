@@ -1,6 +1,7 @@
 import Ember from 'ember';
 import ParseHelper from '../utils/parse-helper';
 import EventTracker from '../utils/event-tracker';
+import CryptoHash from '../utils/crypto-hash';
 
 export default Ember.Controller.extend({
     needs: ['index', 'user', 'test', 'category'],
@@ -22,6 +23,8 @@ export default Ember.Controller.extend({
             if (this.get('currentPath') !== 'search')
                 this.send('deactivateSiteSearch');
         }
+
+        window.Intercom('update');
 
         var path = this.get('currentPath'),
             title = "",
@@ -154,6 +157,28 @@ export default Ember.Controller.extend({
     manageCurrentUserSession: function () {
         var currentUser = this.get('currentUser');
         if (currentUser) {
+            // Intercom.io
+            /*window.intercomSettings = {
+
+                "app_id": "pjy1btre"
+            };*/
+            window.Intercom('boot', {
+                app_id: "oibyis4o",
+                user_hash: CryptoHash.SHA256(currentUser.get('id'), "Xhl5IzCrI-026mCaD5gqXpoO2WURA416KtCRlWsJ"),
+                user_id: currentUser.get('id'),
+                name: currentUser.get('name'),
+                email: currentUser.get('email'),
+                timeZone: currentUser.get('timeZone'),
+                profileImageURL: currentUser.get('profileImageURL'),
+                points: currentUser.get('points'),
+                srActivated: currentUser.get('srActivated'),
+                signUpSource: currentUser.get('signUpSource'),
+                numberOfTestsCreated: currentUser.get('numberOfTestsCreated'),
+                receivePromotionalEmails: currentUser.get('receivePromotionalEmails'),
+                created_at: Date.parse(currentUser.get('createdAt'))/1000
+            });
+
+            // Session Token Handling
             localStorage.sessionToken = currentUser.get('sessionToken');
             var adapter = this.store.adapterFor("parse-user");
             Ember.set(adapter, 'headers.X-Parse-Session-Token', currentUser.get('sessionToken'));
@@ -162,6 +187,7 @@ export default Ember.Controller.extend({
             else
                 this.send('incrementLoadingItems');
 
+            // Load user's content if not already done so in initialisers
             ParseHelper.cloudFunction(this, 'initialiseWebsiteForUser', {}).then(function (response) {
                 ParseHelper.handleResponseForInitializeWebsiteForUser(this.store, currentUser, response);
                 this.get('controllers.index').myTestsListUpdate();
@@ -173,7 +199,7 @@ export default Ember.Controller.extend({
             }.bind(this));
 
         } else {
-            // TODO Logout with REST API
+            // Log user out
             localStorage.clear();
             this.set('websiteNotInitialisedForUser', true);
         }

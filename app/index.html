@@ -23,7 +23,7 @@
     <link rel="apple-touch-icon" sizes="144x144" href="/img/favicons/apple-icon-144x144.png">
     <link rel="apple-touch-icon" sizes="152x152" href="/img/favicons/apple-icon-152x152.png">
     <link rel="apple-touch-icon" sizes="180x180" href="/img/favicons/apple-icon-180x180.png">
-    <link rel="icon" type="image/png" sizes="192x192"  href="/img/favicons/android-icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/img/favicons/android-icon-192x192.png">
     <link rel="icon" type="image/png" sizes="32x32" href="/img/favicons/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="96x96" href="/img/favicons/favicon-96x96.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/img/favicons/favicon-16x16.png">
@@ -32,7 +32,7 @@
     <meta name="msapplication-TileColor" content="#e73a3d">
     <meta name="msapplication-TileImage" content="/img/favicons/ms-icon-144x144.png">
     <meta name="theme-color" content="#e73a3d">
-    
+
     <!-- Required for AJAX crawling -->
     <meta name="fragment" content="!">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -43,10 +43,6 @@
     <link rel="stylesheet" href="assets/vendor.css">
     <link rel="stylesheet" href="assets/synap-web.css">
     <link rel="stylesheet" href="style/social.css">
-
-    <!-- Go to www.addthis.com/dashboard to customize your tools -->
-    <!-- <script type="text/javascript" src="https://s7.addthis.com/js/300/addthis_widget.js#pubid=ra-54d949656c333bb3"
-            async="async"></script> -->
 
     <!--
     <script type="text/javascript">
@@ -122,9 +118,43 @@
     })(document, window.mixpanel || []);
     mixpanel.init("e246417d11beff0d10fcae900bd02c75");</script>
     -->
-    <!-- end Mixpanel -->
 
+    <!-- GoRoost -->
     <!-- <script src='//cdn.goroost.com/roostjs/et3g3sd7e2tc60dvmnvyuvnf84v7rwcd' async></script> -->
+
+    <!-- Intercom -->
+    <script>(function () {
+        var w = window;
+        var ic = w.Intercom;
+        if (typeof ic === "function") {
+            ic('reattach_activator');
+            ic('update', intercomSettings);
+        } else {
+            var d = document;
+            var i = function () {
+                i.c(arguments)
+            };
+            i.q = [];
+            i.c = function (args) {
+                i.q.push(args)
+            };
+            w.Intercom = i;
+            function l() {
+                var s = d.createElement('script');
+                s.type = 'text/javascript';
+                s.async = true;
+                s.src = 'https://widget.intercom.io/widget/pjy1btre';
+                var x = d.getElementsByTagName('script')[0];
+                x.parentNode.insertBefore(s, x);
+            }
+
+            if (w.attachEvent) {
+                w.attachEvent('onload', l);
+            } else {
+                w.addEventListener('load', l, false);
+            }
+        }
+    })()</script>
 
     {{content-for 'head-footer'}}
 </head>
@@ -135,31 +165,31 @@
 
 <script type="text/javascript">
     /*// Prerender waiter
-    window.prerenderReady = false;
+     window.prerenderReady = false;
 
-    // Amplitude SDK
-    (function (h, a) {
-        var f = h.amplitude || {};
-        var b = a.createElement("script");
-        b.type = "text/javascript";
-        b.async = true;
-        b.src = "https://d24n15hnbwhuhn.cloudfront.net/libs/amplitude-1.3-min.js";
-        var g = a.getElementsByTagName("script")[0];
-        g.parentNode.insertBefore(b, g);
-        f._q = [];
-        function e(i) {
-            f[i] = function () {
-                f._q.push([i].concat(Array.prototype.slice.call(arguments, 0)))
-            }
-        }
+     // Amplitude SDK
+     (function (h, a) {
+     var f = h.amplitude || {};
+     var b = a.createElement("script");
+     b.type = "text/javascript";
+     b.async = true;
+     b.src = "https://d24n15hnbwhuhn.cloudfront.net/libs/amplitude-1.3-min.js";
+     var g = a.getElementsByTagName("script")[0];
+     g.parentNode.insertBefore(b, g);
+     f._q = [];
+     function e(i) {
+     f[i] = function () {
+     f._q.push([i].concat(Array.prototype.slice.call(arguments, 0)))
+     }
+     }
 
-        var c = ["init", "logEvent", "setUserId", "setUserProperties", "setVersionName", "setDomain", "setGlobalUserProperties"];
-        for (var d = 0; d < c.length; d++) {
-            e(c[d])
-        }
-        h.amplitude = f
-    })(window, document);
-    amplitude.init("0b84efdda59409fdfe6353e1efba9491");*/
+     var c = ["init", "logEvent", "setUserId", "setUserProperties", "setVersionName", "setDomain", "setGlobalUserProperties"];
+     for (var d = 0; d < c.length; d++) {
+     e(c[d])
+     }
+     h.amplitude = f
+     })(window, document);
+     amplitude.init("0b84efdda59409fdfe6353e1efba9491");*/
 </script>
 
 <script src="assets/vendor.js"></script>
@@ -202,7 +232,7 @@
 <!-- App Loading State
     This is hidden by initializer:session.js-->
 <div class="app-loading" id="appLoading">
-    <img src="img/loading-large.gif" />
+    <img src="img/loading-large.gif"/>
 </div>
 <!-- App injection -->
 <div id="body-wrap"></div>

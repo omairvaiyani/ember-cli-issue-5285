@@ -461,6 +461,27 @@ export default Ember.Route.extend({
             });
         },
 
+        /**
+         * @Action Sidebar Toggle
+         * Most sidebar actions are done
+         * by jQuery in SlidingMenuComponent.
+         * But this action breaks when
+         * handlebar changes in the navbar
+         * (where the toggle is kept) occurs.
+         * This action works everytime.
+         */
+        sidebarToggle: function () {
+            var overlay = $('.sidebar-overlay'),
+                sidebar = $('#sidebar');
+
+            sidebar.toggleClass('open');
+            if (sidebar.hasClass('open')) {
+                overlay.addClass('active');
+            } else {
+                overlay.removeClass('active');
+            }
+        },
+
         minimalNavbar: function () {
             this.set('applicationController.minimalNavbar', true);
         },

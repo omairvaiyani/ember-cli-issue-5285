@@ -14,7 +14,7 @@
                     {{action 'previewImage' on='change'}}/>
                 <img id="image-holder" {{bind-attr src=imageFile.url}} class="hidden"/>
 
-                <label class="circular-image margin-bottom-16 pull-right linkify" for="imageInput"
+                <label class="circular-image linkify" for="imageInput"
                     {{bind-attr style=imageFile.style}}></label>
             </div>
             <div class="col-xs-12 col-sm-7 col-fix-right">
@@ -63,6 +63,13 @@
                         <span class="alert alert-danger">{{signUpValidationErrors.signUp}}</span>
                     </div>
                 {{/if}}
+                <div class="row margin-top-16">
+                    <div class="col-md-12 text-center">
+                        <p class="small">By clicking 'Sign up!' you accept that you have read (and agree to) our
+                            <a href='/privacy-policy' target="_blank">Privacy Policy</a>
+                            and <a href='/terms' target="_blank">Terms & Conditions</a>.</p>
+                    </div>
+                </div>
             </div>
         </section>
     {{else}}

@@ -11,21 +11,26 @@ export default Ember.Component.extend({
          * Dropdown menu and sidebar toggle button works with JQuery and Bootstrap.min.js
          */
 
-        // Sidebar toggle
-        //
-        // -------------------
+            // Sidebar toggle
+            //
+            // -------------------
         $(document).ready(function () {
             var overlay = $('.sidebar-overlay');
 
-            $('.sidebar-toggle').on('click', function () {
-                var sidebar = $('#sidebar');
-                sidebar.toggleClass('open');
-                if (sidebar.hasClass('open')) {
-                    overlay.addClass('active');
-                } else {
-                    overlay.removeClass('active');
-                }
-            });
+            // Sidebar toggle is now delegated to ApplicationRoute
+            // This is because jQuery doesn't work when the navbar
+            // elements are altered in handlebars.
+
+            /*$('.sidebar-toggle').on('click', function () {
+             var sidebar = $('#sidebar');
+             sidebar.toggleClass('open');
+             if (sidebar.hasClass('open')) {
+             overlay.addClass('active');
+             } else {
+             overlay.removeClass('active');
+             }
+             });
+             */
 
             overlay.on('click', function () {
                 $(this).removeClass('active');
@@ -97,12 +102,12 @@ export default Ember.Component.extend({
 
             // Add slidedown animation to dropdown
             dropdown.on('show.bs.dropdown', function (e) {
-                $(this).find('.dropdown-menu').first().stop(true, true).slideDown();
+                // $(this).find('.dropdown-menu').first().stop(true, true).slideDown();
             });
 
             // Add slideup animation to dropdown
             dropdown.on('hide.bs.dropdown', function (e) {
-                $(this).find('.dropdown-menu').first().stop(true, true).slideUp();
+                //$(this).find('.dropdown-menu').first().stop(true, true).slideUp();
             });
         })(jQuery);
 
@@ -133,8 +138,8 @@ export default Ember.Component.extend({
     },
 
     actions: {
-        openModal: function (a,b,c,d) {
-            this.get('parentController').send('openModal', a,b,c,d);
+        openModal: function (a, b, c, d) {
+            this.get('parentController').send('openModal', a, b, c, d);
         },
 
         logout: function () {
@@ -143,6 +148,15 @@ export default Ember.Component.extend({
 
         facebookConnect: function () {
             this.get('parentController').send('facebookConnect');
+        },
+
+        toggleDropdownMenu: function () {
+            var dropdown = $(".dropdown"),
+                menu = dropdown.find('.dropdown-menu').first();
+            if (menu.is(":visible"))
+                menu.stop(true, true).slideUp();
+            else
+                menu.stop(true, true).slideDown();
         }
     }
 });
