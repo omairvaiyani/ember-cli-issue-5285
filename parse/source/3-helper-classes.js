@@ -74,6 +74,17 @@ String.prototype.camelCaseToNormal = function (capitalize) {
         return normal.toLowerCase();
 };
 /**
+ * @Function Percentage
+ * @param {integer} number1
+ * @param {integer} number2
+ * @returns {number}
+ */
+var percentage = function (number1, number2) {
+    if(!number1 || number2)
+        return 0;
+    return Math.floor((number1 / number2) * 100);
+};
+/**
  * @Function Generate Pointer
  * @param {string} objectId
  * @param {string} className

@@ -196,7 +196,7 @@ Parse.User.prototype.minimalProfile = function () {
     var object = this.toJSON(),
         propertiesToRemove = ['ACL', 'authData', 'createdTests', 'devices', 'email', 'emailNotifications', 'emailVerified',
             'fbEducation', 'followers', 'following', 'gender', 'savedTests', 'srCompletedAttempts', 'testAttempts',
-            'fbFriends', 'firstTimeLogin', 'isPremium', 'password', 'pushNotifications', 'receivePromotionalEmails',
+            'fbFriends', 'firstTimeLogin', 'isPremium', 'intercomHash', 'password', 'pushNotifications', 'receivePromotionalEmails',
             'srActivated', 'srDoNotDisturbTimes', 'srLatestTest', 'srIntensityLevel', 'srNextDue', 'srNotifyByEmail',
             'srNotifyByPush', 'stripeToken', 'timeZone', 'username', 'uniqueResponses', 'userEvents'];
 
@@ -401,6 +401,8 @@ Parse.User.prototype.addUniqueResponses = function (responses) {
 /**
  * @Function Estimate Memory Strengths for Tests
  *
+ * @Redo Needs rewriting based on SuperMemo topics formula
+ *
  * Fetches tests from given pointers. Fetches
  * ALL uniqueResponses by user (reasonable limit).
  *
@@ -449,6 +451,14 @@ Parse.User.prototype.estimateMemoryStrengthForTests = function (tests) {
                     });
                     return tagMatched;
                 }).length;
+
+                if (estimatedMemoryStrength > 0)
+                    estimatedMemoryStrength = estimatedMemoryStrength / 4;
+                // Max set to 40 for estimation
+                if (estimatedMemoryStrength > 40)
+                    estimatedMemoryStrength = 40;
+
+                estimatedMemoryStrength = Math.round(estimatedMemoryStrength);
 
                 estimatedMemoryStrengths.push({test: test, estimatedMemoryStrength: estimatedMemoryStrength});
             });
@@ -1639,7 +1649,34 @@ var UniqueResponse = Parse.Object.extend("UniqueResponse", {
         return this.get('memoryStrength');
     },
 
+    /**
+     * @Propert correctnessStreak
+     * Number of correct responses in a row
+     * by user. Needed for Spaced-Repetition.
+     * @returns {Integer}
+     */
+    correctnessStreak: function () {
+        return this.get('correctnessStreak');
+    },
 
+    /**
+     * @Propert previousEasinessFactor
+     * Calculated in this.updateMemoryStrength(),
+     * Needed for Spaced-Repetition.
+     * @returns {Number}
+     */
+    previousEasinessFactor: function () {
+        return this.get('previousEasinessFactor');
+    },
+    /**
+     * @Propert currentOptimumInterval
+     * Calculated in this.calculateOptimumRepetitionDate(),
+     * Needed for Spaced-Repetition. Interval is in days.
+     * @returns {Integer}
+     */
+    currentOptimumInterval: function () {
+        return this.get('currentOptimumInterval');
+    },
     /**
      * @Function Set Defaults
      * ACL if user:
@@ -1671,42 +1708,136 @@ var UniqueResponse = Parse.Object.extend("UniqueResponse", {
      * @return {UniqueResponse}
      */
     addLatestResponse: function (response) {
+        logger.log("Spaced Repetition", "-----------------------");
+        logger.log("Spaced Repetition", "Adding Latest Response");
         this.setLatestResponse(response);
         this.set('latestResponseIsCorrect', response.isCorrect());
         this.set('latestResponseDate', response.createdAt ? response.createdAt : new Date());
         this.increment('numberOfResponses');
-        if (response.isCorrect())
+        if (response.isCorrect()) {
             this.increment('numberOfCorrectResponses');
+            this.increment('correctnessStreak');
+        } else
+            this.set('correctnessStreak', 0);
+
+        logger.log("Spaced Repetition", "Is the response correct? " + this.latestResponseIsCorrect() + " : " + response.id);
+        // For Spaced Repetition
+        this.calculateOptimumRepetitionDate();
+        // Uses optimum interval from previous function to
+        // calculate the current memory strength
+        logger.log("Spaced Repetition", "OI set, Now memory strength");
         this.updateMemoryStrength();
+        logger.log("Spaced Repetition", "Memory strength set to " +this.memoryStrength());
         this.responses().add(response);
         return this;
     },
 
     /**
+     * @Function Calculate Optimum Repetition Date
+     * This function is called post-attempt. It
+     * takes previous Unique Response data and
+     * decides when the next repetition should occur.
+     * @returns {UniqueResponse}
+     */
+    calculateOptimumRepetitionDate: function () {
+        logger.log("Spaced Repetition", "Calculating Optimum Interval");
+        // Before we calculate the next interval, check current memory strength
+        // If it's high, that means the user has reviewed this item too early
+        // In which case, we'll disallow this repetition in our calculations
+        this.updateMemoryStrength();
+        if(this.latestResponseIsCorrect() && this.memoryStrength() > 94)
+            return this;
+
+        var optimumInterval, // in days (inter-repetition time)
+            EF, // easiness-factor
+            QF; // quality-factor
+
+        // Only calculate/change EF if QF > 2, i.e. the latest response was correct
+        if (this.latestResponseIsCorrect()) {
+            // Calculate user's QF on this item
+            var grade = percentage(this.numberOfCorrectResponses(), this.numberOfResponses());
+            switch (true) {
+                // NOTE: not sure why QF is even in the formula for incorrect responses.
+                // Incorrect AND less than 19
+                case (grade < 20 && !this.latestResponseIsCorrect()):
+                    QF = 0;
+                    break;
+                // Incorrect AND between than 20-40
+                case (grade > 19 && grade < 40 && !this.latestResponseIsCorrect()):
+                    QF = 1;
+                    break;
+                // Incorrect AND above than 40
+                case (grade > 39 && !this.latestResponseIsCorrect()):
+                    QF = 2;
+                    break;
+                // Correct AND less than 60
+                case (grade < 60 && this.latestResponseIsCorrect()):
+                    QF = 3;
+                    break;
+                // Correct AND between 60-80
+                case (grade > 59 && grade < 80 && this.latestResponseIsCorrect()):
+                    QF = 4;
+                    break;
+                // Correct AND 80 or above
+                case (grade > 79 && this.latestResponseIsCorrect()):
+                    QF = 5;
+                    break;
+            }
+            // Calculate item's EF
+            var previousEF = this.previousEasinessFactor() ? this.previousEasinessFactor() : 2.5;
+            EF = previousEF + (0.1 - (5 - QF) * (0.08 + (5 - QF) * 0.02));
+            // EF cannot be below 1.3
+            if (EF < 1.3)
+                EF = 1.3;
+
+            // Set calculated EF as 'previousEasinessFactor' to be used at next repetition
+            this.set('previousEasinessFactor', EF);
+            logger.log("Spaced Repetition", "EF calculated as " + EF);
+        }
+
+        // Calculate optimum interval (in days) based on EF if steak > 2
+        if (this.correctnessStreak() < 2) // i.e. got the answer wrong, or right for the first time in a row
+            optimumInterval = 1;
+        else if (this.correctnessStreak() === 2) // answered correctly twice in a row now
+            optimumInterval = 6;
+        else {
+            // More then 2 correct answers in a row
+            // Calculation of interval based on EF and number of correct answers in a row
+            optimumInterval = (this.correctnessStreak() - 1) * EF;
+        }
+        logger.log("Spaced Repetition", "Optimum interval is " + optimumInterval);
+        // This will be used to calculate memory strength, and therefore, when to repeat the item
+        this.set('currentOptimumInterval', optimumInterval);
+        this.set('optimumRepetitionDate', moment().add(Math.round(optimumInterval), 'd').toDate());
+        return this;
+    },
+
+    /**
      * @Function Update Memory Strength
+     * Uses the set 'optimumRepetitionDate' to calculate
+     * the current memory strength.
      * @returns {UniqueResponse}
      */
     updateMemoryStrength: function () {
-        var decayMultiplier = 6 - this.numberOfCorrectResponses();
-        if (decayMultiplier < 1)
-            decayMultiplier = 1;
+        // Cannot calculate if no responses, or optimum interval has not been calculated yet.
+        if (!this.latestResponseDate() || !this.currentOptimumInterval()) {
+            this.set('memoryStrength', 0);
+            return this;
+        }
 
-        var hoursSinceLatestResponse = moment().diff(this.latestResponseDate(), 'hours');
+        // Optimum Interval to repeat is when memoryStrength is 90%.
+        // So reverse the calculation to extrapolate the current memoryStrength,
+        // accurate to the hour.
+        var memoryStrength,
+            memoryStrengthDropCutOff = 10,
+            hoursSinceLastAttempt = moment().diff(moment(this.latestResponseDate()), 'hours');
 
-        var memoryStrength = (100 - ((hoursSinceLatestResponse / 10 ) * decayMultiplier) ) +
-            ( (hoursSinceLatestResponse / 100) ^ 2 );
-
-        if (!this.latestResponseIsCorrect())
-            memoryStrength = memoryStrength - 30;
-
-        if (memoryStrength < 0)
-            memoryStrength = 0;
-        else if (memoryStrength > 100)
-            memoryStrength = 100;
+        memoryStrength = 100 - (hoursSinceLastAttempt * (memoryStrengthDropCutOff / (this.currentOptimumInterval() * 24)));
 
         this.set('memoryStrength', Math.round(memoryStrength));
         return this;
     }
+
 }, {
     /**
      * @Function Initialize

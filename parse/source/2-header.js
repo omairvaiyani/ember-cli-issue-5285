@@ -6,9 +6,12 @@ var _ = require("underscore"),
     Mandrill = require('mandrill'),
     Stripe = require('stripe'),
     algoliasearch = require('cloud/algoliasearch.parse.js'),
-    algoliaClient = algoliasearch('ONGKY2T0Y8', 'b13daea376f182bdee7a089ade58b656');
+    algoliaClient = algoliasearch('ONGKY2T0Y8', 'b13daea376f182bdee7a089ade58b656'),
+    CryptoJS = require('cloud/crypto.js'), // Needed for Intercom hashing
+    intercomKey = "Xhl5IzCrI-026mCaD5gqXpoO2WURA416KtCRlWsJ",
+    logger = require("cloud/logentries.js");
 
-// Algolia Indices
+// Algolia Search Master-Indices
 var testIndex = algoliaClient.initIndex('Test'),
     userIndex = algoliaClient.initIndex('User');
 

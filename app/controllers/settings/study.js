@@ -25,6 +25,16 @@ export default Ember.Controller.extend(CurrentUser, {
 
     }.observes('currentUser.isDirty'),*/
 
+    studyIntensityLabel: function () {
+        switch (this.get('currentUser.srIntensityLevel')) {
+            case "1": case 1: return "Light";
+            case "2": case 2: return "Moderate";
+            case "3": case 3: return "High";
+            default:
+                return "Moderate";
+        }
+    }.property('currentUser.srIntensityLevel'),
+
     actions: {
         activateSpacedRepetition: function () {
             if (this.get('preparingSpacedRepetition'))

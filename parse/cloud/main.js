@@ -196,7 +196,7 @@ Parse.User.prototype.minimalProfile = function () {
     var object = this.toJSON(),
         propertiesToRemove = ['ACL', 'authData', 'createdTests', 'devices', 'email', 'emailNotifications', 'emailVerified',
             'fbEducation', 'followers', 'following', 'gender', 'savedTests', 'srCompletedAttempts', 'testAttempts',
-            'fbFriends', 'firstTimeLogin', 'isPremium', 'password', 'pushNotifications', 'receivePromotionalEmails',
+            'fbFriends', 'firstTimeLogin', 'isPremium', 'intercomHash', 'password', 'pushNotifications', 'receivePromotionalEmails',
             'srActivated', 'srDoNotDisturbTimes', 'srLatestTest', 'srIntensityLevel', 'srNextDue', 'srNotifyByEmail',
             'srNotifyByPush', 'stripeToken', 'timeZone', 'username', 'uniqueResponses', 'userEvents'];
 
@@ -401,6 +401,8 @@ Parse.User.prototype.addUniqueResponses = function (responses) {
 /**
  * @Function Estimate Memory Strengths for Tests
  *
+ * @Redo Needs rewriting based on SuperMemo topics formula
+ *
  * Fetches tests from given pointers. Fetches
  * ALL uniqueResponses by user (reasonable limit).
  *
@@ -449,6 +451,14 @@ Parse.User.prototype.estimateMemoryStrengthForTests = function (tests) {
                     });
                     return tagMatched;
                 }).length;
+
+                if (estimatedMemoryStrength > 0)
+                    estimatedMemoryStrength = estimatedMemoryStrength / 4;
+                // Max set to 40 for estimation
+                if (estimatedMemoryStrength > 40)
+                    estimatedMemoryStrength = 40;
+
+                estimatedMemoryStrength = Math.round(estimatedMemoryStrength);
 
                 estimatedMemoryStrengths.push({test: test, estimatedMemoryStrength: estimatedMemoryStrength});
             });
@@ -1639,7 +1649,34 @@ var UniqueResponse = Parse.Object.extend("UniqueResponse", {
         return this.get('memoryStrength');
     },
 
+    /**
+     * @Propert correctnessStreak
+     * Number of correct responses in a row
+     * by user. Needed for Spaced-Repetition.
+     * @returns {Integer}
+     */
+    correctnessStreak: function () {
+        return this.get('correctnessStreak');
+    },
 
+    /**
+     * @Propert previousEasinessFactor
+     * Calculated in this.updateMemoryStrength(),
+     * Needed for Spaced-Repetition.
+     * @returns {Number}
+     */
+    previousEasinessFactor: function () {
+        return this.get('previousEasinessFactor');
+    },
+    /**
+     * @Propert currentOptimumInterval
+     * Calculated in this.calculateOptimumRepetitionDate(),
+     * Needed for Spaced-Repetition. Interval is in days.
+     * @returns {Integer}
+     */
+    currentOptimumInterval: function () {
+        return this.get('currentOptimumInterval');
+    },
     /**
      * @Function Set Defaults
      * ACL if user:
@@ -1671,42 +1708,129 @@ var UniqueResponse = Parse.Object.extend("UniqueResponse", {
      * @return {UniqueResponse}
      */
     addLatestResponse: function (response) {
+        logger.log("Spaced Repetition", "-----------------------");
+        logger.log("Spaced Repetition", "Adding Latest Response");
         this.setLatestResponse(response);
         this.set('latestResponseIsCorrect', response.isCorrect());
         this.set('latestResponseDate', response.createdAt ? response.createdAt : new Date());
         this.increment('numberOfResponses');
-        if (response.isCorrect())
+        if (response.isCorrect()) {
             this.increment('numberOfCorrectResponses');
+            this.increment('correctnessStreak');
+        } else
+            this.set('correctnessStreak', 0);
+
+        logger.log("Spaced Repetition", "Is the response correct? " + this.latestResponseIsCorrect() + " : " + response.id);
+        // For Spaced Repetition
+        this.calculateOptimumRepetitionDate();
+        // Uses optimum interval from previous function to
+        // calculate the current memory strength
+        logger.log("Spaced Repetition", "OI set, Now memory strength");
         this.updateMemoryStrength();
+        logger.log("Spaced Repetition", "Memory strength set to " +this.memoryStrength());
         this.responses().add(response);
+        return this;
+    },
+
+    calculateOptimumRepetitionDate: function () {
+        logger.log("Spaced Repetition", "Calculating Optimum Interval");
+        // Before we calculate the next interval, check current memory strength
+        // If it's high, that means the user has reviewed this item too early
+        // In which case, we'll disallow this repetition in our calculations
+        this.updateMemoryStrength();
+        if(this.latestResponseIsCorrect() && this.memoryStrength() > 94)
+            return this;
+
+        var optimumInterval, // in days (inter-repetition time)
+            EF, // easiness-factor
+            QF; // quality-factor
+
+        // Only calculate/change EF if QF > 2, i.e. the latest response was correct
+        if (this.latestResponseIsCorrect()) {
+            // Calculate user's QF on this item
+            var grade = percentage(this.numberOfCorrectResponses(), this.numberOfResponses());
+            switch (true) {
+                // NOTE: not sure why QF is even in the formula for incorrect responses.
+                // Incorrect AND less than 19
+                case (grade < 20 && !this.latestResponseIsCorrect()):
+                    QF = 0;
+                    break;
+                // Incorrect AND between than 20-40
+                case (grade > 19 && grade < 40 && !this.latestResponseIsCorrect()):
+                    QF = 1;
+                    break;
+                // Incorrect AND above than 40
+                case (grade > 39 && !this.latestResponseIsCorrect()):
+                    QF = 2;
+                    break;
+                // Correct AND less than 60
+                case (grade < 60 && this.latestResponseIsCorrect()):
+                    QF = 3;
+                    break;
+                // Correct AND between 60-80
+                case (grade > 59 && grade < 80 && this.latestResponseIsCorrect()):
+                    QF = 4;
+                    break;
+                // Correct AND 80 or above
+                case (grade > 79 && this.latestResponseIsCorrect()):
+                    QF = 5;
+                    break;
+            }
+            // Calculate item's EF
+            var previousEF = this.previousEasinessFactor() ? this.previousEasinessFactor() : 2.5;
+            EF = previousEF + (0.1 - (5 - QF) * (0.08 + (5 - QF) * 0.02));
+            // EF cannot be below 1.3
+            if (EF < 1.3)
+                EF = 1.3;
+
+            // Set calculated EF as 'previousEasinessFactor' to be used at next repetition
+            this.set('previousEasinessFactor', EF);
+            logger.log("Spaced Repetition", "EF calculated as " + EF);
+        }
+
+        // Calculate optimum interval (in days) based on EF if steak > 2
+        if (this.correctnessStreak() < 2) // i.e. got the answer wrong, or right for the first time in a row
+            optimumInterval = 1;
+        else if (this.correctnessStreak() === 2) // answered correctly twice in a row now
+            optimumInterval = 6;
+        else {
+            // More then 2 correct answers in a row
+            // Calculation of interval based on EF and number of correct answers in a row
+            optimumInterval = (this.correctnessStreak() - 1) * EF;
+        }
+        logger.log("Spaced Repetition", "Optimum interval is " + optimumInterval);
+        // This will be used to calculate memory strength, and therefore, when to repeat the item
+        this.set('currentOptimumInterval', optimumInterval);
+        this.set('optimumRepetitionDate', moment().add(Math.round(optimumInterval), 'd').toDate());
         return this;
     },
 
     /**
      * @Function Update Memory Strength
+     * Uses the set 'optimumRepetitionDate' to calculate
+     * the current memory strength.
      * @returns {UniqueResponse}
      */
     updateMemoryStrength: function () {
-        var decayMultiplier = 6 - this.numberOfCorrectResponses();
-        if (decayMultiplier < 1)
-            decayMultiplier = 1;
+        // Cannot calculate if no responses, or optimum interval has not been calculated yet.
+        if (!this.latestResponseDate() || !this.currentOptimumInterval()) {
+            this.set('memoryStrength', 0);
+            return this;
+        }
 
-        var hoursSinceLatestResponse = moment().diff(this.latestResponseDate(), 'hours');
+        // Optimum Interval to repeat is when memoryStrength is 90%.
+        // So reverse the calculation to extrapolate the current memoryStrength,
+        // accurate to the hour.
+        var memoryStrength,
+            memoryStrengthDropCutOff = 10,
+            hoursSinceLastAttempt = moment().diff(moment(this.latestResponseDate()), 'hours');
 
-        var memoryStrength = (100 - ((hoursSinceLatestResponse / 10 ) * decayMultiplier) ) +
-            ( (hoursSinceLatestResponse / 100) ^ 2 );
-
-        if (!this.latestResponseIsCorrect())
-            memoryStrength = memoryStrength - 30;
-
-        if (memoryStrength < 0)
-            memoryStrength = 0;
-        else if (memoryStrength > 100)
-            memoryStrength = 100;
+        memoryStrength = 100 - (hoursSinceLastAttempt * (memoryStrengthDropCutOff / (this.currentOptimumInterval() * 24)));
 
         this.set('memoryStrength', Math.round(memoryStrength));
         return this;
     }
+
 }, {
     /**
      * @Function Initialize
@@ -1960,9 +2084,12 @@ var _ = require("underscore"),
     Mandrill = require('mandrill'),
     Stripe = require('stripe'),
     algoliasearch = require('cloud/algoliasearch.parse.js'),
-    algoliaClient = algoliasearch('ONGKY2T0Y8', 'b13daea376f182bdee7a089ade58b656');
+    algoliaClient = algoliasearch('ONGKY2T0Y8', 'b13daea376f182bdee7a089ade58b656'),
+    CryptoJS = require('cloud/crypto.js'), // Needed for Intercom hashing
+    intercomKey = "Xhl5IzCrI-026mCaD5gqXpoO2WURA416KtCRlWsJ",
+    logger = require("cloud/logentries.js");
 
-// Algolia Indices
+// Algolia Search Master-Indices
 var testIndex = algoliaClient.initIndex('Test'),
     userIndex = algoliaClient.initIndex('User');
 
@@ -2058,6 +2185,17 @@ String.prototype.camelCaseToNormal = function (capitalize) {
         });
     else
         return normal.toLowerCase();
+};
+/**
+ * @Function Percentage
+ * @param {integer} number1
+ * @param {integer} number2
+ * @returns {number}
+ */
+var percentage = function (number1, number2) {
+    if(!number1 || number2)
+        return 0;
+    return Math.floor((number1 / number2) * 100);
 };
 /**
  * @Function Generate Pointer
@@ -2168,17 +2306,31 @@ Parse.Cloud.beforeSave(Parse.User, function (request, response) {
  * - Set ACL
  */
 Parse.Cloud.afterSave(Parse.User, function (request) {
-    var user = request.object;
+    var user = request.object,
+        promises = [];
 
+    Parse.Cloud.useMasterKey();
     if (!user.existed()) {
+        // ACLs can only be set after the first save
+        // Hashes for Intercom can be created here
         var userACL = new Parse.ACL(user);
         userACL.setPublicReadAccess(false);
         user.setACL(userACL);
-        Parse.Cloud.useMasterKey();
-        user.save();
+        // Need a hash for secure client-intercom messaging
+        // NOTE: storing as string might not work?
+        user.set('intercomHash', CryptoJS.SHA256(user.id, intercomKey).toString());
+        promises.push(user.save());
+    } else {
+        // Old user
+        if (!user.get('intercomHash')) {
+            // Only needed whilst testing, previous statement suffice
+            user.set('intercomHash', CryptoJS.SHA256(user.id, intercomKey).toString());
+            promises.push(user.save());
+        }
     }
     // Add/Update search index (async)
-    user.indexObject();
+    promises.push(user.indexObject());
+    return Parse.Promise.when(promises);
 });
 
 /**
@@ -2314,8 +2466,13 @@ Parse.Cloud.afterSave(Attempt, function (request) {
 
         var userUpdatePromise = attempt.test().fetchIfNeeded().then(function (test) {
             // All Spaced Rep attempts go here
-            if (test.isSpacedRepetition())
+            if (test.isSpacedRepetition()) {
                 user.srCompletedAttempts().add(attempt);
+                // user.srLatestTestIsTaken dictates if a new sr test will be generated or not
+                // safety net: check if srLatestTest is set on user
+                if (!user.get('srLatestTest') || test.id === user.get('srLatestTest').id)
+                    user.set('srLatestTestIsTaken', true);
+            }
             // All other non-generated attempts go here
             else if (!test.isGenerated())
                 user.testAttempts().add(attempt);
@@ -2458,16 +2615,14 @@ Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
             uniqueResponsesForCreatedTestsQuery = uniqueResponsesRelation.query(),
             uniqueResponsesForSavedTestsQuery = uniqueResponsesRelation.query();
         // uniqueResponses on createdTests
-        uniqueResponsesForCreatedTestsQuery.include('test');
-        uniqueResponsesForCreatedTestsQuery.limit(1000);
         uniqueResponsesForCreatedTestsQuery.matchesQuery('test', createdTestsQuery);
         // uniqueResponses on savedTests
-        uniqueResponsesForSavedTestsQuery.include('test');
-        uniqueResponsesForSavedTestsQuery.limit(1000);
-        uniqueResponsesForSavedTestsQuery.matchesQuery('test', createdTestsQuery);
+        uniqueResponsesForSavedTestsQuery.matchesQuery('test', savedTestsQuery);
         // Find uniqueResponses in either of the above two queries
         var uniqueResponsesQuery = Parse.Query.or(uniqueResponsesForCreatedTestsQuery,
             uniqueResponsesForSavedTestsQuery);
+        uniqueResponsesQuery.include('test');
+        uniqueResponsesQuery.limit(1000);
 
         // Perform the query, then update memoryStrength + save
         promises.push(UniqueResponse.findWithUpdatedMemoryStrengths(uniqueResponsesQuery));
@@ -2475,10 +2630,9 @@ Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
         if (user.srLatestTest()) {
             promises.push(user.fetchSRLatestTest());
         }
-
         // Seems to be a limit of 6 parallel promises
     }
-    Parse.Promise.when(promises)
+    return Parse.Promise.when(promises)
         .then(function (config, categories, createdTests, savedTests, uniqueResponses, srLatestTest) {
             result = {
                 config: config,
@@ -2513,9 +2667,10 @@ Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
                 return Parse.Promise.when(promises);
             }
         }).then(function (educationCohort, srAllTests, latestTestAttempts) {
-            result.educationCohort = educationCohort;
-            result.srAllTests = srAllTests;
-            result.latestTestAttempts = latestTestAttempts;
+            result["educationCohort"] = educationCohort;
+            result["srAllTests"] = srAllTests;
+            result["latestTestAttempts"] = latestTestAttempts;
+
             /* var messagesQuery = new Parse.Query("Message");
              messagesQuery.equalTo('to', user);
              messagesQuery.descending("createdAt");
@@ -2545,9 +2700,12 @@ Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
              result.attempts.push(attempt);
              });
              }*/
-            return response.success(result);
+            response.success(result);
         }, function (error) {
-            return response.error(error);
+            if (error)
+                response.error(error);
+            else
+                response.error("Something went wrong.");
         });
 });
 
@@ -3667,6 +3825,8 @@ var WorkActions = {
  * @returns {WorkTask}
  */
 function srCycleTask(task) {
+    logger.log("Spaced Repetition Cycle","SR Cycle Begun");
+
     Parse.Cloud.useMasterKey();
     var initialPromises = [],
         testsGenerated = 0;
@@ -3677,9 +3837,20 @@ function srCycleTask(task) {
     var queryForUsers = new Parse.Query(Parse.User);
     queryForUsers.equalTo('srActivated', true);
     queryForUsers.lessThanOrEqualTo('srNextDue', new Date());
-    queryForUsers.limit(100);
+    // Don't want to generate more until last test is taken or dismissed
+    queryForUsers.equalTo("srLatestTestIsTaken", true);
 
-    initialPromises.push(queryForUsers.find());
+    var queryForUsersTwo = new Parse.Query(Parse.User);
+    queryForUsers.equalTo('srActivated', true);
+    queryForUsers.lessThanOrEqualTo('srNextDue', new Date());
+    // Don't want to generate more until last test is taken or dismissed
+    queryForUsersTwo.equalTo("srLatestTestDismissed", true);
+
+    var mainQueryForUsers = Parse.Query.or(queryForUsers, queryForUsersTwo);
+    mainQueryForUsers.include('educationCohort');
+    mainQueryForUsers.limit(100);
+
+    initialPromises.push(mainQueryForUsers.find());
 
     // Loop through users with SR activated and SR due time in the past
     return Parse.Promise.when(initialPromises).then(function (config, users) {
@@ -3702,6 +3873,14 @@ function srCycleTask(task) {
             // But we shuffle the lowest 60 to be unpredictable
             urQuery.limit(60);
             urQuery.include('question');
+
+            // innerQuery to match uniqueResponse's question.tags with moduleTags
+            if (user.get('educationCohort')) {
+                var questionsInnerQuery = new Parse.Query(Question);
+                questionsInnerQuery.containedIn('tags', user.get('educationCohort').get('moduleTags'));
+                urQuery.matchesQuery("question", questionsInnerQuery);
+            }
+
 
             // Get current time based on User's timeZone
             var timeZone = user.get('timeZone'),
@@ -3769,6 +3948,7 @@ function srCycleTask(task) {
                         return;
                     user.set('srLatestTest', test);
                     user.set('srLatestTestDismissed', false);
+                    user.set('srLatestTestIsTaken', false);
                     user.srAllTests().add(test);
                     testsGenerated++;
 
@@ -3783,19 +3963,20 @@ function srCycleTask(task) {
                 });
             perUserPromises.push(perUserPromise);
         });
-        // Set next SR cycle time to 5 minutes from now.
-        perUserPromises.push(taskCreator('SpacedRepetition', 'srCycle',
-            {scheduledTime: moment().add(5, 'minutes').toDate()}, []));
         return Parse.Promise.when(perUserPromises);
     }).then(function () {
+        // Set next SR cycle time to 5 minutes from now.
         var changes = {
-            'taskStatus': 'done',
-            'taskMessage': testsGenerated + ' test(s) generated.',
-            'taskClaimed': 1
+            taskStatus: 'done',
+            taskMessage: testsGenerated + ' test(s) generated.',
+            taskClaimed: 0, // repetitive task, do not destroy
+            scheduledTime: moment().add(5, 'minutes').toDate()
         };
+        logger.log("Spaced Repetition Cycle", "SR Cycle Completed", changes);
         return task.save(changes, {useMasterKey: true});
     }, function (error) {
         console.error(JSON.stringify(error));
+        logger.log("Spaced Repetition Cycle", "error", error);
     });
 }
 

@@ -34,17 +34,31 @@ Parse.Cloud.beforeSave(Parse.User, function (request, response) {
  * - Set ACL
  */
 Parse.Cloud.afterSave(Parse.User, function (request) {
-    var user = request.object;
+    var user = request.object,
+        promises = [];
 
+    Parse.Cloud.useMasterKey();
     if (!user.existed()) {
+        // ACLs can only be set after the first save
+        // Hashes for Intercom can be created here
         var userACL = new Parse.ACL(user);
         userACL.setPublicReadAccess(false);
         user.setACL(userACL);
-        Parse.Cloud.useMasterKey();
-        user.save();
+        // Need a hash for secure client-intercom messaging
+        // NOTE: storing as string might not work?
+        user.set('intercomHash', CryptoJS.SHA256(user.id, intercomKey).toString());
+        promises.push(user.save());
+    } else {
+        // Old user
+        if (!user.get('intercomHash')) {
+            // Only needed whilst testing, previous statement suffice
+            user.set('intercomHash', CryptoJS.SHA256(user.id, intercomKey).toString());
+            promises.push(user.save());
+        }
     }
     // Add/Update search index (async)
-    user.indexObject();
+    promises.push(user.indexObject());
+    return Parse.Promise.when(promises);
 });
 
 /**
@@ -180,8 +194,13 @@ Parse.Cloud.afterSave(Attempt, function (request) {
 
         var userUpdatePromise = attempt.test().fetchIfNeeded().then(function (test) {
             // All Spaced Rep attempts go here
-            if (test.isSpacedRepetition())
+            if (test.isSpacedRepetition()) {
                 user.srCompletedAttempts().add(attempt);
+                // user.srLatestTestIsTaken dictates if a new sr test will be generated or not
+                // safety net: check if srLatestTest is set on user
+                if (!user.get('srLatestTest') || test.id === user.get('srLatestTest').id)
+                    user.set('srLatestTestIsTaken', true);
+            }
             // All other non-generated attempts go here
             else if (!test.isGenerated())
                 user.testAttempts().add(attempt);

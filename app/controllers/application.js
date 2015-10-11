@@ -164,7 +164,7 @@ export default Ember.Controller.extend({
             };*/
             window.Intercom('boot', {
                 app_id: "oibyis4o",
-                user_hash: CryptoHash.SHA256(currentUser.get('id'), "Xhl5IzCrI-026mCaD5gqXpoO2WURA416KtCRlWsJ"),
+                user_hash: currentUser.get('intercomHash'),
                 user_id: currentUser.get('id'),
                 name: currentUser.get('name'),
                 email: currentUser.get('email'),

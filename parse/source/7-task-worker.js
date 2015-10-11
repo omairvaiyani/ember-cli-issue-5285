@@ -57,6 +57,8 @@ var WorkActions = {
  * @returns {WorkTask}
  */
 function srCycleTask(task) {
+    logger.log("Spaced Repetition Cycle","SR Cycle Begun");
+
     Parse.Cloud.useMasterKey();
     var initialPromises = [],
         testsGenerated = 0;
@@ -67,9 +69,20 @@ function srCycleTask(task) {
     var queryForUsers = new Parse.Query(Parse.User);
     queryForUsers.equalTo('srActivated', true);
     queryForUsers.lessThanOrEqualTo('srNextDue', new Date());
-    queryForUsers.limit(100);
+    // Don't want to generate more until last test is taken or dismissed
+    queryForUsers.equalTo("srLatestTestIsTaken", true);
 
-    initialPromises.push(queryForUsers.find());
+    var queryForUsersTwo = new Parse.Query(Parse.User);
+    queryForUsers.equalTo('srActivated', true);
+    queryForUsers.lessThanOrEqualTo('srNextDue', new Date());
+    // Don't want to generate more until last test is taken or dismissed
+    queryForUsersTwo.equalTo("srLatestTestDismissed", true);
+
+    var mainQueryForUsers = Parse.Query.or(queryForUsers, queryForUsersTwo);
+    mainQueryForUsers.include('educationCohort');
+    mainQueryForUsers.limit(100);
+
+    initialPromises.push(mainQueryForUsers.find());
 
     // Loop through users with SR activated and SR due time in the past
     return Parse.Promise.when(initialPromises).then(function (config, users) {
@@ -92,6 +105,14 @@ function srCycleTask(task) {
             // But we shuffle the lowest 60 to be unpredictable
             urQuery.limit(60);
             urQuery.include('question');
+
+            // innerQuery to match uniqueResponse's question.tags with moduleTags
+            if (user.get('educationCohort')) {
+                var questionsInnerQuery = new Parse.Query(Question);
+                questionsInnerQuery.containedIn('tags', user.get('educationCohort').get('moduleTags'));
+                urQuery.matchesQuery("question", questionsInnerQuery);
+            }
+
 
             // Get current time based on User's timeZone
             var timeZone = user.get('timeZone'),
@@ -159,6 +180,7 @@ function srCycleTask(task) {
                         return;
                     user.set('srLatestTest', test);
                     user.set('srLatestTestDismissed', false);
+                    user.set('srLatestTestIsTaken', false);
                     user.srAllTests().add(test);
                     testsGenerated++;
 
@@ -173,19 +195,20 @@ function srCycleTask(task) {
                 });
             perUserPromises.push(perUserPromise);
         });
-        // Set next SR cycle time to 5 minutes from now.
-        perUserPromises.push(taskCreator('SpacedRepetition', 'srCycle',
-            {scheduledTime: moment().add(5, 'minutes').toDate()}, []));
         return Parse.Promise.when(perUserPromises);
     }).then(function () {
+        // Set next SR cycle time to 5 minutes from now.
         var changes = {
-            'taskStatus': 'done',
-            'taskMessage': testsGenerated + ' test(s) generated.',
-            'taskClaimed': 1
+            taskStatus: 'done',
+            taskMessage: testsGenerated + ' test(s) generated.',
+            taskClaimed: 0, // repetitive task, do not destroy
+            scheduledTime: moment().add(5, 'minutes').toDate()
         };
+        logger.log("Spaced Repetition Cycle", "SR Cycle Completed", changes);
         return task.save(changes, {useMasterKey: true});
     }, function (error) {
         console.error(JSON.stringify(error));
+        logger.log("Spaced Repetition Cycle", "error", error);
     });
 }
 

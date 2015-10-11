@@ -24,18 +24,34 @@
             <div class="form-group">
                 <article class="col-sm-6">
                     <h5 class="control-label">Study intensity <br>
-                        <small>Increase this as you come closer to exams. It makes us more strict when deciding
-                            whether you've remembered your revision material properly!
+                        <small>
+                            Increase this as you come closer to exams. We will adjust the content
+                            we send you according to this intensity.
                         </small>
                     </h5>
                 </article>
 
-                <div class="col-sm-5 margin-top-16">
-                    {{input type="range" min=1 max=4 value=currentUser.srIntensityLevel class='inline-block'}}
+                <div class="col-sm-4 margin-top-16">
+                    {{input type="range" min=1 max=3 value=currentUser.srIntensityLevel class='inline-block'}}
                 </div>
-                <label class="col-sm-1 margin-top-16 control-label">
-                    <strong>{{currentUser.srIntensityLevel}}</strong>
+                <label class="col-sm-2 margin-top-16 control-label">
+                    <strong>{{studyIntensityLabel}}</strong>
                 </label>
+            </div>
+
+            <div class="form-group">
+                <article class="col-sm-6">
+                    <h5 class="control-label">Revision modules <br>
+                        <small>
+                            Select the tags for the modules you are currently revising for. This will make
+                            sure you don't receive questions that you no longer want to revise.
+                        </small>
+                    </h5>
+                </article>
+
+                <div class="col-sm-6 margin-top-16">
+                    {{currentUser.educationCohort.moduleTags}}
+                </div>
             </div>
 
             <div class="form-group">

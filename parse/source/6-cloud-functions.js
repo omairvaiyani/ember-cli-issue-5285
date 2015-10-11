@@ -56,16 +56,14 @@ Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
             uniqueResponsesForCreatedTestsQuery = uniqueResponsesRelation.query(),
             uniqueResponsesForSavedTestsQuery = uniqueResponsesRelation.query();
         // uniqueResponses on createdTests
-        uniqueResponsesForCreatedTestsQuery.include('test');
-        uniqueResponsesForCreatedTestsQuery.limit(1000);
         uniqueResponsesForCreatedTestsQuery.matchesQuery('test', createdTestsQuery);
         // uniqueResponses on savedTests
-        uniqueResponsesForSavedTestsQuery.include('test');
-        uniqueResponsesForSavedTestsQuery.limit(1000);
-        uniqueResponsesForSavedTestsQuery.matchesQuery('test', createdTestsQuery);
+        uniqueResponsesForSavedTestsQuery.matchesQuery('test', savedTestsQuery);
         // Find uniqueResponses in either of the above two queries
         var uniqueResponsesQuery = Parse.Query.or(uniqueResponsesForCreatedTestsQuery,
             uniqueResponsesForSavedTestsQuery);
+        uniqueResponsesQuery.include('test');
+        uniqueResponsesQuery.limit(1000);
 
         // Perform the query, then update memoryStrength + save
         promises.push(UniqueResponse.findWithUpdatedMemoryStrengths(uniqueResponsesQuery));
@@ -73,10 +71,9 @@ Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
         if (user.srLatestTest()) {
             promises.push(user.fetchSRLatestTest());
         }
-
         // Seems to be a limit of 6 parallel promises
     }
-    Parse.Promise.when(promises)
+    return Parse.Promise.when(promises)
         .then(function (config, categories, createdTests, savedTests, uniqueResponses, srLatestTest) {
             result = {
                 config: config,
@@ -111,9 +108,10 @@ Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
                 return Parse.Promise.when(promises);
             }
         }).then(function (educationCohort, srAllTests, latestTestAttempts) {
-            result.educationCohort = educationCohort;
-            result.srAllTests = srAllTests;
-            result.latestTestAttempts = latestTestAttempts;
+            result["educationCohort"] = educationCohort;
+            result["srAllTests"] = srAllTests;
+            result["latestTestAttempts"] = latestTestAttempts;
+
             /* var messagesQuery = new Parse.Query("Message");
              messagesQuery.equalTo('to', user);
              messagesQuery.descending("createdAt");
@@ -143,9 +141,12 @@ Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
              result.attempts.push(attempt);
              });
              }*/
-            return response.success(result);
+            response.success(result);
         }, function (error) {
-            return response.error(error);
+            if (error)
+                response.error(error);
+            else
+                response.error("Something went wrong.");
         });
 });
 

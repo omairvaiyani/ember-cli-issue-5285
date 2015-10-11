@@ -12,10 +12,9 @@
     "jquery": "^2.1.4",
     "loader.js": "ember-cli/loader.js#3.2.0",
     "qunit": "~1.17.1",
-    "bootstrap": "~3.2.0",
+    "bootstrap": "~3.3.5",
     "moment": "^2.10.0",
     "underscore": "~1.7.0",
-    "parse-js-sdk": "^1.4.2",
     "font-awesome": "~4.2.0",
     "css-toggle-switch": "~2.1.6",
     "numeral": "~1.5.3",
@@ -26,6 +25,7 @@
     "algoliasearch": "~3.7.5",
     "jquery-knob": "1.2.11",
     "chartjs": "1.0.2",
-    "moment-range": "~2.0.3"
+    "moment-range": "~2.0.3",
+    "parse-js-sdk": "mylabs/parse-js-sdk"
   }
 }

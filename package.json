@@ -41,6 +41,8 @@
   },
   "dependencies": {
     "algoliasearch": "^3.7.5",
+    "bower": "^1.5.3",
+    "ember-cli": "^1.13.8",
     "ember-cli-knob": "^0.1.2",
     "ember-google-map": "0.0.8",
     "ember-infinite-scroll": "0.2.4",
