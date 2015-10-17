@@ -36,11 +36,15 @@ export default Ember.Controller.extend({
         this.send('closeModal');
         var user;
         this.set('navbarTransparent', false);
+        this.set('hideNavbarSearch', false);
         switch (path) {
             case "index":
                 title += defaultTitle;
-                if (!this.get('currentUser'))
+                if (!this.get('currentUser')) {
                     this.set('navbarTransparent', true);
+                    this.set('hideNavbarSearch', true);
+                    this.get('controllers.index').resizeIndexCoverVideo();
+                }
                 break;
             case "user.index":
                 user = this.get('controllers.user');

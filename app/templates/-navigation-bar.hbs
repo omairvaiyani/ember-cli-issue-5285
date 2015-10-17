@@ -70,7 +70,9 @@
                         </li>
                     {{/unless}}
                 </ul>
-                {{partial 'application/navbar/search-bar'}}
+                {{#unless hideNavbarSearch}}
+                    {{partial 'application/navbar/search-bar'}}
+                {{/unless}}
                 <ul class="nav navbar-nav navbar-right">
                     {{#if currentUser}}
                         {{partial 'application/navbar/user-messages'}}

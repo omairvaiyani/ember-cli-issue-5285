@@ -1,48 +1,63 @@
 <div {{bind-attr class=":footer footerHidden:hidden"}}>
-    <div class="container-fluid">
+    <div class="container">
+        <div class="icon-overlay"></div>
         <section class="row">
-            <div class="col-md-3 text-center margin-bottom-16">
-            </div>
-            <div class="col-md-6 sitemap text-center margin-bottom-16">
-                <section class="row">
-                    <article class="col-md-12">
-                        {{#link-to 'index' tagName='a'}}Home{{/link-to}}
-                        {{#link-to 'browse' tagName='a'}}Browse{{/link-to}}
-                        {{#link-to 'create' tagName='a'}}Create{{/link-to}}
-                        {{#link-to 'about' tagName='a'}}About{{/link-to}}
-                        <a href='http://http://synap.ac/blog' target="_blank">Blog</a>
-                    </article>
-                </section>
-                <section class="row">
-                    <article class="col-md-12">
-                        {{#link-to 'contact' tagName='a'}}Contact Us{{/link-to}}
-                        {{#link-to 'presskit' tagName='a'}}Press{{/link-to}}
-                        {{#link-to 'privacyPolicy' tagName='a'}}Privacy Policy{{/link-to}}
-                        {{#link-to 'terms' tagName='a'}}Terms & Conditions{{/link-to}}
-                    </article>
-                </section>
-            </div>
-            <div class="col-md-3 text-center">
 
-            </div>
+            <article class="col-md-2">
+                {{#link-to 'index'}}<img src="img/logo-square-white.png" class="footer-logo"/>{{/link-to}}
+            </article>
+
+            <article class="col-md-4">
+                <h5><strong>Synap</strong></h5>
+
+                <p class="no-margin">InTechnology Enterprise Incubation Program</p>
+
+                <p class="no-margin">Leeds Innovation Center</p>
+
+                <p class="no-margin">Suite 11b, 103 Clarendon Road</p>
+
+                <p class="no-margin">Leeds, LS2 9DF</p>
+                <br>
+
+                <p>© Synap</p>
+            </article>
+
+            <article class="col-md-6">
+                <h5><strong>Quick Links</strong></h5>
+                <section class="row footer-links">
+                    <article class="col-xs-3">
+                        <h6 class="top-link">{{#link-to 'index'}}Home{{/link-to}}</h6>
+                        <h6>{{#link-to 'browse'}}Browse{{/link-to}}</h6>
+                        <h6>{{#link-to 'create'}}Create{{/link-to}}</h6>
+                        <h6>{{#link-to 'about'}}About{{/link-to}}</h6>
+                    </article>
+                    <article class="col-xs-3">
+                        <h6 class="top-link"><a href="http://synap.ac/blog" target="_blank">Blog</a></h6>
+                        <h6>{{#link-to 'support'}}Support{{/link-to}}</h6>
+                        <h6>{{#link-to 'contact'}}Contact us{{/link-to}}</h6>
+                        <h6>{{#link-to 'presskit'}}Press{{/link-to}}</h6>
+                    </article>
+                    <article class="col-xs-4">
+                        <h6 class="top-link">{{#link-to 'privacyPolicy'}}Privacy{{/link-to}}</h6>
+                        <h6>{{#link-to 'terms'}}Terms & Conditions{{/link-to}}</h6>
+                    </article>
+                </section>
+            </article>
         </section>
+        <hr>
         <section class="row">
-            <article class="col-md-4">
-                <a href="mailto:support@synap.ac" target="_blank" class="email-link">support@synap.ac</a>
+            <article class="col-md-6">
+                <h4 class="inline-block footer-social">Join Us On
+                    <a href="https://twitter.com/synap" target="_blank">
+                        <i class="fa fa-fw fa-twitter margin-left-8 margin-right-8"></i>
+                    </a>
+                    <a href="https://facebook.com/trysynap" target="_blank">
+                        <i class="fa fa-fw fa-facebook margin-right-8"></i>
+                    </a>
+                </h4>
             </article>
-            <article class="col-md-4">
-                {{#link-to 'index' tagName='a' class='watermark'}}
-                    <img src="img/logo-white.png" height="30px" class="logo-icon inline-block"/>
-                {{/link-to}}
-                <p class="copyright-mark">
-                    Copyright 2015 by <a href='http://mylabs.io' target="_blank">MyLabs Ltd</a>
-                </p>
-            </article>
-            <article class="col-md-4">
-                <div class='social'>
-                    <a href='https://facebook.com/trysynap' target='_blank'><i class="fa fa-facebook"></i></a>
-                    <a href='https://twitter.com/synap' target='_blank'><i class="fa fa-twitter"></i></a>
-                </div>
+            <article class="col-md-6">
+                <h5 class="pull-right small">Synap Beta v0.41</h5>
             </article>
         </section>
     </div>

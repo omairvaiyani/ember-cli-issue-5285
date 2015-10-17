@@ -1,6 +1,5 @@
 import Ember from 'ember';
 
-
 export default Ember.Route.extend({
     setupController: function (controller, model, transition) {
         controller.set('model', model);
@@ -9,5 +8,12 @@ export default Ember.Route.extend({
             // Allow page to load. Images can then be scraped by bots.
             transition.send('prerenderReady');
         }, 2000);
+    },
+
+    actions: {
+        willTransition: function () {
+            console.log("Removing trigger");
+            $(".index-page-cover").off("resize", "**");
+        }
     }
 });

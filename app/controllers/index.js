@@ -10,6 +10,10 @@ import ParseHelper from '../utils/parse-helper';
 
 export default
 Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, EstimateMemoryStrength, DeleteWithUndo, ProgressCharts, {
+    needs: ['application'],
+    applicationController: function () {
+        return this.get('controllers.application');
+    }.property('controllers.length'),
     /*
      * GUEST MODE
      */
@@ -42,6 +46,34 @@ Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, EstimateMemoryStrength
     onboardingFirstCTAFocusAfterTyping: function () {
         Ember.run.debounce(this, this.onboardingFirstCTAFocus, 450);
     }.observes('onboardingFirstInput.length'),
+
+    stats: {
+        numberOfUsers: 15000,
+        numberOfTests: 1200,
+        numberOfQuestions: 258800,
+        numberOfAttempts: 97500
+    },
+
+    /**
+     * @Function Resize Index Cover Video
+     *
+     * Called from ApplicationController.currentPathDidChange
+     * Only if a guest visits the homepage.
+     * This trigger is removed on IndexRoute exit.
+     */
+    resizeIndexCoverVideo: function () {
+        // for the window resize
+        $(window).ready(function () {
+            // Set it first, but need a delay
+            setTimeout(function () {
+                $('.index-page-cover').css('height', ($(window).outerHeight() - 140) + 'px');
+            }, 200);
+            // Set resize trigger
+            $(window).resize(function () {
+                $('.index-page-cover').css('height', ($(window).outerHeight() - 140) + 'px');
+            });
+        }.bind(this));
+    },
 
     /*
      * HOME MODE
@@ -296,6 +328,12 @@ Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, EstimateMemoryStrength
         /*
          * GUEST MODE
          */
+        indexLearnMoreScroll: function () {
+            $('html, body').animate({
+                scrollTop: $("#learn-more-flag").offset().top
+            }, 400);
+        },
+
         onboardingFillFirstInput: function (example) {
             this.set('onboardingFirstInput', example);
             this.onboardingFirstCTAFocus();

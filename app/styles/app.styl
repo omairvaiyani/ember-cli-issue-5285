@@ -22,7 +22,7 @@ colorPrimary-A400 = #EB5B5D
 colorPrimary-A700 = #AD2C2E
 colorSecondary = #e41d72
 
-colorBackground = rgb(237, 241, 242)
+colorBackground = #fbfbfb
 colorDarkBackground = #212b3a
 colorDarkText = #6e7681
 colorLightText = #d1dae8
@@ -1048,42 +1048,78 @@ hr.user-message-item-separator {
 /*
  */
 
-.mycqs-page-header.index-page {
-  position: absolute;
-  height: 700px;
-  top: 0
-  left: 0
-  right: 0
-  z-index: -2;
-  //background-image: url('/img/library-background.jpg');
+.index-page-cover
+  position relative
+  height: 600px;
+  padding-top: 190px;
+  margin-top: -20px;
+  background-image: url('/img/guest-page-cover.jpg');
   background-size: cover;
   background-position: center top;
-  padding-bottom: 30px;
-  padding-top: 100px;
-  margin-bottom: 0
-  background: colorPrimary;
-  background: -moz-linear-gradient(left, colorPrimary 0%, colorSecondary 100%);
-  background: -webkit-gradient(linear, left top, right top, color-stop(0%, colorPrimary), color-stop(100%, colorSecondary));
-  background: -webkit-linear-gradient(left, colorPrimary 0%, colorSecondary 100%);
-  background: -o-linear-gradient(left, colorPrimary 0%, colorSecondary 100%);
-  background: -ms-linear-gradient(left, colorPrimary 0%, colorSecondary 100%);
-  background: linear-gradient(to right, colorPrimary 0%, colorSecondary 100%);
-}
-.guest-page-actions
-  margin-top: 350px;
-  height: 200px;
-  .btn
-    font-size: 14px;
-    background-color: alpha(white, 0.75) !important
-    color black !important
-    border: 2px solid;
+  overflow hidden
+  video
+    position absolute
+    top 0
+    bottom 0
+    left 0
+    width 100% !important
+  .container
+    position relative
+    z-index 2
+    color white
+  .dark-overlay
+    position absolute
+    background-color alpha(black, 0.3)
+    top 0
+    height 100%
     width 100%
-    transition margin-top 0.4s
-    &:hover, &.focus
-      background-color alpha(white, 0.95) !important
-      color: #95E5FF;
-    &.focus
-      margin-top -44px
+  .guest-page-actions
+    position absolute
+    bottom 0
+    width 100%
+    padding marginPrimary
+    background-color alpha(black, 0.2)
+    text-align center
+    .input-group
+      width 500px
+      margin auto
+      input
+        width 100%
+        height 32px
+        border 1px black solid
+        border-radius 4px 0 0 4px
+        border-right 0
+        padding marginSecondary
+      span
+        cursor pointer
+        backgroundGradient(0)
+        border 1px solid black
+        color white
+        &:hover
+          backgroundGradient(2)
+        &:active
+          backgroundGradient(4)
+
+.btn-with-icon
+  padding 0
+  border 1px solid colorPrimary-800
+  span
+    padding 0 24px
+    &.right-section
+      padding 6px 10px
+      text-align:center;
+      border-left: 1px solid colorPrimary-800;
+      .icon
+        color: white;
+        width: 13px;
+
+.btn-with-icon.btn-ghost
+  border 2px colorSecondary solid
+  background transparent
+  color colorSecondary !important
+  span
+    &.right-section
+      border-left: 2px solid colorSecondary;
 
 .onboarding-firstSection
   .onboarding-floatingInput
@@ -1120,111 +1156,64 @@ hr.user-message-item-separator {
       margin-bottom: marginSecondary
       display inline-block
       cursor: pointer;
-/*
- * Hiding autocomplete until I fix it's position
- */
 
-.overlay-glass-pane {
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
-}
 
-@media (min-width: 1453px) {
-  .overlay-glass {
-    background-size: cover;
-  }
-}
-
-.overlay-glass {
-  height: 170px;
-  z-index: -1;
-  background-image: url('/img/library-background-blur.jpg');
-  background-position: center -430px;
-}
-
-.mycqs-page-header.index-page p, .mycqs-page-header.index-page h1,
-.mycqs-page-header.index-page h2, .mycqs-page-header.index-page h3 {
-  margin-right: 0px;
-  color: white;
-}
-
-.index-page > .container {
-  z-index: 1;
-}
-
-.index-page h1 > img {
-  height: 80px;
-  box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.4);
-}
-
-.index-page .soft-white {
-  position: absolute;
-  top: 0px;
-  bottom: 0px;
-  left: 0px;
-  right: 0px;
-  background: linear-gradient(to right, rgba(0, 0, 0, 0.18) 0%, rgba(255, 255, 255, 0.2) 100%);
-}
-
-.index-stats {
-  top: 20px;
-  bottom: 0
-  left: 0
-  right: 0
-  color: white;
-}
-
-@media (max-width: 767px) {
-  .index-stats h2 {
-    font-size: 18px;
-    margin: 6px 0px 4px 0px;
-  }
-
-  .index-stats h3 {
-    font-size: 16px
-    margin: 4px 0 28px 0
-  }
-
-  .index-stats.row {
-    margin 0
-  }
-}
-
-.parallax-follower {
-  height: auto;
-  width: 100%;
-  z-index: 1;
-  background-color: whitesmoke;
-  -webkit-box-shadow: 0px -14px 58px -8px rgba(0, 0, 0, 0.86);
-  -moz-box-shadow: 0px -14px 58px -8px rgba(0, 0, 0, 0.86);
-  box-shadow: 0px -14px 58px -8px rgba(0, 0, 0, 0.86);
-  position: relative;
+.index-page-main
   padding-bottom: 16px;
-}
+  .features-row
+    margin-bottom marginPrimary
+    .description
+      color alpha(black, 0.6)
+    .create-column
+      padding-right: 0;
+      padding-left: 0;
+  .stats-row
+    position relative
+    backgroundGradient(0)
+    padding-bottom 32px
+    padding-top marginPrimary
+    color white
+    .icon-overlay
+      background-image url('/img/icon-white-512.png')
+      position: absolute;
+      top: -16px;
+      bottom: 0;
+      width: 400px;
+      opacity: .08;
+      background-size: cover;
+      left: calc(50% - 200px);
+      background-position: center center;
+    hr
+      background  white !important
+    .stat-icon
+      font-size 40px
+      margin-right marginPrimary
+    .stat-right
+      text-align left
+      .stat-number
+        font-size 20px
+        font-weight bold
+        margin 0
+      .stat-title
+        margin 0
 
-.parallax-follower .btn-success {
-  width: 49%;
-}
+hr.mini-hr
+  background colorSecondary
+  width: 20px;
+  height: 2px;
+  margin-top: 0;
 
-.parallax-follower .btn-facebook {
-  width: 49%;
-  padding: 6px;
-  font-size: small;
-}
 
-.parallax-follower .create-column {
-  padding-right: 0px;
-  padding-left: 0px;
-}
 
-.achievements-row img {
-  opacity: 0.3;
-  width: 100%;
-}
+.achievements-row
+  .achievement-cell
+    background white
+    border 1px solid alpha(black, 0.06)
+    padding 16px
+    text-align center
+    img
+      width: 80%;
 
-.achievements-row img:hover {
-  -webkit-filter: none;
-  opacity: 1;
-}
 
 .grey-body {
   background-color: #edf1f2;
@@ -2438,7 +2427,7 @@ body {
 
 @media (min-width: 992px)
   #body-wrap
-    padding-bottom 150px
+    padding-bottom 255px
     &.no-padding-bottom
       padding-bottom 0
 
@@ -2447,51 +2436,41 @@ body {
   bottom: 0;
   left: 0;
   width: 100%;
-  text-align: center;
+  text-align: left;
   font-size: 12px;
   padding-top marginPrimary
   padding-bottom marginPrimary
-  background-color colorDarkBackground
+  background-color #5a5a5a
   color colorLightText
-  .watermark
-    opacity 0.35
-    &:hover
-      opacity 1
+  .icon-overlay
+    background-image url('/img/icon-white-512.png')
+    position: absolute;
+    top: -16px;
+    bottom: 0;
+    width: 400px;
+    opacity: .02;
+    background-size: cover;
+    left: calc(50% - 200px);
+    background-position: center center;
   a
     color colorLightText
-  .email-link, .copyright-mark, .copyright-mark a, i
-    color colorDarkText
+  .footer-logo
+    height 100px
+    width 100px
+    margin-top marginSecondary
+  .footer-links
+    .top-link
+      margin-top 2px
+  .footer-social
+    i
+      cursor pointer
+      color white !important
 
 .footer a:hover, .footer i:hover {
   color colorPrimary
   text-decoration: none;
 }
 
-.footer .sitemap a {
-  margin-right: 8px;
-  font-size: 14px;
-}
-
-.footer .sitemap a:last-child {
-  margin-right: 0;
-}
-
-.footer .social a {
-  opacity: 0.6;
-}
-
-.footer .social a:hover {
-  opacity: 1;
-}
-
-.footer .social a:first-child {
-  margin-bottom: 8px;
-  margin-right: 8px;
-}
-
-.footer .social a > i {
-  font-size: 20px;
-}
 
 .footer .footer-dependencies img {
   max-width: 80px;
