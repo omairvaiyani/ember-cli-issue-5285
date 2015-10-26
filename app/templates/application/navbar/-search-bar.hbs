@@ -1,12 +1,14 @@
-<form {{bind-attr class=":navbar-form :navbar-left navbarSearchIsFocused:is-focused"}}
+<form {{bind-attr class=":navbar-form :navbar-left navbarSearchIsFocused:is-focused :margin-top-8"}}
         role="search" id="navbar-search-container">
     {{input type="text" class="form-control" value=navbarSearchTerm id='navbar-search-input'
     focus-in='navbarSearchFocused' focus-out='navbarSearchBlurred'}}
+
     {{#if navbarSearchIsFocused}}
         <span class="fa fa-close close-icon"></span>
     {{else}}
         <span class="fa fa-search search-icon" {{action 'focusOnNavbarSearch'}}></span>
     {{/if}}
+
     {{#if navbarSearchIsFocused}}
         <div {{bind-attr class=":search-popdown navbarSearchDual:dual"}}>
             <div class="container-fluid">
@@ -57,4 +59,5 @@
             </div>
         </div>
     {{/if}}
+
 </form>

@@ -35,6 +35,11 @@ app.import({
     production: 'bower_components/bootstrap/dist/css/bootstrap.min.css'
 });
 /*
+ * Raleway - FONT
+ */
+app.import('')
+
+/*
  * MATERIAL DESIGN FOR BOOTSTRAP
  */
 

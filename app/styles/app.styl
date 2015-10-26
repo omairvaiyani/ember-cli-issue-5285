@@ -728,9 +728,7 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 // Navbar search current
-
-.navbar-form
-  margin-top 8px !important
+.navbar-form, .main-search
   position relative
   .form-control
     background-color darken(colorPrimary-300, 10)
@@ -744,9 +742,9 @@ input[type="range"]::-webkit-slider-thumb {
       background-color colorPrimary-300
   span
     position: absolute;
-    right: 24px;
-    top: 9px;
-    font-size: 16px;
+    right: 8px;
+    top: 15px;
+    font-size: 18px;
     cursor pointer
   &.is-focused
     .form-control
@@ -756,7 +754,16 @@ input[type="range"]::-webkit-slider-thumb {
     span
       color black
 
+.navbar-form
+  span
+    right 24px
+  .search-popdown
+    width: calc(100% - 30px);
+    top: 42px;
+    left: 15px;
+
 .search-popdown
+  text-align left
   background: #edeff0;
   color black
   border-radius: 3px;
@@ -766,9 +773,8 @@ input[type="range"]::-webkit-slider-thumb {
   overflow: hidden;
   overflow-y scroll
   position: absolute;
-  left: 15px;
-  top: 42px;
-  width: 300px;
+  left: 2px;
+  width: calc(100% - 2px);
   min-height 115px
   max-height 640px
   z-index: 20;
@@ -1047,22 +1053,23 @@ hr.user-message-item-separator {
 /* TEMPLATE - INDEX/GUEST */
 /*
  */
+#index-page-video
+  position absolute
+  top 50px
+  bottom 0
+  left 0
+  width 100% !important
+  z-index -1
+  display none
 
 .index-page-cover
   position relative
   height: 600px;
   padding-top: 190px;
   margin-top: -20px;
-  background-image: url('/img/guest-page-cover.jpg');
   background-size: cover;
   background-position: center top;
-  overflow hidden
-  video
-    position absolute
-    top 0
-    bottom 0
-    left 0
-    width 100% !important
+  background-image url('/img/index-page-cover.jpg')
   .container
     position relative
     z-index 2
@@ -1085,12 +1092,13 @@ hr.user-message-item-separator {
       margin auto
       input
         width 100%
-        height 32px
+        height 46px
         border 1px black solid
         border-radius 4px 0 0 4px
         border-right 0
         padding marginSecondary
-      span
+        font-size 18px
+      span.search-icon
         cursor pointer
         backgroundGradient(0)
         border 1px solid black
@@ -1099,6 +1107,15 @@ hr.user-message-item-separator {
           backgroundGradient(2)
         &:active
           backgroundGradient(4)
+
+@media(min-width 1101px) {
+  #index-page-video {
+    display inherit
+  }
+  .index-page-cover {
+    background-image none
+  }
+}
 
 .btn-with-icon
   padding 0
@@ -1157,16 +1174,18 @@ hr.user-message-item-separator {
       display inline-block
       cursor: pointer;
 
-
 .index-page-main
   padding-bottom: 16px;
-  .features-row
-    margin-bottom marginPrimary
-    .description
-      color alpha(black, 0.6)
-    .create-column
-      padding-right: 0;
-      padding-left: 0;
+  background-color colorBackground
+  .features-container
+    background-image url('/img/white-icon-filled-background.png')
+    .features-row
+      margin-bottom marginPrimary
+      .description
+        color alpha(black, 0.6)
+      .create-column
+        padding-right: 0;
+        padding-left: 0;
   .stats-row
     position relative
     backgroundGradient(0)

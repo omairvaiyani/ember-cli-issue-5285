@@ -1,12 +1,12 @@
+<video autoplay loop id="index-page-video">
+    <source src="https://s3-eu-west-1.amazonaws.com/synap-dev-assets/assets/index-cover-video.mp4" type="video/mp4">
+</video>
 <div class="index-page-cover">
-    <video autoplay loop>
-        <source src="https://s3-eu-west-1.amazonaws.com/synap-dev-assets/assets/index-cover-video.mp4" type="video/mp4">
-    </video>
     <div class="dark-overlay"></div>
     <div class="container text-center">
         <h1 class="margin-top-16">Studying optimised, just for you.</h1>
         <button class="btn btn-danger btn-with-icon"
-                {{action 'openModal' 'application/modal/register'}}>
+            {{action 'openModal' 'application/modal/register'}}>
             <span class="inline-block">GET STARTED</span>
             <span class="right-section inline-block">
                 <i class="fa fa-arrow-right"></i>
@@ -15,9 +15,13 @@
     </div>
     <div class="guest-page-actions">
         <div class="input-group">
-            {{input type='text' value=indexSearchTerm aria-describedby="search-icon"
-            placeholder="Search for revision material"}}
-            <span class="input-group-addon" id="search-icon">
+            {{main-search
+            parentController=this
+            hideSearchIcon=true
+            searchTerm=navbarSearchTerm
+            searchPlaceholder="Search for revision material"
+            }}
+            <span class="input-group-addon search-icon">
                 <i class="fa fa-search"></i>
             </span>
         </div>
@@ -68,33 +72,38 @@
                     </button>
                 </article>
             </section>
-            <hr>
-            <h3 class="text-center" id="learn-more-flag">Features</h3>
-            <hr class="mini-hr">
+        </div>
+        <div class="features-container margin-top-16">
+            <hr class="no-margin">
+            <div class="container">
 
-            <div class="row features-row">
-                <div class="col-md-4 col-sm-4 text-center">
-                    <img src="img/create-features.png" class="margin-top-16" style="max-width: 100%;width:150px;"/>
+                <h3 class="text-center" id="learn-more-flag">Features</h3>
+                <hr class="mini-hr">
 
-                    <h3>Create</h3>
-                    <h4 class="description">Write tests in the multiple-choice questions (MCQs) format</h4>
-                </div>
-                <div class="col-md-4 col-sm-4 text-center">
-                    <img src="img/practice-features.png" class="margin-top-16" style="max-width: 100%;width:150px;"/>
+                <div class="row features-row">
+                    <div class="col-md-4 col-sm-4 text-center">
+                        <img src="img/create-features.png" class="margin-top-16" style="max-width: 100%;width:150px;"/>
 
-                    <h3>Practice</h3>
-                    <h4 class="description">Take tests and monitor your progress over time</h4>
-                </div>
-                <div class="col-md-4 col-sm-4 text-center">
-                    <img src="img/share-features.png" class="margin-top-16" style="max-width: 100%;width:150px;"/>
+                        <h3>Create</h3>
+                        <h4 class="description">Write tests in the multiple-choice questions (MCQs) format</h4>
+                    </div>
+                    <div class="col-md-4 col-sm-4 text-center">
+                        <img src="img/practice-features.png" class="margin-top-16"
+                             style="max-width: 100%;width:150px;"/>
 
-                    <h3>Share</h3>
-                    <h4 class="description">Publish tests to the growing MyCQs Community or find tests created by
-                        others</h4>
+                        <h3>Practice</h3>
+                        <h4 class="description">Take tests and monitor your progress over time</h4>
+                    </div>
+                    <div class="col-md-4 col-sm-4 text-center">
+                        <img src="img/share-features.png" class="margin-top-16" style="max-width: 100%;width:150px;"/>
+
+                        <h3>Share</h3>
+                        <h4 class="description">Publish tests to the growing MyCQs Community or find tests created by
+                            others</h4>
+                    </div>
                 </div>
             </div>
         </div>
-
         <section class="row stats-row">
             <div class="icon-overlay"></div>
             <div class="container">
