@@ -44,6 +44,12 @@ marginPrimary = 16px
 marginSecondary = 8px
 
 /*
+ * Screen Dimensions
+ */
+screenSmall = 768px
+screenMedium = 970px
+screenLarge = 110px
+/*
  * Gradient Mixin
  */
 backgroundGradient(darken)
@@ -1088,7 +1094,7 @@ hr.user-message-item-separator {
     background-color alpha(black, 0.2)
     text-align center
     .input-group
-      width 500px
+      max-width 500px
       margin auto
       input
         width 100%
@@ -1197,24 +1203,29 @@ hr.user-message-item-separator {
       position: absolute;
       top: -16px;
       bottom: 0;
-      width: 400px;
+      width: 90%;
       opacity: .08;
       background-size: cover;
-      left: calc(50% - 200px);
+      left: 10%;
       background-position: center center;
     hr
       background  white !important
     .stat-icon
-      font-size 40px
+      font-size 26px
       margin-right marginPrimary
     .stat-right
       text-align left
       .stat-number
-        font-size 20px
+        font-size 16px
         font-weight bold
         margin 0
       .stat-title
         margin 0
+    @media (min-width screenSmall)
+      .stat-icon
+        font-size 38px
+      .stat-right .stat-number
+        font-size 20px
 
 hr.mini-hr
   background colorSecondary
@@ -2440,13 +2451,13 @@ body {
 #body-wrap
   min-height: 100%;
   position: relative;
-  padding-bottom: 200px;
+  padding-bottom: 427px;
   &.no-padding-bottom
     padding-bottom 0
 
-@media (min-width: 992px)
+@media (min-width: screenSmall)
   #body-wrap
-    padding-bottom 255px
+    padding-bottom 262px
     &.no-padding-bottom
       padding-bottom 0
 
@@ -2466,10 +2477,10 @@ body {
     position: absolute;
     top: -16px;
     bottom: 0;
-    width: 400px;
+    width: 90%;
     opacity: .02;
     background-size: cover;
-    left: calc(50% - 200px);
+    left: 10%;
     background-position: center center;
   a
     color colorLightText

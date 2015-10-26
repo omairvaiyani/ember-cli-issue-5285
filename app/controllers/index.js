@@ -62,17 +62,29 @@ Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, EstimateMemoryStrength
      * This trigger is removed on IndexRoute exit.
      */
     resizeIndexCoverVideo: function () {
+        var calculateHeight = function () {
+            var height = $(window).outerHeight() - 140;
+            if (height < 400)
+                height = 400;
+            else if (height > 620)
+                height = 620;
+            return height;
+        }
+
         // for the window resize
         $(window).ready(function () {
             // Set it first, but need a delay
             setTimeout(function () {
-                $('.index-page-cover').css('height', ($(window).outerHeight() - 140) + 'px');
+                var height = calculateHeight();
+                $('.index-page-cover').css('height', height + 'px');
             }, 200);
             // Set resize trigger
             $(window).resize(function () {
-                $('.index-page-cover').css('height', ($(window).outerHeight() - 140) + 'px');
+                var height = calculateHeight();
+                $('.index-page-cover').css('height', height + 'px');
             });
         }.bind(this));
+
     },
 
     /*
