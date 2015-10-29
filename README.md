@@ -288,7 +288,7 @@ Parse.Cloud.run('createOrUpdateStudyField', {
 In order to create an ```educationCohort```, we need at least two of the three items collected above.
 First, create the object locally like so:
 ```javascript
-ParseHelper.cloudFunction(this, 'createOrGetEducationCohort', {
+Parse.Cloud.run('createOrGetEducationCohort', {
                     educationalInstitutionId: newEducationCohort.institution.id,
                     studyFieldId: newEducationCohort.studyField.id,
                     currentYear: newEducationCohort.currentYear,
@@ -304,6 +304,7 @@ ParseHelper.cloudFunction(this, 'createOrGetEducationCohort', {
                 });
 ```
 More info to follow.
+
 
 
 
