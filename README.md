@@ -257,11 +257,14 @@ If educational information from their profile is found, run this code:
 ```javascript
 var studyFieldObject = latestEducationalInfo.concentration;
     // worth checking if this 'concentration' object is null or not.
+    
+    // Store graduation year
+    newEducationCohort.graduationYear = latestEducationalInfo.year.name;
 ```
 Else, run the Facebook search API and filter in ```object.category``` === ```"Interest"``` or ```"Field of study"```. It's just how Facebook categories the results.
 
 #### Study Year
-Simply dropdown selection. Facebook does provide a graduation date, which we can store in the final object (see next step), but we are not using this just yet.
+Simply dropdown selection. Facebook does provide a graduation date, which we can store in the final object (see next step), but we are not using this just yet. Store selected option as ```newEducationCohort.studyYear```.
 ```javascript
 studyYearsToChooseFrom: [
         "Foundation Year", "Year 1", "Year 2", "Year 3",
@@ -272,12 +275,11 @@ studyYearsToChooseFrom: [
 ####  Creating the Study Field
 Once you have got at least the name for the ```studyFiled```, you can perform this step.
 ```javascript
-Parse.Cloud.run('createOrUpdateInstitution', {
-                name: educationalInstitutionObject.name,
-                facebookId: educationalInstitutionObject.facebookId, // if from Facebook
-                type: educationalInstitutionObject.type
+Parse.Cloud.run('createOrUpdateStudyField', {
+                name: studyFieldObject.name,
+                facebookId: educationalInstitutionObject.facebookId // if from Facebook
             }).then(function (result) {
-                  newEducationCohort.institution = result.institution; // store this 
+                  newEducationCohort.studyField = result.studyField; // store this 
                }), function (error) {
                 console.log(JSON.stringify(error));
             });
@@ -286,7 +288,24 @@ Parse.Cloud.run('createOrUpdateInstitution', {
 In order to create an ```educationCohort```, we need at least two of the three items collected above.
 First, create the object locally like so:
 ```javascript
-
+ParseHelper.cloudFunction(this, 'createOrGetEducationCohort', {
+                    educationalInstitutionId: newEducationCohort.institution.id,
+                    studyFieldId: newEducationCohort.studyField.id,
+                    currentYear: newEducationCohort.currentYear,
+                    graduationYear: newEducationCohort.graduationYear
+                }).then(function (educationCohort) {
+                    // This will either be a brand new educationCohort object,
+                    // or a previously created cohort which matched this user's
+                    // education info.
+                    currentUser.set('educationCohort', educationChort);
+                    return currentUser.save();
+                }, function (error) {
+                    console.log(JSON.stringify(error));
+                });
 ```
+More info to follow.
+
+
+
 
 
