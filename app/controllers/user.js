@@ -143,9 +143,9 @@ export default Ember.ObjectController.extend(CurrentUser, {
      * FACEBOOK EDUCATION LIST
      */
     facebookEducation: function () {
-        if (!this.get('education'))
+        if (!this.get('fbEducation'))
             return [];
-        return this.get('education').sort(function (a, b) {
+        return this.get('fbEducation').sort(function (a, b) {
             return parseInt(b.year.name) - parseInt(a.year.name);
         });
     }.property('education.length'),
