@@ -1,7 +1,38 @@
-<div class="container">
-    <div class="card margin-bottom-16">
-        <h1>About us</h1>
-        <hr>
-        {{outlet}}
+<div class="container margin-bottom-16">
+    <div class="card about-us">
+        <div class="header-container">
+            <h1>About us</h1>
+        </div>
+        <div class="main-body">
+            <div class="tabbable-panel">
+                <div class="tabbable-line">
+                    <ul class="nav nav-tabs">
+                        <li class="active">
+                            <a href="#tab_default_1" data-toggle="tab">
+                                The Company
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#tab_default_2" data-toggle="tab">
+                                 How it Works
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#tab_default_3" data-toggle="tab">
+                                Contact Us
+                            </a>
+                        </li>
+                    </ul>
+                    <div class="tab-content margin-top-16">
+                        {{outlet}}
+                        <div class="tab-pane" id="tab_default_2">
+
+                        </div>
+                        <div class="tab-pane" id="tab_default_3">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>

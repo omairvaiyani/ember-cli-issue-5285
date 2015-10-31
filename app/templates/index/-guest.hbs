@@ -5,26 +5,41 @@
     <div class="dark-overlay"></div>
     <div class="container text-center">
         <h1 class="margin-top-16">Studying optimised, just for you.</h1>
-        <button class="btn btn-danger btn-with-icon"
-            {{action 'openModal' 'application/modal/register'}}>
-            <span class="inline-block">GET STARTED</span>
+
+        {{#if betaUnlocked}}
+            <button class="btn btn-danger btn-with-icon"
+                {{action 'openModal' 'application/modal/register'}}>
+                <span class="inline-block">GET STARTED</span>
             <span class="right-section inline-block">
                 <i class="fa fa-arrow-right"></i>
             </span>
-        </button>
+            </button>
+        {{/if}}
+
     </div>
     <div class="guest-page-actions">
-        <div class="input-group">
-            {{main-search
-            parentController=this
-            hideSearchIcon=true
-            searchTerm=navbarSearchTerm
-            searchPlaceholder="Search for revision material"
-            }}
-            <span class="input-group-addon search-icon">
-                <i class="fa fa-search"></i>
-            </span>
-        </div>
+        {{#if betaUnlocked}}
+            <div class="input-group">
+                {{main-search
+                parentController=this
+                hideSearchIcon=true
+                searchTerm=navbarSearchTerm
+                searchPlaceholder="Search for revision material"
+                }}
+                <span class="input-group-addon search-icon">
+                    <i class="fa fa-search"></i>
+                </span>
+            </div>
+        {{else}}
+            <h3 class="title-header">Want to join the Synap Beta?</h3>
+            <div class="input-group margin-top-8">
+                {{input type="email" class="form" value=registerInterestEmail
+                placeholder="Enter your email and we'll be in touch"}}
+                <span class="input-group-addon search-icon">
+                    <i class="fa fa-envelope fa-fw"></i>
+                </span>
+            </div>
+        {{/if}}
     </div>
 </div>
 {{!--

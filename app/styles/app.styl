@@ -1093,6 +1093,9 @@ hr.user-message-item-separator {
     padding marginPrimary
     background-color alpha(black, 0.2)
     text-align center
+    .title-header
+      color white
+      margin-top 0
     .input-group
       max-width 500px
       margin auto
@@ -2207,40 +2210,94 @@ ul.progress-chart-legends
 }
 
 /* TEMPLATE - ABOUT */
-.about-profile .img-responsive {
-  width: 100%;
-  height: 200px;
-  background-size: cover !important;
-}
+aboutUsHeaderHeight = 90px
+.about-us
+  border-radius 4px
+  .header-container
+    background colorPrimary
+    color whitesmoke
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height aboutUsHeaderHeight
+    border-radius: 4px 4px 0 0;
+    padding: 16px;
+  .main-body
+    margin-top aboutUsHeaderHeight
+    .tabbable-panel
+      .nav-tabs
+        background white
+        li
+          a
+            color darkgray !important
+          &.active
+            a
+              color colorPrimary !important
+              border-bottom 2px solid colorPrimary !important
 
-.member-info {
-  background-color: colorPrimary;
-  color: white;
-  padding: 10px 0px 10px;
-}
 
-.member-info a {
-  color: white;
-}
-
-.member-info a:hover {
-  color: white;
-}
-
-.member-social {
-  background: #EFEFEF;
-  padding: 10px 0px 0px;
-}
-
-.member-social ul {
-  padding: 0px;
-}
-
-.member-social ul > li {
-  display: inline-block;
-  list-style-image: none;
-  font-size: 32px;
-}
+.about-profile
+  min-height 350px
+  .image-mask
+    position absolute
+    width 220px
+    height 220px
+    left calc(50% - 128px)
+    -webkit-filter: grayscale(100%)
+    filter: grayscale(100%)
+  .member-image
+    position: absolute;
+    width: 150px;
+    height: 150px
+    left: calc(50% - 74px);
+    border-radius: 50%;
+    top: 43px;
+    background-size cover !important
+  .member-body
+    position absolute
+    top 200px
+    left 0
+    right 0
+    .member-info
+      colour colorPrimary
+  &.director
+    min-height 335px
+    .member-body
+      top 170px
+    .image-mask
+      width 180px
+      height 180px
+      left calc(50% - 105px)
+    .member-image
+      height 123px
+      width 123px
+      left calc(50% - 61px)
+      top 35px
+  &.employee
+    min-height 320px
+    .member-body
+      top 155px
+    .image-mask
+      width 160px
+      height 160px
+      left calc(50% - 94px)
+    .member-image
+      height 107px
+      width 107px
+      left calc(50% - 53px)
+      top 32px
+  .member-social
+    background #EFEFEF
+    padding 0
+    width 90%
+    margin auto
+    ul
+      padding 0
+      li
+        display: inline-block;
+        list-style-image: none;
+        font-size: 32px;
 
 /* TEMPLATE - MEDICAl (PROFESSIONAL BANK) */
 .professional-bank-filter-background {
