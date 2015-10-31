@@ -32,6 +32,7 @@
             </div>
         {{else}}
             <h3 class="title-header">Want to join the Synap Beta?</h3>
+
             <div class="input-group margin-top-8">
                 {{input type="email" class="form" value=registerInterestEmail
                 placeholder="Enter your email and we'll be in touch"}}
@@ -91,32 +92,27 @@
         <div class="features-container margin-top-16">
             <hr class="no-margin">
             <div class="container">
-
-                <h3 class="text-center" id="learn-more-flag">Features</h3>
-                <hr class="mini-hr">
-
-                <div class="row features-row">
-                    <div class="col-md-4 col-sm-4 text-center">
-                        <img src="img/create-features.png" class="margin-top-16" style="max-width: 100%;width:150px;"/>
-
-                        <h3>Create</h3>
-                        <h4 class="description">Write tests in the multiple-choice questions (MCQs) format</h4>
-                    </div>
-                    <div class="col-md-4 col-sm-4 text-center">
-                        <img src="img/practice-features.png" class="margin-top-16"
-                             style="max-width: 100%;width:150px;"/>
-
-                        <h3>Practice</h3>
-                        <h4 class="description">Take tests and monitor your progress over time</h4>
-                    </div>
-                    <div class="col-md-4 col-sm-4 text-center">
-                        <img src="img/share-features.png" class="margin-top-16" style="max-width: 100%;width:150px;"/>
-
-                        <h3>Share</h3>
-                        <h4 class="description">Publish tests to the growing MyCQs Community or find tests created by
-                            others</h4>
-                    </div>
-                </div>
+                <section class="row">
+                    <article class="col-sm-6">
+                        <br>
+                        <h3 class="text-center" id="learn-more-flag">Let Us Handle Your Learning</h3>
+                        <hr class="mini-hr">
+                        <br>
+                        <br>
+                        <h4 class="text-center">Synap intelligently tracks what you study,
+                            generating revision material that you need, when you need it.</h4>
+                        <br>
+                        <br>
+                        <h4 class="text-center">
+                            {{#link-to 'about.index'}}
+                                <strong>See How it Works!</strong>
+                            {{/link-to}}
+                        </h4>
+                    </article>
+                    <article class="col-sm-6">
+                        <img src="img/iphone-mockup-home.png"/>
+                    </article>
+                </section>
             </div>
         </div>
         <section class="row stats-row">
@@ -176,19 +172,19 @@
 
                 <div class="row margin-top-16 margin-bottom-16 achievements-row">
                     <div class="col-sm-4 col-xs-6 achievement-cell">
-                        <a href="http://www.yorkshireeveningpost.co.uk/news/the-great-war/university-of-leeds-students-aiming-to-get-top-marks-for-smartphone-app-1-5058922"
+                        <a href="http://uk.businessinsider.com/synaps-app-students-edtech-oxford-lse-1st-quiz-exams-2015-10"
                            target="_blank">
-                            <img src="img/yorkshire-evening-post-logo.png"/>
+                            <img src="img/bi-logo.png"/>
                         </a>
                     </div>
                     <div class="col-sm-4 col-xs-6 achievement-cell">
-                        <a href="http://www.tablecrowd.com/blog/2014/06/startup-spotlight-james-gupta-mycqs/"
+                        <a href="http://thetab.com/uk/leeds/2015/10/29/leeds-medical-student-launches-app-18802?utm_source=local&utm_medium=facebook&utm_campaign=pages"
                            target="_blank">
-                            <img src="img/table-crowd-logo.png"/>
+                            <img src="img/tab-logo.png"/>
                         </a>
                     </div>
                     <div class="col-sm-4 col-xs-6 achievement-cell">
-                        <a href="http://www.theguardian.com/technology/appsblog/2012/oct/26/best-ios-apps-me-books-collins-atlas"
+                        <a href="http://www.theguardian.com/simply-business-partner-zone/2015/oct/07/become-graduate-entrepreneur-guide-startups"
                            target="_blank">
                             <img src="img/guardian-logo.png"/>
                         </a>

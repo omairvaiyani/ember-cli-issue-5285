@@ -1188,13 +1188,13 @@ hr.user-message-item-separator {
   background-color colorBackground
   .features-container
     background-image url('/img/white-icon-filled-background.png')
-    .features-row
-      margin-bottom marginPrimary
-      .description
-        color alpha(black, 0.6)
-      .create-column
-        padding-right: 0;
-        padding-left: 0;
+    height 400px
+    overflow hidden
+    img
+      position: absolute
+      right 10px
+      top 10px
+      height 600px
   .stats-row
     position relative
     backgroundGradient(0)
@@ -1242,7 +1242,7 @@ hr.mini-hr
   .achievement-cell
     background white
     border 1px solid alpha(black, 0.06)
-    padding 16px
+    padding 32px
     text-align center
     img
       width: 80%;
