@@ -2238,31 +2238,41 @@ aboutUsHeaderHeight = 90px
 
 
 .about-profile
-  min-height 350px
-  .image-mask
-    position absolute
-    width 220px
-    height 220px
-    left calc(50% - 128px)
-    -webkit-filter: grayscale(100%)
-    filter: grayscale(100%)
-  .member-image
-    position: absolute;
-    width: 150px;
-    height: 150px
-    left: calc(50% - 74px);
-    border-radius: 50%;
-    top: 43px;
-    background-size cover !important
+  min-height 410px
+  @media (min-width screenMedium)
+    min-height 380px
+  .image-holder
+    height: 220px;
+    width: 100%;
+    margin: auto;
+    position: relative;
+    .image-mask
+      position absolute
+      width 220px
+      height 220px
+      left calc(50% - 128px)
+      -webkit-filter: grayscale(70%)
+      filter: grayscale(70%)
+    .member-image
+      position: absolute;
+      width: 150px;
+      height: 150px
+      left: calc(50% - 74px);
+      border-radius: 50%;
+      top: 43px;
+      background-size cover !important
   .member-body
     position absolute
-    top 200px
     left 0
     right 0
     .member-info
       colour colorPrimary
+      max-width 300px
+      margin auto
+      .member-name
+        margin-top 8px
   &.director
-    min-height 335px
+    min-height 281px
     .member-body
       top 170px
     .image-mask
@@ -2275,7 +2285,7 @@ aboutUsHeaderHeight = 90px
       left calc(50% - 61px)
       top 35px
   &.employee
-    min-height 320px
+    min-height 280px
     .member-body
       top 155px
     .image-mask
@@ -2290,8 +2300,8 @@ aboutUsHeaderHeight = 90px
   .member-social
     background #EFEFEF
     padding 0
-    width 90%
     margin auto
+    max-width 300px
     ul
       padding 0
       li
