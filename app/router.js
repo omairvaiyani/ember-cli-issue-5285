@@ -72,9 +72,9 @@ Router.map(function () {
      * Static pages
      */
     this.route('about', function () {
+        this.route('contact');
         this.route('team');
         this.route('howItWorks', {path:'how-it-works'});
-        this.route('contact');
     });
     this.route('support', {path: 'support'});
     this.route('privacyPolicy', {path: 'privacy-policy'});
