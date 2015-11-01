@@ -26,6 +26,7 @@
     "jquery-knob": "1.2.11",
     "chartjs": "1.0.2",
     "moment-range": "~2.0.3",
-    "parse-js-sdk": "mylabs/parse-js-sdk"
+    "parse-js-sdk": "mylabs/parse-js-sdk",
+    "countUp.js": "~1.6.0"
   }
 }

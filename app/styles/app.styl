@@ -1106,7 +1106,9 @@ hr.user-message-item-separator {
         border-radius 4px 0 0 4px
         border-right 0
         padding marginSecondary
-        font-size 18px
+        font-size 14px
+        @media (min-width screenSmall)
+          font-size 18px
       span.search-icon
         cursor pointer
         backgroundGradient(0)
@@ -1187,30 +1189,39 @@ hr.user-message-item-separator {
   padding-bottom: 16px;
   background-color colorBackground
   .features-container
+    height 500px
     background-image url('/img/white-icon-filled-background.png')
-    height 400px
     overflow hidden
+    @media (min-width screenSmall)
+      height 400px
     img
       position: absolute
-      right 10px
-      top 10px
-      height 600px
+      width 300px
+      top 0
+      left calc(50% - 150px)
+      @media (min-width screenSmall)
+        height 600px
+        right 10px
+        left inherit
+        width auto
+        top 10px
   .stats-row
     position relative
     backgroundGradient(0)
-    padding-bottom 32px
+    padding-bottom 48px
     padding-top marginPrimary
     color white
     .icon-overlay
       background-image url('/img/icon-white-512.png')
       position: absolute;
-      top: -16px;
+      top: 0;
       bottom: 0;
-      width: 90%;
-      opacity: .08;
+      width: 400px;
+      opacity: .055;
       background-size: cover;
-      left: 10%;
+      left: calc(50% - 200px);
       background-position: center center;
+      -webkit-filter: invert(10%);
     hr
       background  white !important
     .stat-icon
@@ -1229,23 +1240,22 @@ hr.user-message-item-separator {
         font-size 38px
       .stat-right .stat-number
         font-size 20px
+  .achievements-row
+    .achievement-cell
+      padding 16px
+      background white
+      border 1px solid alpha(black, 0.06)
+      text-align center
+      @media (min-width screenSmall)
+        padding 32px
+      img
+        width: 80%;
 
 hr.mini-hr
   background colorSecondary
   width: 20px;
   height: 2px;
   margin-top: 0;
-
-
-
-.achievements-row
-  .achievement-cell
-    background white
-    border 1px solid alpha(black, 0.06)
-    padding 32px
-    text-align center
-    img
-      width: 80%;
 
 
 .grey-body {
@@ -2542,13 +2552,14 @@ body {
   .icon-overlay
     background-image url('/img/icon-white-512.png')
     position: absolute;
-    top: -16px;
+    top: 0;
     bottom: 0;
-    width: 90%;
-    opacity: .02;
+    width: 400px;
+    opacity: 0.025;
     background-size: cover;
-    left: 10%;
+    left: calc(50% - 200px);
     background-position: center center;
+    -webkit-filter: invert(100%);
   a
     color colorLightText
   .footer-logo

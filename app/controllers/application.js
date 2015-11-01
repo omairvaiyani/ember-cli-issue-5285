@@ -44,6 +44,7 @@ export default Ember.Controller.extend({
                     this.set('navbarTransparent', true);
                     this.set('hideNavbarSearch', true);
                     this.get('controllers.index').resizeIndexCoverVideo();
+                    this.get('controllers.index').shouldShowStats();
                 }
                 break;
             case "user.index":

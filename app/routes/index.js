@@ -12,8 +12,11 @@ export default Ember.Route.extend({
 
     actions: {
         willTransition: function () {
-            console.log("Removing trigger");
+            // For Video Resize on Guest Page
             $(".index-page-cover").off("resize", "**");
+
+            // For Stats Counter Trigger on Guest Page
+            $(window).off("scroll", "**");
         }
     }
 });

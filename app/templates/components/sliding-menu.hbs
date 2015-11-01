@@ -19,9 +19,11 @@
                 {{/link-to}}
             </div>
 
-            <button class="btn btn-facebook" {{action 'facebookConnect'}}>
-                <i class="fa fa-facebook margin-right-8"></i>Signup
-            </button>
+            {{#if betaUnlocked}}
+                <button class="btn btn-facebook" {{action 'facebookConnect'}}>
+                    <i class="fa fa-facebook margin-right-8"></i>Signup
+                </button>
+            {{/if}}
         {{/if}}
     </div>
     <ul class="nav sidebar-nav">
@@ -57,24 +59,33 @@
                 {{/link-to}}
             {{/link-to}}
         {{else}}
-            <li>
-                <a href="javascript:void(0)" {{action 'openModal' 'application/modal/login' 'application'}}>
-                    <i class="sidebar-icon fa fa-fw fa-user"></i>Log in
-                </a>
-            </li>
-            <li>
-                <a href="javascript:void(0)" {{action 'openModal' 'application/modal/register' 'application'}}>
-                    <i class="sidebar-icon fa fa-fw fa-sign-in"></i>Register
-                </a>
-            </li>
+            {{#if betaUnlocked}}
+                <li>
+                    <a href="javascript:void(0)" {{action 'openModal' 'application/modal/login' 'application'}}>
+                        <i class="sidebar-icon fa fa-fw fa-user"></i>Log in
+                    </a>
+                </li>
+                <li>
+                    <a href="javascript:void(0)" {{action 'openModal' 'application/modal/register' 'application'}}>
+                        <i class="sidebar-icon fa fa-fw fa-sign-in"></i>Register
+                    </a>
+                </li>
+            {{/if}}
         {{/if}}
-        {{#link-to 'browse' tagName='li' title='Search for quizzes'}}
-            {{#link-to 'browse' tagName='a'}}
-                <i class="sidebar-icon fa fa-fw fa-globe"></i>Browse
+        {{#if betaUnlocked}}
+            {{#link-to 'browse' tagName='li' title='Search for quizzes'}}
+                {{#link-to 'browse' tagName='a'}}
+                    <i class="sidebar-icon fa fa-fw fa-globe"></i>Browse
+                {{/link-to}}
             {{/link-to}}
-        {{/link-to}}
-        <li class="divider"></li>
+            <li class="divider"></li>
+        {{/if}}
         {{#unless currentUser}}
+            <li>
+                <a href="http://synap.ac/blog" target="_blank">
+                    Blog
+                </a>
+            </li>
             <li class="dropdown">
                 <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
                    aria-expanded="false" {{action "toggleDropdownMenu"}}>
@@ -94,11 +105,6 @@
                     {{#link-to 'contact' tagName='li' title='Contact us'}}
                         {{#link-to 'contact' tagName='a'}}
                             Contact
-                        {{/link-to}}
-                    {{/link-to}}
-                    {{#link-to 'support' tagName='li' title='Support'}}
-                        {{#link-to 'support' tagName='a'}}
-                            Support
                         {{/link-to}}
                     {{/link-to}}
                 </ul>

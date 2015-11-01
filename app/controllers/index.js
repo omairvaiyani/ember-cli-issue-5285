@@ -47,11 +47,34 @@ Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, EstimateMemoryStrength
         Ember.run.debounce(this, this.onboardingFirstCTAFocus, 450);
     }.observes('onboardingFirstInput.length'),
 
+    showStats: false,
+
     stats: {
         numberOfUsers: 15000,
         numberOfTests: 1200,
         numberOfQuestions: 258800,
         numberOfAttempts: 97500
+    },
+    /**
+     * @Function Should Show Stats
+     *
+     * Called from ApplicationController.currentPathDidChange
+     * Only if a guest visits the homepage.
+     * This trigger is removed on IndexRoute exit.
+     */
+    shouldShowStats: function () {
+        var _this = this;
+        setTimeout(function () {
+            $(function () {
+                var oTop = $('#stats-row').offset().top - window.innerHeight;
+                $(window).scroll(function () {
+                    var pTop = $('body').scrollTop();
+                    if (pTop > oTop) {
+                        _this.set('showStats', true);
+                    }
+                });
+            });
+        }, 800);
     },
 
     /**
@@ -69,7 +92,7 @@ Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, EstimateMemoryStrength
             else if (height > 620)
                 height = 620;
             return height;
-        }
+        };
 
         // for the window resize
         $(window).ready(function () {
@@ -343,6 +366,12 @@ Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, EstimateMemoryStrength
         indexLearnMoreScroll: function () {
             $('html, body').animate({
                 scrollTop: $("#learn-more-flag").offset().top
+            }, 400);
+        },
+
+        indexBackToTopScroll: function () {
+            $('html, body').animate({
+                scrollTop: $("#join-beta-flag").offset().top - 50
             }, 400);
         },
 

@@ -31,11 +31,11 @@
                 </span>
             </div>
         {{else}}
-            <h3 class="title-header">Want to join the Synap Beta?</h3>
+            <h3 class="title-header" id="join-beta-flag">Want to join the Synap Beta?</h3>
 
             <div class="input-group margin-top-8">
                 {{input type="email" class="form" value=registerInterestEmail
-                placeholder="Enter your email and we'll be in touch"}}
+                placeholder="Enter your email and we'll be in touch" id="onboarding-firstInput"}}
                 <span class="input-group-addon search-icon">
                     <i class="fa fa-envelope fa-fw"></i>
                 </span>
@@ -82,9 +82,9 @@
                     <h4 class="inline-block margin-right-16">Want to find out how Synap will improve your learning?</h4>
                     <button class="btn btn-ghost btn-with-icon" {{action 'indexLearnMoreScroll'}}>
                         <span class="inline-block">LEARN MORE</span>
-                    <span class="right-section inline-block">
-                        <i class="fa fa-arrow-circle-down"></i>
-                    </span>
+                        <span class="right-section inline-block">
+                            <i class="fa fa-arrow-circle-down"></i>
+                        </span>
                     </button>
                 </article>
             </section>
@@ -93,8 +93,9 @@
             <hr class="no-margin">
             <div class="container">
                 <section class="row">
-                    <article class="col-sm-6">
+                    <article class="col-xs-12 col-sm-6">
                         <br>
+
                         <h3 class="text-center" id="learn-more-flag">Let Us Handle Your Learning</h3>
                         <hr class="mini-hr">
                         <br>
@@ -109,13 +110,13 @@
                             {{/link-to}}
                         </h4>
                     </article>
-                    <article class="col-sm-6">
+                    <article class="col-xs-12 col-sm-6">
                         <img src="img/iphone-mockup-home.png"/>
                     </article>
                 </section>
             </div>
         </div>
-        <section class="row stats-row">
+        <section class="row stats-row" id="stats-row">
             <div class="icon-overlay"></div>
             <div class="container">
                 <h3 class="text-center">Growing Community</h3>
@@ -125,7 +126,12 @@
                         <i class="stat-icon fa fa-fw fa-users inline-block"></i>
 
                         <div class="stat-right inline-block">
-                            <p class="stat-number">{{number-wizard stats.numberOfUsers}}</p>
+                            <p class="stat-number">
+                                {{#if showStats}}
+                                    {{count-up startVal=0 endVal=stats.numberOfUsers duration=3 decimals=0 useEasing=true
+                                    useGrouping=true separator=',' decimal='.'}}
+                                {{/if}}
+                            </p>
 
                             <p class="stat-title">Users</p>
                         </div>
@@ -135,7 +141,12 @@
                         <i class="stat-icon fa fa-fw fa-th-list inline-block"></i>
 
                         <div class="stat-right inline-block">
-                            <p class="stat-number">{{number-wizard stats.numberOfTests}}</p>
+                            <p class="stat-number">
+                                {{#if showStats}}
+                                    {{count-up startVal=0 endVal=stats.numberOfTests duration=3 decimals=0 useEasing=true
+                                    useGrouping=true separator=',' decimal='.'}}
+                                {{/if}}
+                            </p>
 
                             <p class="stat-title">Tests</p>
                         </div>
@@ -145,7 +156,12 @@
                         <i class="stat-icon fa fa-fw fa-question-circle inline-block"></i>
 
                         <div class="stat-right inline-block">
-                            <p class="stat-number">{{number-wizard stats.numberOfQuestions}}</p>
+                            <p class="stat-number">
+                                {{#if showStats}}
+                                    {{count-up startVal=0 endVal=stats.numberOfQuestions duration=3 decimals=0 useEasing=true
+                                    useGrouping=true separator=',' decimal='.'}}
+                                {{/if}}
+                            </p>
 
                             <p class="stat-title">Questions</p>
                         </div>
@@ -155,7 +171,12 @@
                         <i class="stat-icon fa fa-fw fa-play inline-block"></i>
 
                         <div class="stat-right inline-block">
-                            <p class="stat-number">{{number-wizard stats.numberOfAttempts}}</p>
+                            <p class="stat-number">
+                                {{#if showStats}}
+                                    {{count-up startVal=0 endVal=stats.numberOfAttempts duration=3 decimals=0 useEasing=true
+                                    useGrouping=true separator=',' decimal='.'}}
+                                {{/if}}
+                            </p>
 
                             <p class="stat-title">Attempts</p>
                         </div>
@@ -197,19 +218,30 @@
                     </div>
 
                     <div class="col-sm-4 col-xs-6 achievement-cell">
-                        <a href="http://kairossociety.co.uk/fellows/" target="_blank">
-                            <img src="img/kairos-logo.png"/>
+                        <a href="http://crowdcube.com" target="_blank">
+                            <img src="img/crowdcube-logo.png"/>
                         </a>
                     </div>
 
                     <div class="col-sm-4 col-xs-6 achievement-cell">
-                        <a href="http://fote-conference.com/2014/09/24/fote14-pitchfest-finalist-mycqs/"
+                        <a href="http://www.thebusinessdesk.com/yorkshire/news/725346-edtech-entrepreneurs-launch-180-000-crowdfunding-campaign.html"
                            target="_blank">
-                            <img src="img/fote-logo.png"/>
+                            <img src="img/business-desk-logo.png"/>
                         </a>
                     </div>
                 </div>
             </div>
+        </section>
+
+        <section class="row">
+            <article class="col-xs-12 text-center">
+                <button class="btn btn-ghost btn-with-icon" {{action 'indexBackToTopScroll'}}>
+                    <span class="inline-block">Join the Synap beta today!</span>
+                        <span class="right-section inline-block">
+                            <i class="fa fa-arrow-circle-up"></i>
+                        </span>
+                </button>
+            </article>
         </section>
 
     </div>
