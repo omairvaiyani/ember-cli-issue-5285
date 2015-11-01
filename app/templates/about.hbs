@@ -1,5 +1,5 @@
-<div class="container margin-bottom-16">
-    <div class="card about-us">
+<div class="container margin-bottom-16 text-center">
+    <div class="card about-us text-left">
         <div class="header-container">
             <h1>About us</h1>
         </div>
@@ -7,29 +7,24 @@
             <div class="tabbable-panel">
                 <div class="tabbable-line">
                     <ul class="nav nav-tabs">
-                        <li class="active">
-                            <a href="#tab_default_1" data-toggle="tab">
+                        {{#link-to "about.team" tagName="li"}}
+                            <a href="#tab_team" data-toggle="tab">
                                 The Company
                             </a>
-                        </li>
-                        <li>
-                            <a href="#tab_default_2" data-toggle="tab">
-                                 How it Works
+                        {{/link-to}}
+                        {{#link-to "about.howItWorks" tagName="li"}}
+                            <a href="#tab_how_it_works" data-toggle="tab">
+                                How it Works
                             </a>
-                        </li>
-                        <li>
-                            <a href="#tab_default_3" data-toggle="tab">
+                        {{/link-to}}
+                        {{#link-to "about.contact" tagName="li"}}
+                            <a href="#tab_contact" data-toggle="tab">
                                 Contact Us
                             </a>
-                        </li>
+                        {{/link-to}}
                     </ul>
                     <div class="tab-content margin-top-16">
                         {{outlet}}
-                        <div class="tab-pane" id="tab_default_2">
-
-                        </div>
-                        <div class="tab-pane" id="tab_default_3">
-                        </div>
                     </div>
                 </div>
             </div>

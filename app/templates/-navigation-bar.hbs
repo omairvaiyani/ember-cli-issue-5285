@@ -11,9 +11,9 @@
                 </button>
                 {{#link-to 'index' tagName='a' classNames='navbar-brand navbar-brand-adjust'}}
                     {{#if loadingItems}}
-                        <img src="img/loading-white.gif" height="45px" class="logo-icon"/>
+                        <img src="img/loading-white.gif" height="45px" class="logo-icon margin-right-16"/>
                     {{else}}
-                        <img src="img/logo-wide.png" height="45px" class="logo-icon"/>
+                        <img src="img/logo-wide.png" height="45px" class="logo-icon margin-right-16"/>
                     {{/if}}
                 {{/link-to}}
             </div>
@@ -42,16 +42,16 @@
                     {{/if}}
                     <!-- About dropdown menu-->
                     {{#unless currentUser}}
-                        <li title='Contact us'>
-                            <a href="http://synap.ac/blog" target="_blank">
-                                Blog
-                            </a>
-                        </li>
                         {{#link-to 'about.team' tagName='li' title='MyCQs Team'}}
                             {{#link-to 'about.team' tagName='a'}}
                                 About
                             {{/link-to}}
                         {{/link-to}}
+                        <li title='Synap Blog'>
+                            <a href="http://synap.ac/blog" target="_blank">
+                                Blog
+                            </a>
+                        </li>
                     {{/unless}}
                 </ul>
                 {{#if betaUnlocked}}

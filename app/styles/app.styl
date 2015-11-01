@@ -55,12 +55,11 @@ screenLarge = 110px
 backgroundGradient(darken)
   background darken(colorPrimary, darken)
   background -moz-linear-gradient(left, darken(colorPrimary, darken) 0%, darken(colorSecondary, darken) 100%)
-  background -webkit-gradient(linear, left top, right top, color-stop(0%, darken(colorPrimary, darken)), color-stop(100%,  darken(colorSecondary, darken)))
-  background -webkit-linear-gradient(left, darken(colorPrimary, darken) 0%,  darken(colorSecondary, darken) 100%)
-  background -o-linear-gradient(left, darken(colorPrimary, darken) 0%,  darken(colorSecondary, darken) 100%)
-  background -ms-linear-gradient(left, darken(colorPrimary, darken) 0%,  darken(colorSecondary, darken) 100%)
-  background linear-gradient(to right, darken(colorPrimary, darken) 0%,  darken(colorSecondary, darken) 100%)
-
+  background -webkit-gradient(linear, left top, right top, color-stop(0%, darken(colorPrimary, darken)), color-stop(100%, darken(colorSecondary, darken)))
+  background -webkit-linear-gradient(left, darken(colorPrimary, darken) 0%, darken(colorSecondary, darken) 100%)
+  background -o-linear-gradient(left, darken(colorPrimary, darken) 0%, darken(colorSecondary, darken) 100%)
+  background -ms-linear-gradient(left, darken(colorPrimary, darken) 0%, darken(colorSecondary, darken) 100%)
+  background linear-gradient(to right, darken(colorPrimary, darken) 0%, darken(colorSecondary, darken) 100%)
 
 @import "addons/material-sidebar"
 @import "material.css"
@@ -155,12 +154,12 @@ body
     cursor pointer
 
 /* Fix for floating labels in material.css */
-.form-control-wrapper .form-control~.floating-label
+.form-control-wrapper .form-control ~ .floating-label
   opacity 0.9
   color colorPrimary
 
-.form-control-wrapper .form-control:focus~.floating-label,
-.form-control-wrapper .form-control:not(.empty)~.floating-label {
+.form-control-wrapper .form-control:focus ~ .floating-label,
+.form-control-wrapper .form-control:not(.empty) ~ .floating-label {
   top: -10px;
   font-size: 10px;
   opacity: 1;
@@ -207,6 +206,7 @@ body
 .my-tab:hover {
   text-decoration: underline;
 }
+
 .modal-dialog
   padding 24px
   .modal-content
@@ -299,6 +299,7 @@ body
   right: 0px;
   background-color: #14A325;
 }
+
 .or-wrapper
   border-bottom: 1px solid #eee;
   padding: 10px 0;
@@ -377,7 +378,6 @@ input[type="range"]::-webkit-slider-thumb {
   margin-right 8px
   border-radius 50%
 
-
 .sidebar-nav
   li.active, a.active, li.active:hover, a.active:hover
     background-color colorPrimary-A100
@@ -440,6 +440,7 @@ input[type="range"]::-webkit-slider-thumb {
 
 .textarea-holder
   padding marginSecondary
+
 /*
  * Global spinner for cross-page items
  */
@@ -554,7 +555,6 @@ input[type="range"]::-webkit-slider-thumb {
     .close-notification
       display block
 
-
 .tag.category-edit {
   background: dodgerblue;
   color: whitesmoke;
@@ -601,38 +601,37 @@ input[type="range"]::-webkit-slider-thumb {
     li
       float: none
 
-
 .tag
   background: colorPrimary-400;
-  white-space:nowrap;
-  position:relative;
-  margin:0 10px 0 10px;
-  displaY:inline-block;
-  height:26px;
+  white-space: nowrap;
+  position: relative;
+  margin: 0 10px 0 10px;
+  displaY: inline-block;
+  height: 26px;
   border-radius: 0 5px 5px 0;
   padding: 0 12px;
   border: 1px solid colorPrimary-800;
-  color:whitesmoke;
-  line-height:23px;
+  color: whitesmoke;
+  line-height: 23px;
   text-decoration: none;
   -webkit-transition: color 0.2s;
   cursor pointer
   &::before
-    position:absolute;
+    position: absolute;
     background: colorPrimary-400;
-    content:"\25CF";
-    color:white;
+    content: "\25CF";
+    color: white;
     text-shadow: 0 0 1px #aaa;
-    font-size:12px;
-    line-height:13px;
-    text-indent:6px;
-    top:3px;
-    left:-10px;
+    font-size: 12px;
+    line-height: 13px;
+    text-indent: 6px;
+    top: 3px;
+    left: -10px;
     width: 18px;
     height: 18px;
     transform: rotate(45deg);
-    border-left:1px solid colorPrimary-800;
-    border-bottom:1px solid colorPrimary-700;
+    border-left: 1px solid colorPrimary-800;
+    border-bottom: 1px solid colorPrimary-700;
   &:hover
     background: colorPrimary-500
     color: white;
@@ -647,12 +646,12 @@ input[type="range"]::-webkit-slider-thumb {
     background lighten(grey, 40)
     color lighten(black, 15)
     &::before
-      background  lighten(grey, 40)
+      background lighten(grey, 40)
     &:hover
-      background  lighten(grey, 38)
+      background lighten(grey, 38)
       color lighten(black, 10)
       &::before
-        background  lighten(grey, 38)
+        background lighten(grey, 38)
   input[type=text]
     background transparent
     border none
@@ -670,7 +669,7 @@ input[type="range"]::-webkit-slider-thumb {
     &::before
       background colorSecondary
     &:hover
-      background  lighten(colorSecondary, 10)
+      background lighten(colorSecondary, 10)
       &::before
         background lighten(colorSecondary, 10)
     &.is-active
@@ -775,7 +774,7 @@ input[type="range"]::-webkit-slider-thumb {
   border-radius: 3px;
   border: 1px solid #d6dadc;
   border-bottom-color: #c4c9cc;
-  box-shadow: 0 1px 6px rgba(0,0,0,.15);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, .15);
   overflow: hidden;
   overflow-y scroll
   position: absolute;
@@ -784,7 +783,7 @@ input[type="range"]::-webkit-slider-thumb {
   min-height 115px
   max-height 640px
   z-index: 20;
-  -webkit-transform: translate3d(0,0,0);
+  -webkit-transform: translate3d(0, 0, 0);
   transition width 0.2s
   &.dual
     width 600px
@@ -798,8 +797,8 @@ input[type="range"]::-webkit-slider-thumb {
     padding marginSecondary
     .card-fade
       display inherit
-      background: -webkit-linear-gradient(top,rgba(240,240,240,0) 0,rgba(240,240,240,0) 50%,#f0f0f0 85%,#f0f0f0 100%);
-      background: linear-gradient(to bottom,rgba(240,240,240,0) 0,rgba(240,240,240,0) 50%,#f0f0f0 85%,#f0f0f0 100%);
+      background: -webkit-linear-gradient(top, rgba(240, 240, 240, 0) 0, rgba(240, 240, 240, 0) 50%, #f0f0f0 85%, #f0f0f0 100%);
+      background: linear-gradient(to bottom, rgba(240, 240, 240, 0) 0, rgba(240, 240, 240, 0) 50%, #f0f0f0 85%, #f0f0f0 100%);
       bottom: 0;
       left: 0;
       position: absolute;
@@ -808,7 +807,7 @@ input[type="range"]::-webkit-slider-thumb {
       z-index: 2;
       transition opacity 0.2s
     &:hover
-      box-shadow 0 1px 2px -1px rgba(0,0,0,.8)
+      box-shadow 0 1px 2px -1px rgba(0, 0, 0, .8)
       height inherit
       .title
         font-size 12px
@@ -1022,6 +1021,7 @@ hr.user-message-item-separator {
   right 0
   background darken(colorBackground, 3)
   z-index 1
+  display none // REMOVE AFTER BETA
   img
     position absolute
     height 150px
@@ -1098,7 +1098,10 @@ hr.user-message-item-separator {
       margin-top 0
     .input-group
       max-width 500px
+      min-width 320px
       margin auto
+      @media (min-width screenSmall)
+        min-width 400px;
       input
         width 100%
         height 46px
@@ -1114,15 +1117,23 @@ hr.user-message-item-separator {
         backgroundGradient(0)
         border 1px solid black
         color white
+        position: absolute;
+        right: -1px;
+        top: 0;
+        height: 46px;
+        width: 40px;
+        line-height: 30px;
+        padding: 6px;
         &:hover
           backgroundGradient(2)
         &:active
           backgroundGradient(4)
 
-@media(min-width 1101px) {
+@media (min-width 1101px) {
   #index-page-video {
     display inherit
   }
+
   .index-page-cover {
     background-image none
   }
@@ -1135,7 +1146,7 @@ hr.user-message-item-separator {
     padding 0 24px
     &.right-section
       padding 6px 10px
-      text-align:center;
+      text-align: center;
       border-left: 1px solid colorPrimary-800;
       .icon
         color: white;
@@ -1155,13 +1166,13 @@ hr.user-message-item-separator {
       color: white;
       font-size 20px
       &:focus
-        background-image linear-gradient(black,transparent),linear-gradient(#d2d2d2,#d2d2d2)
-    .form-control~.floating-label, .form-control:focus~.floating-label
+        background-image linear-gradient(black, transparent), linear-gradient(#d2d2d2, #d2d2d2)
+    .form-control ~ .floating-label, .form-control:focus ~ .floating-label
       color white
       top 0
-    .form-control~.floating-label
+    .form-control ~ .floating-label
       font-size 20px
-    .form-control:focus~.floating-label, .form-control:not(.empty)~.floating-label
+    .form-control:focus ~ .floating-label, .form-control:not(.empty) ~ .floating-label
       font-size 14px
       top -20px
     .input-action
@@ -1172,8 +1183,8 @@ hr.user-message-item-separator {
       &:hover
         color colorPrimary
   .onboarding-studyExamples
-    color:white;
-    font-size:12px;
+    color: white;
+    font-size: 12px;
     &.invisible
       visibility none
     span
@@ -1223,7 +1234,7 @@ hr.user-message-item-separator {
       background-position: center center;
       -webkit-filter: invert(10%);
     hr
-      background  white !important
+      background white !important
     .stat-icon
       font-size 26px
       margin-right marginPrimary
@@ -1238,6 +1249,7 @@ hr.user-message-item-separator {
     @media (min-width screenSmall)
       .stat-icon
         font-size 38px
+
       .stat-right .stat-number
         font-size 20px
   .achievements-row
@@ -1256,7 +1268,6 @@ hr.mini-hr
   width: 20px;
   height: 2px;
   margin-top: 0;
-
 
 .grey-body {
   background-color: #edf1f2;
@@ -1700,7 +1711,7 @@ ul.progress-chart-legends
       color black !important
       .input
         font-size 16px
-    .form-control~.floating-label, .form-control:focus~.floating-label
+    .form-control ~ .floating-label, .form-control:focus ~ .floating-label
       color black !important
       font-size 16px
     .button-list
@@ -1712,12 +1723,12 @@ ul.progress-chart-legends
       left: 0;
       right: 0;
       height: 55px;
-      background-color: rgba(0,0,0,0.1);
+      background-color: rgba(0, 0, 0, 0.1);
   .onboarding.progress
     position: absolute;
     bottom -8px
     height: 38px;
-    background-color: rgba(0,0,0,.1);
+    background-color: rgba(0, 0, 0, .1);
     right 0
     left 0
     line-height: 2.7;
@@ -1733,14 +1744,14 @@ ul.progress-chart-legends
       top: 0;
       line-height: 2.35;
       border-radius: 4px 0 0 12px;;
-    .progress-completed
-      position: absolute;
-      right: 0;
-      font-weight: 800;
-      padding: 3px 10px 2px;
-      bottom: 0;
-      top: 0;
-      line-height: 2.35;
+.progress-completed
+  position: absolute;
+  right: 0;
+  font-weight: 800;
+  padding: 3px 10px 2px;
+  bottom: 0;
+  top: 0;
+  line-height: 2.35;
 
 @media (min-width 768px)
   .onboarding-container
@@ -1753,12 +1764,12 @@ ul.progress-chart-legends
       max-width: 800px;
     .onboarding-well
       height: 485px;
-      border-radius: 12px!important;
+      border-radius: 12px !important;
       .onboarding-well-footer
         border-radius: 0 0 12px 12px;
     .onboarding.progress
       bottom -16px
-      border-radius: 4px 12px!important;
+      border-radius: 4px 12px !important;
 
 @media (min-width 992px)
   .onboarding-container
@@ -1769,6 +1780,7 @@ ul.progress-chart-legends
     .onboarding.progress
       width 100%
       left calc(50% - 400px)
+
 /* TEMPLATE - BROWSE */
 
 .category-container .card {
@@ -1791,7 +1803,6 @@ ul.progress-chart-legends
     padding-left 1px
     li
       padding 2px 4px
-
 
 .list-card
   .left
@@ -1860,7 +1871,7 @@ ul.progress-chart-legends
     top: 8px;
     right: 8px;
   span.search-icon, .floating-label
-      color colorPrimary-200
+    color colorPrimary-200
   .form-control:focus ~ span.search-icon
     color colorPrimary
 
@@ -2216,13 +2227,13 @@ ul.progress-chart-legends
   width: calc(100% + 31px);
   height: 300px;
   margin-left: -16px;
-  margin-top: -20px;
 }
 
 /* TEMPLATE - ABOUT */
 aboutUsHeaderHeight = 90px
 .about-us
   border-radius 4px
+  max-width 950px
   .header-container
     background colorPrimary
     color whitesmoke
@@ -2246,11 +2257,10 @@ aboutUsHeaderHeight = 90px
               color colorPrimary !important
               border-bottom 2px solid colorPrimary !important
 
-
 .about-profile
-  min-height 410px
+  min-height 440px
   @media (min-width screenMedium)
-    min-height 380px
+    min-height 416px
   .image-holder
     height: 220px;
     width: 100%;
@@ -2261,8 +2271,7 @@ aboutUsHeaderHeight = 90px
       width 220px
       height 220px
       left calc(50% - 128px)
-      -webkit-filter: grayscale(70%)
-      filter: grayscale(70%)
+      opacity 0.85
     .member-image
       position: absolute;
       width: 150px;
@@ -2281,6 +2290,19 @@ aboutUsHeaderHeight = 90px
       margin auto
       .member-name
         margin-top 8px
+      .member-bio
+        font-size 15px
+  .member-social
+    background #EFEFEF
+    padding 0
+    margin auto
+    max-width 280px
+    ul
+      padding 0
+      li
+        display: inline-block;
+        list-style-image: none;
+        font-size: 32px;
   &.director
     min-height 281px
     .member-body
@@ -2294,6 +2316,8 @@ aboutUsHeaderHeight = 90px
       width 123px
       left calc(50% - 61px)
       top 35px
+    .member-social
+      max-width 200px
   &.employee
     min-height 280px
     .member-body
@@ -2307,17 +2331,8 @@ aboutUsHeaderHeight = 90px
       width 107px
       left calc(50% - 53px)
       top 32px
-  .member-social
-    background #EFEFEF
-    padding 0
-    margin auto
-    max-width 300px
-    ul
-      padding 0
-      li
-        display: inline-block;
-        list-style-image: none;
-        font-size: 32px;
+    .member-social
+      max-width 200px
 
 /* TEMPLATE - MEDICAl (PROFESSIONAL BANK) */
 .professional-bank-filter-background {
@@ -2495,6 +2510,7 @@ aboutUsHeaderHeight = 90px
 .professional-bank-generate .btn {
   margin-top: -5px;
 }
+
 /* TEMPLATE - MODAL MIGRATE TESTS */
 ul.migrate-test-selection
   height: 250px;
@@ -2578,7 +2594,6 @@ body {
   color colorPrimary
   text-decoration: none;
 }
-
 
 .footer .footer-dependencies img {
   max-width: 80px;

@@ -386,6 +386,10 @@ Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, EstimateMemoryStrength
             this.transitionTo("onboarding");
         },
 
+        subscribeEmailForBeta: function () {
+            $("#mc-embedded-subscribe-form").submit();
+        },
+
         /*
          * USER MODE
          */
