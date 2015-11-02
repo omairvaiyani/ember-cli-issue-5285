@@ -371,8 +371,9 @@ Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, EstimateMemoryStrength
 
         indexBackToTopScroll: function () {
             $('html, body').animate({
-                scrollTop: $("#join-beta-flag").offset().top - 50
+                scrollTop: $("#join-beta-flag").offset().top + 150
             }, 400);
+            $("#mce-EMAIL").focus();
         },
 
         onboardingFillFirstInput: function (example) {

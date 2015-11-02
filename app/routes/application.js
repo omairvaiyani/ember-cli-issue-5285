@@ -33,6 +33,9 @@ export default Ember.Route.extend({
         userProperties.numberOfTests = currentUser.get('numberOfTests');
         userProperties.numberOfAttempts = currentUser.get('numberOfAttempts');
         //amplitude.setUserProperties(userProperties);
+
+        // Google Analytics
+        ga('set', '&uid', currentUser.get('id'));
     }.observes('applicationController.currentUser.id'),
 
     setupController: function (controller, model) {

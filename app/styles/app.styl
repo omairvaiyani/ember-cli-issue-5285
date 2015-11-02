@@ -2578,10 +2578,14 @@ body {
     -webkit-filter: invert(100%);
   a
     color colorLightText
-  .footer-logo
-    height 100px
-    width 100px
-    margin-top marginSecondary
+  .footer-logo-container
+    text-align: center
+    @media (min-width screenSmall)
+      text-align left
+    .footer-logo
+      height 100px
+      width 100px
+      margin-top marginSecondary
   .footer-links
     .top-link
       margin-top 2px
