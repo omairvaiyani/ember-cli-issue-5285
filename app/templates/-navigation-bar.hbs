@@ -52,16 +52,16 @@
                                 How it Works
                             {{/link-to}}
                         {{/link-to}}
-                        {{#link-to 'about.contact' tagName='li' title='Contact Us'}}
-                            {{#link-to 'about.contact' tagName='a'}}
-                                Contact Us
-                            {{/link-to}}
-                        {{/link-to}}
                         <li title='Synap Blog'>
-                            <a href="http://synap.ac/blog" target="_blank">
+                            <a href="http://synap.ac/blog">
                                 Blog
                             </a>
                         </li>
+                        {{#link-to 'about.contact' tagName='li' title='Contact Us'}}
+                            {{#link-to 'about.contact' tagName='a'}}
+                                Contact
+                            {{/link-to}}
+                        {{/link-to}}
                     {{/unless}}
                 </ul>
                 {{#if betaUnlocked}}
