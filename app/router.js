@@ -76,6 +76,7 @@ Router.map(function () {
     this.route('team');
     this.route('howItWorks', {path:'how-it-works'});
     this.route('press');
+    this.route('jobs');
   });
   this.route('support', {path: 'support'});
   this.route('privacyPolicy', {path: 'privacy-policy'});
