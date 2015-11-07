@@ -2,7 +2,7 @@
 
 var _ = require("underscore"),
     moment = require('cloud/moment-timezone-with-data.js'),
-    mandrillKey = 'zAg8HDZtlJSoDu-ozHA3HQ',
+    mandrillKey = 'TUCRsbnixKXZRq2nas_e8g',
     Mandrill = require('mandrill'),
     Stripe = require('stripe'),
     algoliasearch = require('cloud/algoliasearch.parse.js'),

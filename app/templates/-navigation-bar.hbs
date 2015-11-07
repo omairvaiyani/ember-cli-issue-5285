@@ -75,14 +75,14 @@
                         <!-- account actions -->
                         {{partial 'application/navbar/current-user'}}
                     {{else}}
+                        <li class="log-in-join">
+                            <a href="javascript:void(0)" {{action 'openModal' 'application/modal/login'
+                            'application'}}>
+                                Log in
+                            </a>
+                        </li>
                         {{#if betaUnlocked}}
-                            <li>
-                                <a href="javascript:void(0)" {{action 'openModal' 'application/modal/login'
-                                'application'}}>
-                                    Log in
-                                </a>
-                            </li>
-                            <li>
+                            <li class="log-in-join">
                                 <a href="javascript:void(0)" {{action 'openModal' 'application/modal/register'
                                 'application'}}>
                                     Register

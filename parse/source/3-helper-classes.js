@@ -155,3 +155,70 @@ var findNextAvailableSlotForSR = function (now, slots, dndTimes) {
 
     return scheduleForSR;
 };
+/**
+ * Send Email
+ *
+ * @param {string} templateName
+ * @param {string} email
+ * @param {Parse.User} user
+ * @param {Array} data
+ */
+var sendEmail = function (templateName, email, user, data) {
+    var promise = new Parse.Promise();
+    /*
+     * Send welcome email via Mandrill
+     */
+    if (!email || !email.length) {
+        promise.reject("No email given");
+        return promise;
+    }
+
+    var firstName = "",
+        fullName = "",
+        globalData = data ? data : [];
+
+    if(user && user.get('name')) {
+        fullName = user.get('name');
+        firstName = fullName.split(" ")[0];
+        globalData.push({"name": "FNAME", "content": firstName});
+    }
+
+    var subject;
+    switch (templateName) {
+        case 'welcome-email':
+            subject = "Hey " + firstName + ", welcome to MyCQs!";
+            break;
+        case 'forgotten-password':
+            subject = "Reset your MyCQs password";
+            break;
+        case 'beta-invite':
+            subject = "You've been invited to Synap!";
+            break;
+    }
+
+    console.log("About to send email to " + email);
+    return Mandrill.sendTemplate({
+        template_name: templateName,
+        template_content: [],
+        message: {
+            subject: subject,
+            from_email: "no-reply@synap.ac",
+            from_name: "Synap",
+            global_merge_vars: globalData,
+            to: [
+                {
+                    email: email,
+                    name: fullName ? fullName : firstName
+                }
+            ]
+        },
+        async: true
+    }, {
+        success: function (httpResponse) {
+            console.log("Sent "+templateName+" email: " + JSON.stringify(httpResponse));
+        },
+        error: function (httpResponse) {
+            console.error("Error sending "+templateName+"  email: " + JSON.stringify(httpResponse));
+        }
+    });
+};

@@ -1,8 +1,14 @@
 <div class="modal-header">
-    <h4 class="modal-title">Log in or Sign up</h4>
+    <h4 class="modal-title">Login to Synap</h4>
 </div>
 <div class="modal-body">
     <div class="container-fluid text-center">
+        <section class="row">
+            <article class="col-xs-12 text-center">
+                <p>Synap is in an invite-only beta.</p>
+            </article>
+        </section>
+        <hr class="mini-hr">
         <section class="row">
             <article class="col-xs-12 col-sm-8 col-sm-offset-2">
                 <button class="btn btn-facebook no-margin" {{action 'facebookConnect'}}>
@@ -56,9 +62,11 @@
     </div>
     <div class="row">
         <div class="col-md-8 col-md-offset-2 text-center margin-bottom-16">
+            {{#if betaUnlocked}}
                 <span class="linkify small" {{action 'openModal' 'application/modal/register' 'application'}}>
                     Register a free account
                 </span>
+            {{/if}}
         </div>
     </div>
 </div> <!-- /modal-body -->

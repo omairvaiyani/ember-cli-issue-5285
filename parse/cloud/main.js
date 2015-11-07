@@ -1732,6 +1732,13 @@ var UniqueResponse = Parse.Object.extend("UniqueResponse", {
         return this;
     },
 
+    /**
+     * @Function Calculate Optimum Repetition Date
+     * This function is called post-attempt. It
+     * takes previous Unique Response data and
+     * decides when the next repetition should occur.
+     * @returns {UniqueResponse}
+     */
     calculateOptimumRepetitionDate: function () {
         logger.log("Spaced Repetition", "Calculating Optimum Interval");
         // Before we calculate the next interval, check current memory strength
@@ -2080,7 +2087,7 @@ var StudyField = Parse.Object.extend("StudyField", {
 
 var _ = require("underscore"),
     moment = require('cloud/moment-timezone-with-data.js'),
-    mandrillKey = 'zAg8HDZtlJSoDu-ozHA3HQ',
+    mandrillKey = 'TUCRsbnixKXZRq2nas_e8g',
     Mandrill = require('mandrill'),
     Stripe = require('stripe'),
     algoliasearch = require('cloud/algoliasearch.parse.js'),
@@ -2267,6 +2274,73 @@ var findNextAvailableSlotForSR = function (now, slots, dndTimes) {
     }
 
     return scheduleForSR;
+};
+/**
+ * Send Email
+ *
+ * @param {string} templateName
+ * @param {string} email
+ * @param {Parse.User} user
+ * @param {Array} data
+ */
+var sendEmail = function (templateName, email, user, data) {
+    var promise = new Parse.Promise();
+    /*
+     * Send welcome email via Mandrill
+     */
+    if (!email || !email.length) {
+        promise.reject("No email given");
+        return promise;
+    }
+
+    var firstName = "",
+        fullName = "",
+        globalData = data ? data : [];
+
+    if(user && user.get('name')) {
+        fullName = user.get('name');
+        firstName = fullName.split(" ")[0];
+        globalData.push({"name": "FNAME", "content": firstName});
+    }
+
+    var subject;
+    switch (templateName) {
+        case 'welcome-email':
+            subject = "Hey " + firstName + ", welcome to MyCQs!";
+            break;
+        case 'forgotten-password':
+            subject = "Reset your MyCQs password";
+            break;
+        case 'beta-invite':
+            subject = "You've been invited to Synap!";
+            break;
+    }
+
+    console.log("About to send email to " + email);
+    return Mandrill.sendTemplate({
+        template_name: templateName,
+        template_content: [],
+        message: {
+            subject: subject,
+            from_email: "no-reply@synap.ac",
+            from_name: "Synap",
+            global_merge_vars: globalData,
+            to: [
+                {
+                    email: email,
+                    name: fullName ? fullName : firstName
+                }
+            ]
+        },
+        async: false
+    }, {
+        success: function (httpResponse) {
+            console.log("Sent "+templateName+" email: " + JSON.stringify(httpResponse));
+        },
+        error: function (httpResponse) {
+            console.error("Error sending "+templateName+"  email: " + JSON.stringify(httpResponse));
+        }
+    });
 };/*
  * BACKGROUND JOBS
  */
@@ -3404,10 +3478,10 @@ Parse.Cloud.define('createOrUpdateStudyField', function (request, response) {
                 return studyField.save();
             }
         }).then(function () {
-            response.success(studyField);
-        }, function (error) {
-            response.error(error);
-        });
+        response.success(studyField);
+    }, function (error) {
+        response.error(error);
+    });
 });
 /**
  * @CloudFunction Set Education Cohort using Facebook
@@ -3762,10 +3836,46 @@ Parse.Cloud.define('mapOldTestsToNew', function (request, response) {
             createdTests.add(tests);
             return user.save();
         }).then(function () {
-            response.success(tests);
-        }, function (error) {
-            response.error(error);
+        response.success(tests);
+    }, function (error) {
+        response.error(error);
+    });
+});
+/**
+ * @CloudFunction Send Beta Invite
+ *
+ * @return success/error
+ */
+Parse.Cloud.define("sendBetaInvite", function (request, response) {
+    var promises = [];
+    // Find people who haven't been invite yet
+    var betaInviteQuery = new Parse.Query("BetaInvite");
+    betaInviteQuery.notEqualTo("inviteSent", true);
+
+    betaInviteQuery.find().then(function (betaInvites) {
+        var betaInvitesToSend = [];
+        // Figure out who we want to invite
+        _.each(betaInvites, function (betaInvite) {
+            if (betaInvite.get('email') === "omair.vaiyani@live.co.uk")
+                betaInvitesToSend.push(betaInvite);
+
         });
+        // Send invites
+        _.each(betaInvitesToSend, function (betaInvite) {
+            var firstName = betaInvite.get('firstName');
+            if(!firstName)
+                firstName = "You";
+
+            promises.push(
+                sendEmail("beta-invitation", betaInvite.get('email'), null,
+                    [{"name": "FNAME", "content": firstName}]));
+        });
+        return Parse.Promise.when(promises);
+    }).then(function () {
+        response.success("Done!")
+    }, function (error) {
+        response.error(error);
+    });
 });/*
  * TASK WORKER
  */

@@ -845,10 +845,10 @@ Parse.Cloud.define('createOrUpdateStudyField', function (request, response) {
                 return studyField.save();
             }
         }).then(function () {
-            response.success(studyField);
-        }, function (error) {
-            response.error(error);
-        });
+        response.success(studyField);
+    }, function (error) {
+        response.error(error);
+    });
 });
 /**
  * @CloudFunction Set Education Cohort using Facebook
@@ -1203,8 +1203,44 @@ Parse.Cloud.define('mapOldTestsToNew', function (request, response) {
             createdTests.add(tests);
             return user.save();
         }).then(function () {
-            response.success(tests);
-        }, function (error) {
-            response.error(error);
+        response.success(tests);
+    }, function (error) {
+        response.error(error);
+    });
+});
+/**
+ * @CloudFunction Send Beta Invite
+ *
+ * @return success/error
+ */
+Parse.Cloud.define("sendBetaInvite", function (request, response) {
+    var promises = [];
+    // Find people who haven't been invite yet
+    var betaInviteQuery = new Parse.Query("BetaInvite");
+    betaInviteQuery.notEqualTo("inviteSent", true);
+
+    betaInviteQuery.find().then(function (betaInvites) {
+        var betaInvitesToSend = [];
+        // Figure out who we want to invite
+        _.each(betaInvites, function (betaInvite) {
+            if (betaInvite.get('email') === "omair.vaiyani@live.co.uk")
+                betaInvitesToSend.push(betaInvite);
+
         });
+        // Send invites
+        _.each(betaInvitesToSend, function (betaInvite) {
+            var firstName = betaInvite.get('firstName');
+            if(!firstName)
+                firstName = "You";
+
+            promises.push(
+                sendEmail("beta-invitation", betaInvite.get('email'), null,
+                    [{"name": "FNAME", "content": firstName}]));
+        });
+        return Parse.Promise.when(promises);
+    }).then(function () {
+        response.success("Done!")
+    }, function (error) {
+        response.error(error);
+    });
 });
