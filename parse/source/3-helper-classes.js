@@ -202,7 +202,7 @@ var sendEmail = function (templateName, email, user, data) {
         template_content: [],
         message: {
             subject: subject,
-            from_email: "no-reply@synap.ac",
+            from_email: "support@synap.ac",
             from_name: "Synap",
             global_merge_vars: globalData,
             to: [

@@ -1223,24 +1223,105 @@ Parse.Cloud.define("sendBetaInvite", function (request, response) {
         var betaInvitesToSend = [];
         // Figure out who we want to invite
         _.each(betaInvites, function (betaInvite) {
-            if (betaInvite.get('email') === "omair.vaiyani@live.co.uk")
+            if (betaInvite.get('email') === "um11mov@leeds.ac.uk"
+                || betaInvite.get('email') === "omair.vaiyani@live.co.uk")
                 betaInvitesToSend.push(betaInvite);
 
         });
         // Send invites
         _.each(betaInvitesToSend, function (betaInvite) {
             var firstName = betaInvite.get('firstName');
-            if(!firstName)
+            if (!firstName)
                 firstName = "You";
+
+            var invitationLink = "https://synap.ac/activate-beta/" + betaInvite.id;
 
             promises.push(
                 sendEmail("beta-invitation", betaInvite.get('email'), null,
-                    [{"name": "FNAME", "content": firstName}]));
+                    [{name: "FNAME", content: firstName},
+                        {name: "INVITATIONLINK", content: invitationLink}]));
+
+            // Set sent flag
+            betaInvite.set('inviteSent', true);
+            promises.push(betaInvite.save());
         });
         return Parse.Promise.when(promises);
     }).then(function () {
         response.success("Done!")
     }, function (error) {
         response.error(error);
+    });
+});
+/**
+ * @CloudFunction Beta Invite Accepted
+ *
+ * @param {string} id (for BetaInvite class)
+ * @return success/error
+ */
+Parse.Cloud.define("betaInviteAccepted", function (request, response) {
+    var betaInviteId = request.params.id;
+    if (!betaInviteId)
+        return response.error("No beta invitation id sent.");
+
+    Parse.Cloud.useMasterKey();
+    // Find the invite
+    var betaInviteQuery = new Parse.Query("BetaInvite");
+    betaInviteQuery.equalTo("objectId", betaInviteId);
+
+    betaInviteQuery.find().then(function (betaInvites) {
+        var betaInvite = betaInvites[0];
+        if (!betaInvite)
+            response.error("No beta invitation with this id.");
+        else if (!betaInvite.get('inviteSent'))
+            response.error("You have not been invited to the Synap beta yet. Please hold tight!");
+
+        else if (betaInvite.get('betaActivated') && betaInvite.get('user'))
+            response.error("Woops! Looks like you've already activated your invitation!");
+        else {
+            betaInvite.set('betaActivated', true);
+            return betaInvite.save();
+        }
+    }).then(function (betaInvite) {
+        if (betaInvite)
+            response.success({betaInvite: betaInvite});
+    });
+});
+/**
+ * @CloudFunction Check Beta Access
+ *
+ * @param {string} id (for BetaInvite class)
+ * @param {string} email
+ * @return success/error
+ */
+Parse.Cloud.define("checkBetaAccess", function (request, response) {
+    var betaInviteId = request.params.id,
+        email = request.params.email;
+
+    if (!betaInviteId && !email)
+        return response.error("No beta invitation id/email sent.");
+
+    Parse.Cloud.useMasterKey();
+    // Find the invite
+    var betaInviteQuery = new Parse.Query("BetaInvite");
+    if (betaInviteId)
+        betaInviteQuery.equalTo("objectId", betaInviteId);
+    else if (email)
+        betaInviteQuery.equalTo("email", email);
+
+    betaInviteQuery.find().then(function (betaInvites) {
+        var betaInvite = betaInvites[0];
+        if (!betaInvite || !betaInvite.get('inviteSent'))
+            response.error("You are not invited to the beta yet.");
+        else if (!betaInvite.get('betaActivated'))
+            response.error("You have not activated your beta invited yet! Check your email.");
+        else {
+            if(email && betaInvite.get('email') !== email) {
+                betaInvite.set('email', email); // Likely that the user used a different email to sign up.
+                betaInvite.save().then(function () {
+                    response.success({betaInvite: betaInvite});
+                });
+            } else
+                response.success({betaInvite: betaInvite});
+        }
     });
 });

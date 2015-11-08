@@ -177,30 +177,31 @@ export default Ember.Route.extend({
                 ParseUser = this.store.modelFor('parse-user'),
                 data = {
                     username: email,
-                    password: password
+                    password: password,
+                    email: email
                 };
 
             var promise = ParseUser.login(this.store, data)
                 .then(
-                function (user) {
-                    controller.set('currentUser', user);
-                    this.send('closeModal');
-                    this.send('redirectAfterLogin');
-                }.bind(this),
+                    function (user) {
+                        controller.set('currentUser', user);
+                        this.send('closeModal');
+                        this.send('redirectAfterLogin');
+                    }.bind(this),
 
-                function (error) {
-                    console.dir(error);
-                    if (error.code === Parse.Error.OBJECT_NOT_FOUND)
-                        controller.set('loginMessage.error', "Email and password do not match");
-                    else if (error.code === Parse.Error.EMAIL_MISSING)
-                        controller.set('loginMessage.error', "Please type in your email");
-                    else if (error.code === Parse.Error.PASSWORD_MISSING)
-                        controller.set('loginMessage.error', "Please type in your password");
-                    else if (error.error)
-                        controller.set('loginMessage.error', error.error.capitalize());
-                    else
-                        controller.set('loginMessage.error', "Something went wrong! " + error.code);
-                }.bind(this)).then(function () {
+                    function (error) {
+                        console.dir(error);
+                        if (error.code === Parse.Error.OBJECT_NOT_FOUND)
+                            controller.set('loginMessage.error', "Email and password do not match");
+                        else if (error.code === Parse.Error.EMAIL_MISSING)
+                            controller.set('loginMessage.error', "Please type in your email");
+                        else if (error.code === Parse.Error.PASSWORD_MISSING)
+                            controller.set('loginMessage.error', "Please type in your password");
+                        else if (error.error)
+                            controller.set('loginMessage.error', error.error.capitalize());
+                        else
+                            controller.set('loginMessage.error', "Something went wrong! " + error.code);
+                    }.bind(this)).then(function () {
                     this.send('decrementLoadingItems');
                 }.bind(this));
 
@@ -224,7 +225,6 @@ export default Ember.Route.extend({
                 scope: 'public_profile, user_friends, user_about_me, user_education_history,' +
                 'email, user_location'
             });
-
         },
         /**
          * Sign up Authorised Facebook User:
@@ -290,7 +290,16 @@ export default Ember.Route.extend({
 
             data.timeZone = timeZone;
 
-            var promise = ParseUser.signup(this.store, data).then(function (user) {
+            // First check if they have beta access
+            // Either localStorage will have the betaActivationId
+            // Or we can use the email provided (more likely for those
+            // who connect via facebook)
+            var promise = ParseHelper.cloudFunction(this, "checkBetaAccess", {
+                id: localStorage.getItem("betaActivationId"),
+                email: data.email
+            }).then(function (response) {
+                return ParseUser.signup(this.store, data);
+            }.bind(this)).then(function (user) {
                 this.get('applicationController').set('currentUser', user);
                 // Sometimes sessionToken isn't added to the adapter by ApplicationController.manageSessionToken
                 // This ensures that user.reload() works properly:
@@ -301,7 +310,7 @@ export default Ember.Route.extend({
                     if (this.get('applicationController.currentUser.firstTimeLogin')) {
                         this.set('applicationController.currentUser.firstTimeLogin', false);
                         // If .redirect is set, this is called from new onboarding process
-                        if(!this.get('applicationController.redirect')) {
+                        if (!this.get('applicationController.redirect')) {
                             // Else, they are in the old process
                             this.set('applicationController.redirectAfterLoginToRoute', 'join.personalise');
                             this.set('applicationController.redirectAfterLoginToController', 'join');
@@ -315,13 +324,19 @@ export default Ember.Route.extend({
 
                     if (error.code === Parse.Error.USERNAME_TAKEN || error.code === Parse.Error.EMAIL_TAKEN)
                         this.get('applicationController').set('signUpValidationErrors.email', "Email taken.");
-                    else if (error.error)
+                    else if (error.error) {
                         this.get('applicationController').set('signUpValidationErrors.signUp', error.error.capitalize());
-                    else
+                        var notification = {
+                            type: "error",
+                            title: 'Login Failed!',
+                            message: error.error
+                        };
+                        this.send('addNotification', notification);
+                    } else
                         this.get('applicationController').set('signUpValidationErrors.signUp', "Something went wrong!");
                 }.bind(this)).then(function () {
-                    this.send('decrementLoadingItems');
-                }.bind(this));
+                this.send('decrementLoadingItems');
+            }.bind(this));
 
             if (callback)
                 callback(promise);
@@ -370,7 +385,7 @@ export default Ember.Route.extend({
 
         // @Deprecated - Being replaced by redirectRoute
         redirectAfterLogin: function () {
-            if(this.get('applicationController.redirect'))
+            if (this.get('applicationController.redirect'))
                 return this.send('redirectRoute');
 
             // Old code, still in action.

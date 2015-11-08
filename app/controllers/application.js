@@ -165,8 +165,8 @@ export default Ember.Controller.extend({
             // Intercom.io
             /*window.intercomSettings = {
 
-                "app_id": "pjy1btre"
-            };*/
+             "app_id": "pjy1btre"
+             };*/
             window.Intercom('boot', {
                 app_id: "oibyis4o",
                 user_hash: currentUser.get('intercomHash'),
@@ -180,7 +180,7 @@ export default Ember.Controller.extend({
                 signUpSource: currentUser.get('signUpSource'),
                 numberOfTestsCreated: currentUser.get('numberOfTestsCreated'),
                 receivePromotionalEmails: currentUser.get('receivePromotionalEmails'),
-                created_at: Date.parse(currentUser.get('createdAt'))/1000
+                created_at: Date.parse(currentUser.get('createdAt')) / 1000
             });
 
             // Session Token Handling
@@ -249,7 +249,7 @@ export default Ember.Controller.extend({
      */
     signUpValidationHasErrors: function () {
         return this.get('signUpValidationErrors.name.length') || this.get('signUpValidationErrors.email.length')
-        || this.get('signUpValidationErrors.password.length');
+            || this.get('signUpValidationErrors.password.length');
     }.property('signUpValidationErrors.name.length', 'signUpValidationErrors.email.length',
         'signUpValidationErrors.password.length'),
 
@@ -367,6 +367,10 @@ export default Ember.Controller.extend({
     navbarSearchDual: function () {
         return this.get('navbarSearchResults.tests.length') && this.get('navbarSearchResults.users.length');
     }.property('navbarSearchResults.tests.length', 'navbarSearchResults.users.length'),
+
+    betaActivated: function () {
+        return !!localStorage.betaActivationId;
+    }.property(),
 
     actions: {
         incrementLoadingItems: function () {
