@@ -10,7 +10,7 @@ export default Ember.Route.extend({
         }, function (error) {
             console.dir(error);
             this.set("errorMessage", error.error);
-        });
+        }.bind(this));
     },
 
     setupController: function (controller, model) {

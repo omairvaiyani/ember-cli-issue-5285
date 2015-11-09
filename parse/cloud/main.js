@@ -3848,6 +3848,7 @@ Parse.Cloud.define('mapOldTestsToNew', function (request, response) {
  */
 Parse.Cloud.define("sendBetaInvite", function (request, response) {
     var promises = [];
+    Parse.Cloud.useMasterKey();
     // Find people who haven't been invite yet
     var betaInviteQuery = new Parse.Query("BetaInvite");
     betaInviteQuery.notEqualTo("inviteSent", true);
