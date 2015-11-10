@@ -183,15 +183,20 @@ var sendEmail = function (templateName, email, user, data) {
         globalData.push({"name": "FNAME", "content": firstName});
     }
 
+    // defaults
+    globalData.push({"name": "CURRENT_YEAR", "content": moment().format("YYYY")});
+    globalData.push({"name": "COMPANY", "content": "Synap"});
+    globalData.push({"name": "ADDRESS", "content": "Leeds Innovation Center, UK"});
+
     var subject;
     switch (templateName) {
         case 'welcome-email':
-            subject = "Hey " + firstName + ", welcome to MyCQs!";
+            subject = "Hey " + firstName + ", welcome to Synap!";
             break;
         case 'forgotten-password':
-            subject = "Reset your MyCQs password";
+            subject = "Reset your Synap password.";
             break;
-        case 'beta-invite':
+        case 'beta-invitation':
             subject = "You've been invited to Synap!";
             break;
     }

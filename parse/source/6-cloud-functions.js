@@ -1239,7 +1239,7 @@ Parse.Cloud.define("sendBetaInvite", function (request, response) {
 
             promises.push(
                 sendEmail("beta-invitation", betaInvite.get('email'), null,
-                    [{name: "FNAME", content: firstName},
+                    [{name: "FNAME", content: firstName.capitalizeFirstLetter()},
                         {name: "INVITATIONLINK", content: invitationLink}]));
 
             // Set sent flag
