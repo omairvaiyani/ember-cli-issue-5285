@@ -263,7 +263,7 @@ Parse.Cloud.define('createNewTest', function (request, response) {
  *
  * @param {Parse.Pointer<Test>} test
  * @param {Question} question
- * @return {UserEvent} userEvent
+ * @return [{UserEvent},{Question}, {Boolean}] userEvent, question, didLevelUp
  */
 Parse.Cloud.define('saveNewQuestion', function (request, response) {
     var user = request.user,

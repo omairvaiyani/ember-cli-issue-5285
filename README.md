@@ -2,7 +2,8 @@
 
 ### Prerequisites
 In order to interact with the Synap API, either use 3rd party Titanium modules for the Parse SDK ([Android](https://github.com/ndizazzo/android-parse-titanium-module) and [iOS](https://github.com/ewindso/ios-parse-titanium-module)), or refer to Parse's [REST API Guide](https://parse.com/docs/rest/guide). All code in this document is previewed in Javascript. 
-Please use [moment.js](http://momentjs.com/) for datetime manipulation and [JSTZ](http://pellepim.bitbucket.org/jstz/) for detecting timezones.
+
+Please use [moment.js](http://momentjs.com/) for datetime manipulation and [JSTZ](http://pellepim.bitbucket.org/jstz/) for detecting timezones. Use the [Aviary SDK](https://developers.aviary.com/docs/android) for image manipulation. This document will assume that you use [underscore.js](http://underscorejs.org/) in Javascript, otherwise, use your own preferred methods to manipulate any JSON objects/arrays.
 
 ### Initialising the API
 We are currently using the "Synap Dev" project on Parse. The following credentials will change
@@ -64,6 +65,86 @@ Parse.Cloud.run("initialiseWebsiteForUser").then(function (response) {
     console.log(JSON.stringify(error));  
 });
 ```
+
+## Basics of Parse Objects
+This sections is a brief run through of Parse Objects - This will help you follow along the rest of the API.
+
+All objects in Parse belong to the ```Parse.Object``` class. Two default sub-classes of ```Parse.Object``` provided by Parse, which you must be aware of, are ```Parse.User``` and ```Parse.Installation```. You have dealt with ```Parse.User```
+in the login/registration flow. ```Parse.Installation``` is created for mobile users, allowing us to track
+device IDs, in-app purchases etc. 
+
+```Parse.ACL``` is primarily used in Cloud Code, and allows us to manage 'access control' on objects - whilst front-end development will not utilise this class, it is worth being aware of.
+
+```Parse.File``` are used for image storage: please read the [Parse.File](https://parse.com/docs/rest/guide#files) section on Parse when you come across it in this API doc.
+
+All ```Parse.Object``` instances, including the defaults, have the following properties as default:
+```javascript
+{
+    objectId: {String},
+    createdAt: {Date},
+    updatedAt: {Date},
+    ACL: {Parse.ACL}
+}
+```
+Objects in Parse can embed JSON Objects and Arrays within on of their properties, or contain a ```Pointer```,
+like so:
+```javascript
+Parse.User = {
+    ...
+    educationCohort: {*EducationCohort}
+    ...
+}
+```
+
+Parse SDKs handle pointers automatically, like so:
+```javasscript
+{
+currentUser.set('educationCohort', educationCohort);
+// outputs as
+// {"__type":"Pointer","className":"EducationCohort","objectId":"sOmeObj3ct1D"}
+}
+```
+This JSON Object is identified by Parse, which manages relations during object
+retrievals. If you are using a REST API alone, you will have to do create a
+custom function which takes the ```objectId``` and sets the appropriate
+```className```, outputting a JSON object, like so:
+```javascript
+{
+var educationCohortPointer = customFunctionToGeneratePointer(educationCohort);
+// {"__type":"Pointer","className":"EducationCohort","objectId":"sOmeObj3ct1D"}
+currentUser.set('educationCohort', educationCohortPointer);
+currentUser.save();
+}
+```
+
+This 'pointer field' could also be an array of pointers, like so:
+```javascript
+Test = {
+    ...
+    questions: [*Question]
+    // [{"__type":"Pointer","className":"Question","objectId":"sOmeObj3ct1D"},
+    // {"__type":"Pointer","className":"Question","objectId":"sOmeObj3ct1D2"}, ...]
+    ...
+}
+```
+Pointers in the form of arrays are great as it reduces the response size on database queries.
+However, by default, Parse will only return the pointers, rather than the actual objects. You
+must ask Parse to  ```include``` pointer fields, as explained here: [Query Guide](https://parse.com/docs/rest/guide#objects-retrieving-objects)
+
+An array with more than 100 pointers can become inefficient, and so for certain fields, we
+use something called a ```Parse.Relation```. Please read this section to familiarise yourself
+with relations and pointers: [Data Types](https://parse.com/docs/rest/guide#objects-data-types).
+
+An example of a ```Parse.Relation``` in our schema is:
+```javascript
+Parse.User {
+    ...
+    followers: {Parse.Relation<Parse.User>},
+    savedTests: {Parse.Relation<Test>},
+    ...
+}
+```
+
 
 ### Registering New Users
 #### By Email
@@ -149,7 +230,7 @@ var signUpAuthorisedFacebookUser = function (data) {
 }    
 ```
 
-### Setting Educational Info
+## Setting Educational Info
 This is done after registration as it decouples the process - the education info is either manually entered by the user or confirmed by the user from data returned through FB. Furthermore, an ```educationCohort``` is created based on the ```institution```, ```studyField``` and ```studyYear```. This allows us to group colleagues together. This process is somewhat complicated and so, it's best to keep it separate from the registration function.
 
 #### Finding the Institution (without Facebook)
@@ -247,10 +328,10 @@ Parse.Cloud.run('createOrUpdateInstitution', {
 ```            
 This, ```newEducationCohort``` will be saved later and set onto the ```currentUser```.
 
-#### Study Field (without Facebook)
+#### Finding the Study Field (without Facebook)
 Follow the same steps as for the ```institution``` code, but set ```recordType``` as ```"study-fields"```.
 
-#### Study Field (with Facebook)
+#### Finding the Study Field (with Facebook)
 Follow the same steps as for ```institution```, with the following differences:
 If educational information from their profile is found, run this code:
 
@@ -263,15 +344,6 @@ var studyFieldObject = latestEducationalInfo.concentration;
 ```
 Else, run the Facebook search API and filter in ```object.category``` === ```"Interest"``` or ```"Field of study"```. It's just how Facebook categories the results.
 
-#### Study Year
-Simply dropdown selection. Facebook does provide a graduation date, which we can store in the final object (see next step), but we are not using this just yet. Store selected option as ```newEducationCohort.studyYear```.
-```javascript
-studyYearsToChooseFrom: [
-        "Foundation Year", "Year 1", "Year 2", "Year 3",
-        "Year 4", "Year 5", "Year 6", "Intercalation Year",
-        "Master's", "Ph.D", "Professional Education"
-    ];
-```
 ####  Creating the Study Field
 Once you have got at least the name for the ```studyFiled```, you can perform this step.
 ```javascript
@@ -284,9 +356,23 @@ Parse.Cloud.run('createOrUpdateStudyField', {
                 console.log(JSON.stringify(error));
             });
 ```    
+
+#### Setting the Study Year
+Simply dropdown selection. Facebook does provide a graduation date, which we can store in the final object (see next step), but we are not using this just yet. Store selected option as ```newEducationCohort.studyYear```.
+```javascript
+studyYearsToChooseFrom: [
+        "Foundation Year", "Year 1", "Year 2", "Year 3",
+        "Year 4", "Year 5", "Year 6", "Intercalation Year",
+        "Master's", "Ph.D", "Professional Education"
+    ];
+```
+
 #### Set Educational Cohort (Final step)
 In order to create an ```educationCohort```, we need at least two of the three items collected above.
-First, create the object locally like so:
+Send the items to the Cloud Function ```createOrGetEducationCohort```: the function will look
+to see if this cohort exists and return it, else a new cohort will be created and sent back. Set
+the returned object onto the current user's ```'educationCohort'``` property, and save the changes
+for the user.
 ```javascript
 Parse.Cloud.run('createOrGetEducationCohort', {
                     educationalInstitutionId: newEducationCohort.institution.id,
@@ -303,10 +389,138 @@ Parse.Cloud.run('createOrGetEducationCohort', {
                     console.log(JSON.stringify(error));
                 });
 ```
-More info to follow.
 
+## Creating a Quiz
+Note: We use the term 'Quiz' for front-facing purposes, but the API uses the term 'Test'.
+A ```Test``` object contains the following properties:
+```javascript
+{
+    ... 
+    // Parse.Object default properties
+    ...
+    title: {String}
+    author: {*Parse.User},
+    category: {*Category},
+    questions: [*Question],
+    tags: [String],
+    description: {String},
+    isPublic: {Boolean},
+    ... 
+    // Managed in Cloud 
+    ...
+    difficulty: {Number},
+    totalQuestions: {Number},
+    averageScore: {Number}
+    numberOfAttempts: {Number}
+    isGenerated: {Boolean},
+    isSpacedRepetition: {Boolean},
+    isProfessional: {Number},
+    quality: {Number},
+    slug: {String}
+}
+```
+To begin creating a test, the minimum information required are the ```Test.title``` string, ```Test.category``` pointer and ```Test.author``` pointer:
+```javascript
+var Test = Parse.Object.extend("Test"),
+    newTest = new Test();
+// minimum    
+newTest.set('title', "Algebra");    
+newTest.set('author', currentUser);
+// refer to the App Initialization section to get list of Category objects
+newTest.set('category', selectedCategory); 
+// extra
+newTest.set('isPublic', true); // false by default
+newTest.set('description', "This quiz is for beginners");
+newTest.set('tags', ["Math 101", "GCSEs"]);
+// Save Test to begin adding questions
+Parse.Cloud.run('createNewTest', {test: newTest}).then(function (response) {
+    var test = response.test;
+    // test will now have an objectId
+    // response contains additional information, primarily used for Gamification
+});
+```
+Please note, after the initial ```Test``` object creation, you can update/save changes using
+the default Parse save function ```newTest.save();```.
 
+#### The Question object
+A ```Question``` object contains the following properties:
+```javascript
+{
+    ... 
+    // Parse.Object default properties
+    ...
+    stem: {String}
+    options: [String],
+    feedback: {String},
+    image: [Parse.File], // Read the Parse Object Basics section above 
+    ...
+    // Managed in Cloud
+    ...
+    difficulty: [Number],
+    numberOfResponses: {Number},
+    numberOfCorrectResponses: {Number},
+    percentOfCorrectResponses: {Number}
+}
+```
+The ```Question.stem``` string is the actual question displayed to the user.
 
+```Question.options``` is an example of using directly embedded JSON arrays, instead of using Pointers. A typical ```Question.options``` array looks like this:
+```javascript
+[
+    {"isCorrect":true,"phrase":"London"},
+    {"isCorrect":false,"phrase":"Edinburgh"},
+    {"isCorrect":false,"phrase":"Manchester"},
+    {"isCorrect":false,"phrase":"Brighton"}
+]
+```
+Note, we currently limit the total options to five, and a minimum of two. Only one option can be correct. These are opinionated practices, something which we may change in the future based on feedback.
+
+#### Creating and Saving new questions
+Create a new ```Question``` object - by default add four options, the first of which should be set as correct. Allow the user to remove unused options, or ignore empty options. Prompt the user to add an ```image``` and ```feedback```. Save the new question using the ```saveNewQuestion``` Cloud Code function.
+
+```javascript
+var Question = Parse.Object.extend("Question"),
+    newQuestion = new Question();
+
+newQuestion.set('stem', "What is the capital of UK?");
+newQuestion.set('options', [...]);
+newQuestion.set('feedback', "Edinburgh is the capital of Scotland, not the UK.");
+
+Parse.Cloud.run('saveNewQuestion', {test: test, question: newQuestion}).then(function (response) {
+    var question = response.question;
+    // question will now have an objectId
+    // response contains additional information, primarily used for Gamification
+});
+```
+So far, you have only saved the ```Question``` object onto the database: you still need to assign this question to a quiz. The Cloud Function required the ```Test``` object as a parameter for Gamification purposes. It did not attach the question to said test you would need to repeat the process locally anyways.
+
+#### Adding a saved question to a Quiz
+Once you have run the above function, push the ```Question``` object into ```Test.questions```, and update the ```Test```:
+
+```javascript
+test.get('questions').push(question);
+test.save();
+```
+#### Updating questions
+You do not need to update a ```Test``` object when updating questions: ```question.save()``` is all that is needed.
+
+#### Deleting questions
+You MUST update a ```Test``` object when deleting questions:
+```javascript
+var updatedQuestionsList = _.reject(test.get('questions'), function(object) { return object.id === question.id; });
+test.set('questions', updatedQuestionsList);    
+test.save();
+
+// Do not delete the question using Parse's default delete function. We have a custom Cloud Function which
+// handles the process carefully for our purposes
+Parse.Cloud.run('deleteObjects', {"className":"Question", objects:[question]);
+```
+#### Additional Info for Quizzes
+Note that ```Test.questions``` are shuffled each time a quiz is taken, as are ```Question.options```. Therefore, when adding or removing questions to tests, or options to questions, the order does not matter.
+
+Questions, whilst created for a particular test, can be attached to multiple tests. For example, when a 'Spaced Repetition' test is 'generated', our Cloud Code will pull questions from other tests, in order to generate an entirely new test. This is why the ```Question``` class does not contain any parent info.
+
+Images for questions are optional, but encouraged: use the [Aviary SDK](https://developers.aviary.com/docs/android) for image manipulation.
 
 
 
