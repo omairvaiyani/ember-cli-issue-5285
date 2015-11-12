@@ -436,49 +436,61 @@ Parse.Cloud.define('getCommunityTest', function (request, response) {
 });
 
 /**
- * @Deprecated, using Search Index instead.
- * @CloudFunction Get Community Tests
+ * @Unfinished, read TODOs
+ * @CloudFunction Search Index
  *
- * Conducts a test query.
- * Response is with questions,
- * category and limited-author profile
- * included.
+ * Conducts a search query using
+ * Algolia.
  *
- * If test does not belong to user, author
- * profile is minimised.
- *
- * @param {Array} queryOptions
- * @return {Array<Test>}
+ * @param {String} className
+ * @param {String} sortIndex
+ * @param {String} searchTerm
+ * @param {Object} searchOptions
+ * @return {Object} response
  */
-Parse.Cloud.define('getCommunityTests', function (request, response) {
-    var queryOptions = request.params.queryOptions,
-        query = new Parse.Query(Test);
+Parse.Cloud.define('searchIndex', function (request, response) {
+    var className = request.params.className,
+        sortIndex = request.params.sortIndex,
+        searchTerm = request.params.searchTerm,
+        searchOptions = request.params.searchOptions ? request.params.searchOptions : {};
 
-    query.notEqualTo('isObjectDeleted', true);
-    query.include('questions', 'author', 'category');
+    if (!className)
+        return response.error("Please provide an className.");
 
+    var searchIndex = algoliaClient.initIndex(className);
+    // TODO utilise sortIndex
 
-    _.each(queryOptions, function (queryOption) {
-        if (queryOption.key && queryOption.value)
-            query[queryOption.method](queryOption.key, queryOption.value);
-        else if (queryOption.value)
-            query[queryOption.method](queryOption.value);
-        else if (queryOption.key)
-            query[queryOption.method](queryOption.key);
-    });
-    // Need this to get author.
-    Parse.Cloud.useMasterKey();
+    searchIndex.search(searchTerm, searchOptions).then(function (algResponse) {
+        var hits = algResponse.hits,
+            records = [];
+        _.each(hits, function (hit) {
+            if (className === "User")
+                className = "_User";
+            var query = new Parse.Query(className);
+            query.containedIn("objectId", objectIds);
+        /*
+            var object = new Parse.Object(className);
+            object.id = hit.objectId;
+            object.createdAt = hit.createdAt;
+            object.updatedAt = hit.updatedAt;
 
-    query.find().then(function (result) {
-        var tests = [];
-        // Query includes private tests in case the test
-        // belongs to the user. We check it manually here.
-        _.each(result, function (test) {
-            if (test.get('isPublic'))
-                tests.push(test);
-            // TODO limit user profile
+            switch (className) {
+                case "Test":
+                    var props = ["title", "author", "category", "description", "questions", "difficulty",
+                        "totalQuestions", "tags", "slug", "isPublic", "averageScore", "numberOfAttempts",
+                    "isGenerated", "isPublic", "isProfessional", "isSpacedRepetition", "quality"];
+                    _.each(props, function (prop) {
+                        object.set(prop, hit.prop);
+                    });
+                    break;
+                // TODO case for User
+            }
+
+            records.push(object);*/
         });
-        response.success(tests);
+        Parse.Cloud.useMasterKey();
+        // TODO Figure out how to send these records without saving them, as Parse won't let us
+        response.success({records: records, meta: algResponse});
     }, function (error) {
         response.error(error);
     });
@@ -1316,7 +1328,7 @@ Parse.Cloud.define("checkBetaAccess", function (request, response) {
         else if (!betaInvite.get('betaActivated'))
             response.error("You have not activated your beta invited yet! Check your email.");
         else {
-            if(email && betaInvite.get('email') !== email) {
+            if (email && betaInvite.get('email') !== email) {
                 betaInvite.set('email', email); // Likely that the user used a different email to sign up.
                 betaInvite.save().then(function () {
                     response.success({betaInvite: betaInvite});

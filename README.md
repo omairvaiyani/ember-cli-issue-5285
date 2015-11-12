@@ -522,5 +522,65 @@ Questions, whilst created for a particular test, can be attached to multiple tes
 
 Images for questions are optional, but encouraged: use the [Aviary SDK](https://developers.aviary.com/docs/android) for image manipulation.
 
+## Finding Quizzes
+This is the 'Discovery' part of Synap. Whilst Parse has a sophisticated query system, they do not handle 'keyword' searching well enough for our needs. This is because indexing large datasets is complicated, therefore we use a third-party service called [Algolia](https://www.algolia.com/), to index our content for efficient, and useful searching.
 
+Things to consider:
+1. Everytime a new object (users and tests for now) is created, Cloud Code sends a replica to Algolia
+2. Everytime an object is updated, changes are relayed to Algolia
+3. Algolia stores and returns the object as a JSON, NOT as a Parse.Object
+4. Not only does Algolia have separate classes like Parse, but for each class, data is cloned for various assortment types (i.e. A-Z, Most Recent, Difficulty, etc.), to speed up searching
+
+Due to point 3, when you perform searches through Aloglia, the returned objects will need to be converted to Parse.Objects. This is relatively simple to achieve on the client, and will be explained further down.
+
+#### Setting up Algolia
+This doc will refer to Alogolia's [Javascript Docs](https://www.algolia.com/doc/javascript), though they also have [other SDKs](https://www.algolia.com/doc). Follow steps to include their SDK into the project. Initialize the search client like so:
+```javascript
+var algoliaAppId = "ONGKY2T0Y8",
+    algoliaAppKey = "8553807a02b101962e7bfa8c811fd105";
+
+var searchClient = algoliasearch(algoliaAppId, 8553807a02b101962e7bfa8c811fd105);
+// Store searchClient globally
+```
+
+#### Performing a Basic Quiz Search
+Here's a simple example search - Finding all quizzes in the Cardiology category:
+```javascript
+var testIndex = searchClient.initIndex('Test'),
+    aviationCategoryId = "MnOS2t6h1A";
+
+testIndex.search('',
+            {
+                facets: "category.objectId",
+                facetFilters: ["category.objectId:"+aviationCategoryId],
+                hitsPerPage: 10
+            }).then(function (response) {
+                var totalHitsFound = response.nbHits,
+                    unparsedTests = response.hits;
+                // unparsedTests will be converted to Parse.Object instances, explained further    
+            });
+```
+Before discussing the specifics of how the facets and facetFilters work (which you can learn more about [here](https://www.algolia.com/doc/javascript#faceting)), let's see how the response objects are converted to 
+Parse.Object instances:
+
+```javascript
+unparsedTests; // Array of tests received from Algolia
+var tests = [],
+    props = ["title", "author", "category", "description", "questions", "difficulty",
+                        "totalQuestions", "tags", "slug", "isPublic", "averageScore", "numberOfAttempts",
+                    "isGenerated", "isPublic", "isProfessional", "isSpacedRepetition", "quality"];
+                    
+_.each(unparsedTests, function (unparsedTest) {
+    var test = new Test(); // or new Parse.Object("Test");
+    test.id = unparsedTest.objectId;
+    _.each(props, function (prop) {
+        test.set(prop, unparsedTest.prop);
+    });
+    tests.push(test);
+});
+// Do not try to save these tests
+```
+Ideally, this process would be done on Cloud Code, unfortunately, when objects are created locally like this - they must be saved before Parse allows us to send them to/from Cloud Code. This would increase the latency significantly, and so, client-side searching must perform these actions locally.
+
+***Section not yet complete***
 
