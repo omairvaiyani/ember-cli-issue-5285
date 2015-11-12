@@ -557,7 +557,8 @@ testIndex.search('',
             }).then(function (response) {
                 var totalHitsFound = response.nbHits,
                     unparsedTests = response.hits;
-                // unparsedTests will be converted to Parse.Object instances, explained further    
+                // unparsedTests will be converted to Parse.Object instances, 
+                // explained further on    
             });
 ```
 Before discussing the specifics of how the facets and facetFilters work (which you can learn more about [here](https://www.algolia.com/doc/javascript#faceting)), let's see how the response objects are converted to 
@@ -582,5 +583,71 @@ _.each(unparsedTests, function (unparsedTest) {
 ```
 Ideally, this process would be done on Cloud Code, unfortunately, when objects are created locally like this - they must be saved before Parse allows us to send them to/from Cloud Code. This would increase the latency significantly, and so, client-side searching must perform these actions locally.
 
-***Section not yet complete***
+#### Searching with Keywords
+You can filter results with keywords - the following example builds on the previous code:
+```javascript
+var keywords = "Roman History";
+    
+testIndex.search(keywords,
+            {
+                hitsPerPage: 20,
+                page: currentPage + 1
+            }).then(function (response) {
+                var totalHitsFound = response.nbHits,
+                    unparsedTests = response.hits,
+                    currentPage = response.page,
+                    totalPages = response.nbPages;
+            });
+```
+#### Filtering by Tags
+Algolia also has a ```tagsFilter```, which can be utilised like so:
+```javascript
+var keywords = "Farming";
+testIndex.search(keywords,
+            {
+                tagsFilter: ["Agriculture", "Year 2"]
+                hitsPerPage: 10,
+                page: 0
+            }).then(function (response) {
+                ...
+            });
+```
+#### Sorting Results
+In Algolia, we have a complicated algorithm which decides what order the results are indexed, and therefore, returned as. This makes the default index most relevant, but, tests can be received in alphabetical order (ASC) or by difficulty (DESC). Our analytics from MyCQs suggests that most users will only change the sort method once, and then revert to the default. Given that each type of assortment requires Algolia to clone the dataset (this includes changes between ASC and DESC), we are keeping sorting to a bare minimum.
+
+To change sorting, you must initialize the appropriate ```testIndex``` like so:
+```javascript
+// For A-Z
+var testIndex = searchClient.initIndex('Test_title(ASC)');
+// For Difficulty (hard to easy)
+testIndex = searchClient.initIndex('Test_difficulty(DESC)');
+
+testIndex.search(...);
+```
+
+#### Finding all Quizzes for a Parent Category with Child Categories
+Earlier in this section, quizzes within the Aviation categories were found by adding the ```aviationCategory.objectId``` to the ```facetFilters```. This is fine as all aviation quizzes have their ```Test.category``` pointer set to Aviation. However, some categories have child categories within, for e.g. Engineering is a parent category for Mechanicial Engineering, Electronical Engineering, Chemical Engineering etc. You could find all Mechanical Engineering quizzes in the same way as we did above for aviation. But, if you set the parent category, Engingeering, id in the ```facetFilters```, you would get ```0``` results.
+
+To get round this, loop through each child category, and create an array for the ```facetFilters``` like so:
+
+```javascript
+var categoryFilters = [];
+if (category.get('hasChildren')) {
+    _.each(childCategories, function (category) {
+        categoryFilter.push("category.objectId:" + category.get('id'));
+    });
+}
+testIndex.search('', {
+    facets: "category.objectId",
+    facetFilters: categoryFilters
+    ...
+    }).then(...);
+```
+#### Search for Users
+Simply replace ```'Test'``` with ```'User'``` for the ```searchClient.initIndex();``` function. Currently, the User index has no other assortments. You can replace facets with other things like ```educationCohort```, or not use any facets at all.
+
+#### Additional Info regarding Algolia
+The Algolia SDK caches results - if this starts causing any problems, use ```testIndex.clearCache();``` after each search.
+
+## Saving Quizzes
 
