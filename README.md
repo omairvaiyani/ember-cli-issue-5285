@@ -4,7 +4,6 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Synap API Documentation](#synap-api-documentation)
   - [Prerequisites](#prerequisites)
   - [Initialising the API](#initialising-the-api)
   - [Initialising the App](#initialising-the-app)
