@@ -1,36 +1,12 @@
 # Synap API Documentation
-
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+<!-- START doctoc -->
 <!-- END doctoc -->
-
-  - [Prerequisites](#prerequisites)
-  - [Initialising the API](#initialising-the-api)
-  - [Initialising the App](#initialising-the-app)
-- [Basics of Parse Objects](#basics-of-parse-objects)
-    - [Creating and Saving new questions](#creating-and-saving-new-questions)
-    - [Adding a saved question to a Quiz](#adding-a-saved-question-to-a-quiz)
-    - [Updating questions](#updating-questions)
-    - [Deleting questions](#deleting-questions)
-    - [Additional Info for Quizzes](#additional-info-for-quizzes)
-- [Finding Quizzes](#finding-quizzes)
-    - [Setting up Algolia](#setting-up-algolia)
-    - [Performing a Basic Quiz Search](#performing-a-basic-quiz-search)
-    - [Searching with Keywords](#searching-with-keywords)
-    - [Filtering by Tags](#filtering-by-tags)
-    - [Sorting Results](#sorting-results)
-    - [Finding all Quizzes for a Parent Category with Child Categories](#finding-all-quizzes-for-a-parent-category-with-child-categories)
-    - [Search for Users](#search-for-users)
-    - [Additional Info regarding Algolia](#additional-info-regarding-algolia)
-- [Saving Quizzes](#saving-quizzes)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
-### Prerequisites
+## Prerequisites
 In order to interact with the Synap API, either use 3rd party Titanium modules for the Parse SDK ([Android](https://github.com/ndizazzo/android-parse-titanium-module) and [iOS](https://github.com/ewindso/ios-parse-titanium-module)), or refer to Parse's [REST API Guide](https://parse.com/docs/rest/guide). All code in this document is previewed in Javascript. 
 
 Please use [moment.js](http://momentjs.com/) for datetime manipulation and [JSTZ](http://pellepim.bitbucket.org/jstz/) for detecting timezones. Use the [Aviary SDK](https://developers.aviary.com/docs/android) for image manipulation. This document will assume that you use [underscore.js](http://underscorejs.org/) in Javascript, otherwise, use your own preferred methods to manipulate any JSON objects/arrays.
 
-### Initialising the API
+## Initialising the API
 We are currently using the "Synap Dev" project on Parse. The following credentials will change
 in the final release, so do not hard-code them.
 ```javascript
@@ -72,7 +48,7 @@ testObject.save().then(function(object) {
 });
 ```
 
-### Initialising the App
+## Initialising the App
 Our API returns a session token upon successful logins: store this token on the device and check if it's valid on each boot.
 ```javascript
 Parse.User.become("session-token-here").then(function (user) {
@@ -171,8 +147,10 @@ Parse.User {
 ```
 
 
-### Registering New Users
-#### By Email
+## Registering New Users
+There are two ways in which new users can sign up to Synap: Email and Facebook. Both methods are covered in this document. 
+
+### By Email
 ```javascript
 var newUser = new Parse.User();
 newUser.set("name", "Firstname Surname");
@@ -195,7 +173,7 @@ user.signUp(null, {
 });
 ```
 
-#### By Facebook
+### By Facebook
 Make sure you have followed steps to set up the Facebook SDK.
 
 ```javascript
@@ -258,7 +236,7 @@ var signUpAuthorisedFacebookUser = function (data) {
 ## Setting Educational Info
 This is done after registration as it decouples the process - the education info is either manually entered by the user or confirmed by the user from data returned through FB. Furthermore, an ```educationCohort``` is created based on the ```institution```, ```studyField``` and ```studyYear```. This allows us to group colleagues together. This process is somewhat complicated and so, it's best to keep it separate from the registration function.
 
-#### Finding the Institution (without Facebook)
+### Finding the Institution (without Facebook)
 Ask for the user's university/college, school or workplace name in a text field. We have a list of universities and schools from around the world in our search index: use it for autocomplete.
 
 ```javascript
@@ -280,7 +258,7 @@ If no records are found, allow user to continue with whatever name they typed. W
 
 Store this institution name (and whether it's a school, university of workplace by asking the user), in a variable. We'll need it in the next part.
 
-#### Finding the Institution (with Facebook)
+### Finding the Institution (with Facebook)
 Either we'll have the user's educuational information through Facebook, or we can use Facebook's autocomplete to perform a similar function to the one above.
 
 An example of Facebook's educational info JSON:
@@ -336,7 +314,7 @@ FB.api('search', {q: "University Name".toLowerCase(), type: "page"},
 ```
 Store the selected record, we'll need in the next part.
 
-####  Creating the Institution
+###  Creating the Institution
 Once you have got at least the name for the ```eductionalInstition```, you can perform this step. Though having the ```educationalInstitution.type``` is handy.
 
 ```javascript
@@ -353,10 +331,10 @@ Parse.Cloud.run('createOrUpdateInstitution', {
 ```            
 This, ```newEducationCohort``` will be saved later and set onto the ```currentUser```.
 
-#### Finding the Study Field (without Facebook)
+### Finding the Study Field (without Facebook)
 Follow the same steps as for the ```institution``` code, but set ```recordType``` as ```"study-fields"```.
 
-#### Finding the Study Field (with Facebook)
+### Finding the Study Field (with Facebook)
 Follow the same steps as for ```institution```, with the following differences:
 If educational information from their profile is found, run this code:
 
@@ -369,7 +347,7 @@ var studyFieldObject = latestEducationalInfo.concentration;
 ```
 Else, run the Facebook search API and filter in ```object.category``` === ```"Interest"``` or ```"Field of study"```. It's just how Facebook categories the results.
 
-####  Creating the Study Field
+###  Creating the Study Field
 Once you have got at least the name for the ```studyFiled```, you can perform this step.
 ```javascript
 Parse.Cloud.run('createOrUpdateStudyField', {
@@ -382,7 +360,7 @@ Parse.Cloud.run('createOrUpdateStudyField', {
             });
 ```    
 
-#### Setting the Study Year
+### Setting the Study Year
 Simply dropdown selection. Facebook does provide a graduation date, which we can store in the final object (see next step), but we are not using this just yet. Store selected option as ```newEducationCohort.studyYear```.
 ```javascript
 studyYearsToChooseFrom: [
@@ -392,7 +370,7 @@ studyYearsToChooseFrom: [
     ];
 ```
 
-#### Set Educational Cohort (Final step)
+### Set Educational Cohort (Final step)
 In order to create an ```educationCohort```, we need at least two of the three items collected above.
 Send the items to the Cloud Function ```createOrGetEducationCohort```: the function will look
 to see if this cohort exists and return it, else a new cohort will be created and sent back. Set
@@ -467,7 +445,7 @@ Parse.Cloud.run('createNewTest', {test: newTest}).then(function (response) {
 Please note, after the initial ```Test``` object creation, you can update/save changes using
 the default Parse save function ```newTest.save();```.
 
-#### The Question object
+### The Question object
 A ```Question``` object contains the following properties:
 ```javascript
 {
@@ -500,7 +478,7 @@ The ```Question.stem``` string is the actual question displayed to the user.
 ```
 Note, we currently limit the total options to five, and a minimum of two. Only one option can be correct. These are opinionated practices, something which we may change in the future based on feedback.
 
-#### Creating and Saving new questions
+### Creating and Saving new questions
 Create a new ```Question``` object - by default add four options, the first of which should be set as correct. Allow the user to remove unused options, or ignore empty options. Prompt the user to add an ```image``` and ```feedback```. Save the new question using the ```saveNewQuestion``` Cloud Code function.
 
 ```javascript
@@ -519,17 +497,17 @@ Parse.Cloud.run('saveNewQuestion', {test: test, question: newQuestion}).then(fun
 ```
 So far, you have only saved the ```Question``` object onto the database: you still need to assign this question to a quiz. The Cloud Function required the ```Test``` object as a parameter for Gamification purposes. It did not attach the question to said test you would need to repeat the process locally anyways.
 
-#### Adding a saved question to a Quiz
+### Adding a saved question to a Quiz
 Once you have run the above function, push the ```Question``` object into ```Test.questions```, and update the ```Test```:
 
 ```javascript
 test.get('questions').push(question);
 test.save();
 ```
-#### Updating questions
+### Updating questions
 You do not need to update a ```Test``` object when updating questions: ```question.save()``` is all that is needed.
 
-#### Deleting questions
+### Deleting questions
 You MUST update a ```Test``` object when deleting questions:
 ```javascript
 var updatedQuestionsList = _.reject(test.get('questions'), function(object) { return object.id === question.id; });
@@ -540,7 +518,7 @@ test.save();
 // handles the process carefully for our purposes
 Parse.Cloud.run('deleteObjects', {"className":"Question", objects:[question]);
 ```
-#### Additional Info for Quizzes
+### Additional Info for Quizzes
 Note that ```Test.questions``` are shuffled each time a quiz is taken, as are ```Question.options```. Therefore, when adding or removing questions to tests, or options to questions, the order does not matter.
 
 Questions, whilst created for a particular test, can be attached to multiple tests. For example, when a 'Spaced Repetition' test is 'generated', our Cloud Code will pull questions from other tests, in order to generate an entirely new test. This is why the ```Question``` class does not contain any parent info.
@@ -558,7 +536,7 @@ Things to consider:
 
 Due to point 3, when you perform searches through Aloglia, the returned objects will need to be converted to Parse.Objects. This is relatively simple to achieve on the client, and will be explained further down.
 
-#### Setting up Algolia
+### Setting up Algolia
 This doc will refer to Alogolia's [Javascript Docs](https://www.algolia.com/doc/javascript), though they also have [other SDKs](https://www.algolia.com/doc). Follow steps to include their SDK into the project. Initialize the search client like so:
 ```javascript
 var algoliaAppId = "ONGKY2T0Y8",
@@ -568,7 +546,7 @@ var searchClient = algoliasearch(algoliaAppId, 8553807a02b101962e7bfa8c811fd105)
 // Store searchClient globally
 ```
 
-#### Performing a Basic Quiz Search
+### Performing a Basic Quiz Search
 Here's a simple example search - Finding all quizzes in the Cardiology category:
 ```javascript
 var testIndex = searchClient.initIndex('Test'),
@@ -608,7 +586,7 @@ _.each(unparsedTests, function (unparsedTest) {
 ```
 Ideally, this process would be done on Cloud Code, unfortunately, when objects are created locally like this - they must be saved before Parse allows us to send them to/from Cloud Code. This would increase the latency significantly, and so, client-side searching must perform these actions locally.
 
-#### Searching with Keywords
+### Searching with Keywords
 You can filter results with keywords - the following example builds on the previous code:
 ```javascript
 var keywords = "Roman History";
@@ -624,7 +602,7 @@ testIndex.search(keywords,
                     totalPages = response.nbPages;
             });
 ```
-#### Filtering by Tags
+### Filtering by Tags
 Algolia also has a ```tagsFilter```, which can be utilised like so:
 ```javascript
 var keywords = "Farming";
@@ -637,7 +615,7 @@ testIndex.search(keywords,
                 ...
             });
 ```
-#### Sorting Results
+### Sorting Results
 In Algolia, we have a complicated algorithm which decides what order the results are indexed, and therefore, returned as. This makes the default index most relevant, but, tests can be received in alphabetical order (ASC) or by difficulty (DESC). Our analytics from MyCQs suggests that most users will only change the sort method once, and then revert to the default. Given that each type of assortment requires Algolia to clone the dataset (this includes changes between ASC and DESC), we are keeping sorting to a bare minimum.
 
 To change sorting, you must initialize the appropriate ```testIndex``` like so:
@@ -650,7 +628,7 @@ testIndex = searchClient.initIndex('Test_difficulty(DESC)');
 testIndex.search(...);
 ```
 
-#### Finding all Quizzes for a Parent Category with Child Categories
+### Finding all Quizzes for a Parent Category with Child Categories
 Earlier in this section, quizzes within the Aviation categories were found by adding the ```aviationCategory.objectId``` to the ```facetFilters```. This is fine as all aviation quizzes have their ```Test.category``` pointer set to Aviation. However, some categories have child categories within, for e.g. Engineering is a parent category for Mechanicial Engineering, Electronical Engineering, Chemical Engineering etc. You could find all Mechanical Engineering quizzes in the same way as we did above for aviation. But, if you set the parent category, Engingeering, id in the ```facetFilters```, you would get ```0``` results.
 
 To get round this, loop through each child category, and create an array for the ```facetFilters``` like so:
@@ -668,11 +646,10 @@ testIndex.search('', {
     ...
     }).then(...);
 ```
-#### Search for Users
+### Search for Users
 Simply replace ```'Test'``` with ```'User'``` for the ```searchClient.initIndex();``` function. Currently, the User index has no other assortments. You can replace facets with other things like ```educationCohort```, or not use any facets at all.
 
-#### Additional Info regarding Algolia
+### Additional Info regarding Algolia
 The Algolia SDK caches results - if this starts causing any problems, use ```testIndex.clearCache();``` after each search.
 
 ## Saving Quizzes
-
