@@ -1,6 +1,8 @@
+# Synap API Documentation
+
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+**Table of Contents**
 
 - [Synap API Documentation](#synap-api-documentation)
   - [Prerequisites](#prerequisites)
@@ -35,9 +37,6 @@
   - [Gamification](#gamification)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
-# Synap API Documentation
-
 
 ## Prerequisites
 In order to interact with the Synap API, either use 3rd party Titanium modules for the Parse SDK ([Android](https://github.com/ndizazzo/android-parse-titanium-module) and [iOS](https://github.com/ewindso/ios-parse-titanium-module)), or refer to Parse's [REST API Guide](https://parse.com/docs/rest/guide). All code in this document is previewed in Javascript. 
