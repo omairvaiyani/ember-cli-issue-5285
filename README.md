@@ -1,5 +1,30 @@
 # Synap API Documentation
 
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+<!-- END doctoc -->
+
+  - [Prerequisites](#prerequisites)
+  - [Initialising the API](#initialising-the-api)
+  - [Initialising the App](#initialising-the-app)
+- [Basics of Parse Objects](#basics-of-parse-objects)
+    - [Creating and Saving new questions](#creating-and-saving-new-questions)
+    - [Adding a saved question to a Quiz](#adding-a-saved-question-to-a-quiz)
+    - [Updating questions](#updating-questions)
+    - [Deleting questions](#deleting-questions)
+    - [Additional Info for Quizzes](#additional-info-for-quizzes)
+- [Finding Quizzes](#finding-quizzes)
+    - [Setting up Algolia](#setting-up-algolia)
+    - [Performing a Basic Quiz Search](#performing-a-basic-quiz-search)
+    - [Searching with Keywords](#searching-with-keywords)
+    - [Filtering by Tags](#filtering-by-tags)
+    - [Sorting Results](#sorting-results)
+    - [Finding all Quizzes for a Parent Category with Child Categories](#finding-all-quizzes-for-a-parent-category-with-child-categories)
+    - [Search for Users](#search-for-users)
+    - [Additional Info regarding Algolia](#additional-info-regarding-algolia)
+- [Saving Quizzes](#saving-quizzes)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 ### Prerequisites
 In order to interact with the Synap API, either use 3rd party Titanium modules for the Parse SDK ([Android](https://github.com/ndizazzo/android-parse-titanium-module) and [iOS](https://github.com/ewindso/ios-parse-titanium-module)), or refer to Parse's [REST API Guide](https://parse.com/docs/rest/guide). All code in this document is previewed in Javascript. 
 
