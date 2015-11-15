@@ -4,167 +4,27 @@
 <div class="page-header">
     <div class="dark-overlay"></div>
     <div class="content-body">
-        <h1>Create a Quiz</h1>
-        <h4>Write Multiple-Choice Questions (MCQs)</h4>
+        <h1 class="title">Create a Quiz</h1>
+        <h4 class="subtitle">Write Multiple-Choice Questions (MCQs)</h4>
     </div>
 </div>
 <div class="container margin-bottom-16">
     <section class="row">
         <article class="col-xs-12 col-md-8 col-md-offset-2">
             <div class="card">
-                {{!-- {{outlet}} --}}
-
-                {{!-- Title and Category row --}}
-                <section class="row">
-
-                    {{!-- Title column --}}
-                    <article class="col-xs-12 col-md-7 margin-bottom-16">
-                        <section class="row">
-                            <article class="col-xs-12">
-                                <h4>Enter a Title</h4>
-                            </article>
-                        </section>
-                        <section class="row">
-                            <article class="col-xs-12">
-                                {{input type="text" placeholder="Name your Quiz" classNames="form-input"
-                                value=model.title}}
-                            </article>
-                        </section>
-                    </article>
-
-                    {{!-- Category column --}}
-                    <article class="col-xs-12 col-md-5 margin-bottom-16">
-                        <section class="row">
-                            <article class="col-xs-12">
-                                <h4>Choose a Category</h4>
-                            </article>
-                        </section>
-                        {{#unless model.category}}
-                            <section class="row">
-                                {{!-- Parent Category row --}}
-                                <article class="col-xs-12">
-                                    {{view 'select'
-                                    classNames='form-input'
-                                    content=parentCategories
-                                    optionValuePath="content"
-                                    optionLabelPath="content.name"
-                                    selection=parentCategory
-                                    prompt="Please select a subject"}}
-                                </article>
-                            </section>
-                            {{#if childCategories.length}}
-                            {{!-- Child Category row --}}
-                                <section class="row">
-                                    <div class="col-xs-12 margin-top-16">
-                                        {{view 'select'
-                                        classNames='form-input'
-                                        content=childCategories
-                                        optionValuePath="content"
-                                        optionLabelPath="content.name"
-                                        selection=childCategory
-                                        prompt="Please select a subject area"}}
-                                    </div>
-                                </section>
-                            {{/if}}
-                        {{else}}
-                            {{!-- Category Tags --}}
-                            <ul class="tags margin-bottom-8">
-                                {{#if model.category.parent}}
-                                    <li {{action 'removeCategory' model.category.parent}}
-                                            class="tag category">{{model.category.parent.name}}</li>
-                                {{/if}}
-                                <li {{action 'removeCategory' model.category}} class="tag category">{{model.category.name}}</li>
-                            </ul>
-                        {{/unless}}
-                    </article>
-                </section>
-
-                {{!-- Tags row --}}
-                <section class="row margin-bottom-16">
-                    <article class="col-xs-12 col-sm-6">
-                        <section class="row">
-                            <article class="col-xs-12">
-                                <h4>Add Tags <i class="fa fa-question-circle"></i></h4>
-                            </article>
-                        </section>
-                        <section class="row">
-                            <article class="col-xs-12">
-                                <ul class="tags">
-                                    {{#each model.tags as |tag|}}
-                                        <li class="tag" {{action "removeTag" tag}}>{{tag}}</li>
-                                    {{/each}}
-                                    <li class="tag default">
-                                        {{#if addingTag}}
-                                            {{input type='text' value=newTag placeholder="Type a tag..."
-                                            id="new-tag" action="completeAddingTag"}}
-                                            <i {{bind-attr class=":fa :fa-plus :add-tag newTag.length::close-tag"}}
-                                                {{action 'completeAddingTag'}}></i>
-                                        {{else}}
-                                            <span {{action 'startAddingNewTag'}}>+ add</span>
-                                        {{/if}}
-                                    </li>
-                                </ul>
-                            </article>
-                        </section>
-                    </article>
-                </section>
-
-                <hr class="full-hr no-margin">
-
-                {{!-- Description row --}}
-                <section class="row margin-top-16">
-                    <article class="col-xs-12 margin-bottom-16">
-                        <section class="row">
-                            <article class="col-xs-12">
-                                <h4>Describe your Quiz (optional)</h4>
-                            </article>
-                        </section>
-                        <section class="row">
-                            <article class="col-xs-12">
-                                {{textarea placeholder="Enter a brief description of your test"
-                                classNames="form-input" value=model.description height="80px"}}
-                            </article>
-                        </section>
-                    </article>
-                </section>
-
-                {{!-- Visbility row --}}
-                <section class="row">
-                    <article class="col-xs-12 margin-bottom-16">
-                        <section class="row">
-                            <article class="col-xs-12  margin-bottom-8">
-                                <h4>Quiz Visibility</h4>
-                            </article>
-                        </section>
-
-                        <section class="row">
-                            <article class="col-xs-12">
-                                <div class="togglebutton togglebutton-info">
-                                    <label>
-                                        <strong class="margin-right-8">Public</strong>
-                                        {{input type="checkbox" checked=model.isPublic}}<span class="toggle"></span>
-                                    </label>
-                                </div>
-                            </article>
-                            <article class="col-xs-12">
-                                {{#if model.isPublic}}
-                                    <p>This quiz will be visible to everyone.</p>
-                                {{else}}
-                                    <p>Only you will see this quiz.</p>
-                                {{/if}}
-                            </article>
-                        </section>
-                    </article>
-                </section>
+               {{partial 'edit/test-detail'}}
 
                 {{!-- Save/Add Questions row --}}
                 <section class="row">
                     <article class="col-xs-12 col-sm-6">
-                        <button class="btn btn-info action-button" id="add-questions"
-                            {{action "checkTest"}}>Add Questions</button>
+                        <button class="btn btn-info btn-with-icon action-button" {{action "checkTest"}} id="add-questions">
+                            <span class="inline-block">Add Questions</span>
+                            <span class="right-section inline-block">
+                                <i class="fa fa-arrow-circle-right"></i>
+                            </span>
+                        </button>
                     </article>
                 </section>
-
             </div>
         </article>
     </section>

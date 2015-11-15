@@ -2,15 +2,16 @@ import Ember from 'ember';
 import validateQuestion from '../utils/validate-question';
 import ParseHelper from '../utils/parse-helper';
 import CurrentUser from '../mixins/current-user';
+import ImageUpload from '../mixins/image-upload';
 /*
  * EditQuestionController for the following routes:
  * - edit.newQuestion
  * - editQuestion
  */
-export default Ember.Controller.extend(CurrentUser, {
+export default Ember.Controller.extend(CurrentUser, ImageUpload, {
     needs: ['application', 'create'],
 
-    featherEditor: null,
+    /*featherEditor: null,
 
     initializeFeatherEditor: function () {
         var featherEditor = new Aviary.Feather({
@@ -35,9 +36,9 @@ export default Ember.Controller.extend(CurrentUser, {
             }
         });
         this.set('featherEditor', featherEditor);
-    }.observes('model.id'),
+    }.observes('model.id'),*/
 
-    imageFile: function () {
+    /*imageFile: function () {
         if (this.get('model.image'))
             return {
                 name: 'image', url: this.get('model.image.url'), base64: null,
@@ -45,7 +46,7 @@ export default Ember.Controller.extend(CurrentUser, {
             };
         else
             return {name: 'image', url: '', base64: null, style: ''};
-    }.property('model.image'),
+    }.property('model.image'),*/
 
     loadingItems: function () {
         return this.get('controllers.application.loadingItems');
@@ -281,30 +282,15 @@ export default Ember.Controller.extend(CurrentUser, {
                 }.bind(this));
             }
         },
-        addImage: function () {
-            var oFReader = new FileReader();
-            oFReader.readAsDataURL(document.getElementById("questionImageInput").files[0]);
 
-            oFReader.onload = function (oFREvent) {
-                var base64 = oFREvent.target.result;
-                this.set('imageFile.url', base64);
-                this.set('imageFile.base64', base64);
-                this.set('imageFile.style', "background-image:url('" + base64 + "');");
-                this.send('editImage');
-            }.bind(this);
-        },
         viewImage: function () {
             this.set('modalImageUrl', this.get('imageFile.url'));
             this.send('openModal', 'application/modal/image', 'edit-question');
         },
-        editImage: function () {
-            this.get('featherEditor').launch({
-                image: 'question-image-holder',
-                url: this.get('imageFile.url')
-            });
-        },
+
+
         removeImage: function () {
-            document.getElementById("fileInput").value = '';
+            document.getElementById("imageInput").value = '';
             this.set('imageFile.url', '');
             this.set('imageFile.base64', '');
             this.set('imageFile.style', '');

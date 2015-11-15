@@ -268,7 +268,7 @@ export default Ember.Controller.extend(CurrentUser, DeleteWithUndo, {
             if (returnItem.type === "test") {
                 this.transitionTo('edit.index', returnItem.object.get('slug'));
             } else if (returnItem.type === "question") {
-                if(returnItem.isCurrent)
+                if (returnItem.isCurrent)
                     this.transitionTo('editQuestion', returnItem.object.id);
             }
         },
@@ -284,23 +284,26 @@ export default Ember.Controller.extend(CurrentUser, DeleteWithUndo, {
         /**
          * ADDING AND REMOVING TAGS
          */
-        startAddingNewTag: function () {
-            this.set('addingTag', true);
-            setTimeout(function () {
-                Ember.$("#new-tag").focus();
-            }, 150);
-        },
-
-        completeAddingTag: function () {
+        toggleAddingNewTag: function () {
             if (this.get('newTag.length')) {
+                if (!this.get('model.tags'))
+                    this.set('model.tags', new Ember.A());
                 this.get('model.tags').pushObject(this.get('newTag'));
                 this.set('newTag', "");
             }
-            this.set('addingTag', false);
+            this.set('addingTag', !this.get('addingTag'));
+            setTimeout(function () {
+                if (this.get('addingTag'))
+                    Ember.$("#new-tag").focus();
+            }.bind(this), 150);
         },
 
         removeTag: function (tag) {
             this.get('model.tags').removeObject(tag);
+        },
+
+        openEditInfoModal: function () {
+            this.send('openModal', 'edit/modal/edit-info', 'create', this.get('model'));
         },
 
         /**

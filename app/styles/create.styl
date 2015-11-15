@@ -1,0 +1,295 @@
+/* Create Pages */
+.module-tag
+  background: #c8c8c8;
+  white-space: nowrap;
+  position: relative;
+  displaY: inline-block;
+  height: 30px;
+  min-width 60px
+  border-radius: 24px;
+  padding: 0 38px 0 16px
+  color: white;
+  font-weight 400
+  line-height: 32px;
+  text-decoration: none;
+  -webkit-transition: color .2s;
+  cursor: pointer;
+  margin-right marginSecondary
+  margin-bottom marginSecondary
+  &.has-icon
+    padding-left 38px
+  input[type=text]
+    background transparent
+    color white
+    border none
+    width 80px
+  ::-webkit-input-placeholder
+    color: white
+  .action-button
+    background: #a6a6a6;
+    color: #fff;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    line-height: 18px;
+    position: absolute;
+    top: 5px;
+    right: 10px;
+    text-align: center;
+    font-size: 18px;
+    font-weight: bold;
+    &:hover
+      background: lighten(#a6a6a6, 3);
+  .remove-tag
+    position: absolute;
+    top: 5px;
+    right: 10px;
+    font-size: 20px;
+  .icon
+    color white
+    position: absolute;
+    left: 8px;
+    top: 8px;
+    font-size: 18px;
+  &.inverse
+    background alpha(black, 0.4)
+    color white
+    border-color white
+    &:hover
+      background alpha(black, 0.3)
+  &.no-edit
+    padding-right marginPrimary
+
+.category-tag
+  background: colorBackground;
+  white-space: nowrap;
+  position: relative;
+  displaY: inline-block;
+  height: 30px;
+  min-width 60px
+  border-radius: 24px;
+  border 2px solid colorPrimary
+  padding: 0 16px 0 34px
+  color: colorPrimary;
+  font-weight 400
+  line-height: 28px;
+  text-decoration: none;
+  -webkit-transition: color .2s;
+  cursor: pointer;
+  margin-right marginSecondary
+  margin-bottom marginSecondary
+  .icon
+    color colorPrimary
+    position: absolute;
+    left: 6px;
+    top: 4px;
+    font-size: 20px;
+  &.inverse
+    background alpha(black, 0.10)
+    color white
+    border-color white
+    .icon
+      color white
+    &:hover
+      background alpha(black, 0.06)
+
+.privacy-switch {
+  position: relative; width: 90px;
+  -webkit-user-select:none; -moz-user-select:none; -ms-user-select: none;
+}
+.privacy-switch-checkbox {
+  display: none;
+}
+.privacy-switch-label {
+  display: block; overflow: hidden; cursor: pointer;
+  border-radius: 20px;
+  border: 2px solid colorPrimary-600;
+}
+.privacy-switch-inner {
+  display: block; width: 200%; margin-left: -100%;
+  transition: margin 0.3s ease-in 0s;
+}
+.privacy-switch-inner:before, .privacy-switch-inner:after {
+  display: block; float: left; width: 50%; height: 30px; padding: 0; line-height: 30px;
+  font-size: 14px; color: white; font-weight: bold;
+  box-sizing: border-box;
+}
+.privacy-switch-inner:before {
+  content: "Public";
+  padding-left: 10px;
+  background-color: #E93156; color: #FFFFFF;
+}
+.privacy-switch-inner:after {
+  content: "Private";
+  padding-right: 10px;
+  background-color: #EEEEEE; color: #999999;
+  text-align: right;
+}
+.privacy-switch-switch {
+  display: block; width: 26px; height 26px; margin: 4px;
+  background: #E8EEF7;
+  position: absolute; top: 0; bottom: 0;
+  right: 56px;
+  border: 2px solid #999999; border-radius: 20px;
+  transition: all 0.3s ease-in 0s;
+}
+.privacy-switch-checkbox:checked + .privacy-switch-label .privacy-switch-inner {
+  margin-left: 0;
+}
+.privacy-switch-checkbox:checked + .privacy-switch-label .privacy-switch-switch {
+  right: 0;
+}
+  
+  
+  
+
+.category-selection-field {
+  padding: 8px;
+}
+
+.category-selection-field:first-child {
+  padding-bottom: 8px;
+}
+
+.category-selection-field:last-child {
+  padding-top: 8px;
+}
+
+.category-selection-field:hover {
+  background: #dddddd;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.privacy-switch {
+  margin-left: 0;
+}
+
+.privacy-switch .is-active {
+  color: white;
+  background-color: transparent;
+}
+
+.privacy-switch span {
+  cursor: pointer;
+}
+
+.edit-test-saved {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+}
+
+.question-list-item
+  padding 6px 28px 6px 15px
+  text-overflow ellipsis
+  white-space nowrap
+  overflow hidden
+  a:hover
+    text-decoration none
+
+.question-list-item-row
+  cursor pointer
+  i
+    position absolute
+    top marginSecondary
+    right marginSecondary
+    color lightgrey
+  i:hover
+    color alpha(colorRed, 0.8)
+  i:active
+    color colorRed
+
+.question-list-item.active-question
+  background-color aliceblue
+
+.question-image-thumbnail {
+  display: inline-block;
+  height: 73px;
+  width: 73px;
+  vertical-align: top;
+  border-radius: 4px;
+  box-shadow: 0 3px 6px -2px black;
+  cursor: pointer;
+  background-size: cover;
+  background-position: 50% 50%;
+}
+
+.question-image-add {
+  display: inline-block;
+  height: 73px;
+  width: 73px;
+  border-radius: 4px;
+  box-shadow: 0 3px 6px -2px black;
+  cursor: pointer;
+  background-color: rgb(239, 239, 239);
+  color: colorPrimary
+}
+
+.question-image-add:hover {
+  background-color: rgb(243, 243, 243);
+}
+
+.question-image-add:active {
+  background-color: rgb(220, 220, 220);
+}
+
+.question-image-add > span {
+  margin-top: 10px;
+  font-size: 50px;
+}
+
+.question-image-input {
+  position: absolute;
+  left: -9999em;
+}
+
+.saving-loader {
+  margin: 12px auto 0;
+  width: 70px;
+  text-align: center;
+}
+
+.saving-loader > div {
+  width: 18px;
+  height: 18px;
+  background-color: #B44537;
+
+  border-radius: 100%;
+  display: inline-block;
+  -webkit-animation: bouncedelay 1.4s infinite ease-in-out;
+  animation: bouncedelay 1.4s infinite ease-in-out;
+  /* Prevent first frame from flickering when animation starts */
+  -webkit-animation-fill-mode: both;
+  animation-fill-mode: both;
+}
+
+.saving-loader .bounce1 {
+  -webkit-animation-delay: -0.32s;
+  animation-delay: -0.32s;
+}
+
+.saving-loader .bounce2 {
+  -webkit-animation-delay: -0.16s;
+  animation-delay: -0.16s;
+}
+
+@-webkit-keyframes bouncedelay {
+  0%, 80%, 100% {
+    -webkit-transform: scale(0.0)
+  }
+  40% {
+    -webkit-transform: scale(1.0)
+  }
+}
+
+@keyframes bouncedelay {
+  0%, 80%, 100% {
+    transform: scale(0.0);
+    -webkit-transform: scale(0.0);
+  }
+  40% {
+    transform: scale(1.0);
+    -webkit-transform: scale(1.0);
+  }
+}

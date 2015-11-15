@@ -1,112 +1,31 @@
-<div class="container">
-    <div class="row">
-        <div class="col-md-12">
-            <div class="card">
-                <section class="row margin-bottom-16">
-                    <article class="col-md-1">
-                        <h4>TITLE</h4>
-                    </article>
-                    <article class="col-md-5">
-                        {{input type="text" class="form-control input-lg" placeholder="Type your test title here."
-                        value=model.title}}
-                    </article>
-                </section>
-                <section class="row">
-                    <article class="col-md-1">
-                        <h5 class="">CATEGORY</h5>
-                    </article>
-                    <article class="col-md-5">
-                        {{#if model.category}}
-                            <ul class="tags margin-bottom-8">
-                                {{#if model.category.parent}}
-                                    <li {{action 'removeCategory' model.category.parent}}
-                                            class="tag category">{{model.category.parent.name}}</li>
-                                {{/if}}
-                                <li {{action 'removeCategory' model.category}}
-                                        class="tag category">{{model.category.name}}</li>
-                            </ul>
-                        {{else}}
-                            <div class="row">
-                                <div class="col-md-12 margin-bottom-16">
-                                    {{view 'select'
-                                    classNames='form-control'
-                                    content=parentCategories
-                                    optionValuePath="content"
-                                    optionLabelPath="content.name"
-                                    selection=parentCategory
-                                    prompt="Please select a subject"}}
-                                </div>
-                            </div>
-                            {{#if childCategories.length}}
-                                <div class="row">
-                                    <div class="col-md-12 margin-bottom-16">
-                                        {{view 'select'
-                                        classNames='form-control'
-                                        content=childCategories
-                                        optionValuePath="content"
-                                        optionLabelPath="content.name"
-                                        selection=childCategory
-                                        prompt="Please select a subject area"}}
-                                    </div>
-                                </div>
-                            {{/if}}
-                        {{/if}}
-                    </article>
-                    <article class="col-md-1">
-                        <h5>DESCRIPTION</h5>
-                    </article>
-                    <article class="col-md-5">
-                        <div class="textarea-holder">
-                            {{textarea value=model.description class="form-control"
-                            placeholder="Help other's understand what this test is about."}}
-                        </div>
-                    </article>
-                </section>
-                <section class="row">
-                    <article class="col-md-1">
-                        <h5 class="">TAGS</h5>
-                    </article>
-                    <article class="col-md-5">
-                        <ul class="tags">
-                            {{#each model.tags as |tag|}}
-                                <li class="tag" {{action "removeTag" tag}}>{{tag}}</li>
-                            {{/each}}
-                            <li class="tag default">
-                                {{#if addingTag}}
-                                    {{input type='text' value=newTag placeholder="Type a tag..."
-                                    id="new-tag" action="completeAddingTag"}}
-                                    <i {{bind-attr class=":fa :fa-plus :add-tag newTag.length::close-tag"}}
-                                        {{action 'completeAddingTag'}}></i>
-                                {{else}}
-                                    <span {{action 'startAddingNewTag'}}>+ add</span>
-                                {{/if}}
-                            </li>
-                        </ul>
-                    </article>
-                    <article class="col-md-6 text-right">
-                        <div class="togglebutton togglebutton-info inline-block margin-right-8 margin-top-8">
-                            <label class="text-left">
-                                <strong class="margin-right-8">Public</strong>
-                                {{input type="checkbox" checked=model.isPublic}}<span class="toggle"></span>
-                            </label>
-                        </div>
-                        <div class="btn-group">
-                            <button class="btn btn-flat btn-icon margin-right-8" {{action 'deleteTest' model}}>
-                                <i class="mdi-action-delete"></i>
-                            </button>
-                            <button class="btn btn-primary" {{action 'finishedEditing'}}>
-                                Done
-                            </button>
-                        </div>
-                    </article>
-                </section>
-            </div>
+<div class="page-header">
+    <div class="dark-overlay"></div>
+    <div class="content-body">
+        <h1 class="title margin-top-0">
+            <span class="editable" {{action 'openEditInfoModal'}}>
+                {{model.title}}
+            </span>
+        </h1>
+        <h4 class="subtitle">
+            <span class="editable" {{action 'openEditInfoModal'}}>
+                {{model.description}}
+            </span>
+        </h4>
+
+        <div class="extras">
+            {{category-tags test=model canEdit=false inverseStyle=true center=true class="inline-top"
+            overrideAction='openEditInfoModal' parentController=this}}
+            {{module-tags test=model canEdit=false inverseStyle=true center=true class="inline-top"
+            overrideAction='openEditInfoModal' parentController=this}}
         </div>
     </div>
+</div>
 
-    <div class="row">
-        <div class="col-md-3 margin-top-16">
+<div class="container">
+    <section class="row">
 
+        {{!-- Questions List --}}
+        <article class="col-sm-4 col-md-3">
             <div class="panel panel-default">
                 <div class="panel-heading">
                     <strong>QUESTIONS LIST</strong>
@@ -132,12 +51,10 @@
                     </div>
                 </div>
             </div>
+        </article>
 
-        </div>
-
-
-        <div class="col-md-9 col-fix-right margin-top-16">
-
+        {{!-- Edit Question Outlet --}}
+        <article class="col-sm-8 col-md-6 col-lg-7 col-fix-middle">
             <div class="panel panel-primary">
                 <div class="panel-heading">
                     <strong>QUESTION</strong>
@@ -146,7 +63,44 @@
                     {{outlet}}
                 </div>
             </div>
+        </article>
 
-        </div>
-    </div>
+        {{!-- Action Panel --}}
+        <article class="col-sm-12 col-md-3 col-lg-2">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <strong>FINALIZE</strong>
+                </div>
+                <div class="panel-body text-center">
+                    <div class="margin-bottom-8">
+                        <div class="privacy-switch text-left margin-auto">
+                            {{input type="checkbox" checked=model.isPublic class="privacy-switch-checkbox"
+                            id="privacy-switch"}}
+                            <label class="privacy-switch-label" for="privacy-switch">
+                                <span class="privacy-switch-inner"></span>
+                                <span class="privacy-switch-switch"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-success btn-with-icon action-button"
+                        {{action "finishedEditing"}}>
+                        <span class="inline-block">Save</span>
+                            <span class="right-section inline-block">
+                                <i class="fa fa-fw fa-save"></i>
+                            </span>
+                    </button>
+
+                    <hr class="full-hr">
+
+                    <span class="linkify" {{action "deleteTest" model}}>
+                        <i class="fa fa-fw fa-trash-o margin-right-8"></i>
+                        Delete Quiz
+                    </span>
+
+                </div>
+            </div>
+        </article>
+
+    </section>
 </div>

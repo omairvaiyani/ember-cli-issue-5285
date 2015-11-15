@@ -1,0 +1,34 @@
+<div class="tags">
+    {{#each test.tags as |tag|}}
+        {{#if canEdit}}
+            <div {{bind-attr class=":module-tag :has-icon canEdit::no-edit"}}{{action "removeTag" tag}}>
+                <i class="fa fa-fw fa-tag icon"></i>
+                <span>{{tag}}</span>
+                <i class="fa fa-fa fa-times-circle remove-tag"></i>
+            </div>
+        {{else}}
+            <div {{bind-attr class=":module-tag canEdit::no-edit :has-icon inverseStyle:inverse"}}
+            {{action "tagClicked"}}>
+                <i class="fa fa-fw fa-tag icon"></i>
+                <span>{{tag}}</span>
+            </div>
+        {{/if}}
+    {{/each}}
+    {{#if canEdit}}
+        {{#if parentController.addingTag}}
+            <div {{bind-attr class=":module-tag :new-tag"}}>
+                {{input type='text' value=parentController.newTag placeholder="Type a tag..."
+                id="new-tag" action="toggleAddingNewTag"}}
+                <div class="action-button" {{action 'toggleAddingNewTag'}}>
+                    +
+                </div>
+            </div>
+        {{else}}
+            <div {{bind-attr class=":module-tag :new-tag"}} {{action 'toggleAddingNewTag'}}>
+                <span>Add Tag</span>
+
+                <div class="action-button">+</div>
+            </div>
+        {{/if}}
+    {{/if}}
+</div>
