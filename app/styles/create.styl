@@ -1,6 +1,6 @@
 /* Create Pages */
 .module-tag
-  background: #c8c8c8;
+  background: #909090;
   white-space: nowrap;
   position: relative;
   displaY: inline-block;
@@ -26,8 +26,8 @@
   ::-webkit-input-placeholder
     color: white
   .action-button
-    background: #a6a6a6;
-    color: #fff;
+    background: white;
+    color: #909090;
     width: 20px;
     height: 20px;
     border-radius: 50%;
@@ -39,7 +39,7 @@
     font-size: 18px;
     font-weight: bold;
     &:hover
-      background: lighten(#a6a6a6, 3);
+      background: darken(white, 3);
   .remove-tag
     position: absolute;
     top: 5px;
@@ -59,7 +59,17 @@
       background alpha(black, 0.3)
   &.no-edit
     padding-right marginPrimary
-
+  &.small
+    height: 24px;
+    min-width: 50px;
+    padding: 0 12px 0 30px;
+    line-height: 24px;
+    font-size: 10px;
+    .icon
+      font-size: 14px;
+      left: 6px;
+      right: 4px;
+      top: 6px;
 .category-tag
   background: colorBackground;
   white-space: nowrap;
@@ -92,6 +102,16 @@
       color white
     &:hover
       background alpha(black, 0.06)
+  &.small
+    height: 24px;
+    min-width: 50px;
+    padding: 0 10px 0 30px;
+    line-height: 20px;
+    font-size: 10px;
+    .icon
+      font-size 16px
+      left 4px
+      right 4px
 
 .privacy-switch {
   position: relative; width: 90px;

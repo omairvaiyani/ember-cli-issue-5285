@@ -3,56 +3,34 @@
         {{#unless mini}}
             <div {{bind-attr class=":card :list-card :margin-top-16"}}>
                 <div class="left inline-top">
-                    <h4>
-                        {{test.title}}
-                    </h4>
+                    {{!--
+                     {{#if showMemoryStrength}}
+                         <div class="memory-strength inline-top margin-right-16">
+                             {{#tool-tipster title="Memory Strength" class='inline-block'}}
+                                 <div class="brain-bulb-fill" {{bind-attr style=test.memoryStrengthMeterStyle}}></div>
+                                 <div class="grey-fill" {{bind-attr style=test.memoryStrengthMeterInverseStyle}}></div>
+                                 <img {{bind-attr src=test.memoryStrengthSrc}} />
+                                 <label>
+                                     {{test.memoryStrength}}
+                                 </label>
+                             {{/tool-tipster}}
+                         </div>
+                     {{/if}}
+                        --}}
 
-                    <p class="small margin-bottom-8">
-                        {{test.totalQuestions}} {{pluralize-word 'question' test.totalQuestions}}
-                        {{#if test.latestAttempt}} | Last attempt {{test.latestAttempt.score}}%
-                            {{simple-date test.latestAttempt.createdAt}}{{/if}}
-                    </p>
+                     {{#if showSRIcon}}
+                         <div class="special-icon inline-block">
+                             <img src="/img/brain-bulb-small-gradient.png"/>
+                         </div>
+                     {{/if}}
 
-                    <p class="margin-bottom-8">{{text-preview test.description 120}}</p>
-
-                    <ul class="tags">
-                        {{#if test.category}}
-                            <li {{bind-attr class=":tag :category test.category.isActive"}}
-                                {{action 'toggleCategoryFilter' test.category}}>
-                                {{test.category.distinctName}}
-                            </li>
-                        {{/if}}
-                        {{#each test.tags itemController="component.testCard.item.tag" as |tag|}}
-                            <li {{bind-attr class=":tag tag.isActive"}} {{action 'toggleTagFilter' tag.model}}>
-                                {{tag.model}}
-                            </li>
-                        {{/each}}
-                    </ul>
-                </div>
-
-                <div class="right inline-top">
-                    {{#if showMemoryStrength}}
-                        <div class="memory-strength inline-top margin-right-16">
-                            {{#tool-tipster title="Memory Strength" class='inline-block'}}
-                                <div class="brain-bulb-fill" {{bind-attr style=test.memoryStrengthMeterStyle}}></div>
-                                <div class="grey-fill" {{bind-attr style=test.memoryStrengthMeterInverseStyle}}></div>
-                                <img {{bind-attr src=test.memoryStrengthSrc}} />
-                                <label>
-                                    {{test.memoryStrength}}
-                                </label>
-                            {{/tool-tipster}}
-                        </div>
-                    {{/if}}
-                    {{#if showSRIcon}}
-                        <div class="inline-top">
-                            <img src="/img/brain-bulb-small-gradient.png" height="50px"/>
-                        </div>
-                    {{/if}}
                     {{#if showProfilePicture}}
-                        <div class="author inline-top">
+                        <div class="author inline-block">
                             {{profile-picture user=test.author}}
                         </div>
                     {{/if}}
+
+                    {{!--
 
                     <div class="right-bottom">
                         <button {{action 'openModal' 'browse/modal/test-info' 'browse.modal.testInfo' test}}
@@ -90,6 +68,106 @@
                             </div>
                         {{/if}}
                     </div>
+                    --}}
+                </div>
+
+                <div class="right inline-top">
+                    <h4 class="margin-bottom-8 title">
+                        {{test.title}}
+                    </h4>
+
+                    <p class="margin-bottom-8 small description">{{test.description}}</p>
+
+                    {{category-tags test=test parentController=this small=true class="inline-top"}}
+                    {{module-tags test=test parentController=this small=true class="inline-top"}}
+                    {{!--
+                    <ul class="tags">
+                        {{#if test.category}}
+                            <li {{bind-attr class=":tag :category test.category.isActive"}}
+                                {{action 'toggleCategoryFilter' test.category}}>
+                                {{test.category.distinctName}}
+                            </li>
+                        {{/if}}
+                        {{#each test.tags itemController="component.testCard.item.tag" as |tag|}}
+                            <li {{bind-attr class=":tag tag.isActive"}} {{action 'toggleTagFilter' tag.model}}>
+                                {{tag.model}}
+                            </li>
+                        {{/each}}
+                    </ul>
+                    --}}
+                    <div class="extra-actions-item-container">
+                        {{#if showSave}}
+                            <button class="btn btn-default right-border no-margin" {{action "saveTest"}}>
+                                <i class="fa fa-fw fa-heart"></i> Add to Favourites
+                            </button>
+                        {{/if}}
+                        <button class="btn btn-default no-margin">
+                            <i class="fa fa-fw fa-share-alt"></i> Share
+                        </button>
+                        {{#if showMenuOverFlow}}
+                            <div class="btn-group no-margin inline-block">
+                                <button class="btn btn-default btn-flat dropdown-toggle no-margin"
+                                        data-toggle="dropdown"
+                                        aria-expanded="false">
+                                    <i class="mdi-navigation-more-vert"></i>
+                                </button>
+                                <ul class="dropdown-menu" role="menu">
+                                    {{#if showEdit}}
+                                        {{#link-to 'edit' test.slug tagName='li'}}{{#link-to 'edit' test.slug}}
+                                            Edit{{/link-to}}{{/link-to}}
+                                    {{/if}}
+                                    {{#if showDelete}}
+                                        <li><a href="javascript:void(0)" {{action 'deleteTest'}}>Delete</a></li>
+                                    {{/if}}
+                                    {{#if showRemove}}
+                                        <li><a href="javascript:void(0)" {{action 'removeTest'}}>Remove</a></li>
+                                    {{/if}}
+                                    {{#if showDismiss}}
+                                        <li><a href="javascript:void(0)" {{action 'dismissLatestSRTest'}}>Dismiss</a>
+                                        </li>
+                                    {{/if}}
+                                </ul>
+                            </div>
+                        {{/if}}
+                    </div>
+                </div>
+
+                <hr class="full-hr margin-bottom-8 margin-top-8">
+
+                <div class="bottom">
+                    <section class="row">
+                        <article class="col-xs-12 col-sm-6">
+                            <div class="stat-container">
+                                <div class="stat-icon-container inline-block">
+                                    <i class="fa fa-fw fa-question stat-icon"></i>
+                                </div>
+                                <span>{{test.totalQuestions}}</span>
+                            </div>
+
+                            <div class="vertical-separator"></div>
+
+                            <div class="stat-container">
+                                <div class="stat-icon-container inline-block">
+                                    <i class="fa fa-fw fa-pencil stat-icon"></i>
+                                </div>
+                                <span class="inline-block">{{test.numberOfAttempts}}</span>
+                            </div>
+
+                            <div class="vertical-separator"></div>
+
+                            <div class="stat-container">
+                                <div class="stat-icon-container inline-block">
+                                    <i class="fa fa-fw fa-flag-checkered stat-icon"></i>
+                                </div>
+                                <span class="inline-block">{{test.averageScore}}%</span>
+                            </div>
+                        </article>
+                        <article class="col-xs-12 col-sm-6">
+                            {{#link-to 'test' test.slug tagName="button" class="btn btn-info btn-ghost"}}
+                                Take Test
+                            {{/link-to}}
+                        </article>
+                    </section>
                 </div>
             </div>
         {{else}}

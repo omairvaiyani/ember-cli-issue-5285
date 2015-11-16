@@ -5,6 +5,16 @@
 .btn
   border-radius 3px
 
+.btn-ghost
+  border 2px colorSecondary solid
+  background transparent !important
+  font-weight 400
+  &.btn-primary
+    color colorPrimary !important
+  &.btn-info
+    border-color colorInfo
+    color colorInfo !important
+
 .btn-with-icon
   padding 0
   border 1px solid colorPrimary-800
@@ -18,9 +28,6 @@
         color: white;
         width: 13px;
   &.btn-ghost
-    border 2px colorSecondary solid
-    background transparent
-    color colorSecondary !important
     span
       &.right-section
         border-left: 2px solid colorSecondary;
@@ -431,6 +438,108 @@ input[type="range"]::-webkit-slider-thumb {
     -webkit-transform: perspective(120px) rotateX(-180deg) rotateY(-179.9deg);
   }
 }
+.vertical-separator
+  margin-left marginSecondary
+  margin-right marginSecondary
+  max-height 50px
+  height 20px
+  border-left 1px solid alpha(colorLightText, 0.45)
+  display inline-block
+  vertical-align middle
+
+.list-card
+  padding marginSecondary
+  .left
+    width: 96px
+    height 96px
+    padding 4px
+    text-align center
+    line-height 140px
+    @media (min-width screenSmall)
+      line-height 96px
+    .author, .special-icon
+      height 80px
+      .profile-picture, img
+        height: 80px;
+        width: 80px;
+        display inline-block
+        vertical-align: top
+        background-size cover
+      img
+        width auto
+  .right
+    width calc(100% - 100px)
+    min-height 108px
+    .title
+      margin-top 34px
+      font-weight 400
+      @media(min-width screenSmall)
+        max-width calc(100% - 225px)
+        margin-top marginSecondary
+    .description
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    .extra-actions-item-container
+      position absolute
+      top 0
+      right 0
+      height 35px
+      border-bottom 1px solid colorBorder
+      border-left 1px solid colorBorder
+      background white
+      button
+        width: auto;
+        padding: 8px 6px;
+        font-size: 12px;
+        color: colorPrimary !important;
+        background: white;
+        &.right-border
+          border-right 1px solid colorBorder
+      .btn.dropdown-toggle
+        padding: 5px 5px;
+        border-left 1px solid colorBorder
+  .full-hr
+    width: calc(100% + 16px);
+    margin-left: -8px !important
+  .bottom
+    height 35px
+    line-height 35px
+    text-align center
+    @media (min-width screenSmall)
+      text-align left
+    .stat-container
+      height 100%
+      line-height 100%
+      display inline-block
+      vertical-align middle
+      .stat-icon-container
+        border-radius 50%
+        height: 35px;
+        width: 35px;
+        border: 1px solid colorPrimary;
+        font-size: 20px;
+        line-height: 32px;
+        margin-right: 4px;
+        text-align: center;
+    button
+      margin marginPrimary 0 0 0
+      @media(min-width screenSmall)
+        float right
+        margin-top 0
+  &.mini
+    height 120px
+    overflow hidden
+    .title
+      font-size 12px
+      margin-bottom 2px
+    .subtitle
+      display none
+      font-size 12px
+      margin-bottom 0
+    .card-fade
+      display none
+
 
 .notification-container {
   position: fixed;
