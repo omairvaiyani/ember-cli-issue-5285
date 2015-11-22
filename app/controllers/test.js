@@ -72,6 +72,17 @@ export default Ember.Controller.extend(CurrentUser, {
         return "https://mycqs.com/test/" + this.get('model.slug');
     }.property('model.slug.length'),
 
+    /**
+     * Question Progress Bar
+     */
+    questionProgress: function () {
+        return (this.get('currentQuestionIndex') / this.get('shuffledQuestions.length')) * 100;
+    }.property('currentQuestionIndex', 'shuffledQuestions.length'),
+
+    questionProgressStyle: function () {
+        return "width: "+this.get('questionProgress')+"%;";
+    }.property('questionProgress'),
+
     actions: {
         optionSelected: function (optionIndex) {
             /*

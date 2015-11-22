@@ -1,0 +1,111 @@
+/*
+ * Take Test
+ */
+.take-test.card
+  padding-bottom 8px
+  .title
+    color colorSecondary
+    margin-top 0
+    margin-bottom marginPrimary
+    font-weight 400
+  .category-tag-container
+    margin-top: -7px;
+    margin-right: -(marginSecondary);
+  .question-progress-container
+    width calc(100% + 32px)
+    height 8px
+    margin-left -(marginPrimary)
+    border-radius 2px
+    background colorBorder
+    border-top 1px solid darken(colorBorder, 4)
+    .question-progress
+      backgroundGradient(0)
+      float left
+      width 0
+      height 100%
+      transition width 0.5s
+  .question-stem-container
+    width 100%
+    .question-counter
+      font-weight: 400;
+      font-size: 20px;
+      border-radius: 50%;
+      border: 1px solid colorSecondary;
+      color: colorSecondary;
+      height: 32px;
+      width: 32px;
+      line-height: 30px;
+      text-align: center;
+      margin-right: marginPrimary
+    .question-stem
+      font-weight 400
+      font-size 20px
+      width calc(100% - 52px)
+  .options-container
+    .option
+      font-size: 16px;
+      padding: marginSecondary marginPrimary !important
+      cursor: default;
+      margin: 0 marginPrimary marginSecondary marginPrimary;
+      width: calc(100% - 32px);
+      .option-label
+        font-weight: 400;
+        font-size: 14px;
+        border-radius: 50%;
+        background-color colorGreen
+        color: whitesmoke;
+        height: 24px;
+        width: 24px;
+        line-height: 24px;
+        text-align: center;
+        margin-right: marginPrimary
+      &.is-selected
+        background-color: colorBorder;
+        border 1px solid colorDarkBackground
+      &:hover
+        background-color colorBackground
+      &:active
+        background-color: darken(colorBackground, 2)
+  .question-navigation-container
+    position relative
+    .navigation-counter
+      position absolute
+      width 100px
+      left calc(50% - 50px)
+      height 50px
+      top calc(50% - 25px)
+      line-height 50px
+      text-align center
+
+.author-info-card
+  padding 0
+  margin-bottom marginPrimary
+  .panel-body
+    padding 0
+    padding-top marginPrimary
+  .full-hr
+    width 100%
+    margin-left 0 !important
+  .author-stats-container
+    width 100%
+    .author-stats
+      width calc(50% - 4px)
+      text-align center
+      &.border-left
+        border-left 1px solid colorBorder
+      .icon-container
+        width 35%
+        .icon
+           color colorPrimary
+           font-size 26px
+      .stat-container
+        text-align left
+        .stat-label
+          font-size 14px
+          color lighten(colorText, 4)
+          margin-bottom 4px
+        .stat
+          font-size 14px
+          font-weight bold
+
+

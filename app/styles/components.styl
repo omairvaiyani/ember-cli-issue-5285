@@ -9,6 +9,7 @@
   border 2px colorSecondary solid
   background transparent !important
   font-weight 400
+  color colorSecondary !important
   &.btn-primary
     color colorPrimary !important
   &.btn-info
@@ -20,22 +21,28 @@
   border 1px solid colorPrimary-800
   span
     padding 0 24px
-    &.right-section
+    &.right-section, &.left-section
       padding 6px 10px
       text-align: center;
       border-left: 1px solid colorPrimary-800;
       .icon
         color: white;
         width: 13px;
+    &.left-section
+      border-left none
+      border-right: 1px solid colorPrimary-800;
   &.btn-ghost
-    span
-      &.right-section
-        border-left: 2px solid colorSecondary;
-  &.btn-info, &.btn-success, &.btn-danger, &.btn-warning
-    border: 1px solid alpha(black, 0.15)
-    span
-      &.right-section
-        border-left 1px solid alpha(black, 0.15)
+      color colorSecondary !important
+      span
+        &.right-section
+          border-left: 2px solid colorSecondary;
+    &.btn-info, &.btn-success, &.btn-danger, &.btn-warning, &.btn-default
+      border: 1px solid alpha(black, 0.15)
+      span
+        &.right-section
+          border-left-color alpha(black, 0.15)
+        &.left-section
+          border-right-color alpha(black, 0.15)
 
 .card
   position relative

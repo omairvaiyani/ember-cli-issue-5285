@@ -1,14 +1,60 @@
-<div class="card author-info">
-    <h4>Author info</h4>
-    {{profile-picture user=model.author}}
-    {{#link-to 'user' model.author.slug}}<p class="name">{{model.author.name}}</p>{{/link-to}}
-    <hr>
-    <p>Tests
-        <small class="pull-right">{{#link-to 'user.tests' model.author.slug}}
-            {{model.author.numberOfTests}}{{/link-to}}</small>
-    </p>
-    <p>Followers
-        <small class="pull-right">{{#link-to 'user.followers' model.author.slug}}
-            {{model.author.numberOfFollowers}}{{/link-to}}</small>
-    </p>
+<div class="panel panel-default card author-info-card">
+    <div class="panel-heading">
+        <h3 class="panel-title">Author Info</h3>
+    </div>
+    <div class="panel-body author-info text-center">
+
+        {{!-- Author Details --}}
+        <div class="margin-left-16 margin-right-16">
+            {{profile-picture user=model.author height=80 width=80}}
+            <h4 class="text-uppercase">{{#link-to 'user' model.author.slug}}{{model.author.name}}{{/link-to}}</h4>
+
+            {{!-- Education --}}
+            {{#if model.author.educationCohort}}
+                <hr class="mini-hr"/>
+
+                {{#if model.author.educationCohort.currentYear}}
+                    <div class="inline-block">
+                        <i class="fa fa-fw fa-group margin-right-8"></i>
+                        {{model.author.educationCohort.currentYear}}
+                    </div>
+                {{/if}}
+                {{#if model.author.educationCohort.studyField}}
+                    <div class="margin-left-16 inline-block"><i class="fa fa-w fa-book margin-right-8"></i><a
+                        {{bind-attr href=model.author.educationCohort.studyField.url}}
+                            target="_blank">{{model.author.educationCohort.studyField.name}}</a></div>
+                {{/if}}
+                {{#if model.author.educationCohort.institution}}
+                    <div class="margin-left-16 inline-block"><i class="fa fa-fw fa-university margin-right-8"></i><a
+                        {{bind-attr href=model.author.educationCohort.institution.url}}
+                            target="_blank">{{model.author.educationCohort.institution.name}}</a></div>
+                {{/if}}
+            {{/if}}
+        </div>
+
+        <hr class="full-hr margin-bottom-0">
+
+        {{!-- Author Stats --}}
+
+        <div class="author-stats-container">
+
+            {{!-- Num Tests --}}
+            <div class="author-stats inline-block">
+                <div class="icon-container inline-block"><i class="fa fa-fw fa-list-alt icon"></i></div>
+                <div class="stat-container inline-block">
+                    <h4 class="stat-label margin-top-16">Tests</h4>
+                    <h4 class="stat margin-top-0 margin-bottom-16">{{model.author.numberOfTestsCreated}}</h4>
+                </div>
+            </div>
+
+            {{!-- Num Followers --}}
+            <div class="author-stats inline-block border-left">
+                <div class="icon-container inline-block"><i class="fa fa-fw fa-users icon"></i></div>
+                <div class="stat-container inline-block">
+                    <h4 class="stat-label margin-top-16">Followers</h4>
+                    <h4 class="stat margin-top-0 margin-bottom-16">{{model.author.numberOfFollowers}}</h4>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
