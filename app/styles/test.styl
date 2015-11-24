@@ -12,6 +12,7 @@
     margin-top: -7px;
     margin-right: -(marginSecondary);
   .question-progress-container
+    position relative
     width calc(100% + 32px)
     height 8px
     margin-left -(marginPrimary)
@@ -19,6 +20,7 @@
     background colorBorder
     border-top 1px solid darken(colorBorder, 4)
     .question-progress
+      position absolute
       backgroundGradient(0)
       float left
       width 0
@@ -107,5 +109,44 @@
         .stat
           font-size 14px
           font-weight bold
+  &.modal-type
+    background-color colorBackground
+    padding marginSecondary marginPrimary
+    border-top 1px solid colorBorder
+    border-bottom 1px solid colorBorder
+    .profile-image-container
+      vertical-align middle !important
+      .profile-image
+        width 30px
+        height 30px
+    .middle-section
+      width calc(100% - 168px)
+    .follow-button
+      width 100px
 
+
+.test-info-base
+  .modal-title
+    color colorSecondary !important
+    font-size 26px
+  .by-label
+    color lighten(colorText, 30)
+  .test-stats-container
+    width 100%
+    border-bottom 1px solid colorBorder
+    margin-top -(marginPrimary)
+    margin-bottom marginPrimary
+    .stat-container
+      width: 32%;
+      text-align: center;
+      padding marginPrimary
+      &.border-left
+        border-left 1px solid colorBorder
+      span
+        font-weight bold
+    .gauge-box
+      margin-top -4px
+  .description
+    font-weight 400
+    font-size 14px
 

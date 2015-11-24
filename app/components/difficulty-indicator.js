@@ -1,9 +1,9 @@
 import Ember from 'ember';
 
 export default Ember.Component.extend({
-    height: 40,
+    height: 30,
 
-    width: 80,
+    width: 60,
 
     foregroundColor: function () {
         return "#e73a3d";

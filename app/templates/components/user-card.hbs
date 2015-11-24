@@ -1,101 +1,177 @@
-<div class="row">
-    <div class="col-xs-12">
-        {{#unless mini}}
-            <div {{bind-attr class=":card :list-card :margin-top-16"}}>
-                <div class="left inline-top">
-                    <h4>
-                        {{user.name}}
-                    </h4>
+{{#if defaultCard}}
+    <div class="panel panel-default card author-info-card">
+        <div class="panel-heading">
+            <h3 class="panel-title">Author Info</h3>
+        </div>
+        <div class="panel-body author-info text-center">
 
-                    <p class="small margin-bottom-8">
-                        {{user.numberOfTestsCreated}} {{pluralize-word 'test' user.numberOfTestsCreated}}
-                    </p>
+            {{!-- Author Details --}}
+            <div class="margin-left-16 margin-right-16">
+                {{profile-picture user=user height=80 width=80}}
+                <h4 class="text-uppercase">{{#link-to 'user' user.slug}}{{user.name}}{{/link-to}}</h4>
+
+                {{!-- Education --}}
+                {{#if user.educationCohort}}
+                    <hr class="mini-hr"/>
 
                     {{#if user.educationCohort.currentYear}}
-                        <p><i class="fa fa-group margin-right-8"></i>{{user.educationCohort.currentYear}}</p>
-                    {{/if}}
-                    {{#if user.educationCohort.studyField}}
-                        <p><i class="fa fa-book margin-right-8"></i><a
-                            {{bind-attr href=user.educationCohort.studyField.url}}
-                                target="_blank">{{user.educationCohort.studyField.name}}</a></p>
-                    {{/if}}
-                    {{#if user.educationCohort.institution}}
-                        <p><i class="fa fa-university margin-right-8"></i><a
-                            {{bind-attr href=user.educationCohort.institution.url}}
-                                target="_blank">{{user.educationCohort.institution.name}}</a></p>
-                    {{/if}}
-                </div>
-
-                <div class="right inline-top">
-                    {{#if showProfilePicture}}
-                        <div class="author inline-top">
-                            {{profile-picture user=user}}
+                        <div class="inline-block">
+                            <i class="fa fa-fw fa-group margin-right-8"></i>
+                            {{user.educationCohort.currentYear}}
                         </div>
                     {{/if}}
+                    {{#if user.educationCohort.studyField}}
+                        <div class="margin-left-16 inline-block"><i class="fa fa-w fa-book margin-right-8"></i><a
+                            {{bind-attr href=user.educationCohort.studyField.url}}
+                                target="_blank">{{user.educationCohort.studyField.name}}</a></div>
+                    {{/if}}
+                    {{#if user.educationCohort.institution}}
+                        <div class="margin-left-16 inline-block"><i class="fa fa-fw fa-university margin-right-8"></i><a
+                            {{bind-attr href=user.educationCohort.institution.url}}
+                                target="_blank">{{user.educationCohort.institution.name}}</a></div>
+                    {{/if}}
+                {{/if}}
+            </div>
 
-                    <div class="right-bottom">
-                        <button {{action 'openModal' 'browse/modal/test-info' 'browse.modal.testInfo' test}}
-                                class="btn btn-primary">Take Test
-                        </button>
-                        {{#if showMenuOverFlow}}
-                            <div class="btn-group">
-                                <button type="button" class="btn btn-default btn-flat dropdown-toggle"
-                                        data-toggle="dropdown"
-                                        aria-expanded="false">
-                                    <i class="mdi-navigation-more-vert"></i>
-                                </button>
-                                <ul class="dropdown-menu" role="menu">
-                                    {{#if showEdit}}
-                                        {{#link-to 'edit' test.slug tagName='li'}}{{#link-to 'edit' test.slug}}
-                                            Edit{{/link-to}}{{/link-to}}
-                                    {{/if}}
-                                    {{#if showSave}}
-                                        <li><a href="javascript:void(0)" {{action 'saveTest'}}>Save</a></li>
-                                    {{/if}}
-                                    {{#if showShare}}
-                                        <li><a href="javascript:void(0)" {{action 'shareTest'}}>Share</a></li>
-                                    {{/if}}
-                                    {{#if showDelete}}
-                                        <li class="divider"></li>
-                                        <li><a href="javascript:void(0)" {{action 'deleteTest'}}>Delete</a></li>
-                                    {{/if}}
-                                    {{#if showRemove}}
-                                        <li class="divider"></li>
-                                        <li><a href="javascript:void(0)" {{action 'removeTest'}}>Remove</a></li>
-                                    {{/if}}
-                                </ul>
-                            </div>
-                        {{/if}}
+            <hr class="full-hr margin-bottom-0">
+
+            {{!-- Author Stats --}}
+
+            <div class="author-stats-container">
+
+                {{!-- Num Tests --}}
+                <div class="author-stats inline-block">
+                    <div class="icon-container inline-block"><i class="fa fa-fw fa-list-alt icon"></i></div>
+                    <div class="stat-container inline-block">
+                        <h4 class="stat-label margin-top-16">Tests</h4>
+                        <h4 class="stat margin-top-0 margin-bottom-16">{{user.numberOfTestsCreated}}</h4>
+                    </div>
+                </div>
+
+                {{!-- Num Followers --}}
+                <div class="author-stats inline-block border-left">
+                    <div class="icon-container inline-block"><i class="fa fa-fw fa-users icon"></i></div>
+                    <div class="stat-container inline-block">
+                        <h4 class="stat-label margin-top-16">Followers</h4>
+                        <h4 class="stat margin-top-0 margin-bottom-16">{{user.numberOfFollowers}}</h4>
                     </div>
                 </div>
             </div>
-        {{else}}
-            <div class="card list-card margin-top-16 mini">
-                <div class="card-fade"></div>
-                <div class="text-nowrap">
-                    <div class="inline-block margin-right-8">
-                        {{profile-picture user=user}}
-                    </div>
-                    <div class="inline-block">
-                        <p class="title no-margin">{{#link-to 'user.index' user.slug}}{{user.name}}{{/link-to}}</p>
-                        {{#if user.educationCohort.currentYear}}
-                            <p class="no-margin small">
-                                <i class="fa fa-group fa-fw"></i>&nbsp; {{user.educationCohort.currentYear}}
-                            </p>
-                        {{/if}}
-                        {{#if user.educationCohort.studyField}}
-                            <p class="no-margin small">
-                                <i class="fa fa-book fa-fw"></i>&nbsp; {{user.educationCohort.studyField.name}}
-                            </p>
-                        {{/if}}
-                        {{#if user.educationCohort.institution}}
-                            <p class="no-margin small">
-                                <i class="fa fa-university fa-fw"></i>&nbsp; {{user.educationCohort.institution.name}}
-                            </p>
-                        {{/if}}
-                    </div>
-                </div>
-            </div>
-        {{/unless}}
+        </div>
     </div>
-</div>
+{{/if}}
+
+{{#if modalCard}}
+    <div class="author-info-card modal-type">
+        {{profile-picture user=user class="profile-image-container"}}
+        <div class="middle-section inline-block">
+            <h4 class="text-uppercase margin-top-0">{{user.name}}</h4>
+            <h4 class="small margin-bottom-0">
+                {{user.numberOfFollowers}} {{pluralize-word 'follower' user.numberOfFollowers}}
+            </h4>
+        </div>
+        <button class="btn btn-success btn-sm follow-button" {{action 'followUser' user}}>
+            Follow
+        </button>
+    </div>
+{{/if}}
+
+{{#if miniListCard}}
+    <div class="card list-card margin-top-16 mini">
+        <div class="card-fade"></div>
+        <div class="text-nowrap">
+            <div class="inline-block margin-right-8">
+                {{profile-picture user=user}}
+            </div>
+            <div class="inline-block">
+                <p class="title no-margin">{{#link-to 'user.index' user.slug}}{{user.name}}{{/link-to}}</p>
+                {{#if user.educationCohort.currentYear}}
+                    <p class="no-margin small">
+                        <i class="fa fa-group fa-fw"></i>&nbsp; {{user.educationCohort.currentYear}}
+                    </p>
+                {{/if}}
+                {{#if user.educationCohort.studyField}}
+                    <p class="no-margin small">
+                        <i class="fa fa-book fa-fw"></i>&nbsp; {{user.educationCohort.studyField.name}}
+                    </p>
+                {{/if}}
+                {{#if user.educationCohort.institution}}
+                    <p class="no-margin small">
+                        <i class="fa fa-university fa-fw"></i>&nbsp; {{user.educationCohort.institution.name}}
+                    </p>
+                {{/if}}
+            </div>
+        </div>
+    </div>
+{{/if}}
+
+{{#if listCard}}
+    <div {{bind-attr class=":card :list-card :margin-top-16"}}>
+        <div class="left inline-top">
+            <h4>
+                {{user.name}}
+            </h4>
+
+            <p class="small margin-bottom-8">
+                {{user.numberOfTestsCreated}} {{pluralize-word 'test' user.numberOfTestsCreated}}
+            </p>
+
+            {{#if user.educationCohort.currentYear}}
+                <p><i class="fa fa-group margin-right-8"></i>{{user.educationCohort.currentYear}}</p>
+            {{/if}}
+            {{#if user.educationCohort.studyField}}
+                <p><i class="fa fa-book margin-right-8"></i><a
+                    {{bind-attr href=user.educationCohort.studyField.url}}
+                        target="_blank">{{user.educationCohort.studyField.name}}</a></p>
+            {{/if}}
+            {{#if user.educationCohort.institution}}
+                <p><i class="fa fa-university margin-right-8"></i><a
+                    {{bind-attr href=user.educationCohort.institution.url}}
+                        target="_blank">{{user.educationCohort.institution.name}}</a></p>
+            {{/if}}
+        </div>
+
+        <div class="right inline-top">
+            {{#if showProfilePicture}}
+                <div class="author inline-top">
+                    {{profile-picture user=user}}
+                </div>
+            {{/if}}
+
+            <div class="right-bottom">
+                <button {{action 'openModal' 'browse/modal/test-info' 'browse.modal.testInfo' test}}
+                        class="btn btn-primary">Take Test
+                </button>
+                {{#if showMenuOverFlow}}
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-default btn-flat dropdown-toggle"
+                                data-toggle="dropdown"
+                                aria-expanded="false">
+                            <i class="mdi-navigation-more-vert"></i>
+                        </button>
+                        <ul class="dropdown-menu" role="menu">
+                            {{#if showEdit}}
+                                {{#link-to 'edit' test.slug tagName='li'}}{{#link-to 'edit' test.slug}}
+                                    Edit{{/link-to}}{{/link-to}}
+                            {{/if}}
+                            {{#if showSave}}
+                                <li><a href="javascript:void(0)" {{action 'saveTest'}}>Save</a></li>
+                            {{/if}}
+                            {{#if showShare}}
+                                <li><a href="javascript:void(0)" {{action 'shareTest'}}>Share</a></li>
+                            {{/if}}
+                            {{#if showDelete}}
+                                <li class="divider"></li>
+                                <li><a href="javascript:void(0)" {{action 'deleteTest'}}>Delete</a></li>
+                            {{/if}}
+                            {{#if showRemove}}
+                                <li class="divider"></li>
+                                <li><a href="javascript:void(0)" {{action 'removeTest'}}>Remove</a></li>
+                            {{/if}}
+                        </ul>
+                    </div>
+                {{/if}}
+            </div>
+        </div>
+    </div>
+{{/if}}

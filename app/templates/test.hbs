@@ -200,7 +200,7 @@
                         </article>
                     {{else}}
                         <article class="col-md-12 col-sm-6 col-xs-12 margin-bottom-16">
-                            {{partial 'user/author-info'}}
+                            {{user-card user=model.author}}
                         </article>
                     {{/if}}
                 {{else}}

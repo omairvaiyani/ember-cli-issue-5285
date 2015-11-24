@@ -16,13 +16,6 @@ export default Ember.Controller.extend(CurrentUser, {
         }
     }.observes('preparingTest'),
 
-    modal: {
-        title: "",
-        message: "",
-        suggestions: "",
-        error: false
-    },
-
     shuffledQuestions: new Ember.A(),
 
     currentQuestionIndex: 0,
@@ -76,12 +69,28 @@ export default Ember.Controller.extend(CurrentUser, {
      * Question Progress Bar
      */
     questionProgress: function () {
-        return (this.get('currentQuestionIndex') / this.get('shuffledQuestions.length')) * 100;
-    }.property('currentQuestionIndex', 'shuffledQuestions.length'),
+        return (this.get('questionsAnswered.length') / this.get('shuffledQuestions.length')) * 100;
+    }.property('questionsAnswered.length', 'shuffledQuestions.length'),
 
     questionProgressStyle: function () {
         return "width: "+this.get('questionProgress')+"%;";
     }.property('questionProgress'),
+
+    finishTestAlertMessage: function () {
+        var message,
+            totalQuestions = this.get('shuffledQuestions.length'),
+            questionsAnswered = this.get('questionsAnswered.length'),
+            questionsSkipped = totalQuestions - questionsAnswered;
+
+        if(!questionsSkipped)
+            message = "You have answered all "+this.get('shuffledQuestions.length')+" questions.";
+        else if (questionsAnswered)
+            message = "You have skipped "+ questionsSkipped +" questions.";
+        else
+            message = "You have not answered any of the "+totalQuestions+" questions.";
+
+        return message;
+    }.property('shuffledQuestions.length', 'questionsAnswered.length'),
 
     actions: {
         optionSelected: function (optionIndex) {
@@ -127,25 +136,6 @@ export default Ember.Controller.extend(CurrentUser, {
 
         },
         confirmFinish: function () {
-            this.set('modal.error', false);
-            if (!this.get('questionsAnswered.length')) {
-                this.set('modal.title', "Error!");
-                this.set('modal.message', "We cannot mark your test if you do not answer any questions!");
-                this.set('modal.suggestions', "Please press 'Go back' to return to the test");
-                this.set('modal.error', true);
-            } else if (this.get('questionsAnswered.length') < this.get('shuffledQuestions.length')) {
-                this.set('modal.title', "Are you sure you have finished?");
-                this.set('modal.message', "You have only answered " + this.get('questionsAnswered.length') +
-                " of " + this.get('questions.length') + " questions!");
-                this.set('modal.suggestions', "You can skip those questions by pressing 'Mark test' or " +
-                "press 'Go back' to return to the test.");
-            } else {
-                this.set('modal.title', "Finish");
-                this.set('modal.message', "You have answered all " + this.get('shuffledQuestions.length') + " questions!");
-                this.set('modal.suggestions', "Get your results by pressing 'Mark test', or check your answers by pressing" +
-                " 'Go back'.");
-            }
-
             this.send('openModal', 'test/modals/finish-test', 'test');
         },
         /**

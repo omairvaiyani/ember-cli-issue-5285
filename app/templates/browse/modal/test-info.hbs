@@ -1,23 +1,23 @@
-<div class="modal-header">
-    <h4 class="modal-title">{{title}}</h4>
-</div>
-<div class="modal-body">
+<div class="modal-body synap-modal top-image">
+    <div class="modal-image">
+        <img src="img/icon-gradient-1024.png"/>
+    </div>
+
     {{partial 'test/test-info-base'}}
-</div>
-<div class="modal-footer">
-    <div class="container-fluid">
-        <section class="row">
-            <article class="col-xs-12">
-                {{#if currentUser}}
-                    {{#if currentUser.isMobileUser}}
-                        <button type="button" class="btn btn-info pull-left"
-                            {{action 'sendPush' this 'toMobile' this.model}}><span
-                                class="glyphicon glyphicon-phone"></span> {{sendToMobileButtonText}}
-                        </button>
-                    {{/if}}
-                {{/if}}
-                {{#link-to 'test' slug tagName='a' classNames="btn btn-primary margin-bottom-16"}}Take test{{/link-to}}
-            </article>
-        </section>
+
+    {{#if showSendToMobile}}
+        {{!-- TODO adapt controller code, update cloud code, adjust style--}}
+        <button type="button" class="btn btn-info pull-left"
+            {{action 'sendPush' this 'toMobile' model}}><span
+                class="glyphicon glyphicon-phone"></span> {{sendToMobileButtonText}}
+        </button>
+    {{/if}}
+
+    {{#link-to 'test' model.slug class="btn btn-info action-button" tagName="button"}}
+        Take Quiz
+    {{/link-to}}
+
+    <div class="close-modal" data-dismiss="modal">
+        <span class="icon">&#10005;</span>
     </div>
 </div>

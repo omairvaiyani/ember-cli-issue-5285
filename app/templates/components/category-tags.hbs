@@ -31,7 +31,7 @@
 
 {{#if test.category}}
 {{!-- Category Tags --}}
-    <div {{bind-attr class=":tags :margin-bottom-8 center:text-center"}}>
+    <div {{bind-attr class=":tags :margin-bottom-8 center:text-center centre:text-center"}}>
         {{#if test.category.parent}}
             <div {{action 'removeCategory' test.category.parent}}
                     {{bind-attr class=":category-tag inverseStyle:inverse small"}}>

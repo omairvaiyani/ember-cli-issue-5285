@@ -65,18 +65,19 @@
   padding 0
 
 .gauge-box
+  position relative
   .gauge-holder
-    height 65px
-    width 80px
+    height 36px
+    width 60px
     margin auto
   label.easy
     position: absolute;
-    left: calc(50% - 48px);
-    top 40px
+    left: calc(50% - 40px);
+    top 30px
   label.hard
     position: absolute;
-    right: calc(50% - 48px)
-    top 40px
+    right: calc(50% - 40px)
+    top 30px
 
 .icon-only-loader
   height: 60px;
@@ -106,6 +107,14 @@
 
 .btn-facebook:hover, .btn-facebook:focus
   color white
+
+.btn.fulfilled {
+  background-color: green;
+}
+
+.btn.rejected {
+  background-color: crimson;
+}
 
 .hidden-file-input {
   position: absolute;
@@ -188,12 +197,72 @@ textarea.form-input
   text-decoration: underline;
 }
 
-.modal-dialog
-  padding 24px
-  .modal-content
-    border-radius 8px
-    .modal-title
-      color colorPrimary-600
+.modal
+  background alpha(black, 0.5)
+  .modal-dialog
+    padding 24px
+    width 448px
+    margin 90px auto
+    .modal-content
+      box-shadow none
+      width 400px
+      border-radius marginSecondary
+      .modal-title
+        color colorPrimary-600
+    .modal-image
+      position absolute
+      top -50px
+      left calc(50% - 50px)
+      height 100px
+      width 100px
+      border 1px solid colorSecondary
+      border-radius 50%
+      padding: marginPrimary
+      background: rgba(255,255,255,1);
+      background: -moz-linear-gradient(-45deg, rgba(255,255,255,1) 0%, rgba(255,255,255,1) 50%, darken(white, 2) 50%, darken(white, 2) 71%, darken(white, 2) 100%);
+      background: -webkit-gradient(left top, right bottom, color-stop(0%, rgba(255,255,255,1)), color-stop(50%, rgba(255,255,255,1)), color-stop(50%, darken(white, 2)), color-stop(71%, darken(white, 2)), color-stop(100%, darken(white, 2)));
+      background: -webkit-linear-gradient(-45deg, rgba(255,255,255,1) 0%, rgba(255,255,255,1) 50%, darken(white, 2) 50%, darken(white, 2) 71%, darken(white, 2) 100%);
+      background: -o-linear-gradient(-45deg, rgba(255,255,255,1) 0%, rgba(255,255,255,1) 50%, darken(white, 2) 50%, darken(white, 2) 71%, darken(white, 2) 100%);
+      background: -ms-linear-gradient(-45deg, rgba(255,255,255,1) 0%, rgba(255,255,255,1) 50%, darken(white, 2) 50%, darken(white, 2) 71%, darken(white, 2) 100%);
+      img
+        height 100%
+    .synap-modal
+      padding marginPrimary 0 60px 0 !important
+      &.top-image
+        padding-top 56px
+      .message
+        width 100%
+        text-align center
+        margin-top marginPrimary
+        font-weight 400
+        font-size 16px
+      button.action-button
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        margin: 0;
+        height: 50px;
+        width: 100%;
+        border-radius: 0 0 8px 8px;
+      .close-modal
+        position absolute
+        width 40px
+        height 40px
+        bottom -56px
+        left calc(50% - 20px)
+        border 2px solid colorBorder
+        border-radius 50%
+        cursor pointer
+        text-align center
+        line-height 36px
+        .icon
+          font-size 24px
+          color colorBorder
+        &:hover
+          border-color lighten(colorBorder, 10)
+          .icon
+            color lighten(colorBorder, 10)
 
 .onoffswitch {
   position: relative;
@@ -515,20 +584,6 @@ input[type="range"]::-webkit-slider-thumb {
     text-align center
     @media (min-width screenSmall)
       text-align left
-    .stat-container
-      height 100%
-      line-height 100%
-      display inline-block
-      vertical-align middle
-      .stat-icon-container
-        border-radius 50%
-        height: 35px;
-        width: 35px;
-        border: 1px solid colorPrimary;
-        font-size: 20px;
-        line-height: 32px;
-        margin-right: 4px;
-        text-align: center;
     button
       margin marginPrimary 0 0 0
       @media(min-width screenSmall)
@@ -702,10 +757,17 @@ input[type="range"]::-webkit-slider-thumb {
       &::before
         background darken(colorSecondary, 10)
 
-.btn.fulfilled {
-  background-color: green;
-}
-
-.btn.rejected {
-  background-color: crimson;
-}
+.stat-container
+  height 100%
+  line-height 100%
+  display inline-block
+  vertical-align middle
+  .stat-icon-container
+    border-radius 50%
+    height: 35px;
+    width: 35px;
+    border: 1px solid colorPrimary;
+    font-size: 20px;
+    line-height: 32px;
+    margin-right: 4px;
+    text-align: center;

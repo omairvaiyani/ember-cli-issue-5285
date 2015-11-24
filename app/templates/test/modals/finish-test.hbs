@@ -1,15 +1,23 @@
-<div class="modal-header">
-    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span
-            class="sr-only">Close</span></button>
-    <h4 class="modal-title">{{modal.title}}</h4>
-</div>
-<div class="modal-body">
-    <p>{{modal.message}}</p>
-    <p>{{modal.suggestions}}</p>
-</div>
-<div class="modal-footer">
-    <button type="button" class="btn btn-default" data-dismiss="modal">Go back</button>
-    {{#unless modal.error}}
-        <button type="button" class="btn btn-primary" {{action 'markTest'}}>Mark test</button>
-    {{/unless}}
+<div class="modal-body synap-modal">
+    <div class="container-fluid">
+        <section class="row">
+            <article class="col-xs-12">
+                <h4 class="modal-title text-center margin-bottom-0">Are You Sure?</h4>
+            </article>
+        </section>
+
+        <section class="row">
+            <article class="col-xs-12">
+                <p class="message">{{finishTestAlertMessage}}</p>
+            </article>
+        </section>
+    </div>
+
+    <button class="btn btn-info action-button" {{action 'markTest'}}>
+        Mark Test
+    </button>
+
+    <div class="close-modal" data-dismiss="modal">
+        <span class="icon">&#10005;</span>
+    </div>
 </div>

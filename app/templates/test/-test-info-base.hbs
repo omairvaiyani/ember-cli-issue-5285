@@ -1,63 +1,47 @@
-<div class="container-fluid">
+<div class="test-info-base">
 
-    {{!-- Questions | Difficulty | Memory --}}
-    <section class="row">
-        {{!-- Questions --}}
-        <article class="col-sm-4 margin-bottom-16">
-            <h2 class="text-center" style="height:45px;">{{model.totalQuestions}}</h2>
-            <h5 class="text-center">QUESTIONS</h5>
-        </article>
+    <div class="container-fluid">
+        <section class="row">
+            <article class="col-xs-12">
+                <h4 class="modal-title text-center margin-bottom-0">{{model.title}}</h4>
+                <h5 class="by-label text-center margin-top-0 margin-bottom-16">BY</h5>
+            </article>
+        </section>
+    </div>
 
-        {{!-- Difficulty --}}
-        <article class="col-sm-4 col-fix-middle margin-bottom-16">
-           {{difficulty-indicator difficulty=model.difficulty}}
-            <h5 class="text-center">DIFFICULTY</h5>
-        </article>
+    {{user-card user=model.author cardType="modal" class="margin-bottom-0"}}
 
-        {{!-- Memory --}}
-        <article class="col-sm-4 col-fix-right text-center margin-bottom-16">
-            <h3 class="text-center no-margin" style="height:65px;">
-                {{#tool-tipster title="Memory Strength" class='inline-block memory-strength'}}
-                    <span class="brain-bulb-fill" {{bind-attr style=model.memoryStrengthMeterStyle}}></span>
-                    <span class="grey-fill" {{bind-attr style=model.memoryStrengthMeterInverseStyle}}></span>
-                    <img {{bind-attr src=model.memoryStrengthSrc}} />
-                {{/tool-tipster}}
-            </h3>
-            <h5 class="text-center">MEMORY</h5>
-        </article>
-    </section>
+    <div class="test-stats-container">
+        <div class="stat-container">
+            <div class="stat-icon-container inline-block">
+                <i class="fa fa-fw fa-question stat-icon"></i>
+            </div>
+            <span>{{model.totalQuestions}}</span>
+        </div>
+        <div class="stat-container border-left">
+            <div class="stat-icon-container inline-block">
+                <i class="fa fa-fw fa-pencil-square stat-icon"></i>
+            </div>
+            <span>{{model.numberOfAttempts}}</span>
+        </div>
+        <div class="stat-container border-left">
+            {{difficulty-indicator difficulty=model.difficulty}}
+        </div>
+    </div>
 
-    {{!-- Category | Tags --}}
-    <section class="row margin-bottom-16">
-        <article class="col-xs-12">
-            <ul class="tags text-center">
-                {{!-- Category --}}
-                {{#if model.category}}
-                    <li {{bind-attr class=":tag :category model.category.isActive"}}
-                        {{action 'toggleCategoryFilter' model.category}}>
-                        {{model.category.distinctName}}
-                    </li>
-                {{/if}}
-                {{!-- Tags --}}
-                {{#each model.tags itemController="component.testCard.item.tag" as |tag|}}
-                    <li {{bind-attr class=":tag tag.isActive"}} {{action 'toggleTagFilter' tag.model}}>
-                        {{tag.model}}
-                    </li>
-                {{/each}}
-            </ul>
-        </article>
-    </section>
-
-    {{!-- Author | Description --}}
-    <section class="row">
-        <article class="col-sm-6">
-            {{user-card user=model.author mini=true parentController=this}}
-        </article>
-        <article class="col-sm-6">
-            <blockquote>
-                <p class="small">{{model.description}}</p>
-            </blockquote>
-        </article>
-    </section>
-
+    <div class="container-fluid">
+        <section class="row">
+            <article class="col-xs-12 margin-bottom-8">
+                {{category-tags test=model canEdit=false inverseStyle=false center=true}}
+                {{module-tags test=model canEdit=false inverseStyle=false center=true}}
+            </article>
+        </section>
+        <section class="row">
+            <article class="col-xs-12">
+                <p class="text-center description">
+                    {{model.description}}
+                </p>
+            </article>
+        </section>
+    </div>
 </div>
