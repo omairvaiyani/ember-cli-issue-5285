@@ -1,0 +1,52 @@
+<div class="card margin-bottom-16 response-card">
+    <div {{bind-attr class=":response-toggle-container response.showFull"}} {{action 'toggleResponse'}}>
+        <h4 class="question-stem inline-block">
+            <strong>Q{{response.itemNumber}}</strong> {{response.question.stem}}
+        </h4>
+        <i {{bind-attr class=":fa :fa-fw :correctness-icon response.isCorrect:fa-check-circle:fa-times-circle
+        response.isCorrect :inline-block"}}></i>
+    </div>
+    <div {{bind-attr class=":response-body-container response.showFull"}}>
+        {{#each response.shuffledOptions as |option index|}}
+            <div {{bind-attr class=":option option.isChosen:is-selected
+                    option.isCorrect:is-correct:is-incorrect"}}>
+                <div class="option-statistics" {{bind-attr style=option.statisticsStyling}}></div>
+                <span class="option-label margin-right-16">{{alphabetise-index index}}</span>
+                <span class="phrase-over-statistics">{{option.phrase}}</span>
+                {{#if showResponseStatistics}}
+                    {{#if response.itemIndex}}
+                        {{#if currentUser}}
+                            <span class="small option-statistics-label">
+                                {{#tool-tipster title=option.statisticsTitle position=top}}
+                                    {{math-round option.percentageOfTimesChosen}}%
+                                {{/tool-tipster}}
+                            </span>
+                        {{else}}
+                            <span class="option-statistics-label">
+                                {{#tool-tipster title='Login or Create an account to see these stats! Click the triangle.'
+                                position='top'}}
+                                    <i class="fa fa-exclamation-triangle linkify"
+                                        {{action 'userWantsToSeeAllResponseStatistics'}}></i>
+                                {{/tool-tipster}}
+                            </span>
+                        {{/if}}
+                    {{else}}
+                        <span class="small option-statistics-label">
+                            {{#tool-tipster title=option.statisticsTitle position=top}}
+                                {{math-round option.percentageOfTimesChosen}}%
+                            {{/tool-tipster}}
+                        </span>
+                    {{/if}}
+                {{/if}}
+            </div>
+        {{/each}}
+        {{#if response.question.feedback}}
+            <h4 class="margin-top-8 margin-bottom-0 margin-left-16 margin-right-16">
+                Feedback
+            </h4>
+            <h5 class="margin-bottom-16 margin-left-16 margin-right-16">
+                {{response.question.feedback}}
+            </h5>
+        {{/if}}
+    </div>
+</div>

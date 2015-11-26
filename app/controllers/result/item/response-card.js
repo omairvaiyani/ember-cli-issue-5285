@@ -48,10 +48,16 @@ export default Ember.ObjectController.extend(EachItem, CurrentUser, {
         return this.get('parentController.allResponses');
     }.property('parentController.allResponses.length'),
 
+    showFull: false,
+
     actions: {
         userWantsToSeeAllResponseStatistics: function () {
             EventTracker.recordEvent(EventTracker.JOIN_TO_VIEW_ALL_RESPONSE_STATISTICS, this.get('parentController.model'));
             this.transitionToRoute('join');
+        },
+
+        toggleResponse: function () {
+            this.toggleProperty('showFull');
         }
     }
 });

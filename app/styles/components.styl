@@ -229,7 +229,7 @@ textarea.form-input
     .synap-modal
       padding marginPrimary 0 60px 0 !important
       &.top-image
-        padding-top 56px
+        padding-top 56px !important
       .message
         width 100%
         text-align center
@@ -409,6 +409,14 @@ input[type="range"]::-webkit-slider-thumb {
       background colorPrimary
       border-color colorPrimary
       cursor pointer
+
+.panel
+  &.card
+    padding 0
+  &.panel-secondary
+    .panel-heading
+      background-color colorSecondary
+      color lighten(colorSecondary, 50)
 
 .circular-image
   height: 120px;

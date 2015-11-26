@@ -1,3 +1,95 @@
+<div class="container margin-bottom-16">
+    <section class="row">
+        <article class="col-md-9 margin-bottom-16">
+
+            {{!-- Overview Panel --}}
+            <div class="panel panel-secondary card">
+                <div class="panel-heading">
+                    <h4 class="no-margin">Overview</h4>
+                </div>
+
+                <div class="panel-body">
+
+                    {{!-- Score Indicator --}}
+                    {{!--<div class="score-container">
+                        <div class="arc arc_start"></div>
+                        <div class="arc arc_end"></div>
+                        <div class="score">
+                            {{model.score}}%
+                        </div>
+                        <div class="score-label">
+                            Score
+                        </div>
+                    </div>--}}
+                    <div class="score-container inline-block">
+                        {{ember-knob fgColor=style.colorSecondary bgColor=style.colorBorder width="90" height="90"
+                        readOnly=true min=0 max=100 value=model.score angleArc=360 angleOffset=0 thickness=0.1
+                        inputColor=style.colorOrange displayInput=false}}
+                        <div class="score">
+                            {{model.score}}%
+                        </div>
+                        <div class="score-label">
+                            Score
+                        </div>
+                    </div>
+
+                    <div class="vertical-separator"></div>
+
+                    <div class="overview-stat-container inline-block">
+                        <h4 class="stat">
+                            {{correctResponses.length}}/{{model.questions.length}}
+                        </h4>
+                        <h4 class="small">
+                            Answered Correctly
+                        </h4>
+                    </div>
+
+                    <div class="vertical-separator"></div>
+
+                    <div class="overview-stat-container inline-block">
+                        <h4 class="stat">
+                            120xp
+                        </h4>
+                        <h4 class="small">
+                            Points Earned
+                        </h4>
+                    </div>
+
+                    <div class="vertical-separator"></div>
+
+                    <div class="overview-stat-container inline-block">
+                        <h4 class="stat">
+                            2nd
+                        </h4>
+                        <h4 class="small">
+                            Attempt
+                        </h4>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="panel panel-info card">
+                <div class="panel-heading">
+                    <h4 class="no-margin">Questions</h4>
+                </div>
+                <div class="panel-body">
+                    {{#each allResponses itemController="result.item.response-card" as |response|}}
+                        {{partial 'result/item/response-card'}}
+                    {{/each}}
+                </div>
+            </div>
+
+        </article>
+
+        {{!-- Author Info --}}
+        <article class="col-md-3 col-fix-right margin-bottom-16">
+            {{user-card user=model.user}}
+        </article>
+    </section>
+</div>
+
+{{!--
 <div class="container margin-bottom-16 ">
     <div class="card padding-bottom-0">
         <h3>Result overview</h3>
@@ -72,19 +164,6 @@
                     Generate another test{{/link-to}}
             {{/if}}
         </article>
-        {{!--
-        <article class="col-xs-6 margin-top-16">
-            <div class="pull-right">
-                <div class="checkbox inline-top margin-right-8">
-                    {{input type='checkbox' checked=showResponseStatistics id='show-response-statistics'}}
-                    <label for="show-response-statistics"></label>
-                </div>
-                <div class="inline-block">
-                    <label for="show-response-statistics">Show how others answered this test</label>
-                </div>
-            </div>
-        </article>
-        --}}
     </div>
     <div class="row">
         <div class="col-md-9">
@@ -105,10 +184,6 @@
             {{/if}}
         </div>
         <div class="col-md-3 margin-top-16 col-fix-right">
-            {{#if model.test.author}}
-               {{!-- {{render 'user/-author-info' test}}--}}
-            {{/if}}
-            {{!-- {{partial 'application/social-sharing'}} --}}
             {{#if categoryTests.length}}
                 <div class="card">
                     <h4 class="margin-bottom-16">Recent {{model.test.category.name}} tests</h4>
@@ -123,3 +198,4 @@
         </div>
     </div>
 </div>
+--}}

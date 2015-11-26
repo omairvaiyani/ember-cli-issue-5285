@@ -78,6 +78,15 @@ export default Ember.Controller.extend(CurrentUser, {
             EventTracker.recordEvent(EventTracker.VIEWED_RESPONSE_STATISTICS, this.get('model'));
     }.observes('showResponseStatistics'),
 
+    showScoreArc: false,
+
+    style: {
+        colorSecondary: "#e41d72",
+        colorBorder: "#eaeaea",
+        colorOrange: "#FF8833"
+
+    },
+
     actions: {
         switchTab: function (tab) {
             this.set('tab', tab);

@@ -29,8 +29,9 @@ colorLightText = #d1dae8
 colorBorder = #eaeaea
 colorDarkBorder = darken(colorBorder, 10)
 colorBackgroundCard = white
-colorRed = #a94442
-colorGreen = #88C057
+colorRed = #EB7265
+colorGreen = #8BC060
+colorOrange = #FF8833
 colorInfo = #13a4df
 
 fontSizeHuge = 38px
@@ -80,6 +81,7 @@ body
 /* Template Styles */
 @import create
 @import test
+@import result
 
 .svg-icons rect, .svg-icons polygon, .svg-icons circle,
 .svg-icons line, .svg-icons g, .svg-icons path, .svg-icons ellipse,
@@ -1321,82 +1323,6 @@ ul.progress-chart-legends
 }
 
 /* TEMPLATE - RESULT */
-.response-indicator {
-  width: 16px;
-  margin: -16px 0px -16px -16px;
-  background-color: #B44537;
-  min-height: 100px;
-  vertical-align: top;
-  height: 100%;
-  position: absolute;
-}
-
-.response-card .option {
-  width: calc(100% + 16px);
-  padding-right: 38px;
-}
-
-/* Stop hover/click css */
-.response-card .option:hover,
-.response-card .option:active {
-  background-color: inherit;
-  color: inherit;
-}
-
-/* Stop hover/click css */
-.response-card .option.is-selected:hover {
-  background-color: #2A98D6;
-  color: white;
-}
-
-.is-correct {
-  background-color: #58BE54;
-  color: white;
-}
-
-.response-card .is-correct:hover {
-  background-color: #58BE54;
-  color: white;
-}
-
-.response-card .option.is-correct.is-selected {
-  background-color: #2A98D6;
-  color: white;
-}
-
-.response-card .is-unimportant {
-  background-color: #97A07D;
-}
-
-.response-card .option-statistics {
-  background-color: rgba(66, 66, 66, 0.62);
-  position: absolute;
-  top: 0px;
-  bottom: 0px;
-  left: 0px;
-  transition-property: width;
-  transition-duration: 0.6s;
-}
-
-.response-card .option-label {
-  position: absolute;
-}
-
-.response-card .phrase-over-statistics {
-  position: absolute;
-  margin-left: 24px;
-  margin-right: 38px;
-}
-
-.response-card .phrase-hidden {
-  visibility: hidden;
-}
-
-.response-card .option-statistics-label {
-  position: absolute;
-  right: 8px;
-}
-
 .author-info .profile-image {
   width: 50px;
   height: 50px;
