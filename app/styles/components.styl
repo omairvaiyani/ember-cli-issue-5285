@@ -60,10 +60,6 @@
     color #B0C0A4
     font-size large
 
-.card .card, .modal-body .card
-  box-shadow none
-  padding 0
-
 .gauge-box
   position relative
   .gauge-holder
@@ -551,19 +547,20 @@ input[type="range"]::-webkit-slider-thumb {
         background-size cover
       img
         width auto
+  .title
+    font-weight 400
+  .description
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   .right
     width calc(100% - 100px)
     min-height 108px
     .title
       margin-top 34px
-      font-weight 400
       @media(min-width screenSmall)
         max-width calc(100% - 225px)
         margin-top marginSecondary
-    .description
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
     .extra-actions-item-container
       position absolute
       top 0

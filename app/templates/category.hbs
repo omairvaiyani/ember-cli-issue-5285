@@ -1,24 +1,17 @@
-<div class="mycqs-page-header">
-    <div class="container">
+<div class="page-header">
+    <div class="dark-overlay"></div>
+    <div class="content-body">
         {{#if model.browseAll}}
-            <h1>{{seoPageHeader}}</h1>
+            <h1 class="title">{{seoPageHeader}}</h1>
 
-            <h4>Search from thousands of MCQ tests in Synap.</h4>
+            <h4 class="subtitle">Search from thousands of MCQ Quizzes in Synap.</h4>
         {{else}}
-            <div class='inline-block svg-icon-white'>
-                {{#unless model.hasChildren}}
-                    {{#if model.parent}}
-                        {{svg-icon icon=model.parent.name height=60 width=60 colour="white"}}
-                    {{/if}}
-                {{else}}
-                    {{svg-icon icon=model.name height=60 width=60 colour="white"}}
-                {{/unless}}
-            </div>
-            <h1 class="inline-block">{{seoPageHeader}}</h1>
-            <h4>{{seoPageDescription}}</h4>
+            <h1 class="title">{{seoPageHeader}}</h1>
+            <h4 class="subtitle">{{seoPageDescription}}</h4>
         {{/if}}
     </div>
 </div>
+
 <div class="container margin-bottom-16">
     <ol class="breadcrumb">
         {{#link-to 'browse' tagName='li'}}{{#link-to 'browse'}}Browse{{/link-to}}{{/link-to}}

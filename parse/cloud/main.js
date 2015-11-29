@@ -3106,25 +3106,25 @@ Parse.Cloud.define('searchIndex', function (request, response) {
                 className = "_User";
             var query = new Parse.Query(className);
             query.containedIn("objectId", objectIds);
-        /*
-            var object = new Parse.Object(className);
-            object.id = hit.objectId;
-            object.createdAt = hit.createdAt;
-            object.updatedAt = hit.updatedAt;
+            /*
+             var object = new Parse.Object(className);
+             object.id = hit.objectId;
+             object.createdAt = hit.createdAt;
+             object.updatedAt = hit.updatedAt;
 
-            switch (className) {
-                case "Test":
-                    var props = ["title", "author", "category", "description", "questions", "difficulty",
-                        "totalQuestions", "tags", "slug", "isPublic", "averageScore", "numberOfAttempts",
-                    "isGenerated", "isPublic", "isProfessional", "isSpacedRepetition", "quality"];
-                    _.each(props, function (prop) {
-                        object.set(prop, hit.prop);
-                    });
-                    break;
-                // TODO case for User
-            }
+             switch (className) {
+             case "Test":
+             var props = ["title", "author", "category", "description", "questions", "difficulty",
+             "totalQuestions", "tags", "slug", "isPublic", "averageScore", "numberOfAttempts",
+             "isGenerated", "isPublic", "isProfessional", "isSpacedRepetition", "quality"];
+             _.each(props, function (prop) {
+             object.set(prop, hit.prop);
+             });
+             break;
+             // TODO case for User
+             }
 
-            records.push(object);*/
+             records.push(object);*/
         });
         Parse.Cloud.useMasterKey();
         // TODO Figure out how to send these records without saving them, as Parse won't let us
@@ -3974,6 +3974,25 @@ Parse.Cloud.define("checkBetaAccess", function (request, response) {
             } else
                 response.success({betaInvite: betaInvite});
         }
+    });
+});
+
+/**
+ * @CloudFunction Get Hot Tests
+ * Used to find up and coming tests for Browse Page.
+ *
+ * @return {hotTests: [Test]}
+ */
+Parse.Cloud.define('getHotTests', function (request, response) {
+    var hotTestsQuery = new Parse.Query(Test);
+
+    hotTestsQuery.greaterThan('createdAt', moment().subtract(20, 'weeks').toDate());
+    hotTestsQuery.descending('numberOfAttempts');
+    hotTestsQuery.limit(3);
+    hotTestsQuery.find().then(function (tests) {
+        response.success({hotTests: tests});
+    }, function (error) {
+        response.error(error);
     });
 });/*
  * TASK WORKER

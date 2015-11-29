@@ -30,7 +30,7 @@
                             <article {{bind-attr class="navbarSearchResults.users.length:col-xs-6:col-xs-12"}}>
                                 <h5>TESTS</h5>
                                 {{#each navbarSearchResults.tests as |test|}}
-                                    {{test-card test=test parentController=this mini=true}}
+                                    {{test-card test=test parentController=this cardType="miniList"}}
                                 {{/each}}
                             </article>
                         {{/if}}
@@ -40,7 +40,7 @@
                                 <h5>USERS</h5>
                                 {{#each navbarSearchResults.users as |user|}}
                                     {{#link-to 'user.index' user.slug tagName="div"}}
-                                        {{user-card user=user parentController=this mini=true}}
+                                        {{user-card user=user parentController=this cardStyle="miniList"}}
                                     {{/link-to}}
                                 {{/each}}
                             </article>

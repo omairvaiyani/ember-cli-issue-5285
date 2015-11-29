@@ -1,6 +1,18 @@
 import Ember from 'ember';
 
 export default Ember.Component.extend({
+    defaultCard: function () {
+        return !this.get('cardType') || this.get('cardType') === "default";
+    }.property('cardType'),
+
+    miniListCard: function () {
+        return this.get('cardType') === "miniList";
+    }.property('cardType'),
+
+    hotTestCard: function () {
+        return this.get('cardType') === "hotTest";
+    }.property('cardType'),
+
     currentUser: function () {
         return this.get('parentController.currentUser');
     }.property('parentController.currentUser'),
@@ -103,6 +115,10 @@ export default Ember.Component.extend({
         if (this.get('currentUser') && !this.get('test.memoryStrengthDataHasBeenFetched'))
             this.send('fetchMemoryStrengthData');
     }.observes('test.uniqueResponses.length'),
+
+    coverImageStyle: function () {
+        return "background-image:url("+ this.get('test.author.profileImageURL') +");";
+    }.property('test.author.profileImageURL.length'),
 
     actions: {
         deleteTest: function () {
