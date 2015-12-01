@@ -11,16 +11,6 @@
                 <div class="panel-body">
 
                     {{!-- Score Indicator --}}
-                    {{!--<div class="score-container">
-                        <div class="arc arc_start"></div>
-                        <div class="arc arc_end"></div>
-                        <div class="score">
-                            {{model.score}}%
-                        </div>
-                        <div class="score-label">
-                            Score
-                        </div>
-                    </div>--}}
                     <div class="score-container inline-block">
                         {{ember-knob fgColor=style.colorSecondary bgColor=style.colorBorder width="90" height="90"
                         readOnly=true min=0 max=100 value=model.score angleArc=360 angleOffset=0 thickness=0.1

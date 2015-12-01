@@ -1,6 +1,7 @@
+{{!--
 <section class="row">
-    <article class="col-md-3">
-        <div class="well mini-well margin-top-16">
+    <article class="col-xs-12">
+        <div class="card margin-top-16">
             {{input type="text" class="form-control floating-label" placeholder="Filter tests" value=myTestsListFilter}}
 
             {{#if activeCategories.length}}
@@ -36,26 +37,21 @@
             {{/each}}
         </div>
     </article>
-    <article class="col-md-9 col-fix-right">
-        {{#if currentUser.srLatestTest}}
-            {{#unless currentUser.srLatestTestDismissed}}
-                {{test-card test=currentUser.srLatestTest parentController=this isLatestSRTest=true}}
-            {{/unless}}
-        {{/if}}
-        <section class="row margin-top-16">
-            <article class="col-xs-3 col-sm-4">
-                <h5>{{myTestsList.length}} {{pluralize-word 'test' myTestsList.length}}</h5>
-            </article>
-            <article class="col-xs-3 col-sm-4 col-fix-middle text-right">
-                <label for="my-tests-list-order" class="margin-top-8">Sort by</label>
-            </article>
-            <article class="col-xs-6 col-sm-4 col-fix-right pull-right">
-                {{view 'select' class="form-control pull-right" content=listOrders value=listOrder
-                optionLabelPath='content.label' optionValuePath='content' id="my-tests-list-order"}}
-            </article>
-        </section>
-        {{#each myTestsList as |test|}}
-            {{test-card test=test parentController=this}}
-        {{/each}}
+</section>
+--}}
+<section class="row">
+    <article class="col-xs-3 col-sm-4">
+        <h5>{{myTestsList.length}} {{pluralize-word 'test' myTestsList.length}}</h5>
+    </article>
+    <article class="col-xs-3 col-sm-4 col-fix-middle text-right">
+        <label for="my-tests-list-order" class="margin-top-8">Sort by</label>
+    </article>
+    <article class="col-xs-6 col-sm-4 col-fix-right pull-right">
+        {{view 'select' class="form-control pull-right" content=listOrders value=listOrder
+        optionLabelPath='content.label' optionValuePath='content' id="my-tests-list-order"}}
     </article>
 </section>
+
+{{#each myTestsList as |test|}}
+    {{test-card test=test parentController=this}}
+{{/each}}

@@ -1,0 +1,33 @@
+<section class="row margin-bottom-16">
+    {{#if currentUser}}
+        <article class="col-xs-12 col-sm-3">
+            <div class="panel panel-primary card">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Home Navigation</h3>
+                </div>
+                <ul class="nav sidebar-nav">
+                    {{#link-to 'index.index' tagName='li'}}
+                        {{#link-to 'index.index'}}
+                            Overview
+                        {{/link-to}}
+                    {{/link-to}}
+                    {{#link-to 'index.user' currentUser.slug tagName='li'}}
+                        {{#link-to 'index.user' currentUser.slug}}
+                            My Study Area
+                        {{/link-to}}
+                    {{/link-to}}
+                    {{#link-to 'index.progress' tagName='li'}}
+                        {{#link-to 'index.progress'}}
+                            My Progress
+                        {{/link-to}}
+                    {{/link-to}}
+                </ul>
+            </div>
+        </article>
+    {{/if}}
+
+
+    <article class="col-xs-12 col-sm-9 col-fix-right">
+        {{outlet}}
+    </article>
+</section>

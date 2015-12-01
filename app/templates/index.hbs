@@ -1,7 +1,9 @@
-{{#if currentUser.id}}
-    <div class="container">
-        {{partial 'index/user'}}
-    </div>
-{{else}}
+{{#if showGuestPage}}
     {{partial 'index/guest'}}
+{{/if}}
+
+{{#if showUserPage}}
+    <div class="container">
+        {{partial 'index/home'}}
+    </div>
 {{/if}}

@@ -205,7 +205,7 @@ export default Ember.Controller.extend({
 
         } else {
             // Log user out
-            localStorage.clear();
+            localStorage.removeItem("sessionToken");
             this.set('websiteNotInitialisedForUser', true);
         }
     }.observes('currentUser'),
@@ -248,8 +248,8 @@ export default Ember.Controller.extend({
      * @return {Boolean}
      */
     signUpValidationHasErrors: function () {
-        return this.get('signUpValidationErrors.name.length') || this.get('signUpValidationErrors.email.length')
-            || this.get('signUpValidationErrors.password.length');
+        return !!this.get('signUpValidationErrors.name.length') || !!this.get('signUpValidationErrors.email.length')
+            || !!this.get('signUpValidationErrors.password.length');
     }.property('signUpValidationErrors.name.length', 'signUpValidationErrors.email.length',
         'signUpValidationErrors.password.length'),
 

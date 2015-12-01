@@ -2,12 +2,7 @@
     <section class="row">
         <article class="col-md-6 col-md-offset-3 margin-top-16 text-center">
             <div class='card'>
-                {{#if model}}
-                    <h2 class="text-center">Beta Activated!</h2>
-                    <hr class="mini-hr">
-                    {{partial 'application/join'}}
-
-                {{else}}
+                {{#if errorMessage}}
                     <h2 class="text-center">Oops!</h2>
                     <hr class="mini-hr">
 

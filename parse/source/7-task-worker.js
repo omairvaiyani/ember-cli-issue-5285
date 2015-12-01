@@ -221,10 +221,22 @@ function notifyUserForSRTask(task) {
     return task.save(changes, {useMasterKey: true});
 }
 
+/**
+ * @Task Update Test Stats After Attempt
+ *
+ * Set on Attempt.afterSave
+ *
+ * @param task
+ * @param params
+ * @param objects
+ * @returns {*}
+ */
 function updateTestStatsAfterAttemptTask(task, params, objects) {
     Parse.Cloud.useMasterKey();
     var test = objects[0],
         questionPointers = objects[1],
+        attempt = objects[2],
+        user = objects[3],
         questionQuery = new Parse.Query(Question);
 
     questionQuery.containedIn("objectId", _.map(questionPointers, function (questionPointer) {
@@ -234,6 +246,7 @@ function updateTestStatsAfterAttemptTask(task, params, objects) {
     return questionQuery.find().then(function (questions) {
 
         test.increment('numberOfAttempts');
+
         // The test.averageScore is not the average attempt score on the test,
         // rather, it's the tally of average correctness in its individual
         // questions - this allows flexibility should the questions be moved
@@ -266,6 +279,31 @@ function updateTestStatsAfterAttemptTask(task, params, objects) {
 
         // MasterKey is needed due to the Test's ACLs, even request.user === author.
         return test.save(null, {useMasterKey: true});
+    }).then(function () {
+        // Prepare to update stats for test's author and user
+        var author = test.get('author');
+
+        var attemptsQuery = new Parse.Query(Attempt);
+        attemptsQuery.equalTo('user', user);
+        attemptsQuery.equalTo('test', test);
+        attemptsQuery.ascending('createdAt');
+        return Parse.Promise.when(author.fetch(), attemptsQuery.find());
+    }).then(function (author, previousAttempts) {
+        // Update Author
+        if(author.id !== user.id)
+            author.increment('numberOfAttemptsByCommunity');
+
+        // Update Author and User for Unique Attempt
+        // Normal attempt count updated more immediately in
+        // the first cloud function for attempt generation
+        var isUnique = previousAttempts[0] && previousAttempts[0].id === attempt.id;
+        if(isUnique) {
+            if(author.id !== user.id)
+                author.increment('numberOfUniqueAttemptsByCommunity');
+            user.increment('numberOfUniqueAttempts');
+        }
+
+        return Parse.Promise.when(author.save(null, {useMasterKey: true}), user.save(null, {useMasterKey: true}));
     }).then(function () {
         var changes = {
             'taskStatus': 'done',

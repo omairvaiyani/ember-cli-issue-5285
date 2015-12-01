@@ -150,6 +150,7 @@ export default Ember.Route.extend({
                 email = applicationController.get('newUser.email'),
                 password = applicationController.get('newUser.password');
 
+            console.log("before " + applicationController.get('signUpValidationHasErrors'));
             applicationController.set('signUpValidationErrors.name', FormValidation.name(name.trim()));
             applicationController.set('signUpValidationErrors.email', FormValidation.email(email.trim()));
             applicationController.set('signUpValidationErrors.password', FormValidation.password(password.trim()));
@@ -161,8 +162,11 @@ export default Ember.Route.extend({
                     signUpSource: 'Web',
                     password: password
                 };
+                console.log(1);
                 this.send('registerUser', data, callback);
             } else if (callback) {
+                console.log(2);
+                console.log("after " + applicationController.get('signUpValidationHasErrors'));
                 callback(new Parse.Promise().resolve());
             }
         },

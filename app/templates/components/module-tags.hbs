@@ -1,5 +1,5 @@
 <div {{bind-attr class=":tags center:text-center centre:text-center"}}>
-    {{#each test.tags as |tag|}}
+    {{#each tags as |tag|}}
         {{#if canEdit}}
             <div {{bind-attr class=":module-tag :has-icon canEdit::no-edit"}}{{action "removeTag" tag}}>
                 <i class="fa fa-fw fa-tag icon"></i>

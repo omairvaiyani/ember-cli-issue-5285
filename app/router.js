@@ -24,10 +24,20 @@ Router.map(function () {
      */
     this.route('onboarding', {path: 'begin'});
 
+
+    /**
+     * @Route Index
+     * /user
+     */
+    this.route('index', {path: ''}, function() {
+      this.route('user', {path: '/:user_slug'});
+      this.route('progress');
+    });
+
     /*
      * User profiles and profile editing
      */
-    this.resource('user', {path: '/:user_slug'}, function () {
+    this.resource('user', {path: '/user/:user_slug'}, function () {
         this.route('tests');
         this.route('following');
         this.route('followers');
@@ -121,10 +131,14 @@ Router.map(function () {
     this.route('notFound', {path: '/not-found'});
     this.route('fourOhFour', {path: '*path'});
 
+
+    /**
+     * @Route Settings
+     * /study
+     */
     this.route('settings', function () {
         this.route('study');
     });
-
 });
 
 /*Router.reopen({

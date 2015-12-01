@@ -190,7 +190,7 @@ Parse.Cloud.afterSave(Attempt, function (request) {
     if (!attempt.existed()) {
         // Test stats will be updated within 15 minutes
         var taskCreatorPromise = taskCreator('Statistics', 'updateTestStatsAfterAttempt',
-            {}, [attempt.test(), attempt.questions()]);
+            {}, [attempt.test(), attempt.questions(), attempt, user]);
 
         var userUpdatePromise = attempt.test().fetchIfNeeded().then(function (test) {
             // All Spaced Rep attempts go here

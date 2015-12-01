@@ -1,0 +1,28 @@
+<section class="row">
+    <article class="col-xs-12 col-sm-8">
+        {{#if currentUser.srLatestTest}}
+            {{#unless currentUser.srLatestTestDismissed}}
+                {{test-card test=currentUser.srLatestTest parentController=this isLatestSRTest=true}}
+            {{/unless}}
+        {{/if}}
+    </article>
+
+    {{#if showCurrentUserMiniProfile}}
+        <div class="col-xs-12 col-sm-4 col-fix-right">
+            <section class="row">
+                <article class="col-md-12">
+                    <div class="card">
+                        {{profile-picture user=currentUser}}
+                        <div class="inline-top">
+                            {{#link-to 'user' currentUser.slug}}
+                                <strong><p class="margin-bottom-8">{{currentUser.name}}</p></strong>
+                            {{/link-to}}
+                            <p>{{currentUser.level.title}}</p>
+                        </div>
+                        {{level-progress points=currentUser.points level=currentUser.level}}
+                    </div>
+                </article>
+            </section>
+        </div>
+    {{/if}}
+</section>

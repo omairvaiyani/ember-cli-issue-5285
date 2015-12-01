@@ -1,0 +1,84 @@
+<section class="row margin-bottom-16">
+    <article class="col-xs-12">
+        <div class="card">
+            <section class="row">
+                <article class="col-xs-5">
+                    {{profile-picture user=model height=90 width=90 class="inline-top margin-right-8"}}
+                    <div class="inline-top">
+                        <h3 class="no-margin">{{model.name}}</h3>
+
+                        <p>{{model.level.title}}</p>
+                        {{level-progress points=model.points level=model.level}}
+                    </div>
+                </article>
+
+                <article class="col-xs-7">
+                    <div class="overview-stat-container inline-block">
+                        <h4 class="stat">
+                            {{model.numberOfTestsCreated}}
+                        </h4>
+                        <h4 class="small">
+                            Quizzes Created
+                        </h4>
+                    </div>
+
+                    <div class="vertical-separator"></div>
+
+                    <div class="overview-stat-container inline-block">
+                        <h4 class="stat">
+                            {{model.numberOfAttempts}}
+                        </h4>
+                        <h4 class="small">
+                            Quizzes Taken
+                        </h4>
+                    </div>
+
+                    <div class="vertical-separator"></div>
+
+                    <div class="overview-stat-container inline-block">
+                        <h4 class="stat">
+                            0
+                        </h4>
+                        <h4 class="small">
+                            Badges Unlocked
+                        </h4>
+                    </div>
+
+                    <div class="vertical-separator"></div>
+
+                    <div class="overview-stat-container inline-block">
+                        <h4 class="stat">
+                            {{model.numberOfFollowers}}
+                        </h4>
+                        <h4 class="small">
+                            Followers
+                        </h4>
+                    </div>
+                </article>
+            </section>
+        </div>
+    </article>
+</section>
+
+<section class="row">
+
+    <article class="col-xs-12 col-sm-9">
+        {{partial 'index/user/my-tests'}}
+    </article>
+
+    <article class="col-xs-12 col-sm-3 col-fix-right">
+        <div class="panel panel-success card">
+
+            <div class="panel-heading">
+                <h4 class="no-margin">
+                    Badges
+                </h4>
+            </div>
+            <div class="panel-body">
+
+            </div>
+
+        </div>
+    </article>
+</section>
+

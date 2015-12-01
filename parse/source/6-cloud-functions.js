@@ -236,6 +236,8 @@ Parse.Cloud.define('createNewTest', function (request, response) {
         userEvent;
 
     test.save().then(function () {
+        // Update Basic Stat, user will be saved during UserEvent generation
+        user.increment('numberOfTestsCreated');
         // Creates a new userEvent and increments the users points.
         return UserEvent.newEvent(UserEvent.CREATED_TEST, test, user);
     }).then(function (result) {
@@ -528,6 +530,10 @@ Parse.Cloud.define('saveTestAttempt', function (request, status) {
         // Convert attempt payload to Parse Object and save
         attempt = Parse.Object.createFromJSON(JSONAttempt, 'Attempt');
         promises.push(attempt.save());
+
+        // Basic Stat Update, user will be saved in .addUniqueResponses function
+        // (unique stats done on TaskWorker)
+        user.increment('numberOfAttempts');
 
         // Create or update uniqueResponses
         promises.push(user.addUniqueResponses(responses));
@@ -1357,3 +1363,36 @@ Parse.Cloud.define('getHotTests', function (request, response) {
         response.error(error);
     });
 });
+
+/**
+ * @CloudFunction Get User Profile
+ * User profiles are private objects:
+ * this fetches them and removes
+ * sensitive info before returning.
+ * @param {String} slug
+ * @param {String} objectId
+ * @return {Parse.User}
+ */
+Parse.Cloud.define('getUserProfile', function (request, response) {
+    Parse.Cloud.useMasterKey();
+
+    var slug = request.params.slug,
+        objectId = request.params.objectId;
+
+    var userQuery = new Parse.Query(Parse.User);
+    if(slug)
+        userQuery.equalTo('slug', slug);
+    if(objectId)
+        userQuery.equalTo('objectId', objectId);
+
+    userQuery.find().then(function (results) {
+        var user = results[0];
+        if(!user)
+            return response.error("User with this slug or id not found.");
+
+        response.success(user.minimalProfile());
+    }, function (error) {
+        response.error(error);
+    });
+});
+

@@ -267,15 +267,32 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
             this.set('user.studyYear', "");
         },
 
+        /**
+         * ADDING AND REMOVING TAGS
+         */
+        toggleAddingNewTag: function () {
+            if (this.get('newTag.length')) {
+                if (!this.get('user.moduleTags'))
+                    this.set('user.moduleTags', new Ember.A());
+                this.get('user.moduleTags').pushObject(this.get('newTag'));
+                this.set('newTag', "");
+            }
+            this.set('addingTag', !this.get('addingTag'));
+            setTimeout(function () {
+                if (this.get('addingTag'))
+                    Ember.$("#new-tag").focus();
+            }.bind(this), 150);
+        },
+
         addNewModuleTag: function () {
-            if (this.get('newModuleTag.length')) {
-                this.get('user.moduleTags').pushObject(this.get('newModuleTag'));
-                this.set('newModuleTag', "");
+            if (this.get('newTag.length')) {
+                this.get('user.moduleTags').pushObject(this.get('newTag'));
+                this.set('newTag', "");
             }
         },
 
-        removeModuleTag: function (index) {
-            this.get('user.moduleTags').removeObject(this.get('user.moduleTags').objectAt(index));
+        removeTag: function (tag) {
+            this.get('user.moduleTags').removeObject(tag);
         },
 
         // Image uploaded to server after

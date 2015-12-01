@@ -11,9 +11,54 @@ import ParseHelper from '../utils/parse-helper';
 export default
 Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, EstimateMemoryStrength, DeleteWithUndo, ProgressCharts, {
     needs: ['application'],
+
     applicationController: function () {
         return this.get('controllers.application');
     }.property('controllers.length'),
+
+    /**
+     * @Property Show Guest Page
+     * Only show guest page if
+     * - On index.index without currentUser.
+     *
+     * @return {boolean}
+     */
+    showGuestPage: function () {
+        var currentPath = this.get('applicationController.currentPath');
+
+        if(currentPath === "index.index" && !this.get('currentUser'))
+            return true;
+
+    }.property('currentUser', 'applicationController.currentPath.length'),
+
+    /**
+     * @Property Show User Page
+     * Only show user page if
+     * - On index.* with currentUser
+     * - OR, index.user without currentUser
+     *
+     * @return {boolean}
+     */
+    showUserPage: function () {
+        var currentPath = this.get('applicationController.currentPath');
+        if(this.get('currentUser') || currentPath === "index.user")
+            return true;
+
+    }.property('currentUser', 'applicationController.currentPath.length'),
+
+    /**
+     * @Property Show Current User Mini Profile
+     * Only show if
+     * - On index.index with currentUser
+     * @return {boolean}
+     */
+    showCurrentUserMiniProfile: function () {
+        var currentPath = this.get('applicationController.currentPath');
+        if(this.get('currentUser') || currentPath === "index.index")
+            return true;
+
+    }.property('currentUser', 'applicationController.currentPath.length'),
+
     /*
      * GUEST MODE
      */
@@ -141,13 +186,9 @@ Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, EstimateMemoryStrength
         }
     }.on('init'),
 
-    navigationTabDidSwitch: function () {
-        var onProgressTab = false;
-
-        this.get('navigationTabs').forEach(function (tab) {
-            if (tab.get('value') === 'progress' && tab.get('active'))
-                onProgressTab = true;
-        });
+    checkToCreateOrDestroyProgressChart: function () {
+        // TODO replace this observer with index.progress route willDestroy hook
+        var onProgressTab = this.get('applicationController.currentPath') === "index.progress";
 
         if (!onProgressTab)
             this.send('closeChart');
@@ -156,7 +197,7 @@ Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, EstimateMemoryStrength
                 this.send('createChart');
             }.bind(this), 500);
         }
-    }.observes('navigationTabs.@each.active'),
+    }.observes('applicationController.currentPath.length'),
 
     /**
      * @Property

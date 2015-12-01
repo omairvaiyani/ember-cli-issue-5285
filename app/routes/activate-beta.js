@@ -2,6 +2,8 @@ import Ember from 'ember';
 import ParseHelper from '../utils/parse-helper';
 
 export default Ember.Route.extend({
+    controllerName: ['onboarding'],
+
     model: function (params) {
         var betaActivationId = params["activate_beta_id"];
         return ParseHelper.cloudFunction(this, "betaInviteAccepted", {id: betaActivationId}).
@@ -17,9 +19,15 @@ export default Ember.Route.extend({
         if (!model)
             controller.set("errorMessage", this.get('errorMessage') ? this.get('errorMessage') : "Something went wrong!");
         else {
-            controller.set("model", model);
-            console.dir(model);
+            controller.set("betaInvite", model);
             localStorage.setItem("betaActivationId",  model.objectId);
+            this.transitionTo('onboarding');
+
+            var notification = {
+                type: "success",
+                title: "Beta Activated!"
+            };
+            this.send('addNotification', notification);
         }
     }
 });

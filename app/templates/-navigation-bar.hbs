@@ -22,14 +22,14 @@
             <div class="collapse navbar-collapse" id="bs-navbar-collapsing">
                 <ul class="nav navbar-nav">
                     {{#if currentUser}}
-                        {{#link-to 'create' tagName='li' title='MCQ Quiz Maker'}}
-                            {{#link-to 'create' tagName='a'}}
-                                Create
+                        {{#link-to 'index' tagName='li' title='My Home'}}
+                            {{#link-to 'index' tagName='a'}}
+                                Home
                             {{/link-to}}
                         {{/link-to}}
-                        {{#link-to 'index' tagName='li' title='My Quizzes'}}
-                            {{#link-to 'index' tagName='a'}}
-                                Practice
+                        {{#link-to 'create' tagName='li' title='Create an MCQ Quiz'}}
+                            {{#link-to 'create' tagName='a'}}
+                                Create
                             {{/link-to}}
                         {{/link-to}}
                         {{#link-to 'browse' tagName='li' title='Search for quizzes'}}

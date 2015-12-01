@@ -14,11 +14,11 @@
     <fieldset>
         <div class="row margin-bottom-16">
             <div class="col-xs-12 col-sm-8 col-sm-push-2">
-                <div class="form-control-wrapper">
-                    {{input type='text' value=newUser.name
-                    classNameBindings=":form-control newUser.name.length::empty"}}
-                    <div class="floating-label">Full Name</div>
-                    <span class="material-input"></span>
+                <div class="form-control-wrapper text-left">
+                    <label for="new-user-name">Full Name</label>
+                    {{input type='text' value=newUser.name id="new-user-name"
+                    classNameBindings=":form-input newUser.name.length::empty"
+                    placeholder="Enter your full name"}}
                 </div>
             </div>
             {{#if signUpValidationErrors.name}}
@@ -30,11 +30,11 @@
 
         <div class="row margin-bottom-16">
             <div class="col-xs-12 col-sm-8 col-sm-push-2">
-                <div class="form-control-wrapper margin-top-16">
-                    {{input type='email' value=newUser.email
-                    classNameBindings=":form-control newUser.email.length::empty"}}
-                    <div class="floating-label">Email</div>
-                    <span class="material-input"></span>
+                <div class="form-control-wrapper margin-top-16 text-left">
+                    <label for="new-user-email">Email</label>
+                    {{input type='email' value=newUser.email id="new-user-email"
+                    classNameBindings=":form-input newUser.email.length::empty"
+                    placeholder="Enter a valid email address"}}
                 </div>
             </div>
             {{#if signUpValidationErrors.email}}
@@ -46,11 +46,11 @@
 
         <div class="row">
             <div class="col-xs-12 col-sm-8 col-sm-push-2">
-                <div class="form-control-wrapper margin-top-16">
-                    {{input type='password' value=newUser.password
-                    classNameBindings=":form-control newUser.password.length::empty"}}
-                    <div class="floating-label">Password</div>
-                    <span class="material-input"></span>
+                <div class="form-control-wrapper margin-top-16 text-left">
+                    <label for="new-user-password">Password</label>
+                    {{input type='password' value=newUser.password id="new-user-password"
+                    classNameBindings=":form-input newUser.password.length::empty"
+                    placeholder="Type your password"}}
                 </div>
             </div>
             {{#if signUpValidationErrors.password}}
@@ -61,7 +61,7 @@
         </div>
     </fieldset>
     <div class="row">
-        <div class="col-xs-12 col-sm-8 col-sm-push-2 text-center margin-bottom-16">
+        <div class="col-xs-12 col-sm-8 col-sm-push-2 text-center margin-top-8 margin-bottom-16">
             {{async-button class='btn btn-primary' action='signUp' default='Sign up!'
             pending='Signing up...' fulfilled='Signed up!' rejected='Error!' reset=true
             id="sign-up-button" type="submit"}}
