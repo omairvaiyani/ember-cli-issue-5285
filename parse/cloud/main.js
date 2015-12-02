@@ -258,9 +258,15 @@ Parse.User.prototype.generateSlug = function () {
 
     return this.verifySlug();
 };
+
 /**
  * @Function Check Level Up
- * @return {Parse.Promise<boolean>} didLevelUp
+ * Checks if points added will level up
+ * the user. If so, the function performs
+ * the levelling up, saves the user and
+ * returns a level object if so.
+ *
+ * @return {Parse.Promise<Level>} levelledUp
  */
 Parse.User.prototype.checkLevelUp = function () {
     var currentLevel = this.level(),
@@ -288,15 +294,117 @@ Parse.User.prototype.checkLevelUp = function () {
                     this.set('level', nextLevel);
                     return this.save();
                 }.bind(this)).then(function () {
-                    return Parse.Promise.as(true);
-                });
+                    return Parse.Promise.as(this.level());
+                }.bind(this));
             }
         }.bind(this));
     }
     return promise;
 };
+
 /**
- * @Function FetchEducationCohort
+ * @Function Check Badge Progression
+ * Called by UserEvent.newEvent generator.
+ *
+ * This function may update the received UserEvent,
+ * but does not save it - handled in UserEvent.newEvent().
+ *
+ * This function may update the user object, and save it.
+ *
+ * @param {UserEvent} userEvent
+ * @return {Parse.Promise<Array<BadgeProgress>>}
+ */
+Parse.User.prototype.checkBadgeProgressions = function (userEvent) {
+    var badgesProgressed = [],
+        userNeedsSaving = false,
+        _this = this;
+
+    return this.fetchBadges().then(function (badges) {
+        var badgeProgressions = badges.badgeProgressions;
+        // Set up UserEvent.badgesProgressedToLevel for historic state sake
+        userEvent.set('badgesProgressedToLevel', []);
+        // Loop through each badgeProgression
+        _.each(badgeProgressions, function (badgeProgression) {
+            badgeProgression.relevantEvents().add(userEvent);
+
+            var badge = badgeProgression.badge(),
+                totalBadgeLevels = badge.criteria().length,
+                badgeLevelCriteria = badge.criteria()[badgeProgression.badgeLevel() - 1];
+
+            var objectToCheck;
+
+            if (badgeLevelCriteria.objectType === "_User") {
+                objectToCheck = _this;
+            } else {
+                objectToCheck = _.filter(userEvent.get('objects'), function (object) {
+                    return object.className == badgeProgression.objectType();
+                })[0];
+            }
+
+            badgeProgression.set('tally', objectToCheck.get(badgeLevelCriteria.attribute));
+
+            if (objectToCheck.get(badgeLevelCriteria.attribute) === badgeLevelCriteria.target) {
+                // If First Level achieved, add to User.earnedBadges
+                if (badgeProgression.badgeLevel() === 1) {
+                    _this.earnedBadges().push(badge);
+                    userNeedsSaving = true;
+                }
+
+                // Badge Progressed (for UserEvent)
+                badgesProgressed.push(badgeProgression);
+
+                // Update UserEvent badgesProgressedToLevel for historic state sake
+                userEvent.badgesProgressedToLevel().push(badgeProgression.badgeLevel());
+
+                // Increment badge level if there is a higher level to achieve
+                if (badgeProgression.badgeLevel() < totalBadgeLevels) {
+                    badgeProgression.increment('badgeLevel');
+                    // Update Badge Level Criteria for progress calculation below
+                    badgeLevelCriteria = badge.criteria()[badgeProgression.badgeLevel() - 1];
+                }
+            }
+
+            // Calculate progress, now that badgeLevel may be adjust. 100% max
+            var currentTarget = badgeLevelCriteria.target,
+                progress = Math.floor((badgeProgression.tally() / currentTarget) * 100);
+            if (progress > 100)
+                progress = 100;
+            badgeProgression.set('currentLevelProgress', progress);
+        });
+        var promises = [];
+        if (userNeedsSaving)
+            promises.push(_this.save());
+        // First save all badgeProgressions (due to tally + currentLevelProgress updates)
+        if (badgeProgressions.length)
+            promises.push(Parse.Object.saveAll(badgeProgressions));
+
+        return Parse.Promise.when(promises);
+    }).then(function () {
+        // Only return those badges that have progressed (i.e. earned/levelled up)
+        return Parse.Promise.as(badgesProgressed);
+    });
+};
+/**
+ * @Function Fetch Badges
+ * This allows us to fetch the user's earnedBadges
+ * and badgeProgressions in one go.
+ * @return {Parse.Promise<{earnedBadges: <Array<Badge>>, badgeProgressions: <Array<BadgeProgress>>}>}
+ */
+Parse.User.prototype.fetchBadges = function () {
+    var sameUserQuery = new Parse.Query(Parse.User);
+    sameUserQuery.include('earnedBadges');
+    sameUserQuery.include('badgeProgressions.badge');
+
+    return sameUserQuery.get(this.id).then(function (user) {
+        return Parse.Promise.as({earnedBadges: user.earnedBadges(), badgeProgressions: user.badgeProgressions()});
+    }, function (error) {
+        console.error("Error fetching badges for user.");
+        console.error(error);
+        return Parse.Promise.as({});
+    });
+};
+/**
+ * @Function Fetch Education Cohort
  * This allows us to fetch the user's educationCohort
  * *as well as* the studyField and institution.
  * @return {Parse.Promise<EducationCohort>} educationCohort
@@ -502,6 +610,20 @@ Parse.User.prototype.points = function () {
     return this.get('points');
 };
 /**
+ * @Property earnedBadges
+ * @returns {Array<Parse.Pointer<Badge>>}
+ */
+Parse.User.prototype.earnedBadges = function () {
+    return this.get('earnedBadges');
+};
+/**
+ * @Property badgeProgressions
+ * @returns {Array<Parse.Pointer<BadgeProgress>>}
+ */
+Parse.User.prototype.badgeProgressions = function () {
+    return this.get('badgeProgressions');
+};
+/**
  * @Property uniqueResponses
  * @returns {Parse.Relation<UniqueResponse>}
  */
@@ -609,6 +731,35 @@ var UserEvent = Parse.Object.extend("UserEvent", {
     },
 
     /**
+     * @Property levelledUp
+     *
+     * @returns {Level}
+     */
+    levelledUp: function () {
+        return this.get('levelledUp');
+    },
+
+    /**
+     * @Property badgesProgressed
+     *
+     * @returns {Array<Parse.Pointer<BadgeProgress>>}
+     */
+    badgesProgressed: function () {
+        return this.get('badgesProgressed');
+    },
+
+    /**
+     * @Property badgesProgressedToLevel
+     * Needed to store for historical state sake,
+     * as badgeProgress object will update over
+     * time.
+     * @returns {Array<Number>}
+     */
+    badgesProgressedToLevel: function () {
+        return this.get('badgesProgressedToLevel');
+    },
+
+    /**
      * @Function Set Defaults
      * ACL
      * {user: read}
@@ -676,6 +827,10 @@ var UserEvent = Parse.Object.extend("UserEvent", {
      * increment the user points in this
      * method.
      *
+     * Call functions to check if user levelled up
+     * and earned a badge or not. These two
+     * are then stored on the userEvent object.
+     *
      * @param {string} eventType
      * @param {*} objects
      * @param {Parse.User} user
@@ -699,7 +854,20 @@ var UserEvent = Parse.Object.extend("UserEvent", {
             user.increment('points', userEvent.pointsTransacted());
             var userEvents = user.userEvents();
             userEvents.add(userEvent);
-            return user.save();
+            var promises = [];
+            // Check and handle if User levelled up
+            promises.push(user.checkLevelUp());
+            // Check and handle if Badge awarded
+            promises.push(user.checkBadgeProgressions(userEvent));
+            return Parse.Promise.when(promises);
+        }).then(function (levelledUp, badgesProgressed) {
+            if (levelledUp)
+                userEvent.set('levelledUp', levelledUp);
+            if (badgesProgressed)
+                userEvent.set('badgesProgressed', badgesProgressed);
+
+            if (levelledUp || badgesProgressed)
+                return userEvent.save();
         }).then(function () {
             return Parse.Promise.as(userEvent);
         });
@@ -1727,7 +1895,7 @@ var UniqueResponse = Parse.Object.extend("UniqueResponse", {
         // calculate the current memory strength
         logger.log("Spaced Repetition", "OI set, Now memory strength");
         this.updateMemoryStrength();
-        logger.log("Spaced Repetition", "Memory strength set to " +this.memoryStrength());
+        logger.log("Spaced Repetition", "Memory strength set to " + this.memoryStrength());
         this.responses().add(response);
         return this;
     },
@@ -1745,7 +1913,7 @@ var UniqueResponse = Parse.Object.extend("UniqueResponse", {
         // If it's high, that means the user has reviewed this item too early
         // In which case, we'll disallow this repetition in our calculations
         this.updateMemoryStrength();
-        if(this.latestResponseIsCorrect() && this.memoryStrength() > 94)
+        if (this.latestResponseIsCorrect() && this.memoryStrength() > 94)
             return this;
 
         var optimumInterval, // in days (inter-repetition time)
@@ -2082,6 +2250,140 @@ var StudyField = Parse.Object.extend("StudyField", {
      */
     pictureUrl: function () {
         return this.get('pictureURl');
+    }
+}, {});
+
+/****
+ * -----
+ * Badge
+ * -----
+ *
+ **/
+var Badge = Parse.Object.extend("Badge", {
+    /**
+     * @Property title
+     * @returns {String}
+     */
+    title: function () {
+        return this.get('title');
+    },
+
+    /**
+     * @Property description
+     * @returns {String}
+     */
+    description: function () {
+        return this.get('description');
+    },
+
+    /**
+     * @Property eventToMonitor
+     * @returns {String}
+     */
+    eventToMonitor: function () {
+        return this.get('eventToMonitor');
+    },
+
+    /**
+     * @Property criteria
+     * [{
+     *   badgeLevel: {Number},
+     *   objectType: {String},
+     *   attribute: {String},
+     *   target: {*}
+     * }, ...]
+     * [
+     *  {
+     *   "badgeLevel": 1,
+     *   "objectType": "_User",
+     *   "attribute": "numberOfQuestionsCreated",
+     *   "target":1
+     *  }
+     * ]
+     * @returns {Array}
+     */
+    criteria: function () {
+        return this.get('criteria');
+    },
+
+    /**
+     * @Property icon
+     * @returns {Parse.File}
+     */
+    icon: function () {
+        return this.get('icon');
+    },
+
+    /**
+     * @Property levelIcons
+     * @returns {Array<Parse.File>}
+     */
+    levelIcons: function () {
+        return this.get('levelIcons');
+    },
+
+    /**
+     * @Property isExplicit
+     * @returns {String}
+     */
+    isExplicit: function () {
+        return this.get('isExplicit');
+    },
+
+    /**
+     * @Property isTimeSensitive
+     * @returns {String}
+     */
+    isTimeSensitive: function () {
+        return this.get('isTimeSensitive');
+    }
+}, {});
+
+/****
+ * -----
+ * BadgeProgress
+ * -----
+ *
+ **/
+var BadgeProgress = Parse.Object.extend("BadgeProgress", {
+    /**
+     * @Property badge
+     * @returns {Badge}
+     */
+    badge: function () {
+        return this.get('badge');
+    },
+
+    /**
+     * @Property tally
+     * @returns {Number}
+     */
+    tally: function () {
+        return this.get('tally');
+    },
+
+    /**
+     * @Property currentLevelProgress
+     * @returns {Number}
+     */
+    currentLevelProgress: function () {
+        return this.get('currentLevelProgress');
+    },
+
+    /**
+     * @Property badgeLevel
+     * @returns {Number}
+     */
+    badgeLevel: function () {
+        return this.get('badgeLevel');
+    },
+
+    /**
+     * @Property relevantEvents
+     * @returns {Parse.Relation<UserEvent>}
+     */
+    relevantEvents: function () {
+        return this.relation('relevantEvents');
     }
 }, {});// Concat source to main.js with 'cat source/*.js > cloud/main.js'
 
@@ -2656,6 +2958,7 @@ Parse.Cloud.beforeSave(UniqueResponse, function (request, response) {
  * - srLatestTest
  * - srAllTests (limit 10)
  * - latestTestAttempts (limit 400)
+ * - earnedBadges (no limit)
  */
 Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
     var user = request.user,
@@ -2743,42 +3046,18 @@ Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
                 latestTestAttemptsQuery.descending("createdAt");
                 promises.push(latestTestAttemptsQuery.find());
 
+                // Get Earned Badges and Progressions
+                promises.push(user.fetchBadges());
+
                 return Parse.Promise.when(promises);
             }
-        }).then(function (educationCohort, srAllTests, latestTestAttempts) {
+        }).then(function (educationCohort, srAllTests, latestTestAttempts, badges) {
             result["educationCohort"] = educationCohort;
             result["srAllTests"] = srAllTests;
             result["latestTestAttempts"] = latestTestAttempts;
+            result["earnedBadges"] = badges.earnedBadges;
+            result["badgeProgressions"] = badges.badgeProgressions;
 
-            /* var messagesQuery = new Parse.Query("Message");
-             messagesQuery.equalTo('to', user);
-             messagesQuery.descending("createdAt");
-             messagesQuery.limit(5);
-             promises.push(messages = messagesQuery.find());
-
-             var followersQuery = user.relation("followers").query();
-             promises.push(followers = followersQuery.find());
-
-             var followingQuery = user.relation("following").query();
-             promises.push(following = followingQuery.find());
-
-             var groupsQuery = user.relation("groups").query();
-             promises.push(groups = groupsQuery.find());*/
-            /*if (messages)
-             result.messages = messages["_result"][0];
-             if (followers)
-             result.followers = followers["_result"][0];
-             if (following)
-             result.following = following["_result"][0];
-             if (groups)
-             result.groups = groups["_result"][0];
-             if (attempts) {
-             result.attempts = [];
-             _.each(attempts["_result"][0], function (attempt) {
-             if (attempt.get('test') && attempt.get('test').id && result.attempts.length < 15)
-             result.attempts.push(attempt);
-             });
-             }*/
             response.success(result);
         }, function (error) {
             if (error)
@@ -2791,7 +3070,7 @@ Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
 /**
  * @CloudFunction Get Memory Strength for Tests
  * You can send an array of tests, test pointers or test objectIds.
- * @param {Array<Test> || Array<pointers> || Array<String>} tests
+ * @param {Array<Test> || Array<Parse.Pointers> || Array<String>} tests
  */
 Parse.Cloud.define('getMemoryStrengthForTests', function (request, response) {
     var user = request.user,
@@ -2870,19 +3149,17 @@ Parse.Cloud.define('getMemoryStrengthForTests', function (request, response) {
 Parse.Cloud.define('createNewTest', function (request, response) {
     var user = request.user,
         testPayload = request.params.test,
-        test = Parse.Object.createFromJSON(testPayload, "Test"),
-        userEvent;
+        test = Parse.Object.createFromJSON(testPayload, "Test");
 
     test.save().then(function () {
         // Update Basic Stat, user will be saved during UserEvent generation
         user.increment('numberOfTestsCreated');
         // Creates a new userEvent and increments the users points.
         return UserEvent.newEvent(UserEvent.CREATED_TEST, test, user);
-    }).then(function (result) {
-        userEvent = result;
-        return user.checkLevelUp();
-    }).then(function (didLevelUp) {
-        return response.success({userEvent: userEvent, test: test, didLevelUp: didLevelUp});
+    }).then(function (userEvent) {
+        // Check Level Up has been moved to UserEvent.newEvent(), and stored on userEvent.
+        // return user.checkLevelUp();
+        return response.success({userEvent: userEvent, test: test});
     }, function (error) {
         response.error(error);
     });
@@ -2903,28 +3180,30 @@ Parse.Cloud.define('createNewTest', function (request, response) {
  *
  * @param {Parse.Pointer<Test>} test
  * @param {Question} question
- * @return [{UserEvent},{Question}, {Boolean}] userEvent, question, didLevelUp
+ * @return [{UserEvent},{Question}] userEvent, question
  */
 Parse.Cloud.define('saveNewQuestion', function (request, response) {
     var user = request.user,
         test = request.params.test,
         questionPayload = request.params.question,
-        question = Parse.Object.createFromJSON(questionPayload, "Question"),
-        userEvent;
+        question = Parse.Object.createFromJSON(questionPayload, "Question");
 
     question.save().then(function () {
+        // Update Basic Stat, user will be saved during UserEvent generation
+        user.increment('numberOfQuestionsCreated');
         // Creates a new userEvent and increments the users points.
         return UserEvent.newEvent(UserEvent.ADDED_QUESTION, [question, test], user);
-    }).then(function (result) {
-        userEvent = result;
-        return user.checkLevelUp();
-    }).then(function (didLevelUp) {
-        return response.success({userEvent: userEvent, question: question, didLevelUp: didLevelUp});
+    }).then(function (userEvent) {
+        //  Check Level Up handled in UserEvent.newEvent, and stored on eventObject
+        //  return user.checkLevelUp();
+        return response.success({userEvent: userEvent, question: question});
     }, function (error) {
         response.error(error);
     });
 });
 /**
+ * @Deprecated
+ *
  * @CloudFunction New User Event
  * @param {Array<Parse.Object>} objects
  * @param {Array<String>} objectTypes
@@ -3200,8 +3479,7 @@ Parse.Cloud.define('saveTestAttempt', function (request, status) {
  * @return success/error
  */
 Parse.Cloud.define('addOrRemoveRelation', function (request, response) {
-    var user = request.user,
-        parentObjectClass = request.params.parentObjectClass,
+    var parentObjectClass = request.params.parentObjectClass,
         parentObjectId = request.params.parentObjectId,
         parentObject = new Parse.Object(parentObjectClass),
         relationKey = request.params.relationKey,

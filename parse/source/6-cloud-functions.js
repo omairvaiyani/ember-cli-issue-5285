@@ -18,6 +18,7 @@
  * - srLatestTest
  * - srAllTests (limit 10)
  * - latestTestAttempts (limit 400)
+ * - earnedBadges (no limit)
  */
 Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
     var user = request.user,
@@ -105,42 +106,18 @@ Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
                 latestTestAttemptsQuery.descending("createdAt");
                 promises.push(latestTestAttemptsQuery.find());
 
+                // Get Earned Badges and Progressions
+                promises.push(user.fetchBadges());
+
                 return Parse.Promise.when(promises);
             }
-        }).then(function (educationCohort, srAllTests, latestTestAttempts) {
+        }).then(function (educationCohort, srAllTests, latestTestAttempts, badges) {
             result["educationCohort"] = educationCohort;
             result["srAllTests"] = srAllTests;
             result["latestTestAttempts"] = latestTestAttempts;
+            result["earnedBadges"] = badges.earnedBadges;
+            result["badgeProgressions"] = badges.badgeProgressions;
 
-            /* var messagesQuery = new Parse.Query("Message");
-             messagesQuery.equalTo('to', user);
-             messagesQuery.descending("createdAt");
-             messagesQuery.limit(5);
-             promises.push(messages = messagesQuery.find());
-
-             var followersQuery = user.relation("followers").query();
-             promises.push(followers = followersQuery.find());
-
-             var followingQuery = user.relation("following").query();
-             promises.push(following = followingQuery.find());
-
-             var groupsQuery = user.relation("groups").query();
-             promises.push(groups = groupsQuery.find());*/
-            /*if (messages)
-             result.messages = messages["_result"][0];
-             if (followers)
-             result.followers = followers["_result"][0];
-             if (following)
-             result.following = following["_result"][0];
-             if (groups)
-             result.groups = groups["_result"][0];
-             if (attempts) {
-             result.attempts = [];
-             _.each(attempts["_result"][0], function (attempt) {
-             if (attempt.get('test') && attempt.get('test').id && result.attempts.length < 15)
-             result.attempts.push(attempt);
-             });
-             }*/
             response.success(result);
         }, function (error) {
             if (error)
@@ -153,7 +130,7 @@ Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
 /**
  * @CloudFunction Get Memory Strength for Tests
  * You can send an array of tests, test pointers or test objectIds.
- * @param {Array<Test> || Array<pointers> || Array<String>} tests
+ * @param {Array<Test> || Array<Parse.Pointers> || Array<String>} tests
  */
 Parse.Cloud.define('getMemoryStrengthForTests', function (request, response) {
     var user = request.user,
@@ -232,19 +209,17 @@ Parse.Cloud.define('getMemoryStrengthForTests', function (request, response) {
 Parse.Cloud.define('createNewTest', function (request, response) {
     var user = request.user,
         testPayload = request.params.test,
-        test = Parse.Object.createFromJSON(testPayload, "Test"),
-        userEvent;
+        test = Parse.Object.createFromJSON(testPayload, "Test");
 
     test.save().then(function () {
         // Update Basic Stat, user will be saved during UserEvent generation
         user.increment('numberOfTestsCreated');
         // Creates a new userEvent and increments the users points.
         return UserEvent.newEvent(UserEvent.CREATED_TEST, test, user);
-    }).then(function (result) {
-        userEvent = result;
-        return user.checkLevelUp();
-    }).then(function (didLevelUp) {
-        return response.success({userEvent: userEvent, test: test, didLevelUp: didLevelUp});
+    }).then(function (userEvent) {
+        // Check Level Up has been moved to UserEvent.newEvent(), and stored on userEvent.
+        // return user.checkLevelUp();
+        return response.success({userEvent: userEvent, test: test});
     }, function (error) {
         response.error(error);
     });
@@ -265,28 +240,30 @@ Parse.Cloud.define('createNewTest', function (request, response) {
  *
  * @param {Parse.Pointer<Test>} test
  * @param {Question} question
- * @return [{UserEvent},{Question}, {Boolean}] userEvent, question, didLevelUp
+ * @return [{UserEvent},{Question}] userEvent, question
  */
 Parse.Cloud.define('saveNewQuestion', function (request, response) {
     var user = request.user,
         test = request.params.test,
         questionPayload = request.params.question,
-        question = Parse.Object.createFromJSON(questionPayload, "Question"),
-        userEvent;
+        question = Parse.Object.createFromJSON(questionPayload, "Question");
 
     question.save().then(function () {
+        // Update Basic Stat, user will be saved during UserEvent generation
+        user.increment('numberOfQuestionsCreated');
         // Creates a new userEvent and increments the users points.
         return UserEvent.newEvent(UserEvent.ADDED_QUESTION, [question, test], user);
-    }).then(function (result) {
-        userEvent = result;
-        return user.checkLevelUp();
-    }).then(function (didLevelUp) {
-        return response.success({userEvent: userEvent, question: question, didLevelUp: didLevelUp});
+    }).then(function (userEvent) {
+        //  Check Level Up handled in UserEvent.newEvent, and stored on eventObject
+        //  return user.checkLevelUp();
+        return response.success({userEvent: userEvent, question: question});
     }, function (error) {
         response.error(error);
     });
 });
 /**
+ * @Deprecated
+ *
  * @CloudFunction New User Event
  * @param {Array<Parse.Object>} objects
  * @param {Array<String>} objectTypes
@@ -562,8 +539,7 @@ Parse.Cloud.define('saveTestAttempt', function (request, status) {
  * @return success/error
  */
 Parse.Cloud.define('addOrRemoveRelation', function (request, response) {
-    var user = request.user,
-        parentObjectClass = request.params.parentObjectClass,
+    var parentObjectClass = request.params.parentObjectClass,
         parentObjectId = request.params.parentObjectId,
         parentObject = new Parse.Object(parentObjectClass),
         relationKey = request.params.relationKey,

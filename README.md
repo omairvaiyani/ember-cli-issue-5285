@@ -807,8 +807,29 @@ A new instance of this class is created when a user takes a particular question 
 
 ## Gamification
 
+#### Overview of Classes and Relations
+Classes to note, ```Level```, ```Badge```, ```BadgeProgress``` and ```UserEvent```. Refer to Parse Data Browser and become familiar with attributes for each class.
+
+Every notable event by users in Synap are recorded. This includes things like, new quiz creation, adding questions, following users, taking quizzes, etc. Some events yield ```points```, which is a simple number attribute on the ```Parse.User``` class. The ```Level``` class is read-only, and has a list of predefined levels. As users earn points, we check if they 'levelled up' on the Cloud. Crucially, it's the ```UserEvent``` object which, whilst recording each important event, stores the number of ```pointsTransacted``` due to the event. The process of event generation (on the Cloud) checks for two things:
+
+1. If the User has reached the next level (if so, level them up)
+2. If the User has earned a new Badge (if so, add the badge to their profile).
+
+All users start on Level 1, which is denoted by a pointer on the user class, ```user.level```. This pointer is updated with the relevant level in point 1 above.
+
+Users also have an array of pointers, initially empty, called ```earnedBadges```. The ```Badge``` class, read-only, has a list of predefined badges with specific ```criteria``` to unlock. As point 2 determines a badge unlocking, a pointer to said badge is added to the users ```earnedBadges``` array. Please note, badges have their own levels, not to be confused with the ```Level``` class. An example would be the 'Question Master' badge, to earn this badge, you must create 5 questions. But, creating 10 questions will set the badge level to 2 (which for the user, results in a better looking badge or something...). Given that badges are pre-defined, we must have a separate class to store how far a user has progressed for each badge.
+
+This is achieved by the ```BadgeProgression``` class. Upon signing up, the user will have badge progresssion for *all* badges, initially set to Level 1. An array of pointer to these is set on the user's ```badgeProgressions``` attribute. Note, if a badge progression's ```badgeLevel ==== 1```, it means they haven't unlocked the badge yet. Once the badge is unlocked, if the badge has further levels, the badge level will increment. In other words, the ```badgeLevel``` is the level the user is aiming to achieve next. Take a look at ```BadgeProgression.tally``` and ```BadgeProgression.currentLevelProgress```. This will be important for UI purposes.
+
+#### Getting User's Current Level and Points
+These are by default, sent on the User object on log in/session retrieval.
+
+#### Getting User's Badges
+These are sent on the app's initialiser Cloud Function under the properties ```earnedBadges``` and ```badgeProgressions```. Store them on the ```currentUser```. 
+
+#### Checking for Badge or Level Updates
+On major events, such as quiz creation and adding new questions, the cloud functions used will return a ```userEvent``` object. Check this for ```levelledUp``` (which will include a level object **if** the user levelled up) and ```badgesEarned``` (which will include an array of ```BadgeProgress``` objects **if** a new badge is earnt or levelled up). Finally, if badges are earned/levelled up, a further attribute on the ```userEvent``` object, ```badgesProgressToLevel```, is an array which stores the level to which the badge(s) have progressed. This is for historic state storing, as the pointer to each badge progression will change over time, but the ```userEvent``` may be accessed on a later date. Think scrolling down to old activites.
+
+[Currently only listed one badge on the database, still working on this, but you can add the logic and test it by trying to achieve the 'First Step' badge, see the badge's ```criteria``` to familiarise yourself with its structure, and figure out how it is unlocked.]
+
 ***In progress***
-
-
-
-

@@ -86,7 +86,7 @@ var ParseUser =  ParseUserModel.extend(ParseMixin, {
     points: DS.attr('number', {defaultValue: 0}),
     level: DS.belongsTo('level', {async: true}),
     earnedBadges: DS.hasMany('badge', {async: true}),
-    badgeProgressions: DS.hasMany('badge-progress', {async: true}),
+    //badgeProgressions: DS.hasMany('badge-progress', {async: true}),
 
     /*
      * Tests
@@ -137,6 +137,7 @@ var ParseUser =  ParseUserModel.extend(ParseMixin, {
     averageUniqueScoreByCommunity: DS.attr(),
     numberFollowing: DS.attr('number', {defaultValue: 0}),
     numberOfFollowers: DS.attr('number', {defaultValue: 0}),
+    numberOfBadgesUnlocked: DS.attr('number', {defaultValue: 0}),
 
     /*
      * Education
