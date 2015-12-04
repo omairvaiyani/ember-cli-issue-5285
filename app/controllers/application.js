@@ -164,8 +164,6 @@ export default Ember.Controller.extend({
             adapter = this.store.adapterFor("parse-user");
 
         if (currentUser) {
-            console.log("-------");
-            console.log("Current User set with " + currentUser.get('sessionToken'));
             this.send('bootIntercomCommunications', currentUser);
             // EventTracker.profileUser(this.get('currentUser'));
 
@@ -181,7 +179,6 @@ export default Ember.Controller.extend({
             // in the SessionInitializer along with the initialiseApp Cloud function
             // - else, we need the cloud function part here
             if (!currentUser.get('initialisedFor')) {
-                console.log("running cf");
                 promise = ParseHelper.cloudFunction(this, 'initialiseApp', {}).then(function (response) {
                     // Returned user object has all pointer fields included
                     var earnedBadges = ParseHelper.extractRawPayload(this.store, 'badge',
