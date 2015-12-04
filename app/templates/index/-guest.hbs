@@ -1,13 +1,26 @@
 <video autoplay loop id="index-page-video">
-    <source src="https://s3-eu-west-1.amazonaws.com/synap-dev-assets/assets/index-cover-video.mp4" type="video/mp4">
+    <source src="/assets/index-cover-video.mp4" type="video/mp4">
 </video>
+
+{{#if showFullAnimationVideo}}
+    <div class="full-animation-video-container">
+        <iframe width="960" height="540" src="https://www.youtube.com/embed/pia1tog0oiY"
+                frameborder="0" allowfullscreen id="embeddedVideo"></iframe>
+    </div>
+{{/if}}
+
 <div class="index-page-cover" id="join-beta-flag">
     <div class="dark-overlay"></div>
+
+    <div class="play-video" {{action 'toggleAnimationVideoContainer'}}>
+        <i class="fa fa-fw fa-play-circle-o icon margin-right-8"></i>
+        <h4 class="play-title">See How</h4>
+    </div>
+
     <div class="container text-center">
         <h1 class="margin-top-16">
             <strong>Learn more in less time. For free.</strong>
         </h1>
-
         {{#if betaUnlocked}}
             <button class="btn btn-danger btn-with-icon"
                 {{action 'openModal' 'application/modal/register'}}>

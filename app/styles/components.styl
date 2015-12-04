@@ -151,6 +151,21 @@
 textarea.form-input
   height auto
 
+.full-animation-video-container
+  position fixed
+  z-index 10
+  left 0
+  right 0
+  top 0
+  bottom 0
+  background alpha(black, 0.4)
+  text-align center
+  padding-top 32px
+  .embedded-video
+    width 960px
+    height 540px
+
+
 .gauge-box
   position relative
   .gauge-holder
@@ -363,11 +378,12 @@ textarea.form-input
   background alpha(black, 0.5)
   .modal-dialog
     padding 24px
-    width 448px
+    width 80%
+    max-width 444px
     margin 90px auto
     .modal-content
       box-shadow none
-      width 400px
+      width auto
       border-radius marginSecondary
       .modal-title
         color colorPrimary-600
@@ -390,6 +406,8 @@ textarea.form-input
         height 100%
     .synap-modal
       padding marginPrimary 0 60px 0 !important
+      width 400px
+      margin auto
       &.top-image
         padding-top 56px !important
       .message
@@ -425,6 +443,8 @@ textarea.form-input
           border-color lighten(colorBorder, 10)
           .icon
             color lighten(colorBorder, 10)
+      &.video-player
+        width 100%
 
 .notification-container {
   position: fixed;

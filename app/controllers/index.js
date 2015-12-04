@@ -26,7 +26,7 @@ Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, EstimateMemoryStrength
     showGuestPage: function () {
         var currentPath = this.get('applicationController.currentPath');
 
-        if(currentPath === "index.index" && !this.get('currentUser'))
+        if (currentPath === "index.index" && !this.get('currentUser'))
             return true;
 
     }.property('currentUser', 'applicationController.currentPath.length'),
@@ -41,7 +41,7 @@ Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, EstimateMemoryStrength
      */
     showUserPage: function () {
         var currentPath = this.get('applicationController.currentPath');
-        if(this.get('currentUser') || currentPath === "index.user")
+        if (this.get('currentUser') || currentPath === "index.user")
             return true;
 
     }.property('currentUser', 'applicationController.currentPath.length'),
@@ -54,7 +54,7 @@ Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, EstimateMemoryStrength
      */
     showCurrentUserMiniProfile: function () {
         var currentPath = this.get('applicationController.currentPath');
-        if(this.get('currentUser') || currentPath === "index.index")
+        if (this.get('currentUser') || currentPath === "index.index")
             return true;
 
     }.property('currentUser', 'applicationController.currentPath.length'),
@@ -62,6 +62,8 @@ Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, EstimateMemoryStrength
     /*
      * GUEST MODE
      */
+    showFullAnimationVideo: false,
+
     onboardUser: function () {
         return this.store.createRecord('parse-user', {
             studying: "", studyingAt: "", placeOfStudy: "", studyYear: "",
@@ -404,6 +406,24 @@ Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, EstimateMemoryStrength
         /*
          * GUEST MODE
          */
+        toggleAnimationVideoContainer: function () {
+            var _this = this;
+
+            _this.toggleProperty('showFullAnimationVideo');
+
+            setTimeout(function () {
+                var videoContainer = $(".full-animation-video-container");
+
+                if(_this.get('showFullAnimationVideo')) {
+                    videoContainer.on('click', function () {
+                        _this.set('showFullAnimationVideo', false);
+                    });
+                } else {
+                    videoContainer.off('click');
+                }
+            }, 500);
+        },
+
         indexLearnMoreScroll: function () {
             $('html, body').animate({
                 scrollTop: $("#learn-more-flag").offset().top

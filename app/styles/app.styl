@@ -539,6 +539,25 @@ hr.user-message-item-separator {
     position relative
     z-index 2
     color white
+  .play-video
+    z-index 3
+    position: absolute;
+    width: 200px;
+    left: calc(50% - 100px);
+    height: 100px;
+    top: calc(50% - 50px);
+    color darken(white, 10)
+    text-align center
+    line-height 30px
+    cursor pointer
+    .icon
+      font-size 70px
+    .play-title
+      margin-top 0
+      font-size 30px
+      font-weight 400
+    &:hover
+      color white
 
 .guest-page-actions, .page-header-action-container
   z-index 2

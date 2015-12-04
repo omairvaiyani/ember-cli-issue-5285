@@ -366,6 +366,7 @@ export default Ember.Controller.extend({
         return !!localStorage.betaActivationId;
     }.property(),
 
+
     actions: {
         incrementLoadingItems: function () {
             this.incrementProperty('loadingItems');
