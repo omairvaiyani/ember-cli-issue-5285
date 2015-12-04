@@ -37,7 +37,7 @@ export default {
             var ParseUser = store.modelFor('parse-user');
 
             promise = ParseUser.validateSessionToken(store, sessionToken).then(function (response) {
-                if (!response)
+                if (!response) {}
                     return new Parse.Promise().error("No Current User found.");
 
                 // Whilst response is currentUser, it does not include pointer fields
@@ -74,6 +74,7 @@ export default {
             }
         }, function (error) {
             console.dir(error);
+            localStorage.removeItem("sessionToken");
         }).then(function () {
             $("#appLoading").hide();
             application.advanceReadiness();

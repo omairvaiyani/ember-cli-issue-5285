@@ -160,14 +160,18 @@ export default Ember.Controller.extend({
      * website load, then it is called.
      */
     manageCurrentUserSession: function () {
-        var currentUser = this.get('currentUser');
+        var currentUser = this.get('currentUser'),
+            adapter = this.store.adapterFor("parse-user");
+
         if (currentUser) {
+            console.log("-------");
+            console.log("Current User set with " + currentUser.get('sessionToken'));
             this.send('bootIntercomCommunications', currentUser);
             // EventTracker.profileUser(this.get('currentUser'));
 
             // Session Token Handling
+            // May no longer have it due to object manipulation after 'intialiseApp' below
             localStorage.sessionToken = currentUser.get('sessionToken');
-            var adapter = this.store.adapterFor("parse-user");
             Ember.set(adapter, 'headers.X-Parse-Session-Token', currentUser.get('sessionToken'));
 
             // Check if User has been Initialised
@@ -177,9 +181,11 @@ export default Ember.Controller.extend({
             // in the SessionInitializer along with the initialiseApp Cloud function
             // - else, we need the cloud function part here
             if (!currentUser.get('initialisedFor')) {
+                console.log("running cf");
                 promise = ParseHelper.cloudFunction(this, 'initialiseApp', {}).then(function (response) {
                     // Returned user object has all pointer fields included
                     var user = ParseHelper.extractRawPayload(this.store, 'parse-user', response);
+                    console.log("replacing user");
                     this.set('currentUser', user);
                 }.bind(this), function (error) {
                     console.dir(error);
@@ -201,6 +207,7 @@ export default Ember.Controller.extend({
         } else {
             // User not logged in
             localStorage.removeItem("sessionToken");
+            Ember.set(adapter, 'headers.X-Parse-Session-Token', null);
         }
     }.observes('currentUser'),
 

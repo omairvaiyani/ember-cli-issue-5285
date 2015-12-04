@@ -1397,12 +1397,14 @@ Parse.Cloud.define("checkBetaAccess", function (request, response) {
     Parse.Cloud.useMasterKey();
     // Find the invite
     var betaInviteQuery = new Parse.Query("BetaInvite");
-    if (betaInviteId)
-        betaInviteQuery.equalTo("objectId", betaInviteId);
-    else if (email)
+    if (email)
         betaInviteQuery.equalTo("email", email);
+    else if (betaInviteId)
+        betaInviteQuery.equalTo("objectId", betaInviteId);
 
+    logger.log("beta-check-email", email);
     betaInviteQuery.find().then(function (betaInvites) {
+        logger.log("beta-invites-found", betaInvites);
         var betaInvite = betaInvites[0];
         if (!betaInvite || !betaInvite.get('inviteSent'))
             response.error("You are not invited to the beta yet.");
