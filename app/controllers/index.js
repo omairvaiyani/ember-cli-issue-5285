@@ -407,9 +407,15 @@ Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, EstimateMemoryStrength
          * GUEST MODE
          */
         toggleAnimationVideoContainer: function () {
-            var _this = this;
+            var _this = this,
+                loop = $("#index-page-video").get(0);
 
             _this.toggleProperty('showFullAnimationVideo');
+
+            if(this.get('showFullAnimationVideo'))
+                loop.pause();
+            else
+                loop.play();
 
             setTimeout(function () {
                 var videoContainer = $(".full-animation-video-container");
@@ -417,6 +423,7 @@ Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, EstimateMemoryStrength
                 if(_this.get('showFullAnimationVideo')) {
                     videoContainer.on('click', function () {
                         _this.set('showFullAnimationVideo', false);
+                        loop.play();
                     });
                 } else {
                     videoContainer.off('click');
