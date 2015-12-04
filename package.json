@@ -32,7 +32,6 @@
     "ember-cli-htmlbars": "0.7.6",
     "ember-cli-ic-ajax": "0.1.1",
     "ember-cli-inject-live-reload": "^1.3.0",
-    "ember-cli-plyr": "0.2.0",
     "ember-cli-qunit": "0.3.13",
     "ember-cli-stylus": "^1.0.4",
     "ember-cli-tooltipster": "0.0.3",
@@ -40,8 +39,7 @@
     "ember-countup": "0.0.4",
     "ember-data": "1.0.0-beta.17",
     "ember-export-application-global": "^1.0.2",
-    "ember-parse-adapter": "omairvaiyani/ember-parse-adapter",
-    "ivy-videojs": "0.6.1"
+    "ember-parse-adapter": "omairvaiyani/ember-parse-adapter"
   },
   "dependencies": {
     "algoliasearch": "^3.7.5",
