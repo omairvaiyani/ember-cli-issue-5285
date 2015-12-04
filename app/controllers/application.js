@@ -184,9 +184,14 @@ export default Ember.Controller.extend({
                 console.log("running cf");
                 promise = ParseHelper.cloudFunction(this, 'initialiseApp', {}).then(function (response) {
                     // Returned user object has all pointer fields included
-                    var user = ParseHelper.extractRawPayload(this.store, 'parse-user', response);
-                    console.log("replacing user");
-                    this.set('currentUser', user);
+                    var earnedBadges = ParseHelper.extractRawPayload(this.store, 'badge',
+                            _.clone(response.user.earnedBadges)),
+                        badgeProgressions = ParseHelper.extractRawPayload(this.store, 'badge-progress',
+                            _.clone(response.user.badgeProgressions));
+
+                    this.set('currentUser.earnedBadges', earnedBadges);
+                    this.set('currentUser.badgeProgressions', badgeProgressions);
+                    this.set('currentUser.initialisedFor', true);
                 }.bind(this), function (error) {
                     console.dir(error);
                 });

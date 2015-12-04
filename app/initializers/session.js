@@ -38,7 +38,7 @@ export default {
 
             promise = ParseUser.validateSessionToken(store, sessionToken).then(function (response) {
                 if (!response) {}
-                    return new Parse.Promise().error("No Current User found.");
+                    return new Parse.Promise().reject("No Current User found.");
 
                 // Whilst response is currentUser, it does not include pointer fields
                 // Therefore, further below, initialiseApp CloudFunction returns a
@@ -75,6 +75,7 @@ export default {
         }, function (error) {
             console.dir(error);
             localStorage.removeItem("sessionToken");
+            Ember.set(store.adapterFor("parse-user"), 'headers.X-Parse-Session-Token', null);
         }).then(function () {
             $("#appLoading").hide();
             application.advanceReadiness();
