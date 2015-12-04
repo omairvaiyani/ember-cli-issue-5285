@@ -243,7 +243,16 @@ export default {
             return loadedRecords;
     },
 
-    handleResponseForInitializeWebsiteForUser: function (store, currentUser, response) {
+    /**
+     * @Function Handle Relational Data Response for User
+     *
+     *
+     *
+     * @param store
+     * @param currentUser
+     * @param response
+     */
+    handleRelationalDataResponseForUser: function (store, currentUser, response) {
         // Created Tests
         if (response.createdTests) {
             var createdTests = this.extractRawPayload(store, 'test', response.createdTests);
@@ -269,14 +278,14 @@ export default {
             currentUser.get('uniqueResponses').clear();
             currentUser.get('uniqueResponses').addObjects(uniqueResponses);
         }
-        // Education Cohort
+        // @deprecated Education Cohort
         if (response.educationCohort && response.educationCohort.length) {
             var educationCohort = this.extractRawPayload(store, 'education-cohort',
                 response.educationCohort);
             if(educationCohort)
                 currentUser.set('educationCohort', educationCohort);
         }
-        // SR Latest Test
+        // @deprecated SR Latest Test
         if (response.srLatestTest) {
             var srLatestTest = this.extractRawPayload(store, 'test',
                 response.srLatestTest);

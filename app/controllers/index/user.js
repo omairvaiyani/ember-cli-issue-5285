@@ -129,6 +129,8 @@ export default Ember.Controller.extend(CurrentUser, SortBy, {
 
         this.get('myTestsList').clear();
         this.get('myTestsList').addObjects(sortedOrderedAndFilteredList);
+
+        window.scrollTo(0,0);
     },
 
     /**
@@ -139,7 +141,7 @@ export default Ember.Controller.extend(CurrentUser, SortBy, {
      */
     myTestsListThrottle: function () {
         Ember.run.debounce(this, this.myTestsListUpdate, 50);
-    }.observes('model.myTests.length', 'myTestsListType', 'listOrder', 'myTestsListFilter.length',
+    }.observes('model.id.length', 'model.myTests.length', 'myTestsListType', 'listOrder', 'myTestsListFilter.length',
         'model.myTests.@each.title.length', 'model.myTests.@each.createdAt',
         'model.myTests.@each.memoryStrength', 'activeTags.length', 'activeCategories.length'),
 

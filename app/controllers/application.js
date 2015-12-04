@@ -162,41 +162,36 @@ export default Ember.Controller.extend({
     manageCurrentUserSession: function () {
         var currentUser = this.get('currentUser');
         if (currentUser) {
-            // Intercom.io
-            /*window.intercomSettings = {
-
-             "app_id": "pjy1btre"
-             };*/
-            window.Intercom('boot', {
-                app_id: "oibyis4o",
-                user_hash: currentUser.get('intercomHash'),
-                user_id: currentUser.get('id'),
-                name: currentUser.get('name'),
-                email: currentUser.get('email'),
-                timeZone: currentUser.get('timeZone'),
-                profileImageURL: currentUser.get('profileImageURL'),
-                points: currentUser.get('points'),
-                srActivated: currentUser.get('srActivated'),
-                signUpSource: currentUser.get('signUpSource'),
-                numberOfTestsCreated: currentUser.get('numberOfTestsCreated'),
-                receivePromotionalEmails: currentUser.get('receivePromotionalEmails'),
-                created_at: Date.parse(currentUser.get('createdAt')) / 1000
-            });
+            this.send('bootIntercomCommunications', currentUser);
+            // EventTracker.profileUser(this.get('currentUser'));
 
             // Session Token Handling
             localStorage.sessionToken = currentUser.get('sessionToken');
             var adapter = this.store.adapterFor("parse-user");
             Ember.set(adapter, 'headers.X-Parse-Session-Token', currentUser.get('sessionToken'));
-            if (!this.get('websiteNotInitialisedForUser'))
-                return this.get('controllers.index').myTestsListUpdate();
-            else
-                this.send('incrementLoadingItems');
 
-            // Load user's content if not already done so in initialisers
-            ParseHelper.cloudFunction(this, 'initialiseWebsiteForUser', {}).then(function (response) {
-                ParseHelper.handleResponseForInitializeWebsiteForUser(this.store, currentUser, response);
+            // Check if User has been Initialised
+            var promise = new Parse.Promise();
+
+            // If the user was previously logged in, sessionToken is validated
+            // in the SessionInitializer along with the initialiseApp Cloud function
+            // - else, we need the cloud function part here
+            if (!currentUser.get('initialisedFor')) {
+                promise = ParseHelper.cloudFunction(this, 'initialiseApp', {}).then(function (response) {
+                    // Returned user object has all pointer fields included
+                    var user = ParseHelper.extractRawPayload(this.store, 'parse-user', response);
+                    this.set('currentUser', user);
+                }.bind(this), function (error) {
+                    console.dir(error);
+                });
+            } else
+                promise.resolve();
+
+            promise.then(function () {
+                return ParseHelper.cloudFunction(this, 'loadMyTestsList', {});
+            }.bind(this)).then(function (response) {
+                ParseHelper.handleRelationalDataResponseForUser(this.store, currentUser, response);
                 this.get('controllers.index').myTestsListUpdate();
-                //EventTracker.profileUser(this.get('currentUser'));
             }.bind(this), function (error) {
                 console.dir(error);
             }).then(function () {
@@ -204,9 +199,8 @@ export default Ember.Controller.extend({
             }.bind(this));
 
         } else {
-            // Log user out
+            // User not logged in
             localStorage.removeItem("sessionToken");
-            this.set('websiteNotInitialisedForUser', true);
         }
     }.observes('currentUser'),
 
@@ -480,6 +474,24 @@ export default Ember.Controller.extend({
 
             if (callback)
                 callback(promise);
+        },
+
+        bootIntercomCommunications: function (currentUser) {
+            window.Intercom('boot', {
+                app_id: "oibyis4o",
+                user_hash: currentUser.get('intercomHash'),
+                user_id: currentUser.get('id'),
+                name: currentUser.get('name'),
+                email: currentUser.get('email'),
+                timeZone: currentUser.get('timeZone'),
+                profileImageURL: currentUser.get('profileImageURL'),
+                points: currentUser.get('points'),
+                srActivated: currentUser.get('srActivated'),
+                signUpSource: currentUser.get('signUpSource'),
+                numberOfTestsCreated: currentUser.get('numberOfTestsCreated'),
+                receivePromotionalEmails: currentUser.get('receivePromotionalEmails'),
+                created_at: Date.parse(currentUser.get('createdAt')) / 1000
+            });
         }
     }
 });

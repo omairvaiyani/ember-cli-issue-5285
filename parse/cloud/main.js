@@ -168,7 +168,7 @@ Parse.User.prototype.setDefaults = function () {
         "averageUniqueScore", "numberOfAttempts", "numberOfUniqueAttempts",
         "numberOfAttemptsByCommunity", "numberOfUniqueAttemptsByCommunity",
         "averageScoreByCommunity", "averageUniqueScoreByCommunity", "numberFollowing",
-        "numberOfFollowers", "points", "srIntensityLevel"];
+        "numberOfFollowers", "points", "srIntensityLevel", "numberOfBadgesUnlocked"];
     _.each(numberProps, function (prop) {
         this.set(prop, 0);
     }.bind(this));
@@ -194,7 +194,7 @@ Parse.User.prototype.setDefaults = function () {
  */
 Parse.User.prototype.minimalProfile = function () {
     var object = this.toJSON(),
-        propertiesToRemove = ['ACL', 'authData', 'createdTests', 'devices', 'email', 'emailNotifications', 'emailVerified',
+        propertiesToRemove = ['ACL', 'authData', 'devices', 'email', 'emailNotifications', 'emailVerified',
             'fbEducation', 'followers', 'following', 'gender', 'savedTests', 'srCompletedAttempts', 'testAttempts',
             'fbFriends', 'firstTimeLogin', 'isPremium', 'intercomHash', 'password', 'pushNotifications', 'receivePromotionalEmails',
             'srActivated', 'srDoNotDisturbTimes', 'srLatestTest', 'srIntensityLevel', 'srNextDue', 'srNotifyByEmail',
@@ -263,8 +263,10 @@ Parse.User.prototype.generateSlug = function () {
  * @Function Check Level Up
  * Checks if points added will level up
  * the user. If so, the function performs
- * the levelling up, saves the user and
- * returns a level object if so.
+ * the levelling up and returns a level object
+ * if so.
+ *
+ * User NOT saved
  *
  * @return {Parse.Promise<Level>} levelledUp
  */
@@ -279,7 +281,7 @@ Parse.User.prototype.checkLevelUp = function () {
         query.equalTo('number', 1);
         promise = query.find().then(function (result) {
             this.set('level', result[0]);
-            return this.save();
+            return this;
         }.bind(this)).then(function () {
             return Parse.Promise.as(true);
         });
@@ -292,7 +294,7 @@ Parse.User.prototype.checkLevelUp = function () {
             else {
                 return Level.getNextLevel(currentLevel).then(function (nextLevel) {
                     this.set('level', nextLevel);
-                    return this.save();
+                    return this;
                 }.bind(this)).then(function () {
                     return Parse.Promise.as(this.level());
                 }.bind(this));
@@ -316,7 +318,6 @@ Parse.User.prototype.checkLevelUp = function () {
  */
 Parse.User.prototype.checkBadgeProgressions = function (userEvent) {
     var badgesProgressed = [],
-        userNeedsSaving = false,
         _this = this;
 
     return this.fetchBadges().then(function (badges) {
@@ -346,8 +347,10 @@ Parse.User.prototype.checkBadgeProgressions = function (userEvent) {
             if (objectToCheck.get(badgeLevelCriteria.attribute) === badgeLevelCriteria.target) {
                 // If First Level achieved, add to User.earnedBadges
                 if (badgeProgression.badgeLevel() === 1) {
-                    _this.earnedBadges().push(badge);
-                    userNeedsSaving = true;
+                    // Something wrong with .earnedBadges. Must generate pointer.
+                    _this.earnedBadges().push(generatePointer(badge.id, "Badge"));
+                    _this.increment('numberOfBadgesUnlocked');
+                    badgeProgression.set('isUnlocked', true);
                 }
 
                 // Badge Progressed (for UserEvent)
@@ -372,8 +375,6 @@ Parse.User.prototype.checkBadgeProgressions = function (userEvent) {
             badgeProgression.set('currentLevelProgress', progress);
         });
         var promises = [];
-        if (userNeedsSaving)
-            promises.push(_this.save());
         // First save all badgeProgressions (due to tally + currentLevelProgress updates)
         if (badgeProgressions.length)
             promises.push(Parse.Object.saveAll(badgeProgressions));
@@ -583,10 +584,17 @@ Parse.User.prototype.name = function () {
 };
 /**
  * @Property createdTests
- * @returns {Parse.Relation}
+ * @returns {Parse.Relation<Test>}
  */
 Parse.User.prototype.createdTests = function () {
     return this.relation('createdTests');
+};
+/**
+ * @Property savedTests
+ * @returns {Parse.Relation<Test>}
+ */
+Parse.User.prototype.savedTests = function () {
+    return this.relation('savedTests');
 };
 /**
  * @Property userEvents
@@ -866,8 +874,10 @@ var UserEvent = Parse.Object.extend("UserEvent", {
             if (badgesProgressed)
                 userEvent.set('badgesProgressed', badgesProgressed);
 
-            if (levelledUp || badgesProgressed)
-                return userEvent.save();
+            // Must save userEvent addition + any points, level or badge changes
+            logger.log("badge-before-save-user", user.earnedBadges());
+            logger.log("user-before-event-save", user.toJSON());
+            return Parse.Promise.when([user.save(), userEvent.save()]);
         }).then(function () {
             return Parse.Promise.as(userEvent);
         });
@@ -1169,8 +1179,57 @@ var Test = Parse.Object.extend("Test", {
 
         this.set('tags', tags);
         return this;
+    },
+
+    /**
+     * @Function Minify Author Profile
+     *
+     * If author is present, its sensitive
+     * info is removed and the test is returned
+     * as a plain Javascript object to send
+     * the object without saving it.
+     *
+     * @returns {Object}
+     */
+    minifyAuthorProfile: function () {
+        if (this.get('author')) {
+            var minimalProfile = this.get('author').minimalProfile();
+            this.set('author', minimalProfile);
+
+            // This is to avoid error on modifying objects without saving.
+            // Else embedded records will be switched to pointers
+            var questions = this.questions();
+            var category = this.category();
+            var testJSON = this.toJSON();
+            testJSON.questions = questions;
+            testJSON.category = category;
+            return testJSON;
+        } else
+            return this;
+
     }
-}, {});
+}, {
+    /**
+     * @Function Minify Author Profiles
+     *
+     * Takes an array of tests with included
+     * author profiles and minifies their profiles
+     * for security purposes. The returned
+     * array is a plain Javascript Array,
+     * fit for Cloud code response without
+     * saving the modified objects.
+     *
+     * @param {Array<Test>} tests
+     * @returns {Array<Object>}
+     */
+    minifyAuthorProfiles: function (tests) {
+        var testsToJSONArray = [];
+        _.each(tests, function (test) {
+            testsToJSONArray.push(test.minifyAuthorProfile());
+        });
+        return testsToJSONArray;
+    }
+});
 
 /****
  * --------
@@ -2384,6 +2443,14 @@ var BadgeProgress = Parse.Object.extend("BadgeProgress", {
      */
     relevantEvents: function () {
         return this.relation('relevantEvents');
+    },
+
+    /**
+     * @Property isUnlocked
+     * @returns {boolean>}
+     */
+    isUnlocked: function () {
+        return this.get('isUnlocked');
     }
 }, {});// Concat source to main.js with 'cat source/*.js > cloud/main.js'
 
@@ -2667,11 +2734,12 @@ Parse.Cloud.beforeSave(Parse.User, function (request, response) {
     var user = request.object,
         promises = [];
 
+    logger.log("user-before-save", user.earnedBadges());
+    logger.log("user-dirty-keys", user.dirtyKeys());
     if (user.isNew()) {
         user.setDefaults();
         promises.push(user.generateSlug());
     }
-
     Parse.Promise.when(promises).then(function () {
         response.success();
     }, function (error) {
@@ -2943,7 +3011,8 @@ Parse.Cloud.beforeSave(UniqueResponse, function (request, response) {
  */
 
 /**
- * @CloudFunction Initialise App for User
+ * @Deprecated see initializeApp
+ * @CloudFunction Initialise Website for User
  *
  * This minimises time spent for the app's initial load
  * by sending all required objects on load. Useful for both
@@ -2978,7 +3047,7 @@ Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
         createdTestsQuery.notEqualTo('isSpacedRepetition', true);
         createdTestsQuery.ascending('title');
         createdTestsQuery.include('questions');
-        createdTestsQuery.limit(200);
+        createdTestsQuery.limit(100);
         promises.push(createdTestsQuery.find());
 
         var savedTestsRelation = user.relation('savedTests'),
@@ -2988,7 +3057,7 @@ Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
         savedTestsQuery.notEqualTo('isSpacedRepetition', true);
         savedTestsQuery.ascending('title');
         savedTestsQuery.include('questions', 'author');
-        savedTestsQuery.limit(200);
+        savedTestsQuery.limit(10);
         promises.push(savedTestsQuery.find());
 
         // Get uniqueResponses only for tests that are being
@@ -3042,12 +3111,12 @@ Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
                     testsToGetLatestAttemptsFor.push(srLatestTest);
 
                 latestTestAttemptsQuery.containedIn('test', testsToGetLatestAttemptsFor);
-                latestTestAttemptsQuery.limit(400);
+                latestTestAttemptsQuery.limit(10);
                 latestTestAttemptsQuery.descending("createdAt");
                 promises.push(latestTestAttemptsQuery.find());
 
                 // Get Earned Badges and Progressions
-                promises.push(user.fetchBadges());
+                //promises.push(user.fetchBadges());
 
                 return Parse.Promise.when(promises);
             }
@@ -3055,8 +3124,8 @@ Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
             result["educationCohort"] = educationCohort;
             result["srAllTests"] = srAllTests;
             result["latestTestAttempts"] = latestTestAttempts;
-            result["earnedBadges"] = badges.earnedBadges;
-            result["badgeProgressions"] = badges.badgeProgressions;
+            //result["earnedBadges"] = badges.earnedBadges;
+            //result["badgeProgressions"] = badges.badgeProgressions;
 
             response.success(result);
         }, function (error) {
@@ -3065,6 +3134,97 @@ Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
             else
                 response.error("Something went wrong.");
         });
+});
+
+/**
+ * @CloudFunction Initialise App
+ *
+ * Initialises client-app
+ * - Config
+ * - Categories
+ * IF User
+ * - Embed pointers
+ * - - EducationCohort (with Institution and StudyField)
+ * - - Level
+ * - - EarnedBadges
+ * - - BadgeProgressions (with Badge)
+ * - - SrLatestTest
+ *
+ * @return {Object} {config, categories, user}
+ */
+Parse.Cloud.define('initialiseApp', function (request, response) {
+    var user = request.user,
+        promises = [];
+
+    // For all initialisations, get Parse.Config and Array<Category>
+    promises.push(Parse.Config.get());
+    promises.push(new Parse.Query(Category).include("parent").find());
+
+    // If logged in, update currentUser with all pointers included
+    // This is because Parse.User.become(sessionToken) is inflexible
+    if (user) {
+        var userQuery = new Parse.Query(Parse.User);
+        userQuery.include('level');
+        userQuery.include('educationCohort.studyField', 'educationCohort.institution');
+        userQuery.include('earnedBadges');
+        userQuery.include('badgeProgressions.badge');
+        userQuery.include('srLatestTest');
+        promises.push(userQuery.get(user.id));
+    }
+
+    Parse.Promise.when(promises).then(function (config, categories, user) {
+        var result = {
+            config: config,
+            categories: categories,
+            user: user
+        };
+        response.success(result);
+    }, function (error) {
+        response.error(error);
+    });
+
+});
+
+/**
+ * @CloudFunction Load My Tests List
+ *
+ * Done as part of client-app initiation
+ * - Created Tests
+ * - Saved Tests
+ */
+Parse.Cloud.define('loadMyTestsList', function (request, response) {
+    var user = request.user,
+        promises = [];
+
+    if (!user)
+        return response.error("You must be logged in.");
+
+    var createdTestsQuery = user.createdTests().query();
+    createdTestsQuery.ascending('title');
+    createdTestsQuery.limit(50);
+    createdTestsQuery.notEqualTo('isObjectDeleted', true);
+    createdTestsQuery.notEqualTo('isSpacedRepetition', true);
+    promises.push(createdTestsQuery.find());
+
+    var savedTestsQuery = user.savedTests().query();
+    savedTestsQuery.ascending('title');
+    savedTestsQuery.include('author');
+    savedTestsQuery.limit(50);
+    savedTestsQuery.notEqualTo('isObjectDeleted', true);
+    savedTestsQuery.notEqualTo('isSpacedRepetition', true);
+    Parse.Cloud.useMasterKey();
+    promises.push(savedTestsQuery.find());
+
+    Parse.Promise.when(promises).then(function (createdTests, savedTests) {
+        var result = {
+            createdTests: createdTests,
+            savedTests: Test.minifyAuthorProfiles(savedTests)
+        };
+        response.success(result);
+    }, function (error) {
+        response.error(error);
+    });
+
 });
 
 /**
@@ -3154,6 +3314,7 @@ Parse.Cloud.define('createNewTest', function (request, response) {
     test.save().then(function () {
         // Update Basic Stat, user will be saved during UserEvent generation
         user.increment('numberOfTestsCreated');
+        user.createdTests().add(test);
         // Creates a new userEvent and increments the users points.
         return UserEvent.newEvent(UserEvent.CREATED_TEST, test, user);
     }).then(function (userEvent) {
@@ -3306,7 +3467,6 @@ Parse.Cloud.define('deleteObjects', function (request, response) {
     });
 });
 /**
- * // TODO, this needs a revision
  * @CloudFunction Get Community Test
  *
  * Fetches a test that is not locally stored
@@ -3325,13 +3485,15 @@ Parse.Cloud.define('getCommunityTest', function (request, response) {
     var user = request.user,
         slug = request.params.slug,
         testId = request.params.testId,
-        query = new Parse.Query(Test);
+        query = new Parse.Query(Test),
+        requestFromAuthor = false;
 
     query.notEqualTo('isObjectDeleted', true);
     if (slug)
         query.equalTo('slug', slug);
     if (testId)
         query.equalTo('objectId', testId);
+
     query.include('questions', 'author', 'category.parent');
 
     // Need this to get author.
@@ -3341,13 +3503,19 @@ Parse.Cloud.define('getCommunityTest', function (request, response) {
         var test = result[0];
         if (!test)
             return response.error("Test not found");
+
+        if (user && user.id === test.get('author').id)
+            requestFromAuthor = true;
+
         // Query includes private tests in case the test
         // belongs to the user. We check it manually here.
-        if (!test.get('isPublic')) {
-            if (!user || user.id !== test.get('author').id)
+        if (!requestFromAuthor) {
+            if (!test.get('isPublic'))
                 return response.error("You do not have permission to view this test.");
+
+            test = test.minifyAuthorProfile();
         }
-        // TODO limit user profile
+
         response.success(test);
     }, function (error) {
         response.error(error);
@@ -3473,7 +3641,7 @@ Parse.Cloud.define('saveTestAttempt', function (request, status) {
  * @param {string} parentObjectClass
  * @param {string} parentObjectId
  * @param {string} relationKey
- * @param {boolean} isTaskToAdd
+ * @param {boolean} isTaskToAdd OR add
  * @param {string} childObjectClass
  * @param {Array} childObjectIds
  * @return success/error
@@ -3483,22 +3651,21 @@ Parse.Cloud.define('addOrRemoveRelation', function (request, response) {
         parentObjectId = request.params.parentObjectId,
         parentObject = new Parse.Object(parentObjectClass),
         relationKey = request.params.relationKey,
-        isTaskToAdd = request.params.isTaskToAdd,
+        isTaskToAdd = request.params.isTaskToAdd ? request.params.isTaskToAdd : request.params.add,
         childObjectClass = request.params.childObjectClass,
         childObjectIds = request.params.childObjectIds,
-        childObjects,
         promises = [];
 
     parentObject.id = parentObjectId;
+    Parse.Cloud.useMasterKey();
     promises.push(parentObject.fetch());
 
     var query = new Parse.Query(childObjectClass);
     query.containedIn('objectId', childObjectIds);
-    promises.push(childObjects = query.find());
+    promises.push(query.find());
 
-    Parse.Promise.when(promises).then(function () {
+    Parse.Promise.when(promises).then(function (parentObject, childObjects) {
         var relation = parentObject.relation(relationKey);
-        childObjects = childObjects._result["0"];
         if (!childObjects.length)
             return Parse.Promise.error("No Child Objects for the given objectIds in Class found.");
         if (isTaskToAdd)
@@ -4287,26 +4454,42 @@ Parse.Cloud.define('getHotTests', function (request, response) {
  * sensitive info before returning.
  * @param {String} slug
  * @param {String} objectId
+ * @param {boolean} includeTests
  * @return {Parse.User}
  */
 Parse.Cloud.define('getUserProfile', function (request, response) {
     Parse.Cloud.useMasterKey();
 
     var slug = request.params.slug,
-        objectId = request.params.objectId;
+        objectId = request.params.objectId,
+        includeTests = request.params.includeTests,
+        user;
 
     var userQuery = new Parse.Query(Parse.User);
-    if(slug)
+    if (slug)
         userQuery.equalTo('slug', slug);
-    if(objectId)
+    if (objectId)
         userQuery.equalTo('objectId', objectId);
 
     userQuery.find().then(function (results) {
-        var user = results[0];
-        if(!user)
+        user = results[0];
+        if (!user)
             return response.error("User with this slug or id not found.");
 
-        response.success(user.minimalProfile());
+        if (includeTests) {
+            var createdTestsQuery = user.createdTests().query();
+            createdTestsQuery.limit(1000);
+            createdTestsQuery.ascending('title');
+            createdTestsQuery.notEqualTo('isObjectDeleted', true);
+            createdTestsQuery.equalTo('isPublic', true);
+            createdTestsQuery.notEqualTo('isGenerated', true);
+            return createdTestsQuery.find();
+        }
+    }).then(function (createdTests) {
+        var userMiniProfile = user.minimalProfile();
+        if (createdTests)
+            userMiniProfile.createdTests = createdTests;
+        response.success(userMiniProfile);
     }, function (error) {
         response.error(error);
     });

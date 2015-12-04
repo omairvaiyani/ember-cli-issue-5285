@@ -3,7 +3,8 @@
  */
 
 /**
- * @CloudFunction Initialise App for User
+ * @Deprecated see initializeApp
+ * @CloudFunction Initialise Website for User
  *
  * This minimises time spent for the app's initial load
  * by sending all required objects on load. Useful for both
@@ -38,7 +39,7 @@ Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
         createdTestsQuery.notEqualTo('isSpacedRepetition', true);
         createdTestsQuery.ascending('title');
         createdTestsQuery.include('questions');
-        createdTestsQuery.limit(200);
+        createdTestsQuery.limit(100);
         promises.push(createdTestsQuery.find());
 
         var savedTestsRelation = user.relation('savedTests'),
@@ -48,7 +49,7 @@ Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
         savedTestsQuery.notEqualTo('isSpacedRepetition', true);
         savedTestsQuery.ascending('title');
         savedTestsQuery.include('questions', 'author');
-        savedTestsQuery.limit(200);
+        savedTestsQuery.limit(10);
         promises.push(savedTestsQuery.find());
 
         // Get uniqueResponses only for tests that are being
@@ -102,12 +103,12 @@ Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
                     testsToGetLatestAttemptsFor.push(srLatestTest);
 
                 latestTestAttemptsQuery.containedIn('test', testsToGetLatestAttemptsFor);
-                latestTestAttemptsQuery.limit(400);
+                latestTestAttemptsQuery.limit(10);
                 latestTestAttemptsQuery.descending("createdAt");
                 promises.push(latestTestAttemptsQuery.find());
 
                 // Get Earned Badges and Progressions
-                promises.push(user.fetchBadges());
+                //promises.push(user.fetchBadges());
 
                 return Parse.Promise.when(promises);
             }
@@ -115,8 +116,8 @@ Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
             result["educationCohort"] = educationCohort;
             result["srAllTests"] = srAllTests;
             result["latestTestAttempts"] = latestTestAttempts;
-            result["earnedBadges"] = badges.earnedBadges;
-            result["badgeProgressions"] = badges.badgeProgressions;
+            //result["earnedBadges"] = badges.earnedBadges;
+            //result["badgeProgressions"] = badges.badgeProgressions;
 
             response.success(result);
         }, function (error) {
@@ -125,6 +126,97 @@ Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
             else
                 response.error("Something went wrong.");
         });
+});
+
+/**
+ * @CloudFunction Initialise App
+ *
+ * Initialises client-app
+ * - Config
+ * - Categories
+ * IF User
+ * - Embed pointers
+ * - - EducationCohort (with Institution and StudyField)
+ * - - Level
+ * - - EarnedBadges
+ * - - BadgeProgressions (with Badge)
+ * - - SrLatestTest
+ *
+ * @return {Object} {config, categories, user}
+ */
+Parse.Cloud.define('initialiseApp', function (request, response) {
+    var user = request.user,
+        promises = [];
+
+    // For all initialisations, get Parse.Config and Array<Category>
+    promises.push(Parse.Config.get());
+    promises.push(new Parse.Query(Category).include("parent").find());
+
+    // If logged in, update currentUser with all pointers included
+    // This is because Parse.User.become(sessionToken) is inflexible
+    if (user) {
+        var userQuery = new Parse.Query(Parse.User);
+        userQuery.include('level');
+        userQuery.include('educationCohort.studyField', 'educationCohort.institution');
+        userQuery.include('earnedBadges');
+        userQuery.include('badgeProgressions.badge');
+        userQuery.include('srLatestTest');
+        promises.push(userQuery.get(user.id));
+    }
+
+    Parse.Promise.when(promises).then(function (config, categories, user) {
+        var result = {
+            config: config,
+            categories: categories,
+            user: user
+        };
+        response.success(result);
+    }, function (error) {
+        response.error(error);
+    });
+
+});
+
+/**
+ * @CloudFunction Load My Tests List
+ *
+ * Done as part of client-app initiation
+ * - Created Tests
+ * - Saved Tests
+ */
+Parse.Cloud.define('loadMyTestsList', function (request, response) {
+    var user = request.user,
+        promises = [];
+
+    if (!user)
+        return response.error("You must be logged in.");
+
+    var createdTestsQuery = user.createdTests().query();
+    createdTestsQuery.ascending('title');
+    createdTestsQuery.limit(50);
+    createdTestsQuery.notEqualTo('isObjectDeleted', true);
+    createdTestsQuery.notEqualTo('isSpacedRepetition', true);
+    promises.push(createdTestsQuery.find());
+
+    var savedTestsQuery = user.savedTests().query();
+    savedTestsQuery.ascending('title');
+    savedTestsQuery.include('author');
+    savedTestsQuery.limit(50);
+    savedTestsQuery.notEqualTo('isObjectDeleted', true);
+    savedTestsQuery.notEqualTo('isSpacedRepetition', true);
+    Parse.Cloud.useMasterKey();
+    promises.push(savedTestsQuery.find());
+
+    Parse.Promise.when(promises).then(function (createdTests, savedTests) {
+        var result = {
+            createdTests: createdTests,
+            savedTests: Test.minifyAuthorProfiles(savedTests)
+        };
+        response.success(result);
+    }, function (error) {
+        response.error(error);
+    });
+
 });
 
 /**
@@ -214,6 +306,7 @@ Parse.Cloud.define('createNewTest', function (request, response) {
     test.save().then(function () {
         // Update Basic Stat, user will be saved during UserEvent generation
         user.increment('numberOfTestsCreated');
+        user.createdTests().add(test);
         // Creates a new userEvent and increments the users points.
         return UserEvent.newEvent(UserEvent.CREATED_TEST, test, user);
     }).then(function (userEvent) {
@@ -366,7 +459,6 @@ Parse.Cloud.define('deleteObjects', function (request, response) {
     });
 });
 /**
- * // TODO, this needs a revision
  * @CloudFunction Get Community Test
  *
  * Fetches a test that is not locally stored
@@ -385,13 +477,15 @@ Parse.Cloud.define('getCommunityTest', function (request, response) {
     var user = request.user,
         slug = request.params.slug,
         testId = request.params.testId,
-        query = new Parse.Query(Test);
+        query = new Parse.Query(Test),
+        requestFromAuthor = false;
 
     query.notEqualTo('isObjectDeleted', true);
     if (slug)
         query.equalTo('slug', slug);
     if (testId)
         query.equalTo('objectId', testId);
+
     query.include('questions', 'author', 'category.parent');
 
     // Need this to get author.
@@ -401,13 +495,19 @@ Parse.Cloud.define('getCommunityTest', function (request, response) {
         var test = result[0];
         if (!test)
             return response.error("Test not found");
+
+        if (user && user.id === test.get('author').id)
+            requestFromAuthor = true;
+
         // Query includes private tests in case the test
         // belongs to the user. We check it manually here.
-        if (!test.get('isPublic')) {
-            if (!user || user.id !== test.get('author').id)
+        if (!requestFromAuthor) {
+            if (!test.get('isPublic'))
                 return response.error("You do not have permission to view this test.");
+
+            test = test.minifyAuthorProfile();
         }
-        // TODO limit user profile
+
         response.success(test);
     }, function (error) {
         response.error(error);
@@ -533,7 +633,7 @@ Parse.Cloud.define('saveTestAttempt', function (request, status) {
  * @param {string} parentObjectClass
  * @param {string} parentObjectId
  * @param {string} relationKey
- * @param {boolean} isTaskToAdd
+ * @param {boolean} isTaskToAdd OR add
  * @param {string} childObjectClass
  * @param {Array} childObjectIds
  * @return success/error
@@ -543,22 +643,21 @@ Parse.Cloud.define('addOrRemoveRelation', function (request, response) {
         parentObjectId = request.params.parentObjectId,
         parentObject = new Parse.Object(parentObjectClass),
         relationKey = request.params.relationKey,
-        isTaskToAdd = request.params.isTaskToAdd,
+        isTaskToAdd = request.params.isTaskToAdd ? request.params.isTaskToAdd : request.params.add,
         childObjectClass = request.params.childObjectClass,
         childObjectIds = request.params.childObjectIds,
-        childObjects,
         promises = [];
 
     parentObject.id = parentObjectId;
+    Parse.Cloud.useMasterKey();
     promises.push(parentObject.fetch());
 
     var query = new Parse.Query(childObjectClass);
     query.containedIn('objectId', childObjectIds);
-    promises.push(childObjects = query.find());
+    promises.push(query.find());
 
-    Parse.Promise.when(promises).then(function () {
+    Parse.Promise.when(promises).then(function (parentObject, childObjects) {
         var relation = parentObject.relation(relationKey);
-        childObjects = childObjects._result["0"];
         if (!childObjects.length)
             return Parse.Promise.error("No Child Objects for the given objectIds in Class found.");
         if (isTaskToAdd)
@@ -1347,26 +1446,42 @@ Parse.Cloud.define('getHotTests', function (request, response) {
  * sensitive info before returning.
  * @param {String} slug
  * @param {String} objectId
+ * @param {boolean} includeTests
  * @return {Parse.User}
  */
 Parse.Cloud.define('getUserProfile', function (request, response) {
     Parse.Cloud.useMasterKey();
 
     var slug = request.params.slug,
-        objectId = request.params.objectId;
+        objectId = request.params.objectId,
+        includeTests = request.params.includeTests,
+        user;
 
     var userQuery = new Parse.Query(Parse.User);
-    if(slug)
+    if (slug)
         userQuery.equalTo('slug', slug);
-    if(objectId)
+    if (objectId)
         userQuery.equalTo('objectId', objectId);
 
     userQuery.find().then(function (results) {
-        var user = results[0];
-        if(!user)
+        user = results[0];
+        if (!user)
             return response.error("User with this slug or id not found.");
 
-        response.success(user.minimalProfile());
+        if (includeTests) {
+            var createdTestsQuery = user.createdTests().query();
+            createdTestsQuery.limit(1000);
+            createdTestsQuery.ascending('title');
+            createdTestsQuery.notEqualTo('isObjectDeleted', true);
+            createdTestsQuery.equalTo('isPublic', true);
+            createdTestsQuery.notEqualTo('isGenerated', true);
+            return createdTestsQuery.find();
+        }
+    }).then(function (createdTests) {
+        var userMiniProfile = user.minimalProfile();
+        if (createdTests)
+            userMiniProfile.createdTests = createdTests;
+        response.success(userMiniProfile);
     }, function (error) {
         response.error(error);
     });

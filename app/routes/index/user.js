@@ -9,9 +9,37 @@ export default Ember.Route.extend({
         //if (!this.get('metaTagsSorted'))
         //    this.sortOutMetaTags(params, transition);
 
-        return ParseHelper.cloudFunction(this, 'getUserProfile', {slug: params.user_slug})
+        var user = this.store.all('parse-user').filterBy('slug', params.user_slug).objectAt(0);
+        // Only use local record if user's tests have been fetched.
+        // Annoyingly, ember-data is screwing up stored records,
+        // it's adding createdTests to the wrong users. Here's a workaround.
+        if (user && user.get('createdTests.length')
+            && user.get('createdTests').objectAt(0).get('author.id') === user.get('id')) {
+            return user;
+        }
+
+        return ParseHelper.cloudFunction(this, 'getUserProfile', {
+                slug: params.user_slug,
+                includeTests: true
+            })
             .then(function (response) {
-                return ParseHelper.extractRawPayload(this.store, 'parse-user', response);
+                var createdTests = new Ember.A(),
+                    savedTests = new Ember.A();
+
+                if (response.createdTests)
+                    createdTests.addObjects(ParseHelper.extractRawPayload(
+                        this.store, 'test', _.clone(response.createdTests)));
+
+                if (response.savedTests)
+                    savedTests.addObjects(ParseHelper.extractRawPayload(
+                        this.store, 'test', _.clone(response.savedTests)));
+
+                var user = ParseHelper.extractRawPayload(this.store, 'parse-user', response);
+
+                user.set('createdTests', createdTests);
+                user.set('savedTests', savedTests);
+
+                return user;
             }.bind(this), function (error) {
                 console.dir(error);
                 // TODO switch template to 404

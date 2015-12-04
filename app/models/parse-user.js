@@ -7,7 +7,7 @@ import ParseUserModel from 'ember-parse-adapter/models/parse-user';
  * Parse User object implementation
  * @type {DS.Model}
  */
-var ParseUser =  ParseUserModel.extend(ParseMixin, {
+var ParseUser = ParseUserModel.extend(ParseMixin, {
     /*
      * Account
      */
@@ -85,7 +85,9 @@ var ParseUser =  ParseUserModel.extend(ParseMixin, {
     userEvents: DS.attr(),
     points: DS.attr('number', {defaultValue: 0}),
     level: DS.belongsTo('level', {async: true}),
-    earnedBadges: DS.hasMany('badge', {async: true}),
+    // Array pointers on ParseUserModel are not working!
+    // We have to manually set these
+    //earnedBadges: DS.hasMany('badge', {async: true}),
     //badgeProgressions: DS.hasMany('badge-progress', {async: true}),
 
     /*
@@ -177,7 +179,7 @@ ParseUserModel.reopenClass({
         );
     },
 
-    loginDeprecated: function (store, data) {
+    /*loginDeprecated: function (store, data) {
         if (Ember.isEmpty(this.typeKey)) {
             throw new Error('Parse login must be called on a model fetched via store.modelFor');
         }
@@ -194,7 +196,7 @@ ParseUserModel.reopenClass({
                 return Ember.RSVP.reject(response.responseJSON);
             }
         );
-    },
+    },*/
 
     /*
      * Modified by Omair:

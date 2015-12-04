@@ -155,7 +155,7 @@
                 {{profile-picture user=user}}
             </div>
             <div class="inline-block">
-                <p class="title no-margin">{{#link-to 'user.index' user.slug}}{{user.name}}{{/link-to}}</p>
+                <p class="title no-margin">{{#link-to 'index.user' user.slug}}{{user.name}}{{/link-to}}</p>
                 {{#if user.educationCohort.currentYear}}
                     <p class="no-margin small">
                         <i class="fa fa-group fa-fw"></i>&nbsp; {{user.educationCohort.currentYear}}

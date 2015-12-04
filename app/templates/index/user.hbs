@@ -37,7 +37,7 @@
 
                     <div class="overview-stat-container inline-block">
                         <h4 class="stat">
-                            0
+                            {{model.numberOfBadgesUnlocked}}
                         </h4>
                         <h4 class="small">
                             Badges Unlocked
@@ -71,11 +71,13 @@
 
             <div class="panel-heading">
                 <h4 class="no-margin">
-                    Badges
+                    Trophy Case
                 </h4>
             </div>
             <div class="panel-body">
-
+                {{#each model.badgeProgressions as |badgeProgression|}}
+                    {{synap-badge badgeProgression=badgeProgression}}
+                {{/each}}
             </div>
 
         </div>

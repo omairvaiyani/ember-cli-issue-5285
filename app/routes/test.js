@@ -10,42 +10,55 @@ export default Ember.Route.extend({
     model: function (params, transition) {
         transition.send('incrementLoadingItems');
 
-        var locallyFound = false;
-        return this.store.filter('test', function (test) {
-            return test.get('slug') === params.test_slug;
-        }).then(function (results) {
-            if (results.objectAt(0)) {
-                locallyFound = true;
-                return results.objectAt(0);
-            }
+        var test = this.store.all('test').filterBy('slug', params.test_slug).objectAt(0);
 
-            return ParseHelper.cloudFunction(this, 'getCommunityTest', {slug: params.test_slug});
-        }.bind(this)).then(function (result) {
-            if (locallyFound)
-                return result; // result === DS.Model<test>
+        if (test && this.checkIfLocalTestHasQuestionsLoaded(test)) {
+            return test;
+        }
 
-            if (result) {
-                // result === ParseObject<Test>
-                var test = ParseHelper.extractRawPayload(this.store, 'test', result);
-                return test;
-            } else {
-                // TODO handle test not found
-                console.error("Test with slug: "+params.test_slug+" not found!");
-            }
-        }.bind(this));
+        return ParseHelper.cloudFunction(this, 'getCommunityTest', {slug: params.test_slug})
+            .then(function (response) {
+                return ParseHelper.extractRawPayload(this.store, 'test', response);
+            }.bind(this), function (error) {
+                console.dir(error);
+                // TODO switch template to 404
+            });
 
+    },
 
+    /**
+     * @Function Check if Local Test has Questions Loaded
+     *
+     * In the model hook, we filter through local tests to
+     * avoid unnecessary network calls. However, when the
+     * website first initialises, we load created and saved
+     * tests for the user *without* questions for latency.
+     * Therefore, we need to check if the local test still
+     * needs to result in the network call to fetch the whole
+     * object (with questions).
+     *
+     * If we did test.get('questions.stem.length'), it would
+     * result in automatic record fetching by ember-data. Yet,
+     * Ember does not provide an official safe way to check
+     * for relational records. Here's our "safe" workaround.
+     *
+     * @param test
+     * @returns {boolean}
+     */
+    checkIfLocalTestHasQuestionsLoaded: function (test) {
+        if (test._data && test._data.questions && test._data.questions[0] && test._data.questions[0]._data
+            && test._data.questions[0]._data.stem)
+            return true;
     },
     /*
      * Prerender readied in Test.Controller.setTimeStarted
      */
     setupController: function (controller, model) {
-        // TODO replace location.history when transition to 404
-        if (!model) {
-            this.transitionTo('notFound');
+        if (!model)
             return;
-        }
+
         var isGeneratedAttempt = false;
+
         if (model.constructor.typeKey === 'attempt') {
             isGeneratedAttempt = true;
         } else {

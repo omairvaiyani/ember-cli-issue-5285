@@ -168,7 +168,7 @@ Parse.User.prototype.setDefaults = function () {
         "averageUniqueScore", "numberOfAttempts", "numberOfUniqueAttempts",
         "numberOfAttemptsByCommunity", "numberOfUniqueAttemptsByCommunity",
         "averageScoreByCommunity", "averageUniqueScoreByCommunity", "numberFollowing",
-        "numberOfFollowers", "points", "srIntensityLevel"];
+        "numberOfFollowers", "points", "srIntensityLevel", "numberOfBadgesUnlocked"];
     _.each(numberProps, function (prop) {
         this.set(prop, 0);
     }.bind(this));
@@ -194,7 +194,7 @@ Parse.User.prototype.setDefaults = function () {
  */
 Parse.User.prototype.minimalProfile = function () {
     var object = this.toJSON(),
-        propertiesToRemove = ['ACL', 'authData', 'createdTests', 'devices', 'email', 'emailNotifications', 'emailVerified',
+        propertiesToRemove = ['ACL', 'authData', 'devices', 'email', 'emailNotifications', 'emailVerified',
             'fbEducation', 'followers', 'following', 'gender', 'savedTests', 'srCompletedAttempts', 'testAttempts',
             'fbFriends', 'firstTimeLogin', 'isPremium', 'intercomHash', 'password', 'pushNotifications', 'receivePromotionalEmails',
             'srActivated', 'srDoNotDisturbTimes', 'srLatestTest', 'srIntensityLevel', 'srNextDue', 'srNotifyByEmail',
@@ -263,8 +263,10 @@ Parse.User.prototype.generateSlug = function () {
  * @Function Check Level Up
  * Checks if points added will level up
  * the user. If so, the function performs
- * the levelling up, saves the user and
- * returns a level object if so.
+ * the levelling up and returns a level object
+ * if so.
+ *
+ * User NOT saved
  *
  * @return {Parse.Promise<Level>} levelledUp
  */
@@ -279,7 +281,7 @@ Parse.User.prototype.checkLevelUp = function () {
         query.equalTo('number', 1);
         promise = query.find().then(function (result) {
             this.set('level', result[0]);
-            return this.save();
+            return this;
         }.bind(this)).then(function () {
             return Parse.Promise.as(true);
         });
@@ -292,7 +294,7 @@ Parse.User.prototype.checkLevelUp = function () {
             else {
                 return Level.getNextLevel(currentLevel).then(function (nextLevel) {
                     this.set('level', nextLevel);
-                    return this.save();
+                    return this;
                 }.bind(this)).then(function () {
                     return Parse.Promise.as(this.level());
                 }.bind(this));
@@ -316,7 +318,6 @@ Parse.User.prototype.checkLevelUp = function () {
  */
 Parse.User.prototype.checkBadgeProgressions = function (userEvent) {
     var badgesProgressed = [],
-        userNeedsSaving = false,
         _this = this;
 
     return this.fetchBadges().then(function (badges) {
@@ -346,8 +347,10 @@ Parse.User.prototype.checkBadgeProgressions = function (userEvent) {
             if (objectToCheck.get(badgeLevelCriteria.attribute) === badgeLevelCriteria.target) {
                 // If First Level achieved, add to User.earnedBadges
                 if (badgeProgression.badgeLevel() === 1) {
-                    _this.earnedBadges().push(badge);
-                    userNeedsSaving = true;
+                    // Something wrong with .earnedBadges. Must generate pointer.
+                    _this.earnedBadges().push(generatePointer(badge.id, "Badge"));
+                    _this.increment('numberOfBadgesUnlocked');
+                    badgeProgression.set('isUnlocked', true);
                 }
 
                 // Badge Progressed (for UserEvent)
@@ -372,8 +375,6 @@ Parse.User.prototype.checkBadgeProgressions = function (userEvent) {
             badgeProgression.set('currentLevelProgress', progress);
         });
         var promises = [];
-        if (userNeedsSaving)
-            promises.push(_this.save());
         // First save all badgeProgressions (due to tally + currentLevelProgress updates)
         if (badgeProgressions.length)
             promises.push(Parse.Object.saveAll(badgeProgressions));
@@ -583,10 +584,17 @@ Parse.User.prototype.name = function () {
 };
 /**
  * @Property createdTests
- * @returns {Parse.Relation}
+ * @returns {Parse.Relation<Test>}
  */
 Parse.User.prototype.createdTests = function () {
     return this.relation('createdTests');
+};
+/**
+ * @Property savedTests
+ * @returns {Parse.Relation<Test>}
+ */
+Parse.User.prototype.savedTests = function () {
+    return this.relation('savedTests');
 };
 /**
  * @Property userEvents
@@ -866,8 +874,10 @@ var UserEvent = Parse.Object.extend("UserEvent", {
             if (badgesProgressed)
                 userEvent.set('badgesProgressed', badgesProgressed);
 
-            if (levelledUp || badgesProgressed)
-                return userEvent.save();
+            // Must save userEvent addition + any points, level or badge changes
+            logger.log("badge-before-save-user", user.earnedBadges());
+            logger.log("user-before-event-save", user.toJSON());
+            return Parse.Promise.when([user.save(), userEvent.save()]);
         }).then(function () {
             return Parse.Promise.as(userEvent);
         });
@@ -1169,8 +1179,57 @@ var Test = Parse.Object.extend("Test", {
 
         this.set('tags', tags);
         return this;
+    },
+
+    /**
+     * @Function Minify Author Profile
+     *
+     * If author is present, its sensitive
+     * info is removed and the test is returned
+     * as a plain Javascript object to send
+     * the object without saving it.
+     *
+     * @returns {Object}
+     */
+    minifyAuthorProfile: function () {
+        if (this.get('author')) {
+            var minimalProfile = this.get('author').minimalProfile();
+            this.set('author', minimalProfile);
+
+            // This is to avoid error on modifying objects without saving.
+            // Else embedded records will be switched to pointers
+            var questions = this.questions();
+            var category = this.category();
+            var testJSON = this.toJSON();
+            testJSON.questions = questions;
+            testJSON.category = category;
+            return testJSON;
+        } else
+            return this;
+
     }
-}, {});
+}, {
+    /**
+     * @Function Minify Author Profiles
+     *
+     * Takes an array of tests with included
+     * author profiles and minifies their profiles
+     * for security purposes. The returned
+     * array is a plain Javascript Array,
+     * fit for Cloud code response without
+     * saving the modified objects.
+     *
+     * @param {Array<Test>} tests
+     * @returns {Array<Object>}
+     */
+    minifyAuthorProfiles: function (tests) {
+        var testsToJSONArray = [];
+        _.each(tests, function (test) {
+            testsToJSONArray.push(test.minifyAuthorProfile());
+        });
+        return testsToJSONArray;
+    }
+});
 
 /****
  * --------
@@ -2384,5 +2443,13 @@ var BadgeProgress = Parse.Object.extend("BadgeProgress", {
      */
     relevantEvents: function () {
         return this.relation('relevantEvents');
+    },
+
+    /**
+     * @Property isUnlocked
+     * @returns {boolean>}
+     */
+    isUnlocked: function () {
+        return this.get('isUnlocked');
     }
 }, {});
