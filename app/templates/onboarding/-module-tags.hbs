@@ -11,24 +11,21 @@
         {{/if}}
         <hr>
         <h5><strong>Modules</strong></h5>
-        <ul class="tags margin-bottom-16">
-            {{#if fetchingModuleTags}}
-                <h5 class="text-center">Fetching Modules...</h5>
-            {{else}}
-                {{!--
-                {{#each user.moduleTags as |tag index|}}
-                    <li class="tag">{{tag}}<i class="fa fa-fw fa-close" {{action "removeModuleTag" index}}></i></li>
-                {{/each}}
-                <li class="tag default">
-                    {{input type="text" value=newModuleTag action="addNewModuleTag" placeholder="Module name"
-                    id="onboarding-addNewModuleTag"}}
-                    <i {{bind-attr class=":fa :fa-fw :fa-plus :add-tag newModuleTag.length::close-tag"}}
-                        {{action 'addNewModuleTag'}}></i>
-                </li>
-                --}}
-                {{module-tags canEdit=true tags=user.moduleTags parentController=this}}
-            {{/if}}
-        </ul>
+
+        {{#if fetchingModuleTags}}
+            <section class="row">
+                <article class="col-xs-12 text-center">
+                    {{loading-bar isLoading=true class="inline-block margin-right-8"}}
+                    <h5 class="inline-block">Fetching Modules...</h5>
+                </article>
+            </section>
+        {{else}}
+            <ul class="tags margin-bottom-16">
+                {{module-tags canEdit=true tags=user.moduleTags parentController=this
+                tagOrModule="Module"}}
+            </ul>
+        {{/if}}
+
     </div>
 </article>
 

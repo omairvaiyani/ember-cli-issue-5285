@@ -1,23 +1,36 @@
 <div {{bind-attr class=":tags center:text-center centre:text-center"}}>
-    {{#each tags as |tag|}}
+    {{#each tagArray as |tagObject|}}
         {{#if canEdit}}
-            <div {{bind-attr class=":module-tag :has-icon canEdit::no-edit"}}{{action "removeTag" tag}}>
-                <i class="fa fa-fw fa-tag icon"></i>
-                <span>{{tag}}</span>
-                <i class="fa fa-fa fa-times-circle remove-tag"></i>
-            </div>
+            {{#unless tagObject.editingTag}}
+                <div {{bind-attr class=":module-tag :has-icon"}} {{action "editTag" tagObject}}>
+                    <i class="fa fa-fw fa-tag icon"></i>
+                    <span>{{tagObject.tag}}</span>
+                    <i class="fa fa-fa fa-times-circle remove-tag" {{action "removeTag" tagObject.tag}}></i>
+                </div>
+            {{else}}
+                <div {{bind-attr class=":module-tag :edit-tag :has-icon"}}>
+                    <i class="fa fa-fw fa-pencil-square icon"></i>
+                    {{input type='text' value=tagObject.tag placeholder="E.g. Bio"
+                    action="finishEditingTag" id=tagObject.id}}
+                    <div class="action-button" {{action 'finishEditingTag'}}>
+                        +
+                    </div>
+                </div>
+            {{/unless}}
+
         {{else}}
             <div {{bind-attr class=":module-tag canEdit::no-edit :has-icon inverseStyle:inverse small"}}
-            {{action "tagClicked"}}>
+                {{action "tagClicked"}}>
                 <i class="fa fa-fw fa-tag icon"></i>
-                <span>{{tag}}</span>
+                <span>{{tagObject.tag}}</span>
             </div>
         {{/if}}
     {{/each}}
     {{#if canEdit}}
         {{#if parentController.addingTag}}
-            <div {{bind-attr class=":module-tag :new-tag"}}>
-                {{input type='text' value=parentController.newTag placeholder="Type a tag..."
+            <div {{bind-attr class=":module-tag :new-tag :has-icon"}}>
+                <i class="fa fa-fw fa-pencil-square icon"></i>
+                {{input type='text' value=parentController.newTag placeholder="E.g. Bio"
                 id="new-tag" action="toggleAddingNewTag"}}
                 <div class="action-button" {{action 'toggleAddingNewTag'}}>
                     +
@@ -25,7 +38,7 @@
             </div>
         {{else}}
             <div {{bind-attr class=":module-tag :new-tag"}} {{action 'toggleAddingNewTag'}}>
-                <span>Add Tag</span>
+                <span>Add {{tagOrModule}}</span>
 
                 <div class="action-button">+</div>
             </div>

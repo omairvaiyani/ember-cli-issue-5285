@@ -17,10 +17,12 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
         return this.get('onboardingSteps')[this.get('currentStepIndex')];
     }.property('currentStepIndex'),
 
-    onboardingSteps: ["studyingAt", "moduleTags", "spacedRepetition", "profileSetup"],
+    onboardingSteps: ["welcomeScreen", "studyingAt", "moduleTags", "spacedRepetition", "profileSetup"],
 
     onboardingStepTitle: function () {
         switch (this.get('currentStep')) {
+            case "welcomeScreen":
+                return "Welcome to Synap!";
             case "studyingAt":
                 return "Let us tailor fit your studies";
             case "moduleTags":
@@ -70,21 +72,39 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
             if (user.get('moduleTags.length') > 4)
                 progress += 4;
         }
-        if (user.get('srActivated'))
+        if (user.get('srIntensityLevel') > 0)
             progress += 25;
         if (this.get('registrationComplete'))
             progress += 17;
         return progress;
     }.property('user.studying.length', 'user.studyingAt.length', 'user.placeOfStudy.length',
-        'user.studyYear.length', 'user.moduleTags.length', 'user.srActivated', 'registrationComplete'),
+        'user.studyYear.length', 'user.moduleTags.length', 'user.srIntensityLevel', 'registrationComplete'),
 
     studyOptimizationBarStyle: function () {
         return "width:" + this.get('studyOptimizationProgress') + "%;";
     }.property('studyOptimizationProgress'),
 
     /*
+     * STEP - Welcome Screen
+     */
+    welcomeScreenStepComplete: true,
+
+    /*
      * STEP - Studying At
      */
+    focusOnStudyFieldInput: function () {
+        if (this.get('currentStep') === "studyingAt") {
+            // Wait for element to load into dom
+            setTimeout(function () {
+                // Focus on new module tag input
+                var input = $("#studying-input");
+                if (!input)
+                    return;
+                input.focus();
+            }, 150);
+        }
+    }.observes('currentStep.length'),
+
     showPlaceOfStudyInput: false,
     showStudyYearPicker: false,
 
@@ -148,7 +168,7 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
         if (this.get('currentStep') !== "moduleTags")
             return;
 
-        if (!this.get('user.studying') && !this.get('user.placeOfStudy'))
+        if (!this.get('user.studying.length') || !this.get('user.placeOfStudy.length'))
             return;
 
         this.set('fetchingModuleTags', true);
@@ -178,8 +198,21 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
     /*
      * Spaced Repetition
      */
+    studyIntensityLevels: function () {
+        return this.get('controllers.application.parseConfig.srIntensityLevels');
+    }.property('controllers.application.parseConfig.srIntensityLevels'),
+
+    setSelectedIntensityForUX: function () {
+        if (!this.get('studyIntensityLevels.length'))
+            return;
+
+        this.get('studyIntensityLevels').forEach(function (intensity) {
+            Ember.set(intensity, 'isSelected', this.get('user.srIntensityLevel') === intensity.level);
+        }.bind(this));
+    }.observes('user.srIntensityLevel', 'currentStep.length', 'studyIntensityLevels.length'),
+
     spacedRepetitionStepComplete: function () {
-        return this.get('user.srActivated');
+        return this.get('user.srIntensityLevel') > 0;
     }.property('user.srActivated'),
 
     /*
@@ -230,6 +263,27 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
             this.set('imageFile.isDefault', false);
     }.observes('currentStep'),
 
+    /**
+     * @Action Append User Data for Registration
+     * Unifies the data attributes before registering
+     * the user either with FB or Email
+     * @param data (optional)
+     * @return {Object} data
+     */
+    appendUserDataForRegistration: function (data) {
+        if (!data)
+            data = {};
+
+        data.signUpSource = "Web";
+        data.srIntensityLevel = this.get('user.srIntensityLevel');
+        data.moduleTags = this.get('user.moduleTags');
+        if (this.get('user.profilePicture'))
+            data.profilePicture = this.get('user.profilePicture');
+        if (this.get('educationCohort'))
+            data.educationCohort = ParseHelper.generatePointer(this.get('user.educationCohort'), 'EducationCohort');
+        return data;
+    },
+
     actions: {
         studyingAt: function (studyingAt) {
             this.set('user.studyingAt', studyingAt);
@@ -243,12 +297,15 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
         },
 
         continueToNextStep: function () {
-            if (this.get('currentStep') === "moduleTags") {
-                // Check if new moduleTags have been added
-                if (this.get('user.moduleTags.length') && this.get('user.educationCohort'))
-                    this.set('user.educationCohort.moduleTags', this.get('user.moduleTags'));
-            }
             this.incrementProperty('currentStepIndex');
+
+            // user.srIntensityLevel is set to -1 on creation, and here, it's
+            // updated to 2.
+            // This results in the optimisation progress increasing whilst the user
+            // sees the SR step.
+            if (this.get('currentStep') === "spacedRepetition" && this.get('user.srIntensityLevel') === -1) {
+                this.set('user.srIntensityLevel', 2);
+            }
         },
 
         goToPreviousStep: function () {
@@ -295,6 +352,22 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
             this.get('user.moduleTags').removeObject(tag);
         },
 
+        selectStudyIntensity: function (intensity) {
+            this.set('user.srIntensityLevel', intensity.level);
+        },
+
+        activateSpacedRepetitionForUser: function () {
+            ParseHelper.cloudFunction(this, 'activateSpacedRepetitionForUser', {})
+                .then(function () {
+                    return this.get('currentUser').reload();
+                }.bind(this)).then(function () {
+                this.get('currentUser').save();
+            }.bind(this), function (error) {
+                console.dir(error);
+                this.send('decrementLoadingItems');
+            }.bind(this));
+        },
+
         // Image uploaded to server after
         // user presses "register", we
         // we now need to same the image
@@ -309,6 +382,7 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
         registerWithEmailAsyncButton: function () {
             $("#onboarding-registerWithEmail").click();
         },
+
         registerUserWithEmail: function (callback) {
             var name = this.get('user.name'),
                 email = this.get('user.email'),
@@ -326,9 +400,9 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
                     name: name.capitalize().trim(),
                     username: email.trim(),
                     email: email.trim(),
-                    signUpSource: 'Web',
                     password: password
                 };
+                data = this.appendUserDataForRegistration(data);
                 var redirect = Ember.Object.create({
                     controller: this,
                     returnAction: "registrationComplete"
@@ -336,6 +410,7 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
                 });
                 this.send('setRedirect', redirect);
                 this.send('registerUser', data, callback);
+
             } else if (callback) {
                 callback(new Parse.Promise().resolve());
             }
@@ -347,15 +422,48 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
                 returnAction: "registrationComplete"
             });
             this.send('setRedirect', redirect);
-            this.send('facebookConnect');
+            this.send('facebookConnect', this.appendUserDataForRegistration());
         },
 
+        /**
+         * @Action Registration Complete
+         *
+         * This is a callback, sent after ApplicationRoute
+         * has finished registering the user. We can now
+         * add the extra info onto the currentUser, such
+         * as educationCohort, profilePicture and spaced
+         * repetition markers.
+         *
+         */
         registrationComplete: function () {
             this.set('registrationComplete', true);
 
-            this.set('currentUser.educationCohort', this.get('user.educationCohort'));
+            ParseHelper.cloudFunction(this, 'newUserEvent', {type: "registered"}).then(function (result) {
+               return this.send('newUserEvent', result);
+            }.bind(this)).then(function () {
+                // Activating Spaced Repetition requires user to be registered first.
+                // The above changes are saved first as the cloud function for SR
+                // requires the client to 'reload' the user object. This can cause
+                // inconsistencies with previous unsaved changes.
+                if (this.get('currentUser.srIntensityLevel') > 0) {
+                    this.send('activateSpacedRepetitionForUser');
+                }
+            }.bind(this));
+
+            /*this.set('currentUser.educationCohort', this.get('user.educationCohort'));
             this.set('currentUser.profilePicture', this.get('user.profilePicture'));
-            this.get('currentUser').save();
+            this.set('currentUser.srIntensityLevel', this.get('user.srIntensityLevel'));
+            this.set('currentUser.moduleTags', this.get('user.moduleTags'));
+            this.get('currentUser').save().then(function () {
+                // Activating Spaced Repetition requires user to be registered first.
+                // The above changes are saved first as the cloud function for SR
+                // requires the client to 'reload' the user object. This can cause
+                // inconsistencies with previous unsaved changes.
+                if (this.get('currentUser.srIntensityLevel') > 0) {
+                    this.send('activateSpacedRepetitionForUser');
+                }
+            }.bind(this));*/
+
         },
 
         finishOnboarding: function () {

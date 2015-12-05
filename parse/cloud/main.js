@@ -170,7 +170,8 @@ Parse.User.prototype.setDefaults = function () {
         "averageScoreByCommunity", "averageUniqueScoreByCommunity", "numberFollowing",
         "numberOfFollowers", "points", "srIntensityLevel", "numberOfBadgesUnlocked"];
     _.each(numberProps, function (prop) {
-        this.set(prop, 0);
+        if (this.get(prop) === undefined)
+            this.set(prop, 0);
     }.bind(this));
 
     var arrayProps = ["emailNotifications", "pushNotifications", "earnedBadges",
@@ -257,6 +258,32 @@ Parse.User.prototype.generateSlug = function () {
     this.set('slug', slug);
 
     return this.verifySlug();
+};
+
+/**
+ * @Function Assing Badge Progressions
+ * Needed for new users
+ * @returns {*}
+ */
+Parse.User.prototype.assignBadgeProgressions = function () {
+    var badgesQuery = new Parse.Query(Badge);
+
+    return badgesQuery.find().then(function (badges) {
+        var badgeProgressions = [];
+        _.each(badges, function (badge) {
+            var badgeProgression = new BadgeProgress();
+            badgeProgression.set('badge', badge);
+            badgeProgression.set('tally', 0);
+            badgeProgression.set('badgeLevel', 1);
+            badgeProgression.set('currentLevelProgress', 0);
+            badgeProgression.set('isUnlocked', false);
+            badgeProgressions.push(badgeProgression);
+        });
+        return Parse.Object.saveAll(badgeProgressions);
+    }).then(function (badgeProgressions) {
+        this.set('badgeProgressions', badgeProgressions);
+        return this;
+    }.bind(this));
 };
 
 /**
@@ -2738,6 +2765,7 @@ Parse.Cloud.beforeSave(Parse.User, function (request, response) {
     logger.log("user-dirty-keys", user.dirtyKeys());
     if (user.isNew()) {
         user.setDefaults();
+        promises.push(user.assignBadgeProgressions());
         promises.push(user.generateSlug());
     }
     Parse.Promise.when(promises).then(function () {
@@ -3363,28 +3391,22 @@ Parse.Cloud.define('saveNewQuestion', function (request, response) {
     });
 });
 /**
- * @Deprecated
- *
  * @CloudFunction New User Event
  * @param {Array<Parse.Object>} objects
- * @param {Array<String>} objectTypes
  * @param {String} type
  * @return {UserEvent} userEvent
  */
 Parse.Cloud.define('newUserEvent', function (request, response) {
     var user = request.user,
-        testPayload = request.params.test,
-        test = Parse.Object.createFromJSON(testPayload, "Test"),
-        userEvent;
+        objects = request.params.objects ? request.params.objects : [],
+        type = request.params.type;
 
-    test.save().then(function () {
-        // Creates a new userEvent and increments the users points.
-        return UserEvent.newEvent(UserEvent.CREATED_TEST, test, user);
-    }).then(function (result) {
-        userEvent = result;
-        return user.checkLevelUp();
-    }).then(function (didLevelUp) {
-        return response.success({userEvent: userEvent, test: test, didLevelUp: didLevelUp});
+    if (!user)
+        return response.error("You must be logged in.");
+
+    // Creates a new userEvent and increments the users points.
+    UserEvent.newEvent(type, objects, user).then(function (userEvent) {
+        return response.success({userEvent: userEvent});
     }, function (error) {
         response.error(error);
     });
@@ -3620,12 +3642,17 @@ Parse.Cloud.define('saveTestAttempt', function (request, status) {
         // (unique stats done on TaskWorker)
         user.increment('numberOfAttempts');
 
-        // Create or update uniqueResponses
+        // Create or update uniqueResponses, user saved in here
         promises.push(user.addUniqueResponses(responses));
 
+        promises.push(UserEvent.newEvent("finishedQuiz", [attempt], user));
+
         return Parse.Promise.when(promises);
-    }).then(function (attempt, uniqueResponses) {
-        status.success({attempt: attempt, uniqueResponses: uniqueResponses});
+    }).then(function (attempt, uniqueResponses, userEvent) {
+        status.success({
+            attempt: attempt, uniqueResponses: uniqueResponses,
+            userEvent: userEvent
+        });
     }, function (error) {
         status.error(error);
     });
@@ -4063,11 +4090,12 @@ Parse.Cloud.define('activateSpacedRepetitionForUser', function (request, respons
         return response.error("Must be logged in.");
 
     user.set('srActivated', true);
-    user.set('srIntensityLevel', 2);
+    if (user.get('srIntensityLevel') === undefined)
+        user.set('srIntensityLevel', 2);
     user.set('srNotifyByEmail', true);
     // TODO check if user has app.
     user.set('srNotifyByPush', false);
-    user.set('srNextDue', moment().add(1, 'minute'));
+    user.set('srNextDue', moment().add(1, 'minute').toDate());
 
     var doNotDisturbTimes = [];
     Parse.Config.get().then(function (config) {
@@ -4320,13 +4348,15 @@ Parse.Cloud.define("sendBetaInvite", function (request, response) {
     // Find people who haven't been invite yet
     var betaInviteQuery = new Parse.Query("BetaInvite");
     betaInviteQuery.notEqualTo("inviteSent", true);
+    var allowedEmail = request.params.allowedEmail;
 
     betaInviteQuery.find().then(function (betaInvites) {
         var betaInvitesToSend = [];
         // Figure out who we want to invite
         _.each(betaInvites, function (betaInvite) {
             if (betaInvite.get('email') === "um11mov@leeds.ac.uk"
-                || betaInvite.get('email') === "omair.vaiyani@live.co.uk")
+                || betaInvite.get('email') === "omair.vaiyani@live.co.uk"
+                || betaInvite.get('email') === allowedEmail)
                 betaInvitesToSend.push(betaInvite);
 
         });
@@ -4442,8 +4472,11 @@ Parse.Cloud.define('getHotTests', function (request, response) {
     hotTestsQuery.greaterThan('createdAt', moment().subtract(20, 'weeks').toDate());
     hotTestsQuery.descending('numberOfAttempts');
     hotTestsQuery.limit(3);
+    // Needed for author fetching
+    Parse.Cloud.useMasterKey();
+    hotTestsQuery.include('author');
     hotTestsQuery.find().then(function (tests) {
-        response.success({hotTests: tests});
+        response.success({hotTests: Test.minifyAuthorProfiles(tests)});
     }, function (error) {
         response.error(error);
     });

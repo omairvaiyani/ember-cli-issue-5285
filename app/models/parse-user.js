@@ -123,7 +123,7 @@ var ParseUser = ParseUserModel.extend(ParseMixin, {
     srDoNotDisturbTimes: DS.attr(),
     srLatestTestDismissed: DS.attr('boolean'),
     srCompletedAttempts: new Ember.A(),
-
+    moduleTags: DS.attr(),
     /*
      * Stats
      */

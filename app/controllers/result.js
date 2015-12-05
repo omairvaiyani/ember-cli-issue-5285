@@ -18,7 +18,6 @@ export default Ember.Controller.extend(CurrentUser, {
     isTabIncorrect: false,
 
     allResponses: function () {
-        console.dir(this.get('model.responses'));
         var allResponses = [];
         this.get('model.questions').forEach(function (question) {
             var questionHasResponse = false;
@@ -84,7 +83,6 @@ export default Ember.Controller.extend(CurrentUser, {
         colorSecondary: "#e41d72",
         colorBorder: "#eaeaea",
         colorOrange: "#FF8833"
-
     },
 
     actions: {

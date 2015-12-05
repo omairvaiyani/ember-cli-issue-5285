@@ -67,7 +67,7 @@ Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, EstimateMemoryStrength
     onboardUser: function () {
         return this.store.createRecord('parse-user', {
             studying: "", studyingAt: "", placeOfStudy: "", studyYear: "",
-            moduleTags: new Ember.A()
+            moduleTags: new Ember.A(), srIntensityLevel: -1
         });
     }.property(),
 
@@ -511,28 +511,6 @@ Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, EstimateMemoryStrength
             }, function (error) {
                 console.dir(error);
             });
-        },
-
-        deleteTest: function (test) {
-            this.send('deleteObject', {
-                array: this.get('currentUser.createdTests'), object: test,
-                title: "Test deleted!", message: test.get('title')
-            });
-        },
-
-        // Callback from DeleteWithUndoMixin
-        preObjectDelete: function (returnItem) {
-            if (returnItem.type === "test") {
-                // If a user filtered to find a test to delete, clear the filter.
-                if (this.get('myTestsList.length') === 1 && this.get('myTestsListFilter.length')) {
-                    this.set('myTestsListFilter', "");
-                }
-            }
-        },
-
-        undoObjectDelete: function (returnItem, error) {
-            // Called if object delete is undo'd,
-            // TODO see if scrolling to test helps
         },
 
         dismissLatestSRTest: function () {

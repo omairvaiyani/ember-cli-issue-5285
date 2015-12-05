@@ -1,25 +1,27 @@
 <article class="col-sm-8 col-sm-offset-2 col-md-6 col-md-offset-3">
-    <div class="text-center">
-        <iframe src="https://player.vimeo.com/video/134749574?color=ff0179&title=0&byline=0&portrait=0" width="250"
-                height="140"
-                frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
-        <p><a
-                href="https://vimeo.com/134749574" target="_blank">Spaced Repetition</a> from Synap</p>
-    </div>
-    <div class="form-group">
-        <article class="col-sm-9">
-            <h5 class="control-label">Activate 'Spaced Practice'<br>
-                <small>Watch the video above and then tap the toggle on your right.</small>
-            </h5>
-        </article>
 
-        <div class="col-sm-3">
-            <div class="togglebutton togglebutton-success">
-                <label class="margin-top-16 pull-right">
-                    {{input type="checkbox" checked=user.srActivated}}
-                    <span class="toggle"></span>
-                </label>
-            </div>
-        </div>
+    <div class="study-intensity-levels-container">
+        <h4 class="text-center margin-top-0">Select your study intensity</h4>
+        {{#each studyIntensityLevels as |intensity|}}
+            <section {{bind-attr class=":row :intensity-row intensity.isSelected"}}
+            {{action 'selectStudyIntensity' intensity}}>
+                <article class="col-xs-4">
+                    <h4 class="intensity-label margin-right-16">
+                        {{intensity.label}}
+                    </h4>
+                </article>
+                <article class="col-xs-8">
+                    <h4 class="intensity-description small">
+                        {{intensity.description}}
+                    </h4>
+                </article>
+            </section>
+        {{/each}}
+        <p class="margin-top-16">
+            We figure out what topics you are weak in, and generate quizzes for you based
+            on your study intensity level. The higher the intensity, the harder the quizzes,
+            and the more often you'll receive them.
+        </p>
     </div>
+
 </article>

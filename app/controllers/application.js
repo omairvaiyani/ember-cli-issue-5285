@@ -184,10 +184,12 @@ export default Ember.Controller.extend({
                     var earnedBadges = ParseHelper.extractRawPayload(this.store, 'badge',
                             _.clone(response.user.earnedBadges)),
                         badgeProgressions = ParseHelper.extractRawPayload(this.store, 'badge-progress',
-                            _.clone(response.user.badgeProgressions));
+                            _.clone(response.user.badgeProgressions)),
+                        level = ParseHelper.extractRawPayload(this.store, 'level', _.clone(response.user.level));
 
                     this.set('currentUser.earnedBadges', earnedBadges);
                     this.set('currentUser.badgeProgressions', badgeProgressions);
+                    this.set('currentUser.level', level);
                     this.set('currentUser.initialisedFor', true);
                 }.bind(this), function (error) {
                     console.dir(error);

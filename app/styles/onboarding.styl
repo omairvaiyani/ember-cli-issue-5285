@@ -1,0 +1,144 @@
+/** ONBOARDING **/
+/* From Index Page, currently not in use */
+.onboarding-firstSection
+  .onboarding-floatingInput
+    input
+      color: white;
+      font-size 20px
+      &:focus
+        background-image linear-gradient(black, transparent), linear-gradient(#d2d2d2, #d2d2d2)
+    .form-control ~ .floating-label, .form-control:focus ~ .floating-label
+      color white
+      top -12px
+    .form-control ~ .floating-label
+      font-size 20px
+    .form-control:focus ~ .floating-label, .form-control:not(.empty) ~ .floating-label
+      font-size 14px
+      top -20px
+    .input-action
+      position absolute
+      top 14px
+      right 8px
+      cursor pointer
+      &:hover
+        color colorPrimary
+  .onboarding-studyExamples
+    color: white;
+    font-size: 12px;
+    &.invisible
+      visibility none
+    span
+      background-color: lightcoral;
+      padding: 1px 3px;
+      border-radius: 3px;
+      margin-right: 4px;
+      margin-bottom: marginSecondary
+      display inline-block
+      cursor: pointer;
+
+/* Main Onboarding Card */
+
+.onboarding-container
+  position: fixed;
+  top: 50px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  .onboarding-well
+    position: absolute;
+    width auto
+    top 0
+    right 0
+    left 0
+    height: calc(100% - 50px);
+    .form-control
+      color black !important
+      .input
+        font-size 16px
+    .form-control ~ .floating-label, .form-control:focus ~ .floating-label
+      color black !important
+      font-size 16px
+    .button-list
+      .btn
+        width 100%
+    .onboarding-well-footer
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 55px;
+      background-color: rgba(0, 0, 0, 0.1);
+  .onboarding.progress
+    position: absolute;
+    bottom -8px
+    height: 38px;
+    background-color: colorDarkBackground
+    right 0
+    left 0
+    line-height: 2.7;
+    padding-bottom 0
+    .progress-type
+      position: absolute;
+      left: 0;
+      font-weight: 800;
+      padding: 3px 30px 2px 10px;
+      color: lighten(colorPrimary, 40)
+      bottom: 0;
+      top: 0;
+      line-height: 2.35;
+      border-radius: 4px 0 0 12px;
+
+.progress-completed
+  position: absolute;
+  right: 0;
+  font-weight: 800;
+  padding: 3px 10px 2px;
+  bottom: 0;
+  top: 0;
+  line-height: 2.35;
+  color: lighten(colorPrimary, 40)
+
+@media (min-width 768px)
+  .onboarding-container
+    position relative
+    height 580px
+    top 0
+    .onboarding-well, .onboarding.progress
+      width 80%
+      left 10%
+      max-width: 800px;
+    .onboarding-well
+      height: 485px;
+      border-radius: 12px !important;
+      .onboarding-well-footer
+        border-radius: 0 0 12px 12px;
+    .onboarding.progress
+      bottom -16px
+      border-radius: 4px 12px !important;
+
+@media (min-width 992px)
+  .onboarding-container
+    .onboarding-well
+      top: 20px;
+      width: 100%;
+      left: calc(50% - 400px);
+    .onboarding.progress
+      width 100%
+      left calc(50% - 400px)
+
+/* Spaced Repetition / Study Intensity */
+.study-intensity-levels-container
+  .intensity-row
+    border 1px solid colorBorder
+    border-bottom 1px solid colorBorder
+    cursor pointer
+    &:hover
+      background darken(white, 10)
+    .intensity-label
+      font-weight 400
+    .intensity-description
+      font-weight 400
+      margin-top 14px
+    &.is-selected
+      background colorGreen
+      color lighten(colorGreen, 40)

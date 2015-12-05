@@ -219,11 +219,12 @@ export default Ember.Route.extend({
          * -- if response === 'connected', it will have auth data to continue
          * -- if response !== 'connected', we make a FB.login call to get the user to connect.
          * - Once 'connected', we call the next method in the chain 'signUpAuthorisedFacebookUser'
+         * @param {Object} (optional) data (sent after onboarding)
          */
-        facebookConnect: function () {
+        facebookConnect: function (data) {
             FB.login(function (response) {
                 if (response.authResponse) {
-                    this.send('signUpAuthorisedFacebookUser', response.authResponse);
+                    this.send('signUpAuthorisedFacebookUser', response.authResponse, data);
                 }
             }.bind(this), {
                 scope: 'public_profile, user_friends, user_about_me, user_education_history,' +
@@ -243,8 +244,10 @@ export default Ember.Route.extend({
          * - userMinimal is the object returned form the back-end, to get the whole
          * user object, we make a findUserById('user') request to the back-end
          * - Once a fully loaded user record is received, progress to controller logic.
+         * @param {Object} authResponse (received from Facebook)
+         * @param {Object} data (optional, sent after onboarding)
          */
-        signUpAuthorisedFacebookUser: function (authResponse) {
+        signUpAuthorisedFacebookUser: function (authResponse, data) {
             this.get('applicationController').incrementProperty('loadingItems');
             this.send('closeModal');
             FB.api('/me', {fields: 'name,education,gender,cover,email,friends'}, function (response) {
@@ -258,24 +261,27 @@ export default Ember.Route.extend({
                 for (var i = 0; i < fbFriendsData.length; i++) {
                     fbFriendsArray.push(fbFriendsData[i].id);
                 }
-                var data = {
-                    username: response.email,
-                    email: response.email,
-                    name: response.name,
-                    fbid: response.id,
-                    gender: response.gender,
-                    fbEducation: response.education,
-                    fbCoverPicture: response.cover,
-                    fbFriends: fbFriendsArray,
-                    signUpSource: "Web",
-                    authData: {
-                        facebook: {
-                            access_token: authResponse.accessToken,
-                            id: authResponse.userID,
-                            expiration_date: (new Date(2032, 2, 2))
-                        }
+
+                if (!data)
+                    data = {};
+
+                data.username = response.email;
+                data.email = response.email;
+                data.name = response.name;
+                data.fbid = response.id;
+                data.gender = response.gender;
+                data.fbEducation = response.education;
+                data.fbCoverPicture = response.cover;
+                data.fbFriends = fbFriendsArray;
+                data.signUpSource = "Web";
+                data.authData = {
+                    facebook: {
+                        access_token: authResponse.accessToken,
+                        id: authResponse.userID,
+                        expiration_date: (new Date(2032, 2, 2))
                     }
                 };
+
                 this.send('registerUser', data);
             }.bind(this));
 
@@ -301,7 +307,7 @@ export default Ember.Route.extend({
             var promise = ParseHelper.cloudFunction(this, "checkBetaAccess", {
                 id: localStorage.getItem("betaActivationId"),
                 email: data.email
-            }).then(function (response) {
+            }).then(function () {
                 return ParseUser.signup(this.store, data);
             }.bind(this)).then(function (user) {
                 this.get('applicationController').set('currentUser', user);
@@ -679,10 +685,11 @@ export default Ember.Route.extend({
         },
 
         newUserEvent: function (payload) {
+            var promise = new Parse.Promise();
             if (!payload.userEvent)
-                return;
+                return promise.resolve();
             var userEvent = ParseHelper.extractRawPayload(this.store, 'user-event', payload.userEvent);
-            this.get('currentUser').reload().then(function () {
+            promise = this.get('currentUser').reload().then(function () {
                 var notification = {
                     type: "points",
                     title: '+' + userEvent.get('pointsTransacted') + "XP | " + userEvent.get('label'),
@@ -691,6 +698,8 @@ export default Ember.Route.extend({
                 };
                 this.send('addNotification', notification);
             }.bind(this));
+
+            return promise;
         },
 
         activateSiteSearch: function () {

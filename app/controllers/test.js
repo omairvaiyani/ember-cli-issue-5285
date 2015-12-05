@@ -230,10 +230,10 @@ export default Ember.Controller.extend(CurrentUser, {
                     return ParseHelper.cloudFunction(this, 'saveTestAttempt', {attempt: attempt, responses: responsesArray});
                 }.bind(this))
                 .then(function (result) {
-                    console.dir(result);
-                    var attempt = ParseHelper.extractRawPayload(this.store, 'attempt', result.attempt);
-                    var uniqueResponses = ParseHelper.extractRawPayload(this.store, 'unique-response', result.uniqueResponses);
-                    console.dir(uniqueResponses);
+                    var attempt = ParseHelper.extractRawPayload(this.store, 'attempt', result.attempt),
+                        uniqueResponses = ParseHelper.extractRawPayload(this.store, 'unique-response', result.uniqueResponses);
+
+                    this.send('newUserEvent', result);
                     this.get('currentUser.uniqueResponses').addObjects(uniqueResponses);
                     this.set('unsavedAttempt', attempt);
                     this.transitionToRoute('result.new');

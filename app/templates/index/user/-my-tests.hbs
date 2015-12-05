@@ -52,6 +52,10 @@
     </article>
 </section>
 
+{{#if showCreateFirstQuiz}}
+    <h4 class="text-center margin-top-16">{{#link-to 'create'}}Create{{/link-to}} your first quiz!</h4>
+{{/if}}
+
 {{#each myTestsList as |test|}}
     {{test-card test=test parentController=this}}
 {{/each}}

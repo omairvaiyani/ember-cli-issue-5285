@@ -170,7 +170,8 @@ Parse.User.prototype.setDefaults = function () {
         "averageScoreByCommunity", "averageUniqueScoreByCommunity", "numberFollowing",
         "numberOfFollowers", "points", "srIntensityLevel", "numberOfBadgesUnlocked"];
     _.each(numberProps, function (prop) {
-        this.set(prop, 0);
+        if (this.get(prop) === undefined)
+            this.set(prop, 0);
     }.bind(this));
 
     var arrayProps = ["emailNotifications", "pushNotifications", "earnedBadges",
@@ -257,6 +258,32 @@ Parse.User.prototype.generateSlug = function () {
     this.set('slug', slug);
 
     return this.verifySlug();
+};
+
+/**
+ * @Function Assing Badge Progressions
+ * Needed for new users
+ * @returns {*}
+ */
+Parse.User.prototype.assignBadgeProgressions = function () {
+    var badgesQuery = new Parse.Query(Badge);
+
+    return badgesQuery.find().then(function (badges) {
+        var badgeProgressions = [];
+        _.each(badges, function (badge) {
+            var badgeProgression = new BadgeProgress();
+            badgeProgression.set('badge', badge);
+            badgeProgression.set('tally', 0);
+            badgeProgression.set('badgeLevel', 1);
+            badgeProgression.set('currentLevelProgress', 0);
+            badgeProgression.set('isUnlocked', false);
+            badgeProgressions.push(badgeProgression);
+        });
+        return Parse.Object.saveAll(badgeProgressions);
+    }).then(function (badgeProgressions) {
+        this.set('badgeProgressions', badgeProgressions);
+        return this;
+    }.bind(this));
 };
 
 /**

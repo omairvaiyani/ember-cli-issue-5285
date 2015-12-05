@@ -3,14 +3,19 @@ import Ember from 'ember';
 import CurrentUser from '../../mixins/current-user';
 import ParseHelper from '../../utils/parse-helper';
 import SortBy from '../../mixins/sort-by';
+import DeleteWithUndo from '../../mixins/delete-with-undo';
 
-export default Ember.Controller.extend(CurrentUser, SortBy, {
+export default Ember.Controller.extend(CurrentUser, SortBy, DeleteWithUndo, {
     // Needed by SortByMixin and TestCardComponent
     controllerId: "myTests",
 
     isCurrentUser: function () {
         return this.get('currentUser.id') === this.get('model.id');
     }.property('model.id'),
+
+    showCreateFirstQuiz: function () {
+        return this.get('isCurrentUser') && this.get('currentUser.numberOfTestsCreated') === 0;
+    }.property('isCurrentUser', 'currentUser.numberOfTestsCreated'),
 
     isFollowing: function () {
         if (!this.get('isCurrentUser') && this.get('currentUser.following.length')) {
@@ -542,6 +547,29 @@ export default Ember.Controller.extend(CurrentUser, SortBy, {
             if (isPositive) {
                 this.transitionTo('create');
             }
+        },
+
+
+        deleteTest: function (test) {
+            this.send('deleteObject', {
+                array: this.get('currentUser.createdTests'), object: test,
+                title: "Test deleted!", message: test.get('title')
+            });
+        },
+
+        // Callback from DeleteWithUndoMixin
+        preObjectDelete: function (returnItem) {
+            if (returnItem.type === "test") {
+                // If a user filtered to find a test to delete, clear the filter.
+                if (this.get('myTestsList.length') === 1 && this.get('myTestsListFilter.length')) {
+                    this.set('myTestsListFilter', "");
+                }
+            }
+        },
+
+        undoObjectDelete: function (returnItem, error) {
+            // Called if object delete is undo'd,
+            // TODO see if scrolling to test helps
         }
     },
 
@@ -598,6 +626,6 @@ export default Ember.Controller.extend(CurrentUser, SortBy, {
                     confirmCreateTest);
             }
         }
-    }.observes('isEditMode', 'hasBegunEditingProfile')
+    }.observes('isEditMode', 'hasBegunEditingProfile'),
 
 });

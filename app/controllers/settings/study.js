@@ -36,7 +36,9 @@ export default Ember.Controller.extend(CurrentUser, {
     }.property('currentUser.srIntensityLevel'),
 
     actions: {
+
         activateSpacedRepetition: function () {
+            this.get('preparingSpacedRepetition');
             if (this.get('preparingSpacedRepetition'))
                 return;
             this.set('preparingSpacedRepetition', true);
@@ -53,6 +55,7 @@ export default Ember.Controller.extend(CurrentUser, {
                     this.send('decrementLoadingItems');
                 }.bind(this));
         },
+
         toggleSlot: function (slotIndex, dayIndex) {
             var slot = this.get('currentUser.srDoNotDisturbTimes')[dayIndex].slots[slotIndex];
             Ember.set(slot, 'active', !slot.active);
