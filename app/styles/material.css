@@ -55258,8 +55258,8 @@ fieldset[disabled] .navbar .btn-link:focus {
   color: rgba(0, 0, 0, 0.84);
 }
 .progress {
-  height: 12px;
-  border-radius: 6px;
+  height: 10px;
+  border-radius: 50%;
   box-shadow: none;
   background: #c8c8c8;
 }
