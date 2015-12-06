@@ -14,7 +14,7 @@ export default Ember.Component.extend({
      * tag, such as editing individual
      * tags.
      */
-    tagArray: new Ember.A(),
+    tagArray: null,
 
     tagOrModule: "Tag",
 
@@ -23,12 +23,15 @@ export default Ember.Component.extend({
      * See tagArray.
      */
     tagArrayUpdate: function () {
-        if(!this.get('tags'))
-            return new Ember.A();
+        if(!this.get('tagArray'))
+            this.set('tagArray', new Ember.A());
+        else
+            this.get('tagArray').clear();
 
         var tagArray = this.get('tagArray');
-        tagArray.clear();
-
+        if(!this.get('tags.length')) {
+            return;
+        }
         var idIndex = 0;
         this.get('tags').forEach(function (tag) {
             var tagObject = new Ember.Object();
@@ -50,30 +53,14 @@ export default Ember.Component.extend({
         this.tagArrayUpdate();
     }.on('init'),
 
-    /**
-     * @Observe Set Tags
-     *
-     * Allows adding tags directly
-     * or through a test
-     */
-    setTags: function () {
-        if (this.get('test.tags.length')) {
-            if (!this.get('tags'))
-                this.set('tags', new Ember.A());
-            else
-                this.get('tags').clear();
-            this.get('tags').addObjects(this.get('test.tags'));
-        }
-    }.observes('test.tags.length'),
-
     actions: {
         tagClicked: function () {
             if (this.get('overrideAction'))
                 return this.get('parentController').send(this.get('overrideAction'));
         },
 
-        removeTag: function (tag) {
-            this.get('parentController').send('removeTag', tag);
+        removeTag: function (tagIndex) {
+            this.get('parentController').send('removeTag', tagIndex);
         },
 
         toggleAddingNewTag: function () {

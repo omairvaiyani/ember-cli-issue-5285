@@ -1,12 +1,17 @@
 <div class="modal-body synap-modal top-image">
     <div class="modal-image">
-        <img src="img/icon-gradient-1024.png"/>
+        <div class="gloss-overlay"></div>
+        {{#if model.author}}
+            {{profile-picture user=model.author}}
+        {{else}}
+            <img src="img/icon-gradient-1024.png"/>
+        {{/if}}
     </div>
 
     {{partial 'test/test-info-base'}}
 
     {{#if showSendToMobile}}
-        {{!-- TODO adapt controller code, update cloud code, adjust style--}}
+    {{!-- TODO adapt controller code, update cloud code, adjust style--}}
         <button type="button" class="btn btn-info pull-left"
             {{action 'sendPush' this 'toMobile' model}}><span
                 class="glyphicon glyphicon-phone"></span> {{sendToMobileButtonText}}

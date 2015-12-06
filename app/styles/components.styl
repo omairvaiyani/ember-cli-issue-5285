@@ -64,18 +64,17 @@
       border-left none
       border-right: 1px solid colorPrimary-800;
   &.btn-ghost
-      color colorSecondary !important
-      span
-        &.right-section
-          border-left: 1px solid colorSecondary;
-    &.btn-info, &.btn-success, &.btn-danger, &.btn-warning, &.btn-default
-      border: 1px solid alpha(black, 0.15)
-      span
-        &.right-section
-          border-left-color alpha(black, 0.15)
-        &.left-section
-          border-right-color alpha(black, 0.15)
-
+    color colorSecondary !important
+    span
+      &.right-section
+        border-left: 1px solid colorSecondary;
+  &.btn-info, &.btn-success, &.btn-danger, &.btn-warning, &.btn-default
+    border: 1px solid alpha(black, 0.15)
+    span
+      &.right-section
+        border-left-color alpha(black, 0.15)
+      &.left-section
+        border-right-color alpha(black, 0.15)
 
 .btn-facebook
   padding marginSecondary marginPrimary
@@ -140,6 +139,7 @@
   font-size: 10px;
   opacity: 1;
 }
+
 .form-input
   border: 1px solid colorDarkBorder
   width: 100%;
@@ -165,7 +165,6 @@ textarea.form-input
     width 960px
     height 540px
 
-
 .gauge-box
   position relative
   .gauge-holder
@@ -189,7 +188,6 @@ textarea.form-input
   margin: auto;
   -webkit-filter: invert(100%) opacity(0.3);
   filter: invert(100%) opacity(0.3);
-
 
 .hidden-file-input {
   position: absolute;
@@ -255,13 +253,12 @@ textarea.form-input
 .list-card
   padding marginSecondary
   .left
-    width: 96px
+    width: 104px
     height 96px
     padding 4px
     text-align center
-    line-height 140px
-    @media (min-width screenSmall)
-      line-height 96px
+    line-height 82px
+    margin-right marginSecondary
     .author, .special-icon
       height 80px
       .profile-picture, img
@@ -275,25 +272,38 @@ textarea.form-input
   .title
     font-weight 400
   .description
-    white-space: nowrap;
+    /* Max Two lines, bit of black magic involved */
     overflow: hidden;
     text-overflow: ellipsis;
+    display: -webkit-box;
+    line-height: 16px; /* fallback */
+    max-height: 32px; /* fallback */
+    -webkit-line-clamp: 2; /* number of lines to show */
+    -webkit-box-orient: vertical;
   .right
-    width calc(100% - 100px)
+    width calc(100% - 116px)
     min-height 108px
+    padding-bottom 22px
+    position relative
+    @media (min-width screenSmall)
+      padding-bottom marginSecondary
     .title
-      margin-top 34px
+      margin-top marginSecondary
       @media(min-width screenSmall)
-        max-width calc(100% - 258px)
-        margin-top marginSecondary
+        max-width calc(100% - 140px)
     .extra-actions-item-container
       position absolute
-      top 0
-      right 0
+      right -8px
+      bottom -8px
       height 35px
-      border-bottom 1px solid colorBorder
       border-left 1px solid colorBorder
+      border-top 1px solid colorBorder
       background white
+      @media(min-width screenSmall)
+        bottom auto
+        top -8px
+        border-top none
+        border-bottom 1px solid colorBorder
       button
         width: auto;
         padding: 8px 6px;
@@ -316,7 +326,7 @@ textarea.form-input
       text-align left
     button
       margin marginPrimary 0 0 0
-      @media(min-width screenSmall)
+      @media (min-width screenSmall)
         float right
         margin-top 0
   &.mini
@@ -374,6 +384,9 @@ textarea.form-input
   text-decoration: underline;
 }
 
+glossOverlayOpacity = 0.15
+glossOverlayOpacityLight = 0.25
+glossRightColor = alpha(darken(white, 4), glossOverlayOpacity)
 .modal
   background alpha(black, 0.5)
   .modal-dialog
@@ -395,15 +408,26 @@ textarea.form-input
       width 100px
       border 1px solid colorSecondary
       border-radius 50%
-      padding: marginPrimary
-      background: rgba(255,255,255,1);
-      background: -moz-linear-gradient(-45deg, rgba(255,255,255,1) 0%, rgba(255,255,255,1) 50%, darken(white, 2) 50%, darken(white, 2) 71%, darken(white, 2) 100%);
-      background: -webkit-gradient(left top, right bottom, color-stop(0%, rgba(255,255,255,1)), color-stop(50%, rgba(255,255,255,1)), color-stop(50%, darken(white, 2)), color-stop(71%, darken(white, 2)), color-stop(100%, darken(white, 2)));
-      background: -webkit-linear-gradient(-45deg, rgba(255,255,255,1) 0%, rgba(255,255,255,1) 50%, darken(white, 2) 50%, darken(white, 2) 71%, darken(white, 2) 100%);
-      background: -o-linear-gradient(-45deg, rgba(255,255,255,1) 0%, rgba(255,255,255,1) 50%, darken(white, 2) 50%, darken(white, 2) 71%, darken(white, 2) 100%);
-      background: -ms-linear-gradient(-45deg, rgba(255,255,255,1) 0%, rgba(255,255,255,1) 50%, darken(white, 2) 50%, darken(white, 2) 71%, darken(white, 2) 100%);
+      .profile-picture
+        height 98px
+        width 98px
       img
-        height 100%
+        margin marginPrimary
+        height calc(100% - 32px)
+      .gloss-overlay
+        position absolute
+        top 0
+        bottom 0
+        left 0
+        right 0
+        z-index 3
+        border-radius 50%
+        background: rgba(255, 255, 255, glossOverlayOpacity);
+        background: -moz-linear-gradient(-45deg, rgba(255, 255, 255, glossOverlayOpacity) 0%, rgba(255, 255, 255, glossOverlayOpacityLight) 50%, glossRightColor 50%, glossRightColor 71%, glossRightColor 100%);
+        background: -webkit-gradient(left top, right bottom, color-stop(0%, rgba(255, 255, 255, glossOverlayOpacity)), color-stop(50%, rgba(255, 255, 255, glossOverlayOpacityLight)), color-stop(50%, glossRightColor), color-stop(71%, glossRightColor), color-stop(100%, glossRightColor));
+        background: -webkit-linear-gradient(-45deg, rgba(255, 255, 255, glossOverlayOpacity) 0%, rgba(255, 255, 255, glossOverlayOpacityLight) 50%, glossRightColor 50%, glossRightColor 71%, glossRightColor 100%);
+        background: -o-linear-gradient(-45deg, rgba(255, 255, 255, glossOverlayOpacity) 0%, rgba(255, 255, 255, glossOverlayOpacityLight) 50%, glossRightColor 50%, glossRightColor 71%, glossRightColor 100%);
+        background: -ms-linear-gradient(-45deg, rgba(255, 255, 255, glossOverlayOpacity) 0%, rgba(255, 255, 255, glossOverlayOpacityLight) 50%, glossRightColor 50%, glossRightColor 71%, glossRightColor 100%);
     .synap-modal
       padding marginPrimary 0 60px 0 !important
       width 460px
@@ -671,9 +695,7 @@ input[type="range"]::-webkit-slider-thumb {
   background-size cover
   display inline-block
   vertical-align middle
-  margin-right 8px
   border-radius 50%
-
 
 .stat-container
   height 100%
@@ -810,8 +832,6 @@ input[type="range"]::-webkit-slider-thumb {
       background darken(colorSecondary, 10)
       &::before
         background darken(colorSecondary, 10)
-
-
 
 .vertical-separator
   margin-left marginSecondary

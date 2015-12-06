@@ -4348,7 +4348,7 @@ Parse.Cloud.define("sendBetaInvite", function (request, response) {
     // Find people who haven't been invite yet
     var betaInviteQuery = new Parse.Query("BetaInvite");
     betaInviteQuery.notEqualTo("inviteSent", true);
-    var allowedEmail = request.params.allowedEmail;
+    var allowedEmails = request.params.allowedEmails;
 
     betaInviteQuery.find().then(function (betaInvites) {
         var betaInvitesToSend = [];
@@ -4356,7 +4356,7 @@ Parse.Cloud.define("sendBetaInvite", function (request, response) {
         _.each(betaInvites, function (betaInvite) {
             if (betaInvite.get('email') === "um11mov@leeds.ac.uk"
                 || betaInvite.get('email') === "omair.vaiyani@live.co.uk"
-                || betaInvite.get('email') === allowedEmail)
+                || _.contains(allowedEmails, betaInvite.get('email')))
                 betaInvitesToSend.push(betaInvite);
 
         });

@@ -26,6 +26,9 @@
                 <div class="author inline-block">
                     {{profile-picture user=test.author}}
                 </div>
+                <h6 class="margin-top-8 text-center small">
+                    {{test.author.name}}
+                </h6>
             {{/if}}
 
             {{!--
@@ -77,7 +80,7 @@
             <p class="margin-bottom-8 small description">{{test.description}}</p>
 
             {{category-tags test=test parentController=this small=true class="inline-top"}}
-            {{module-tags test=test parentController=this small=true class="inline-top"}}
+            {{module-tags tags=test.tags parentController=this small=true class="inline-top"}}
             {{!--
             <ul class="tags">
                 {{#if test.category}}
@@ -94,12 +97,12 @@
             </ul>
             --}}
             <div class="extra-actions-item-container">
-                {{#if showSave}}
-                    <button class="btn btn-default right-border no-margin" {{action "saveTest"}}>
-                        <i class="fa fa-fw fa-heart"></i> Add to Favourites
+                {{#if showFavouritesIcon}}
+                    <button class="btn btn-default right-border no-margin" {{action "toggleFavouriteTest"}}>
+                        <i {{bind-attr class=":fa :fa-fw isTestSaved:fa-heart:fa-heart-o"}}></i>
                     </button>
                 {{/if}}
-                <button class="btn btn-default no-margin">
+                <button class="btn btn-default no-margin" {{action 'shareTest'}}>
                     <i class="fa fa-fw fa-share-alt"></i> Share
                 </button>
                 {{#if showMenuOverFlow}}
@@ -111,17 +114,18 @@
                         </button>
                         <ul class="dropdown-menu" role="menu">
                             {{#if showEdit}}
-                                {{#link-to 'edit' test.slug tagName='li'}}{{#link-to 'edit' test.slug}}
-                                    Edit{{/link-to}}{{/link-to}}
+                                {{#link-to 'edit' test.slug tagName='li'}}
+                                    {{#link-to 'edit' test.slug}}
+                                        Edit
+                                    {{/link-to}}
+                                {{/link-to}}
                             {{/if}}
                             {{#if showDelete}}
                                 <li><a href="javascript:void(0)" {{action 'deleteTest'}}>Delete</a></li>
                             {{/if}}
-                            {{#if showRemove}}
-                                <li><a href="javascript:void(0)" {{action 'removeTest'}}>Remove</a></li>
-                            {{/if}}
                             {{#if showDismiss}}
-                                <li><a href="javascript:void(0)" {{action 'dismissLatestSRTest'}}>Dismiss</a>
+                                <li>
+                                    <a href="javascript:void(0)" {{action 'dismissLatestSRTest'}}>Dismiss</a>
                                 </li>
                             {{/if}}
                         </ul>

@@ -3,9 +3,10 @@ import CurrentUser from '../mixins/current-user';
 
 export default Ember.Route.extend(CurrentUser, {
     model: function () {
-        return this.store.createRecord('test', {
-            tags: []
-        });
+        var newTest = this.store.createRecord('test');
+        newTest.set('tags', new Ember.A());
+        newTest.set('category', undefined);
+        return newTest;
     },
 
     setupController: function(controller, model, transition) {

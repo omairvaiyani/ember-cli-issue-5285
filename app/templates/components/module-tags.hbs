@@ -1,11 +1,11 @@
 <div {{bind-attr class=":tags center:text-center centre:text-center"}}>
-    {{#each tagArray as |tagObject|}}
+    {{#each tagArray as |tagObject index|}}
         {{#if canEdit}}
             {{#unless tagObject.editingTag}}
                 <div {{bind-attr class=":module-tag :has-icon"}} {{action "editTag" tagObject}}>
                     <i class="fa fa-fw fa-tag icon"></i>
                     <span>{{tagObject.tag}}</span>
-                    <i class="fa fa-fa fa-times-circle remove-tag" {{action "removeTag" tagObject.tag}}></i>
+                    <i class="fa fa-fa fa-times-circle remove-tag" {{action "removeTag" index}}></i>
                 </div>
             {{else}}
                 <div {{bind-attr class=":module-tag :edit-tag :has-icon"}}>

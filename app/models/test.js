@@ -118,6 +118,14 @@ export default DS.Model.extend(ParseMixin, {
             return "/img/brain-bulb-small-gradient.png";
         else
             return "/img/brain-bulb-small-mask.png";
-    }.property('memoryStrength')
+    }.property('memoryStrength'),
+
+    /**
+     * @Property Web Url
+     * Local property, useful for sharing purposes
+     */
+    webUrl: function () {
+        return "https://synap.ac/mcq/" + this.get('slug');
+    }.property('slug.length')
 
 });

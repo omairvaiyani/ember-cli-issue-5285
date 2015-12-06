@@ -6,7 +6,8 @@ export default Ember.Component.extend({
             if (this.get('overrideAction'))
                 return this.get('parentController').send(this.get('overrideAction'));
 
-            this.get('parentController').send('removeCategory', category);
+            if (this.get('canEdit'))
+                this.get('parentController').send('removeCategory', category);
         }
     }
 });

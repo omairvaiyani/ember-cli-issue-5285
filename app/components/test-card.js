@@ -22,9 +22,9 @@ export default Ember.Component.extend({
     }.property('currentUser'),
 
     showMenuOverFlow: function () {
-        return this.get('showDelete') || this.get('showEdit') || this.get('showShare') ||
-            this.get('showSave') || this.get('showRemove') || this.get('showDismiss');
-    }.property('showDelete', 'showEdit', 'showShare', 'showSave', 'showRemove', 'showDismiss'),
+        return this.get('showDelete') || this.get('showEdit') ||
+            this.get('showDismiss');
+    }.property('showDelete', 'showEdit', 'showDismiss'),
 
     showProfilePicture: function () {
         return !this.get('test.isGenerated');
@@ -61,15 +61,14 @@ export default Ember.Component.extend({
     }.property('test.isGenerated', 'test.isPublic'),
 
     /**
-     * @Property Show Save
-     * Only shows the 'Save' test menu item
-     * if current user is not author and current
-     * user has not already saved the test.
+     * @Property Show Favourites Icon
+     * Only shows the 'Favourites' icon test menu item
+     * if current user is not author.
      */
-    showSave: function () {
+    showFavouritesIcon: function () {
         return !this.get('isCurrentUserTheAuthor')
-            && !this.get('isTestSaved') && !this.get('test.isGenerated');
-    }.property('isCurrentUserTheAuthor', 'isTestSaved', 'test.isGenerated'),
+            && !this.get('test.isGenerated');
+    }.property('isCurrentUserTheAuthor', 'test.isGenerated'),
 
     /**
      * @Property Show Remove
@@ -117,7 +116,7 @@ export default Ember.Component.extend({
     }.observes('test.uniqueResponses.length'),
 
     coverImageStyle: function () {
-        return "background-image:url("+ this.get('test.author.profileImageURL') +");";
+        return "background-image:url(" + this.get('test.author.profileImageURL') + ");";
     }.property('test.author.profileImageURL.length'),
 
     actions: {
@@ -125,12 +124,13 @@ export default Ember.Component.extend({
             this.get('parentController').send('deleteTest', this.get('test'));
         },
 
-        saveTest: function () {
-            this.get('parentController').send('saveCommunityTest', this.get('test'));
-        },
+        toggleFavouriteTest: function () {
+            if (this.get('isTestSaved')) {
+                this.get('parentController').send('removeCommunityTest', this.get('test'));
+            } else {
+                this.get('parentController').send('saveCommunityTest', this.get('test'));
+            }
 
-        removeTest: function () {
-            this.get('parentController').send('removeCommunityTest', this.get('test'));
         },
 
         dismissLatestSRTest: function () {
@@ -152,6 +152,11 @@ export default Ember.Component.extend({
 
         fetchMemoryStrengthData: function () {
             this.get('parentController').send('fetchMemoryStrengthDataForTest', this.get('test'));
+        },
+
+        shareTest: function () {
+            this.get('parentController').send('openModal', 'browse/modal/share-test', 'browse/modal/share-test',
+                this.get('test'));
         }
     }
 });

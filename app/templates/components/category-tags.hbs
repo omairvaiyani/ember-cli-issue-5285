@@ -34,13 +34,13 @@
     <div {{bind-attr class=":tags :margin-bottom-8 center:text-center centre:text-center"}}>
         {{#if test.category.parent}}
             <div {{action 'removeCategory' test.category.parent}}
-                    {{bind-attr class=":category-tag inverseStyle:inverse small"}}>
+                    {{bind-attr class=":category-tag inverseStyle:inverse small canEdit::no-edit"}}>
                 <i class="fa fa-fw fa-plane icon"></i>
                 <span>{{test.category.parent.name}}</span>
             </div>
         {{/if}}
         <div {{action 'removeCategory' test.category}}
-            {{bind-attr class=":category-tag inverseStyle:inverse small"}}>
+            {{bind-attr class=":category-tag inverseStyle:inverse small canEdit::no-edit"}}>
             <i class="fa fa-fw fa-plane icon"></i>
             <span>{{test.category.name}}</span>
         </div>

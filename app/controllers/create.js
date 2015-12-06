@@ -5,7 +5,7 @@ import ParseHelper from '../utils/parse-helper';
 import DeleteWithUndo from '../mixins/delete-with-undo';
 
 export default Ember.Controller.extend(CurrentUser, DeleteWithUndo, {
-    needs: ['application', 'editQuestion', 'join'],
+    needs: ['application', 'editQuestion'],
 
     isTestDirty: function () {
         return this.get('isDirty') ||
@@ -48,70 +48,6 @@ export default Ember.Controller.extend(CurrentUser, DeleteWithUndo, {
         return this.get('controllers.application.currentPath') === "edit.newQuestion";
     }.property('controllers.application.currentPath'),
 
-
-    /*
-     * Group Test
-     */
-    selectedGroup: null,
-    setSelectedGroup: function () {
-        if (this.get('group'))
-            this.set('selectedGroup', this.get('group.content'));
-        else
-            this.set('selectedGroup', null);
-    }.observes('group.id'),
-    setGroup: function () {
-        if (this.get('group.id') !== this.get('selectedGroup.id'))
-            this.set('group', this.get('selectedGroup'));
-    }.observes('selectedGroup.id'),
-
-    getGroups: function () {
-        if (this.get('currentUser'))
-        /*this.get('currentUser').getGroups(this.store);*/
-            return [];
-    }.on('init'),
-
-    /*
-     * Join process
-     */
-    joinController: function () {
-        return this.get('controllers.join');
-    }.property('controllers.join'),
-
-    joinStep: function () {
-        return this.get('joinController.joinStep');
-    }.property('joinController.joinStep'),
-
-    inJoinProcess: function () {
-        if (!this.get('currentUser')) {
-            if (!this.get('joinStep.create')) {
-                this.set('joinStep.create', {
-                    active: false,
-                    disabled: false,
-                    completed: false
-                });
-                this.set('joinStep.addQuestions', {
-                    active: false,
-                    disabled: true,
-                    completed: false
-                });
-                this.set('joinStep.join.active', false);
-                this.set('joinStep.join.disabled', true);
-            }
-            this.set('joinStep.create.active', true);
-            return true;
-        } else {
-            // Logged in but are they in the middle of joining?
-            if (!this.get('joinStep.completed') && (
-                this.get('joinStep.create.active') ||
-                this.get('joinStep.join.active') ||
-                this.get('joinStep.personalise.active') ||
-                this.get('joinStep.features.active') ||
-                this.get('joinStep.addQuestions.active'))) {
-                return true;
-            } else
-                return false;
-        }
-    }.property('currentUser', 'joinStep.completed'),
 
     newTag: "",
 
@@ -286,8 +222,10 @@ export default Ember.Controller.extend(CurrentUser, DeleteWithUndo, {
          */
         toggleAddingNewTag: function () {
             if (this.get('newTag.length')) {
-                if (!this.get('model.tags'))
+                if (!this.get('model.tags')) {
+                    // Unlikely, as CreateRoute.model sets this
                     this.set('model.tags', new Ember.A());
+                }
                 this.get('model.tags').pushObject(this.get('newTag'));
                 this.set('newTag', "");
             }
@@ -298,38 +236,12 @@ export default Ember.Controller.extend(CurrentUser, DeleteWithUndo, {
             }.bind(this), 150);
         },
 
-        removeTag: function (tag) {
-            this.get('model.tags').removeObject(tag);
+        removeTag: function (tagIndex) {
+            this.get('model.tags').removeAt(tagIndex);
         },
 
         openEditInfoModal: function () {
             this.send('openModal', 'edit/modal/edit-info', 'create', this.get('model'));
-        },
-
-        /**
-         * @Action Go to Join Step
-         * @param {String} step
-         * @param callback
-         */
-        goToJoinStep: function (step, callback) {
-            if (step === 'create' || step === 'addQuestions') {
-                // create and addQuestions are not handled by the JoinController.
-                this.set('joinStep.create.active', false);
-                this.set('joinStep.join.active', false);
-                this.set('joinStep.personalise.active', false);
-                this.set('joinStep.features.active', false);
-                this.set('joinStep.addQuestions.active', false);
-                if (step === 'create') {
-                    this.set('joinStep.create.active', true);
-                    this.transitionToRoute('create.index');
-                } else if (step === 'addQuestions') {
-                    this.set('joinStep.features.completed', true);
-                    this.set('joinStep.addQuestions.active', true);
-                    this.set('joinStep.addQuestions.disabled', false);
-                    this.send('checkTest', callback);
-                }
-            } else
-                this.get('joinController').send('goToJoinStep', step); // clears other steps
         }
     }
 

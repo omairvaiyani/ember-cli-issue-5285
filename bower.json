@@ -15,7 +15,7 @@
     "bootstrap": "~3.3.5",
     "moment": "^2.10.0",
     "underscore": "~1.7.0",
-    "font-awesome": "~4.2.0",
+    "font-awesome": "~4.5.0",
     "css-toggle-switch": "~2.1.6",
     "numeral": "~1.5.3",
     "moment-timezone": "~0.2.5",
