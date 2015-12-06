@@ -49,7 +49,7 @@ var ParseUser = ParseUserModel.extend(ParseMixin, {
         } else if (this.get('fbid')) {
             return "https://graph.facebook.com/"+this.get('fbid')+"/picture?height=250&type=square";
         } else {
-            return "https://d3uzzgmigql815.cloudfront.net/img/silhouette.png";
+            return "https://d3uzzgmigql815.cloudfront.net/img/synap-silhouette.png";
         }
     }.property('fbid', 'profilePicture'),
 
