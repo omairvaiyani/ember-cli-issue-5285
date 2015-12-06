@@ -18,6 +18,9 @@ export default Ember.View.extend({
             style += "height:"+this.get('height')+"px;";
         if(this.get('width'))
             style += "width:"+this.get('width')+"px;";
+
+        style += "border-color:#505050;border-style: solid;border-radius: 50%;"; // add border radius to the image
+
         return style;
     }.property('user')
 });
