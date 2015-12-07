@@ -1504,17 +1504,14 @@ body {
 }
 
 #body-wrap
-  min-height: 100%;
+  min-height: calc(100% + 400px);
   position: relative;
-  padding-bottom: 460px;
+  padding-bottom 460px
   &.no-padding-bottom
     padding-bottom 0
-
-@media (min-width: screenSmall)
-  #body-wrap
+  @media (min-width: screenSmall)
+    min-height calc(100% + 230px)
     padding-bottom 290px
-    &.no-padding-bottom
-      padding-bottom 0
 
 .footer
   position: absolute;
