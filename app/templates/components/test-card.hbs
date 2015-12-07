@@ -155,44 +155,29 @@
 {{/if}}
 
 {{#if miniListCard}}
-    <div {{bind-attr class=":card :list-card :margin-top-16 mini"}}
+    <div class="card list-card margin-top-16 mini"
         {{action 'openModal' 'browse/modal/test-info' 'browse.modal.testInfo' test}}>
-        <div class="card-fade"></div>
-        <div class="mini">
-            <p class="title">{{test.title}}</p>
+        <section class="row">
+            <article class="col-xs-12">
+                <div class="inline-block">
+                    {{profile-picture user=test.author}}
+                </div>
+                <div class="inline-block">
+                    <p class="title">{{test.title}}</p>
 
-            <p class="subtitle">by {{test.author.name}}</p>
+                    <p class="subtitle small">by {{test.author.name}}</p>
+                </div>
+            </article>
+        </section>
 
-            <div class="container-fluid">
-                <section class="row">
-                    <article class="col-xs-8 col-fix-right">
-                        <ul class="tags text-center">
-                            {{#if test.category}}
-                                <li {{bind-attr class=":tag :category test.category.isActive"}}>
-                                    {{test.category.distinctName}}
-                                </li>
-                            {{/if}}
-                        </ul>
-                    </article>
-                    <article class="col-xs-4 col-fix-right">
-                        <p class="small text-right margin-top-8">
-                            {{test.totalQuestions}} {{pluralize-word 'mcq' test.totalQuestions}}
-                        </p>
-                    </article>
-                </section>
-                <section class="row">
-                    <article class="col-xs-12 col-fix-right">
-                        <ul class="tags">
-                            {{#each test.tags itemController="component.testCard.item.tag" as |tag|}}
-                                <li {{bind-attr class=":tag tag.isActive"}}>
-                                    {{tag.model}}
-                                </li>
-                            {{/each}}
-                        </ul>
-                    </article>
-                </section>
-            </div>
-        </div>
+        <section class="row">
+            <article class="col-xs-12">
+                <button class="btn btn-info btn-ghost btn-block"
+                    {{action 'openModal' 'browse/modal/test-info' test}}>
+                    Take Quiz
+                </button>
+            </article>
+        </section>
     </div>
 {{/if}}
 

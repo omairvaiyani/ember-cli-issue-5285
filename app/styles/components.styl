@@ -325,17 +325,20 @@ textarea.form-input
         float right
         margin-top 0
   &.mini
-    height 120px
-    overflow hidden
+    &.user-card
+      cursor pointer
+      &:hover
+        background darken(white, 2)
+    .right-mini
+      width calc(100% - 64px)
     .title
-      font-size 12px
+      font-size 14px
+      margin-top 4px
       margin-bottom 2px
+      font-weight 400
     .subtitle
-      display none
       font-size 12px
       margin-bottom 0
-    .card-fade
-      display none
 
 .memory-strength
   position relative
@@ -692,6 +695,7 @@ input[type="range"]::-webkit-slider-thumb {
   display inline-block
   vertical-align middle
   border-radius 50%
+  margin-right marginSecondary
 
 .stat-container
   height 100%

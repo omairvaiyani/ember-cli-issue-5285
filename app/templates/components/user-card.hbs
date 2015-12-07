@@ -148,30 +148,27 @@
 {{/if}}
 
 {{#if miniListCard}}
-    <div class="card list-card margin-top-16 mini">
-        <div class="card-fade"></div>
-        <div class="text-nowrap">
-            <div class="inline-block margin-right-8">
-                {{profile-picture user=user}}
-            </div>
-            <div class="inline-block">
-                <p class="title no-margin">{{#link-to 'index.user' user.slug}}{{user.name}}{{/link-to}}</p>
-                {{#if user.educationCohort.currentYear}}
-                    <p class="no-margin small">
-                        <i class="fa fa-group fa-fw"></i>&nbsp; {{user.educationCohort.currentYear}}
-                    </p>
-                {{/if}}
-                {{#if user.educationCohort.studyField}}
-                    <p class="no-margin small">
-                        <i class="fa fa-book fa-fw"></i>&nbsp; {{user.educationCohort.studyField.name}}
-                    </p>
-                {{/if}}
-                {{#if user.educationCohort.institution}}
-                    <p class="no-margin small">
-                        <i class="fa fa-university fa-fw"></i>&nbsp; {{user.educationCohort.institution.name}}
-                    </p>
-                {{/if}}
-            </div>
+    <div class="card list-card margin-top-16 mini user-card">
+        <div class="inline-block">
+            {{profile-picture user=user}}
+        </div>
+        <div class="right-mini inline-block">
+            <h4 class="title margin-bottom-0">{{user.name}}</h4>
+            {{#if user.educationCohort.currentYear}}
+                <div class="no-margin small subtitle inline-block">
+                    <i class="fa fa-group fa-fw"></i>&nbsp; {{user.educationCohort.currentYear}}
+                </div>
+            {{/if}}
+            {{#if user.educationCohort.studyField}}
+                <div class="no-margin small subtitle inline-block margin-left-8">
+                    <i class="fa fa-book fa-fw"></i>&nbsp; {{user.educationCohort.studyField.name}}
+                </div>
+            {{/if}}
+            {{#if user.educationCohort.institution}}
+                <div class="no-margin small subtitle inline-block margin-left-8">
+                    <i class="fa fa-university fa-fw"></i>&nbsp; {{user.educationCohort.institution.name}}
+                </div>
+            {{/if}}
         </div>
     </div>
 {{/if}}
