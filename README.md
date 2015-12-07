@@ -460,18 +460,14 @@ A ```Test``` object contains the following properties:
 ```
 To begin creating a test, the minimum information required are the ```Test.title``` string, ```Test.category``` pointer and ```Test.author``` pointer:
 ```javascript
-var Test = Parse.Object.extend("Test"),
-    newTest = new Test();
-// minimum    
-newTest.set('title', "Algebra");    
-newTest.set('author', currentUser);
-// refer to the App Initialization section to get list of Category objects
-newTest.set('category', selectedCategory); 
-// extra
-newTest.set('isPublic', true); // false by default
-newTest.set('description', "This quiz is for beginners");
-newTest.set('tags', ["Math 101", "GCSEs"]);
-// Save Test to begin adding questions
+var newTest = {
+ title : "Algebra",
+ author : currentUser.id,
+ category : selectedCategory.id,
+ isPublic : true,
+ description : "This quiz is for beginners",
+ tags : ["Math 101", "GCSEs"]
+}
 Parse.Cloud.run('createNewTest', {test: newTest}).then(function (response) {
     var test = response.test;
     // test will now have an objectId

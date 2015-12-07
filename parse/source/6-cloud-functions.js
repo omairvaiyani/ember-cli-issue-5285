@@ -295,7 +295,11 @@ Parse.Cloud.define('getMemoryStrengthForTests', function (request, response) {
  * We need to respond with userEvents
  * or badges: therefore, this custom
  * function saves the test
- * @param {Test} test
+ *
+ * Request param 'test' must be JSON,
+ * not Parse.Object.
+ *
+ * @param {Object} test
  * @return {UserEvent} userEvent
  */
 Parse.Cloud.define('createNewTest', function (request, response) {
