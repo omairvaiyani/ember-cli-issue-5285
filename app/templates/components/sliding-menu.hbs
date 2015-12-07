@@ -59,12 +59,12 @@
                 {{/link-to}}
             {{/link-to}}
         {{else}}
+            <li>
+                <a href="javascript:void(0)" {{action 'openModal' 'application/modal/login' 'application'}}>
+                    <i class="sidebar-icon fa fa-fw fa-user"></i>Log in
+                </a>
+            </li>
             {{#if betaUnlocked}}
-                <li>
-                    <a href="javascript:void(0)" {{action 'openModal' 'application/modal/login' 'application'}}>
-                        <i class="sidebar-icon fa fa-fw fa-user"></i>Log in
-                    </a>
-                </li>
                 <li>
                     <a href="javascript:void(0)" {{action 'openModal' 'application/modal/register' 'application'}}>
                         <i class="sidebar-icon fa fa-fw fa-sign-in"></i>Register
@@ -72,7 +72,7 @@
                 </li>
             {{/if}}
         {{/if}}
-        {{#if betaUnlocked}}
+        {{#if currentUser}}
             {{#link-to 'browse' tagName='li' title='Search for quizzes'}}
                 {{#link-to 'browse' tagName='a'}}
                     <i class="sidebar-icon fa fa-fw fa-globe"></i>Browse
