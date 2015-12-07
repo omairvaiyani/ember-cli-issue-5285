@@ -10,10 +10,10 @@
             {{else}}
                 <div {{bind-attr class=":module-tag :edit-tag :has-icon"}}>
                     <i class="fa fa-fw fa-pencil-square icon"></i>
-                    {{input type='text' value=tagObject.tag placeholder="E.g. Bio"
+                    {{input type='text' value=tagObject.tag
                     action="finishEditingTag" id=tagObject.id}}
                     <div class="action-button" {{action 'finishEditingTag'}}>
-                        +
+                        <span>+</span>
                     </div>
                 </div>
             {{/unless}}
@@ -30,17 +30,19 @@
         {{#if parentController.addingTag}}
             <div {{bind-attr class=":module-tag :new-tag :has-icon"}}>
                 <i class="fa fa-fw fa-pencil-square icon"></i>
-                {{input type='text' value=parentController.newTag placeholder="E.g. Bio"
+                {{input type='text' value=parentController.newTag
                 id="new-tag" action="toggleAddingNewTag"}}
                 <div class="action-button" {{action 'toggleAddingNewTag'}}>
-                    +
+                    <span>+</span>
                 </div>
             </div>
         {{else}}
             <div {{bind-attr class=":module-tag :new-tag"}} {{action 'toggleAddingNewTag'}}>
                 <span>Add {{tagOrModule}}</span>
 
-                <div class="action-button">+</div>
+                <div class="action-button">
+                    <span>+</span>
+                </div>
             </div>
         {{/if}}
     {{/if}}
