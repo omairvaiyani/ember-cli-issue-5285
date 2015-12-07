@@ -704,6 +704,7 @@ input[type="range"]::-webkit-slider-thumb {
   line-height 100%
   display inline-block
   vertical-align middle
+  cursor default
   .stat-icon-container
     border-radius 50%
     height: 35px;
@@ -834,6 +835,11 @@ input[type="range"]::-webkit-slider-thumb {
       background darken(colorSecondary, 10)
       &::before
         background darken(colorSecondary, 10)
+
+.tooltipster-default
+  border-color colorPrimary-800
+  background colorPrimary
+  color colorPrimary-50
 
 .vertical-separator
   margin-left marginSecondary

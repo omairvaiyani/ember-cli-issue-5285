@@ -1,0 +1,29 @@
+{{#tool-tipster title="Total Questions" class="inline-block"}}
+    <div class="stat-container">
+        <div class="stat-icon-container inline-block">
+            <i class="fa fa-fw fa-question stat-icon"></i>
+        </div>
+        <span>{{test.totalQuestions}}</span>
+    </div>
+{{/tool-tipster}}
+
+<div class="vertical-separator"></div>
+
+{{#tool-tipster title="Number of Attempts by Community" class="inline-block"}}
+    <div class="stat-container">
+        <div class="stat-icon-container inline-block">
+            <i class="fa fa-fw fa-pencil stat-icon"></i>
+        </div>
+        <span class="inline-block">{{test.numberOfAttempts}}</span>
+    </div>
+{{/tool-tipster}}
+<div class="vertical-separator"></div>
+
+{{#tool-tipster title="Average Score by Community" class="inline-block"}}
+    <div class="stat-container">
+        <div class="stat-icon-container inline-block">
+            <i class="fa fa-fw fa-flag-checkered stat-icon"></i>
+        </div>
+        <span class="inline-block">{{test.averageScore}}%</span>
+    </div>
+{{/tool-tipster}}

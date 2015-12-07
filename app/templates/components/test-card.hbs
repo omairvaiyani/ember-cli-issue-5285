@@ -139,30 +139,9 @@
         <div class="bottom">
             <section class="row">
                 <article class="col-xs-12 col-sm-6">
-                    <div class="stat-container">
-                        <div class="stat-icon-container inline-block">
-                            <i class="fa fa-fw fa-question stat-icon"></i>
-                        </div>
-                        <span>{{test.totalQuestions}}</span>
-                    </div>
 
-                    <div class="vertical-separator"></div>
+                    {{partial 'components/test-card/stats-box'}}
 
-                    <div class="stat-container">
-                        <div class="stat-icon-container inline-block">
-                            <i class="fa fa-fw fa-pencil stat-icon"></i>
-                        </div>
-                        <span class="inline-block">{{test.numberOfAttempts}}</span>
-                    </div>
-
-                    <div class="vertical-separator"></div>
-
-                    <div class="stat-container">
-                        <div class="stat-icon-container inline-block">
-                            <i class="fa fa-fw fa-flag-checkered stat-icon"></i>
-                        </div>
-                        <span class="inline-block">{{test.averageScore}}%</span>
-                    </div>
                 </article>
                 <article class="col-xs-12 col-sm-6">
                     <button class="btn btn-info btn-ghost"
@@ -236,30 +215,9 @@
 
         <section class="row">
             <article class="col-xs-12 text-center">
-                <div class="stat-container">
-                    <div class="stat-icon-container inline-block">
-                        <i class="fa fa-fw fa-question stat-icon"></i>
-                    </div>
-                    <span>{{test.totalQuestions}}</span>
-                </div>
 
-                <div class="vertical-separator"></div>
+                {{partial 'components/test-card/stats-box'}}
 
-                <div class="stat-container">
-                    <div class="stat-icon-container inline-block">
-                        <i class="fa fa-fw fa-pencil stat-icon"></i>
-                    </div>
-                    <span class="inline-block">{{test.numberOfAttempts}}</span>
-                </div>
-
-                <div class="vertical-separator"></div>
-
-                <div class="stat-container">
-                    <div class="stat-icon-container inline-block">
-                        <i class="fa fa-fw fa-flag-checkered stat-icon"></i>
-                    </div>
-                    <span class="inline-block">{{test.averageScore}}%</span>
-                </div>
             </article>
         </section>
 
