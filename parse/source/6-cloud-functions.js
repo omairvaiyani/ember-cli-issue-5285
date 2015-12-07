@@ -220,6 +220,36 @@ Parse.Cloud.define('loadMyTestsList', function (request, response) {
 });
 
 /**
+ * @CloudFunction Load Recent Attempts for User
+ *
+ * Used for Progress page
+ * - Recent Test attempts
+ */
+Parse.Cloud.define('loadRecentAttemptsForUser', function (request, response) {
+    var user = request.user,
+        promises = [];
+
+    if (!user)
+        return response.error("You must be logged in.");
+
+    var recentTestAttemptsQuery = user.latestTestAttempts().query();
+
+    recentTestAttemptsQuery.limit(20);
+    recentTestAttemptsQuery.descending("createdAt");
+    promises.push(recentTestAttemptsQuery.find());
+
+    Parse.Promise.when(promises).then(function (recentAttempts) {
+        var result = {
+            recentAttempts: recentAttempts
+        };
+        response.success(result);
+    }, function (error) {
+        response.error(error);
+    });
+
+});
+
+/**
  * @CloudFunction Get Memory Strength for Tests
  * You can send an array of tests, test pointers or test objectIds.
  * @param {Array<Test> || Array<Parse.Pointers> || Array<String>} tests

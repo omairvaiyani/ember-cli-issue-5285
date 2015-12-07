@@ -127,8 +127,8 @@ var ParseUser = ParseUserModel.extend(ParseMixin, {
     /*
      * Stats
      */
-    numberOfTestsCreated: DS.attr('number'),
-    numberOfQuestionsCreated: DS.attr('number'),
+    numberOfTestsCreated: DS.attr('number', {defaultValue: 0}),
+    numberOfQuestionsCreated: DS.attr('number', {defaultValue: 0}),
     averageScore: DS.attr('number', {defaultValue: 0}),
     averageUniqueScore: DS.attr('number', {defaultValue: 0}),
     numberOfAttempts: DS.attr('number', {defaultValue: 0}),
@@ -136,7 +136,7 @@ var ParseUser = ParseUserModel.extend(ParseMixin, {
     numberOfAttemptsByCommunity: DS.attr('number', {defaultValue: 0}),
     numberOfUniqueAttemptsByCommunity: DS.attr('number', {defaultValue: 0}),
     averageScoreByCommunity: DS.attr('number', {defaultValue: 0}),
-    averageUniqueScoreByCommunity: DS.attr(),
+    averageUniqueScoreByCommunity: DS.attr('number', {defaultValue: 0}),
     numberFollowing: DS.attr('number', {defaultValue: 0}),
     numberOfFollowers: DS.attr('number', {defaultValue: 0}),
     numberOfBadgesUnlocked: DS.attr('number', {defaultValue: 0}),

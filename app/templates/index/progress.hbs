@@ -1,78 +1,90 @@
 <section class="row margin-top-16 text-center">
     <article class="col-xs-6 col-sm-3">
-        <div class="panel panel-primary">
+        <div class="card panel panel-primary">
             <div class="panel-body">
-                {{currentUser.createdTests.length}}
+                {{currentUser.numberOfTestsCreated}}
             </div>
             <div class="panel-footer">
-                <h3 class="panel-title">Tests Created</h3>
+                <h3 class="panel-title no-margin">Quizzes Created</h3>
             </div>
         </div>
     </article>
     <article class="col-xs-6 col-sm-3 col-fix-right">
-        <div class="panel panel-primary">
+        <div class="card panel panel-primary">
             <div class="panel-body">
-                {{currentUser.testAttempts.length}}
+                {{currentUser.numberOfQuestionsCreated}}
             </div>
             <div class="panel-footer">
-                <h3 class="panel-title">Tests Taken</h3>
+                <h3 class="panel-title no-margin">Questions Written</h3>
             </div>
         </div>
     </article>
     <article class="col-xs-6 col-sm-3 col-fix-right">
-        <div class="panel panel-primary">
+        <div class="card panel panel-primary">
             <div class="panel-body">
-                45%
+                {{currentUser.numberOfAttempts}}
             </div>
             <div class="panel-footer">
-                <h3 class="panel-title">Average Score</h3>
+                <h3 class="panel-title no-margin">Quizzes Taken</h3>
             </div>
         </div>
     </article>
     <article class="col-xs-6 col-sm-3 col-fix-right">
-        <div class="panel panel-primary">
+        <div class="card panel panel-primary">
             <div class="panel-body">
-                Very Good
+                {{currentUser.averageScore}}%
             </div>
             <div class="panel-footer">
-                <h3 class="panel-title">Something Else</h3>
+                <h3 class="panel-title no-margin">Average Score</h3>
             </div>
         </div>
     </article>
 </section>
+
 <section class="row margin-top-16">
     <article class="col-xs-10 col-xs-push-1 col-fix-middle" id="recentAttemptsChartHolder">
-        {{#if showRecentAttemptsChart}}
-            {{#if recentAttemptsChartData}}
+        {{#if recentAttempts.length}}
+            {{#if showRecentAttemptsChart}}
                 {{ember-chart type='Line' data=recentAttemptsChartData width=recentAttemptsChartWidth
                 options=recentAttemptChartOptions height=300}}
                 <ul class="progress-chart-legends">
                     <li>Average Daily Score</li>
                 </ul>
             {{else}}
-                <h5>Preparing Progress Graph</h5>
+                <h4 class="text-center">{{loading-bar}} Preparing Progress Graph</h4>
             {{/if}}
+        {{else}}
+        {{!-- No Attempts show nothing --}}
         {{/if}}
     </article>
 </section>
+
 <section class="row">
-    <article class="col-md-3">
-        <div class="well mini-well margin-top-16">
-            <h4 class="no-margin">ATTEMPTS</h4>
-            {{#each myProgressListTypes as |listType|}}
-                <div class="radio radio-primary">
-                    <label>
-                        {{radio-button name='myProgressListSelection' value=listType checked=myProgressListType}}
-                        <span class="circle"></span><span class="check"></span>
-                        {{listType.label}}
-                    </label>
-                </div>
+    {{#if currentUser.testAttempts.length}}
+        <article class="col-md-3">
+            <div class="card margin-top-16">
+                <h4 class="no-margin">ATTEMPTS</h4>
+                {{#each myProgressListTypes as |listType|}}
+                    <div class="radio radio-primary">
+                        <label>
+                            {{radio-button name='myProgressListSelection' value=listType checked=myProgressListType}}
+                            <span class="circle"></span><span class="check"></span>
+                            {{listType.label}}
+                        </label>
+                    </div>
+                {{/each}}
+            </div>
+        </article>
+        <article class="col-md-9 col-fix-right">
+            {{#each myProgressList as |attempt|}}
+                {{test-card test=attempt.test parentController=this}}
             {{/each}}
-        </div>
-    </article>
-    <article class="col-md-9 col-fix-right">
-        {{#each myProgressList as |attempt|}}
-            {{test-card test=attempt.test parentController=this}}
-        {{/each}}
-    </article>
+        </article>
+    {{else}}
+        <article class="col-xs-12 text-center">
+            {{list-empty icon="fa-pencil-square"
+            title="You have yet to take a quiz. This page will show you your recent scores and how
+            you're improving over time!"}}
+        </article>
+    {{/if}}
 </section>
