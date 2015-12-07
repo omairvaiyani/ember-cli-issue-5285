@@ -38,14 +38,28 @@
     -webkit-text-fill-color: transparent;
 
 .hot-tests-container > div
-  width 30%
-  margin-right marginPrimary
+  width 90%
+  margin-left 5%
+  text-align left
+  @media (min-width screenSmall)
+    margin-left auto
+    width 30%
+    margin-right marginPrimary
+    &:nth-child(3)
+      margin-right 0
   .hot-test.card
     .top
+      position relative
       .tags
         position absolute
-        top marginPrimary
-        right marginPrimary
+        bottom 0
+        right 4px
+        text-align right
+        max-width calc(100% - 16px)
+        margin-bottom 0 !important
+        @media (min-width screenMedium)
+          top 0
+          bottom inherit
         .category-tag
           margin-right 2px
       .image
@@ -53,6 +67,9 @@
         width 100%
         background-size cover
         background-position 50%
+    .middle
+      height 100px
+      overflow hidden
     .stat-container
       text-align center
     .description

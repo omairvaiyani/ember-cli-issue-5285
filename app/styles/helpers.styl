@@ -16,16 +16,6 @@
   cursor: pointer;
 }
 
-.text-input-div-with-tag {
-  padding: 7px 3px !important;
-  height: 36px !important;
-}
-
-.text-input-div {
-  padding: 0px !important;
-  height: 36px !important;
-}
-
 .no-border-input {
   border: none !important;
   box-shadow: none !important;
@@ -99,10 +89,6 @@
   color: colorPrimary;
 }
 
-.red-link {
-  color crimson !important
-}
-
 .margin-top-24
   margin-top 24 !important
 
@@ -143,6 +129,16 @@
   margin-left auto !important
   margin-right auto !important
 
+maxTwoLines()
+  /* Max Two lines, bit of black magic involved */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  line-height: 16px; /* fallback */
+  max-height: 32px; /* fallback */
+  -webkit-line-clamp: 2; /* number of lines to show */
+  -webkit-box-orient: vertical;
+
 .padding-bottom-0 {
   padding-bottom: 0
   !important
@@ -181,4 +177,14 @@
 
 .text-color-unimportant {
   color: #97A07D;
+}
+
+.text-input-div-with-tag {
+  padding: 7px 3px !important;
+  height: 36px !important;
+}
+
+.text-input-div {
+  padding: 0px !important;
+  height: 36px !important;
 }

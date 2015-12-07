@@ -27,8 +27,8 @@
     </h3>
 
     <section class="row">
-        <article class="col-xs-12 col-sm-8 col-sm-push-2">
-            <div class="hot-tests-container">
+        <article class="col-xs-12 col-md-8 col-md-push-2">
+            <div class="hot-tests-container text-center">
                 {{#each hotTests as |test|}}
                     {{test-card test=test parentController=this cardType="hotTest" class="inline-block"}}
                 {{/each}}

@@ -272,15 +272,9 @@ textarea.form-input
         width auto
   .title
     font-weight 400
+    maxTwoLines()
   .description
-    /* Max Two lines, bit of black magic involved */
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: -webkit-box;
-    line-height: 16px; /* fallback */
-    max-height: 32px; /* fallback */
-    -webkit-line-clamp: 2; /* number of lines to show */
-    -webkit-box-orient: vertical;
+    maxTwoLines()
   .right
     width calc(100% - 116px)
     min-height 108px
