@@ -393,7 +393,9 @@ glossRightColor = alpha(darken(white, 4), glossOverlayOpacity)
     padding 24px
     width 80%
     max-width 508px
-    margin 90px auto
+    margin 30px auto
+    @media (min-width screenSmall)
+      margin-top 90px
     .modal-content
       box-shadow none
       width auto
@@ -430,7 +432,6 @@ glossRightColor = alpha(darken(white, 4), glossOverlayOpacity)
         background: -ms-linear-gradient(-45deg, rgba(255, 255, 255, glossOverlayOpacity) 0%, rgba(255, 255, 255, glossOverlayOpacityLight) 50%, glossRightColor 50%, glossRightColor 71%, glossRightColor 100%);
     .synap-modal
       padding marginPrimary 0 60px 0 !important
-      width 460px
       margin auto
       &.top-image
         padding-top 56px !important
