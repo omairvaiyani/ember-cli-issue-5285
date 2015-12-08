@@ -19,4 +19,4 @@
 npm-debug.log
 testem.log
 /.idea/*
-public/.DS_Store
+/public/.DS_Store
