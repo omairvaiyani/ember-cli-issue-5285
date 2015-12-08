@@ -91,13 +91,31 @@
 
             <div class="panel panel-primary card margin-bottom-16 test-actions">
                 <div class="panel-heading">
-                    <h4 class="no-margin">Attempt Actions</h4>
+                    <h4 class="no-margin">What Next</h4>
                 </div>
                 <div class="panel-body">
-                    {{#link-to 'test' model.test.slug class="action-item margin-bottom-8"}}
+
+                    <div class="action-link margin-bottom-8">
                         <i class="fa fa-fw fa-undo margin-right-8"></i>
-                        <span>Retry Quiz</span>
-                    {{/link-to}}
+                        {{#link-to 'test' model.test.slug class="action-item margin-bottom-8"}}
+                            <span>Retry Quiz</span>
+                        {{/link-to}}
+                    </div>
+
+                    <div class="action-link margin-bottom-8">
+                        <i class="fa fa-fw fa-book margin-right-8"></i>
+                        {{#link-to 'index.user' model.test.author.slug class="action-item margin-bottom-8"}}
+                            <span>Back to My Study</span>
+                        {{/link-to}}
+                    </div>
+
+                    <div class="action-link">
+                        <i class="fa fa-fw fa-search margin-right-8"></i>
+                        {{#link-to 'category' model.test.category.slug class="action-item margin-bottom-8"}}
+                            <span>Find Similar Quizzes</span>
+                        {{/link-to}}
+                    </div>
+
                 </div>
             </div>
 
