@@ -39,8 +39,11 @@ scoreContainerParam = 90px
     font-size 11px
 
 .response-card
+  &:last-child
+    margin-bottom 6px !important
   .response-toggle-container
     cursor pointer
+    margin -(marginPrimary)
     &:hover
       background-color darken(white, 2)
     &.show-full
@@ -58,6 +61,8 @@ scoreContainerParam = 90px
         color colorGreen
   .response-body-container
     display none
+    margin-top 32px
+    margin-bottom marginSecondary
     &.show-full
       display block
     .option
