@@ -7,11 +7,10 @@
   .title
     color colorSecondary
     margin-top 0
-    margin-bottom marginPrimary
+    margin-bottom marginSecondary
     font-weight 400
-  .category-tag-container
-    margin-top: -7px;
-    margin-right: -(marginSecondary);
+  .category-and-module-tags-container
+    text-align left
   .question-progress-container
     position relative
     width calc(100% + 32px)
@@ -76,14 +75,28 @@
         background-color: darken(colorBackground, 2)
   .question-navigation-container
     position relative
+    .next-question
+      float right
+      @media (min-width screenSmall)
+        float none
+    .finish-test-button-container
+      text-align center
+      button
+        margin-top marginPrimary
+      @media (min-width screenSmall)
+        text-align right
+        button
+          margin-top inherit
     .navigation-counter
       position absolute
       width 100px
       left calc(50% - 50px)
       height 50px
-      top calc(50% - 25px)
+      top calc(50% - 58px)
       line-height 50px
       text-align center
+      @media (min-width screenSmall)
+        top calc(50% - 25px)
 
 .author-info-card
   padding 0
@@ -104,8 +117,8 @@
       .icon-container
         width 35%
         .icon
-           color colorPrimary
-           font-size 26px
+          color colorPrimary
+          font-size 26px
       .stat-container
         text-align left
         .stat-label
@@ -129,7 +142,6 @@
       width calc(100% - 168px)
     .follow-button
       width 100px
-
 
 .test-info-base
   .modal-title

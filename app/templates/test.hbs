@@ -44,10 +44,14 @@
 
                         <div class="card take-test">
                             {{!-- Question Title + Category Tags --}}
-                            <div>
-                                <h2 class="title inline-block">{{model.title}}</h2>
-                                {{category-tags canEdit=false test=model
-                                class="category-tag-container inline-block pull-right"}}
+                            <div class="title-and-tags">
+                                <h2 class="title">{{model.title}}</h2>
+                                <div class="category-and-module-tags-container">
+                                    {{category-tags canEdit=false test=model
+                                    class="category-tag-container inline-block"}}
+                                    {{module-tags canEdit=false tags=model.tags
+                                    class="inline-block"}}
+                                </div>
                             </div>
 
                             {{!-- Question Progress Bar--}}
@@ -103,15 +107,15 @@
                                         <span class="inline-block">Prev</span>
                                     </button>
 
-                                    <button class="btn btn-default btn-with-icon" {{action 'nextQuestion'}}>
+                                    <button class="btn btn-default btn-with-icon next-question" {{action 'nextQuestion'}}>
                                         <span class="inline-block">Next</span>
                                         <span class="right-section inline-block">
                                             <i class="fa fa-fw fa-arrow-right"></i>
                                         </span>
                                     </button>
                                 </div>
-                                <div class="col-sm-6 col-xs-12">
-                                    <button class="btn btn-ghost pull-right"
+                                <div class="col-sm-6 col-xs-12 finish-test-button-container">
+                                    <button class="btn btn-ghost"
                                         {{action 'confirmFinish'}}>Finish
                                     </button>
                                 </div>
