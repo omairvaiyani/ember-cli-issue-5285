@@ -31,10 +31,6 @@
                         Take test
                     {{/link-to}}
                 {{/unless}}
-                {{#if model.isProfessional}}
-                    {{#link-to 'medical'}}<i class="fa fa-arrow-circle-o-left margin-right-8"></i>
-                        Return to Medical Test Generator{{/link-to}}
-                {{/if}}
             </ol>
         </article>
     </section>
@@ -45,12 +41,16 @@
             <section class="row">
                 <article class="col-md-12">
                     {{#unless loading}}
+
                         <div class="card take-test">
+                            {{!-- Question Title + Category Tags --}}
                             <div>
                                 <h2 class="title inline-block">{{model.title}}</h2>
-                                {{category-tags canEdit=false test=model class="category-tag-container inline-top pull-right"}}
+                                {{category-tags canEdit=false test=model
+                                class="category-tag-container inline-block pull-right"}}
                             </div>
 
+                            {{!-- Question Progress Bar--}}
                             <div class="question-progress-container margin-bottom-16">
                                 <div class="question-progress"
                                     {{bind-attr
@@ -59,31 +59,41 @@
                                 </div>
                             </div>
 
-                            <div class="row margin-bottom-16">
-                                <div class="col-md-12">
-                                    <div class="question-stem-container">
-                                        <span class="question-counter inline-top">{{currentQuestionNumber}}</span>
+                            {{!-- Question Stem + Options Container (Min-Height for UX stability) --}}
+                            <div class="question-stem-and-option-container">
 
-                                        <p class="question-stem margin-top-0 inline-top">
-                                            {{currentQuestion.stem}}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
+                                {{!-- Question Number + Stem--}}
+                                <div class="row margin-bottom-16">
+                                    <div class="col-md-12">
+                                        <div class="question-stem-container">
+                                            <span class="question-counter inline-top">{{currentQuestionNumber}}</span>
 
-                            <div class="options-container">
-                                {{#each currentQuestion.shuffledOptions as |option|}}
-                                    <div class="row" {{action 'optionSelected' _view.contentIndex}}>
-                                        <div {{bind-attr class=":col-md-12 :option :card option.isSelected"}}>
-                                            <div class="option-label inline-block margin-right-16">{{alphabetise-index _view.contentIndex}}</div>
-                                            <span class="phrase inline-block">{{option.phrase}}</span>
+                                            <p class="question-stem margin-top-0 inline-top">
+                                                {{currentQuestion.stem}}
+                                            </p>
                                         </div>
                                     </div>
-                                {{/each}}
+                                </div>
+
+                                {{!-- Options (Label + Phrase) loop --}}
+                                <div class="options-container">
+                                    {{#each currentQuestion.shuffledOptions as |option|}}
+                                        <div class="row" {{action 'optionSelected' _view.contentIndex}}>
+                                            <div {{bind-attr class=":col-md-12 :option :card option.isSelected"}}>
+                                                <div class="option-label inline-block margin-right-16">
+                                                    {{alphabetise-index _view.contentIndex}}
+                                                </div>
+                                                <span class="phrase inline-block">{{option.phrase}}</span>
+                                            </div>
+                                        </div>
+                                    {{/each}}
+                                </div>
+
                             </div>
 
                             <hr class="full-hr margin-top-8 margin-bottom-8">
 
+                            {{!-- Question Navigation--}}
                             <div class="row question-navigation-container">
                                 <div class="col-sm-6 col-xs-12">
                                     <button class="btn btn-default btn-with-icon margin-right-8" {{action 'previousQuestion'}}>
@@ -112,67 +122,9 @@
                             </div>
 
                         </div>
-
-                    {{!--
-                    <div class="card take-test">
-                        <h3>
-                            {{#unless isGeneratedAttempt}}
-                                {{#link-to 'testInfo' model.slug}}{{model.title}}{{/link-to}}
-                                <small>{{#link-to 'category' model.category.slug}}{{model.category.name}}{{/link-to}}</small>
-                            {{else}}
-                                {{partial 'test/srs-header'}}
-                            {{/unless}}
-                            {{#if currentQuestion.image}}
-                                <img class="question-image-thumbnail pull-right"
-                                    {{action 'enlargeQuestionImage'}}
-                                    {{bind-attr src=currentQuestion.image.secureUrl}}/>
-                            {{/if}}
-                        </h3>
-                        <div class="row margin-bottom-16">
-                            <div class="col-md-12 progress-blocks">
-                                {{!--
-                                {{#each shuffledQuestions itemController='test.item.progressBlock' as |question|}}
-                                    <div {{bind-attr style=question.progressBlockWidth
-                                    class=":progress-block question.isCurrentItem:is-current-item"}}></div>
-                                {{/each}}
-                                --}}
-                    {{!--
-                            </div>
-                        </div>
-                        <div class="row margin-bottom-16">
-                            <div class="col-md-12">
-                                <span class="question-stem"><strong>Q{{currentQuestionNumber}}</strong>
-                                    {{currentQuestion.stem}}</span>
-                            </div>
-                        </div>
-
-                        {{#each currentQuestion.shuffledOptions as |option|}}
-                            <div class="row" {{action 'optionSelected' _view.contentIndex}}>
-                                <div {{bind-attr class=":col-md-12 :option option.isSelected"}}>
-                                    <span class="option-label margin-right-16">{{alphabetise-index _view.contentIndex}}</span>
-                                    <span class="phrase">{{option.phrase}}</span>
-                                </div>
-                            </div>
-                        {{/each}}
-                        <div class="row margin-top-16">
-                            <div class="col-md-5">
-                                <button class="flat-button" {{action 'previousQuestion'}}>Previous</button>
-                                <button class="flat-button" {{action 'nextQuestion'}}>Next</button>
-                            </div>
-                            <div class="col-md-2 text-center">
-                                <p class="margin-top-16">Q{{currentQuestionNumber}} of {{shuffledQuestions.length}}</p>
-                            </div>
-                            <div class="col-md-5">
-                                <button class="flat-button pull-right"
-                                    {{action 'confirmFinish'}}>Finish
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                            --}}
                     {{else}}
                         <div class="card text-center">
-                            <h3>{{loading}}</h3>
+                            <h3>{{loading-bar}} {{loading}}</h3>
                         </div>
                     {{/unless}}
                 </article>
@@ -183,61 +135,9 @@
         <article class="col-md-3 col-fix-right">
             <section class="row">
                 {{#unless isGeneratedAttempt}}
-                    {{#if model.isProfessional}}
-                        <article class="col-md-12 col-sm-6 col-xs-12 margin-bottom-16">
-                            <div class="card">
-                                <h4>Generated Test</h4>
-
-                                <p>{{profile-picture user=model.author}}
-                                    {{#link-to 'user' model.author}}{{model.author.name}}{{/link-to}}</p>
-                                {{#if model.group.name}}
-                                    <h5>Group:</h5>
-                                    {{#link-to 'group' model.group.slug}}
-                                        {{model.group.name}}
-                                    {{/link-to}}
-                                {{/if}}
-                            </div>
-                        </article>
-                    {{else}}
-                        <article class="col-md-12 col-sm-6 col-xs-12 margin-bottom-16">
-                            {{user-card user=model.author}}
-                        </article>
-                    {{/if}}
-                {{else}}
-                    {{#if model.isProfessional}}
-                        {{#unless model.test.id.length}}
-                            <article class="col-md-12 col-sm-6 col-xs-12 margin-bottom-16">
-                                <div class="card">
-                                    <h4>Save this Test</h4>
-                                    {{input type='text' placeholder='Give this test a title' value=testTitle
-                                    class='form-control margin-bottom-8'}}
-                                    {{view 'select' content=currentUser.groups optionLabelPath='content.name'
-                                    prompt='Add Test to Group' class='form-control margin-bottom-8'
-                                    value=selectedGroup}}
-                                    {{async-button action='saveProfessionalTest' default='Save' pending='Saving...'
-                                    class='btn btn-success' fulfilled='Test saved!'}}
-                                </div>
-                            </article>
-                        {{else}}
-                            <article class="col-md-12 col-sm-6 col-xs-12 margin-bottom-16">
-                                <div class="card">
-                                    <h4>Generated Test</h4>
-                                    {{#link-to 'testInfo' model.test.slug}} {{model.test.title}} {{/link-to}}
-                                    {{#if model.test.privacy}}<br>
-                                        <small> Use this link to share the test</small>{{/if}}
-                                    <hr>
-                                    <p>{{profile-image user=model.test.author}}
-                                        {{#link-to 'user' model.test.author}}{{model.test.author.name}}{{/link-to}}</p>
-                                    {{#if model.test.group.name}}
-                                        <h5>Group:</h5>
-                                        {{#link-to 'group' model.test.group.slug}}
-                                            {{model.test.group.name}}
-                                        {{/link-to}}
-                                    {{/if}}
-                                </div>
-                            </article>
-                        {{/unless}}
-                    {{/if}}
+                    <article class="col-md-12 col-sm-6 col-xs-12 margin-bottom-16">
+                        {{user-card user=model.author}}
+                    </article>
                 {{/unless}}
             </section>
         </article>

@@ -3,6 +3,7 @@
  */
 .take-test.card
   padding-bottom 8px
+  margin-bottom marginPrimary
   .title
     color colorSecondary
     margin-top 0
@@ -26,8 +27,11 @@
       width 0
       height 100%
       transition width 0.5s
+  .question-stem-and-option-container
+    min-height 338px
   .question-stem-container
     width 100%
+    min-height 66px
     .question-counter
       font-weight: 400;
       font-size: 20px;
@@ -61,6 +65,8 @@
         line-height: 24px;
         text-align: center;
         margin-right: marginPrimary
+      .phrase
+        width calc(100% - 44px)
       &.is-selected
         background-color: colorBorder;
         border 1px solid colorDarkBackground
