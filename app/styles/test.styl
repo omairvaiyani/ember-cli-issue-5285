@@ -28,51 +28,62 @@
       transition width 0.5s
   .question-stem-and-option-container
     min-height 338px
-  .question-stem-container
     width 100%
-    min-height 66px
-    .question-counter
-      font-weight: 400;
-      font-size: 20px;
-      border-radius: 50%;
-      border: 1px solid colorSecondary;
-      color: colorSecondary;
-      height: 32px;
-      width: 32px;
-      line-height: 30px;
-      text-align: center;
-      margin-right: marginPrimary
-    .question-stem
-      font-weight 400
-      font-size 20px
-      width calc(100% - 52px)
-  .options-container
-    .option
-      font-size: 16px;
-      padding: marginSecondary marginPrimary !important
-      cursor: default;
-      margin: 0 marginPrimary marginSecondary marginPrimary;
-      width: calc(100% - 32px);
-      .option-label
+    .question-stem-container
+      width 100%
+      min-height 66px
+      .question-counter
         font-weight: 400;
-        font-size: 14px;
+        font-size: 20px;
         border-radius: 50%;
-        background-color colorGreen
-        color: whitesmoke;
-        height: 24px;
-        width: 24px;
-        line-height: 24px;
+        border: 1px solid colorSecondary;
+        color: colorSecondary;
+        height: 32px;
+        width: 32px;
+        line-height: 30px;
         text-align: center;
         margin-right: marginPrimary
-      .phrase
-        width calc(100% - 44px)
-      &.is-selected
-        background-color: colorBorder;
-        border 1px solid colorDarkBackground
-      &:hover
-        background-color colorBackground
-      &:active
-        background-color: darken(colorBackground, 2)
+      .question-stem
+        font-weight 400
+        font-size 20px
+        width calc(100% - 52px)
+    .options-container
+      .option
+        font-size: 16px;
+        padding: marginSecondary marginPrimary !important
+        cursor: default;
+        margin: 0 marginPrimary marginSecondary marginPrimary;
+        width: calc(100% - 32px);
+        .option-label
+          font-weight: 400;
+          font-size: 14px;
+          border-radius: 50%;
+          background-color colorGreen
+          color: whitesmoke;
+          height: 24px;
+          width: 24px;
+          line-height: 24px;
+          text-align: center;
+          margin-right: marginPrimary
+        .phrase
+          width calc(100% - 44px)
+        &.is-selected
+          background-color: colorBorder;
+          border 1px solid colorDarkBackground
+        &:hover
+          background-color colorBackground
+        &:active
+          background-color: darken(colorBackground, 2)
+    &.has-image
+      width calc(100% - 220px)
+  .image-container
+    width 212px
+    text-align center
+    padding marginPrimary
+    .image
+      width 100%
+      max-height 400px
+      cursor pointer
   .question-navigation-container
     position relative
     .next-question

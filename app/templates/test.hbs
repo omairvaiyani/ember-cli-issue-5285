@@ -64,7 +64,8 @@
                             </div>
 
                             {{!-- Question Stem + Options Container (Min-Height for UX stability) --}}
-                            <div class="question-stem-and-option-container">
+                            <div {{bind-attr class=":question-stem-and-option-container :inline-block
+                            currentQuestion.image.url.length:has-image"}}>
 
                                 {{!-- Question Number + Stem--}}
                                 <div class="row margin-bottom-16">
@@ -92,8 +93,15 @@
                                         </div>
                                     {{/each}}
                                 </div>
-
                             </div>
+
+
+                            {{#if currentQuestion.image.url.length}}
+                                <div class="image-container inline-top">
+                                    <img class="image" {{bind-attr src=currentQuestion.image.secureUrl}}
+                                    {{action 'openModal' 'application/modal/image' true currentQuestion.image.secureUrl}}/>
+                                </div>
+                            {{/if}}
 
                             <hr class="full-hr margin-top-8 margin-bottom-8">
 
