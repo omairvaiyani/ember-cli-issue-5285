@@ -466,6 +466,13 @@ Parse.Cloud.define('deleteObjects', function (request, response) {
 
     switch (className) {
         case "Test":
+            promise = objectQuery.each(function (object) {
+                object.set('isObjectDeleted', true);
+                object.set('isPublic', false);
+                object.setACL(new Parse.ACL());
+                return object.save();
+            });
+            break;
         case "Question":
             promise = objectQuery.each(function (object) {
                 object.set('isObjectDeleted', true);
@@ -1439,9 +1446,7 @@ Parse.Cloud.define("checkBetaAccess", function (request, response) {
     else if (betaInviteId)
         betaInviteQuery.equalTo("objectId", betaInviteId);
 
-    logger.log("beta-check-email", email);
     betaInviteQuery.find().then(function (betaInvites) {
-        logger.log("beta-invites-found", betaInvites);
         var betaInvite = betaInvites[0];
         if (!betaInvite || !betaInvite.get('inviteSent'))
             response.error("You are not invited to the beta yet.");

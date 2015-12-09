@@ -208,14 +208,15 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
             if (this.get('saving') || shouldCheckValidity && !this.isQuestionValid())
                 return;
 
+            var question = this.get('model');
             this.send('incrementLoadingItems');
             this.set('saving', true);
 
             window.scrollTo(0, 0);
             this.send("refreshRoute");
 
-            this.set('model.isPublic', this.get('test.isPublic'));
-            this.set('model.tags', this.get('test.tags'));
+            question.set('isPublic', this.get('test.isPublic'));
+            question.set('tags', this.get('test.tags'));
 
             /*
              * If user added an image, start saving it
@@ -224,14 +225,16 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
             if (this.get('imageFile.base64.length')) {
                 this.send('uploadImage');
             }
+            this.get('questions').pushObject(question);
 
             ParseHelper.cloudFunction(this, 'saveNewQuestion', {
-                question: this.get('model'),
+                question: question,
                 test: ParseHelper.generatePointer(this.get('test'), 'Test')
             }).then(function (response) {
-                // Reloads the ember-data for this model
-                var question = ParseHelper.extractRawPayload(this.store, 'question', response.question);
+                this.get('questions').removeObject(question);
+                question = ParseHelper.extractRawPayload(this.store, 'question', response.question);
                 this.get('questions').pushObject(question);
+
                 this.send('newUserEvent', response);
                 return this.get('test').save();
             }.bind(this)).then(function () {
@@ -247,6 +250,7 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
                 this.send('addNotification', notification);
                 this.get('test').removeObject(this.get('model'));
             }.bind(this));
+
         },
 
         /**

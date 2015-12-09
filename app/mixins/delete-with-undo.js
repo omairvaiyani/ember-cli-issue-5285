@@ -22,7 +22,6 @@ export default Ember.Mixin.create({
             this.send('preObjectDelete', returnItem);
 
             returnItem.array.removeObject(returnItem.object);
-
             // Timeout allows thread to be free for UX animation
             setTimeout(function () {
                 var undo = {

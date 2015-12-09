@@ -902,8 +902,6 @@ var UserEvent = Parse.Object.extend("UserEvent", {
                 userEvent.set('badgesProgressed', badgesProgressed);
 
             // Must save userEvent addition + any points, level or badge changes
-            logger.log("badge-before-save-user", user.earnedBadges());
-            logger.log("user-before-event-save", user.toJSON());
             return Parse.Promise.when([user.save(), userEvent.save()]);
         }).then(function () {
             return Parse.Promise.as(userEvent);
@@ -1962,8 +1960,6 @@ var UniqueResponse = Parse.Object.extend("UniqueResponse", {
      * @return {UniqueResponse}
      */
     addLatestResponse: function (response) {
-        logger.log("Spaced Repetition", "-----------------------");
-        logger.log("Spaced Repetition", "Adding Latest Response");
         this.setLatestResponse(response);
         this.set('latestResponseIsCorrect', response.isCorrect());
         this.set('latestResponseDate', response.createdAt ? response.createdAt : new Date());
@@ -1974,14 +1970,11 @@ var UniqueResponse = Parse.Object.extend("UniqueResponse", {
         } else
             this.set('correctnessStreak', 0);
 
-        logger.log("Spaced Repetition", "Is the response correct? " + this.latestResponseIsCorrect() + " : " + response.id);
         // For Spaced Repetition
         this.calculateOptimumRepetitionDate();
         // Uses optimum interval from previous function to
         // calculate the current memory strength
-        logger.log("Spaced Repetition", "OI set, Now memory strength");
         this.updateMemoryStrength();
-        logger.log("Spaced Repetition", "Memory strength set to " + this.memoryStrength());
         this.responses().add(response);
         return this;
     },
@@ -1994,7 +1987,6 @@ var UniqueResponse = Parse.Object.extend("UniqueResponse", {
      * @returns {UniqueResponse}
      */
     calculateOptimumRepetitionDate: function () {
-        logger.log("Spaced Repetition", "Calculating Optimum Interval");
         // Before we calculate the next interval, check current memory strength
         // If it's high, that means the user has reviewed this item too early
         // In which case, we'll disallow this repetition in our calculations
@@ -2046,7 +2038,6 @@ var UniqueResponse = Parse.Object.extend("UniqueResponse", {
 
             // Set calculated EF as 'previousEasinessFactor' to be used at next repetition
             this.set('previousEasinessFactor', EF);
-            logger.log("Spaced Repetition", "EF calculated as " + EF);
         }
 
         // Calculate optimum interval (in days) based on EF if steak > 2
@@ -2059,7 +2050,6 @@ var UniqueResponse = Parse.Object.extend("UniqueResponse", {
             // Calculation of interval based on EF and number of correct answers in a row
             optimumInterval = (this.correctnessStreak() - 1) * EF;
         }
-        logger.log("Spaced Repetition", "Optimum interval is " + optimumInterval);
         // This will be used to calculate memory strength, and therefore, when to repeat the item
         this.set('currentOptimumInterval', optimumInterval);
         this.set('optimumRepetitionDate', moment().add(Math.round(optimumInterval), 'd').toDate());

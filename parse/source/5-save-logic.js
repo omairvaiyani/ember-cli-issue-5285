@@ -70,6 +70,10 @@ Parse.Cloud.afterSave(Parse.User, function (request) {
  * - Set default parameters + ACL
  * - Generate slug (async)
  *
+ * Existing test:
+ * - Issue with deleted questions not being removed
+ * due to __AddUnique REST call. Here we check if
+ * a question should be removed from the test.
  */
 Parse.Cloud.beforeSave(Test, function (request, response) {
     var test = request.object,

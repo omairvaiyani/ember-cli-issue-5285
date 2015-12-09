@@ -732,7 +732,6 @@ export default Ember.Route.extend({
          * @param test
          */
         saveCommunityTest: function (test) {
-            console.log("App route save comm called");
             this.get('currentUser.savedTests').addObject(test);
             var params = {
                 "parentObjectClass": "_User",
