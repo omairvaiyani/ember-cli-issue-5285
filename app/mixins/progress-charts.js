@@ -85,7 +85,11 @@ export default Ember.Mixin.create({
 
     recentAttemptChartOptions: {
         responsive: true,
-        tooltipTemplate: "<%if (label){%><%=label%>: <%}%><%= value %>%"
+        tooltipTemplate: "<%if (label){%><%=label%>: <%}%><%= value %>%",
+        scaleOverride: true,
+        scaleSteps: 10,
+        scaleStepWidth: 10,
+        scaleStartValue: 0
     },
 
     actions: {
