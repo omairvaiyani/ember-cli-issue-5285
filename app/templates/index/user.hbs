@@ -1,5 +1,6 @@
 <section class="row margin-bottom-16">
     <article class="col-xs-12">
+        {{#if model}}
         <div class="card">
             <section class="row">
                 <article class="col-xs-5">
@@ -57,9 +58,17 @@
                 </article>
             </section>
         </div>
+        {{else}}
+            <br>
+            <br>
+            <br>
+            <p class="text-center">
+                Hmm... we don't have a user with that name. Please check your link and try again!
+            </p>
+    {{/if}}
     </article>
 </section>
-
+{{#if model}}
 <section class="row">
 
     <article class="col-xs-12 col-sm-9">
@@ -83,4 +92,5 @@
         </div>
     </article>
 </section>
+{{/if}}
 
