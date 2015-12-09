@@ -14,18 +14,7 @@ export default {
             "objectId": object.get('id')
         }
     },
-    /* @Deprecated
-     generatePointerFromIdAndClass: function (objectId, className) {
-     if (!objectId || !className)
-     return;
-     if (className === "parseUser")
-     className = "_User";
-     return {
-     "__type": "Pointer",
-     "className": StringHelper.upperCaseFirst(className),
-     "objectId": objectId
-     }
-     },*/
+
     generatePointers: function (array) {
         var pointers = [];
         array.forEach(function (object) {
@@ -33,47 +22,6 @@ export default {
         }.bind(this));
         return pointers;
     },
-
-    // @Deprecated
-    /*generatePointerFromNativeParse: function (object) {
-     var className = object.className,
-     id = object.id;
-
-     if (!id)
-     id = object.get('id');
-     if (!id)
-     id = object.getObjectId();
-     return {
-     "__type": "Pointer",
-     "className": StringHelper.upperCaseFirst(className),
-     "objectId": id
-     }
-     },
-
-     generateSearchTags: function (searchTerm) {
-     return _.filter(searchTerm.toLowerCase().split(' '), function (w) {
-     return w.match(/^\w+$/) && !_.contains(this.stopWords, w);
-     }.bind(this));
-     },
-
-     stopWords: ["the", "in", "and", "test", "mcqs", "of", "a", "an"],*/
-
-    /**
-     * @param {Parse.User} user
-     * @Deprecated
-     *//*
-     getUserProfileImageUrl: function (user) {
-     if (!user)
-     return "https://d3uzzgmigql815.cloudfront.net/img/silhouette.png";
-
-     if (user.get('profilePicture')) {
-     return this.getSecureParseUrl(user.get('profilePicture').get('url'));
-     } else if (user.get('fbid')) {
-     return "https://graph.facebook.com/" + user.get('fbid') + "/picture?height=250&type=square";
-     } else {
-     return "https://d3uzzgmigql815.cloudfront.net/img/silhouette.png";
-     }
-     },*/
 
     getSecureParseUrl: function (url) {
         if (url)

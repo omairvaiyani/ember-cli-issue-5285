@@ -14,10 +14,20 @@ export default Ember.Mixin.create({
         isDefault: true
     },
 
+    /**
+     * @Function Set Default Image
+     * @param {String} url
+     */
+    setDefaultImage: function (url) {
+        this.set('imageFile.url', url);
+        this.set('imageFile.style', "background-image:url('" + url + "');");
+        this.set('imageFile.isDefault', true);
+        this.set('imageFile.base64', null);
+    },
+
     initializeFeatherEditor: function () {
         var featherEditor = new Aviary.Feather({
-            apiKey: 'f1e1a7583f443151',
-            apiVersion: 3,
+            apiKey: '49f5fc178c5c4df5b052c62430ccc074',
             theme: 'light', // Check out our new 'light' and 'dark' themes!
             tools: this.get('tools'),
             appendTo: '',
@@ -41,6 +51,9 @@ export default Ember.Mixin.create({
     }.on('init'),
 
     actions: {
+        /**
+         * @Action Preview Image
+         */
         previewImage: function () {
             var oFReader = new FileReader();
             oFReader.readAsDataURL(document.getElementById("imageInput").files[0]);
@@ -54,18 +67,25 @@ export default Ember.Mixin.create({
                 this.set('imageFile.isDefault', false);
             }.bind(this);
         },
+
         editImage: function () {
             this.get('featherEditor').launch({
                 image: 'image-holder',
                 url: this.get('imageFile.url')
             });
         },
+
+        /**
+         * @Action Upload Image
+         *
+         * @returns {Object} image
+         */
         uploadImage: function () {
-            //var parseFile = new Parse.File('image.jpg', {base64: this.get('imageFile.base64')});
             this.send('incrementLoadingItems');
             return ParseHelper.uploadFile(this, 'image.jpg', {base64: this.get('imageFile.base64')})
                 .then(function (response) {
-                    var image = Ember.Object.create({name:response.name, url:response.url});
+                    var image = Ember.Object.create({
+                        type:"__File", name:response.name, url:response.url});
                     this.send('decrementLoadingItems');
                     this.send('saveUploadedImage', image);
                 }.bind(this), function (error) {

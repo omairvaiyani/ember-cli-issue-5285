@@ -3,6 +3,7 @@ import validateQuestion from '../utils/validate-question';
 import ParseHelper from '../utils/parse-helper';
 import CurrentUser from '../mixins/current-user';
 import ImageUpload from '../mixins/image-upload';
+import ParseFile from 'ember-parse-adapter/file';
 /*
  * EditQuestionController for the following routes:
  * - edit.newQuestion
@@ -11,59 +12,43 @@ import ImageUpload from '../mixins/image-upload';
 export default Ember.Controller.extend(CurrentUser, ImageUpload, {
     needs: ['application', 'create'],
 
-    /*featherEditor: null,
-
-    initializeFeatherEditor: function () {
-        var featherEditor = new Aviary.Feather({
-            apiKey: 'f1e1a7583f443151',
-            apiVersion: 3,
-            theme: 'light', // Check out our new 'light' and 'dark' themes!
-            tools: ['text', 'draw', 'crop', 'resize', 'orientation', 'brightness'],
-            appendTo: '',
-            fileFormat: 'jpg',
-            enableCORS: true,
-            maxSize: '1000',
-            onSave: function (imageID, newURL) {
-                var base64 = $('#avpw_canvas_element')[0].toDataURL("image/jpeg", 0.8),
-                    base64String = base64.replace(/^data:image\/(png|jpeg);base64,/, "");
-                this.set('imageFile.base64', base64String);
-                this.set('imageFile.url', newURL);
-                this.set('imageFile.style', "background-image:url('" + newURL + "');");
-                this.get('featherEditor').close();
-            }.bind(this),
-            onError: function (errorObj) {
-                alert(errorObj.message);
-            }
-        });
-        this.set('featherEditor', featherEditor);
-    }.observes('model.id'),*/
-
-    /*imageFile: function () {
-        if (this.get('model.image'))
-            return {
-                name: 'image', url: this.get('model.image.url'), base64: null,
-                style: "background-image:url('" + this.get('model.image.url') + "');"
-            };
-        else
-            return {name: 'image', url: '', base64: null, style: ''};
-    }.property('model.image'),*/
-
+    // TODO check for deprecation
     loadingItems: function () {
         return this.get('controllers.application.loadingItems');
     }.property('controllers.application.loadingItems.length'),
+
+    // TODO check for deprecation
     saving: false,
+
+    // TODO check for deprecation
     updating: false,
 
+    /**
+     * @Property Test
+     * @retun {DS.Model<test>}
+     */
     test: function () {
         return this.get('controllers.create.model');
     }.property('controllers.create.model'),
 
+    /**
+     * @Property Questions
+     * @retun {Ember.Array<DS.Model<question>>}
+     */
     questions: function () {
         return this.get('controllers.create.model.questions');
     }.property('controllers.create.model.questions.length'),
 
+    setImagePreview: function () {
+        this.setDefaultImage(this.get('model.image.secureUrl'));
+    }.observes('model.id'),
+
+    // TODO check for deprecation
     isDataLoaded: false,
+
+    // @Deprecated
     canAddMoreOptions: false,
+
     validity: {
         question: {
             hasErrors: false,
@@ -81,6 +66,8 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
             {errors: [], warnings: []}
         ]
     },
+
+    // TODO check for efficiency
     isQuestionValid: function () {
         this.send('clearValidity');
         var response = validateQuestion.beginValidation(this.get('model'));
@@ -126,6 +113,8 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
             return false;
         }
     },
+
+    // TODO check for efficiency
     stemAltered: function () {
         var errors = this.get('validity.stem.errors');
         if (errors.length) {
@@ -150,6 +139,7 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
                 this.set('validity.options.' + i + '.warnings', []);
             }
         },
+
         optionAltered: function (index) {
             this.set('areOptionsDirty', true);
             /*
@@ -181,6 +171,8 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
             this.set('validity.question.hasErrors', false);
             this.set('validity.question.hasWarnings', false);
         },
+
+        // @Deprecated
         addOption: function () {
             var options = this.get('model.options');
             options.pushObject(App.Option.create({
@@ -189,65 +181,91 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
             }));
             this.set('canAddMoreOptions', false);
         },
+
+        /**
+         * @Action Save Question
+         *
+         * Runs this.isQuestionValid which handles
+         * and displays errors, halting the function
+         * if any are found.
+         *
+         * Sets Question.isPublic to match test.
+         * Sets Question.tags to match test.
+         * Adds Question to test.questions locally.
+         *
+         * Checks if Question has image
+         * - Saves image asynchronously
+         *
+         * Saves question using Cloud Code
+         * Adds question to test, saves test
+         *
+         * Displays Points/Badges
+         *
+         * @param shouldCheckValidity
+         * @returns {*}
+         */
         saveQuestion: function (shouldCheckValidity) {
             if (this.get('saving') || shouldCheckValidity && !this.isQuestionValid())
                 return;
+
             this.send('incrementLoadingItems');
             this.set('saving', true);
 
             window.scrollTo(0, 0);
             this.send("refreshRoute");
+
             this.set('model.isPublic', this.get('test.isPublic'));
             this.set('model.tags', this.get('test.tags'));
+
             /*
-             * If user added an image,
-             * save that first, add it to the question,
-             * then save the question
+             * If user added an image, start saving it
+             * async. Two save calls will be made.
              */
             if (this.get('imageFile.base64.length')) {
-                // TODO deal with images properly, look at the else part (cloud function to save)
-                /*
-                 * Check if our temporary imageFile object has been used
-                 * If so, use the Parse SDK to save the image first.
-                 * Then, use the returned url and name to create an
-                 * EmberParseAdapter.File object and set it on the
-                 * question.image property.
-                 */
-                var parseFile = new Parse.File('image.jpg', {base64: this.get('imageFile.base64')});
-                return parseFile.save().then(function (image) {
-                    var image = new this.store.adapterFor('parse-user').File(image.name(), image.url());
-                    this.set('model.image', image);
-                    return this.get('model').save();
-                }.bind(this)).
-                    then(function (question) {
-                        this.get('questions').pushObject(question);
-                        return this.get('test').save();
-                    }.bind(this)).then(function (test) {
-                        this.send('decrementLoadingItems');
-                        this.set('saving', false);
-                        this.send('addNotification', 'saved', 'Question saved!', 'This test now has '
-                            + this.get('questions.length') + ' questions.');
-                    }.bind(this));
-            } else {
-                /*
-                 * No image, just save the question
-                 */
-                var promise = ParseHelper.cloudFunction(this, 'saveNewQuestion', {question: this.get('model'),
-                test: ParseHelper.generatePointer(this.get('test'), 'Test')});
-
-                promise.then(function (response) {
-                    var question = ParseHelper.extractRawPayload(this.store, 'question', response.question);
-                    this.send('newUserEvent', response);
-                    this.get('questions').pushObject(question);
-                    return this.get('test').save();
-                }.bind(this)).then(function () {
-                    this.send('decrementLoadingItems');
-                    this.set('saving', false);
-                }.bind(this), function (error) {
-                    console.dir(error);
-                });
+                this.send('uploadImage');
             }
+
+            ParseHelper.cloudFunction(this, 'saveNewQuestion', {
+                question: this.get('model'),
+                test: ParseHelper.generatePointer(this.get('test'), 'Test')
+            }).then(function (response) {
+                // Reloads the ember-data for this model
+                var question = ParseHelper.extractRawPayload(this.store, 'question', response.question);
+                this.get('questions').pushObject(question);
+                this.send('newUserEvent', response);
+                return this.get('test').save();
+            }.bind(this)).then(function () {
+                this.send('decrementLoadingItems');
+                this.set('saving', false);
+            }.bind(this), function (error) {
+                console.dir(error);
+                var notification = {
+                    title: "Error Adding Question!",
+                    message: error.error,
+                    type: "error"
+                };
+                this.send('addNotification', notification);
+                this.get('test').removeObject(this.get('model'));
+            }.bind(this));
         },
+
+        /**
+         * @Action Update Question
+         *
+         * Runs this.isQuestionValid which handles
+         * and displays errors, halting the function
+         * if any are found.
+         *
+         * Updates Question.tags to match test.
+         *
+         * Checks if Question has image
+         * - Saves image asynchronously
+         *
+         * Updates question using REST
+         *
+         * @param shouldCheckValidity
+         * @returns {*}
+         */
         updateQuestion: function (shouldCheckValidity) {
             if (this.get('updating') || shouldCheckValidity && !this.isQuestionValid())
                 return;
@@ -256,31 +274,58 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
             this.set('updating', true);
 
             window.scrollTo(0, 0);
-            this.transitionToRoute('edit');
+            this.transitionToRoute('edit.index');
 
             this.set('model.tags', this.get('test.tags'));
+
+            /*
+             * If user added an image, start saving it
+             * async. Two save calls will be made.
+             */
+            if (this.get('imageFile.base64.length')) {
+                this.send('uploadImage');
+            }
+
             /*
              * If user added, updated, edited or removed image,
              * save that first then the question.
              */
-            if (this.get('imageFile.base64.length')) {
-                var parseFile = new Parse.File('image.jpg', {base64: this.get('imageFile.base64')});
-                return parseFile.save().then(function (image) {
-                    var image = new this.store.adapterFor('parse-user').File(image.name(), image.url());
-                    this.set('model.image', image);
-                    return this.get('model').save();
-                }.bind(this)).then(function () {
-                    this.set('updating', false);
-                    this.send('decrementLoadingItems');
-                    this.send('addNotification', 'saved', 'Question updated!', 'Your test is up to date.');
-                }.bind(this));
-            } else {
-                this.get('model').save().then(function () {
-                    this.set('updating', false);
-                    this.send('decrementLoadingItems');
-                    this.send('addNotification', 'saved', 'Question updated!', 'Your test is up to date.');
-                }.bind(this));
-            }
+            this.get('model').save().then(function () {
+                this.set('updating', false);
+                this.send('decrementLoadingItems');
+                var notification = {
+                    type: "saved",
+                    title: "Question Updated!",
+                    message: "Your test is up to date."
+                };
+                this.send('addNotification', notification);
+            }.bind(this), function (error) {
+                console.dir(error);
+                var notification = {
+                    type: "error",
+                    title: "Error Saving Question!",
+                    message: error.error
+                };
+                this.send('addNotification', notification);
+            }.bind(this));
+        },
+
+        /**
+         * @Action Save Uploaded Image
+         *
+         * Callback from ImageUploadMixin which is called
+         * by this controller when the question is saved.
+         *
+         * Here, we receive the imageData (name, url),
+         * create the correct parse-file transformation,
+         * and set it to the current question, and save it.
+         * Async from saveQuestion and updateQuestion.
+         *
+         * @param {Object} imageData
+         */
+        saveUploadedImage: function (imageData) {
+            this.set('model.image', imageData);
+            this.get('model').save();
         },
 
         viewImage: function () {

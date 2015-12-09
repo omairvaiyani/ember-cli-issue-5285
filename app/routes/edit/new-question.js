@@ -22,6 +22,7 @@ export default Ember.Route.extend({
             this.refresh();
         }
     },
+
     deactivate: function() {
         this.controllerFor('edit-question').send('clearValidity');
     }
