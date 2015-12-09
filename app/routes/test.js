@@ -1,8 +1,9 @@
 import Ember from 'ember';
 import ParseHelper from '../utils/parse-helper';
 import EventTracker from '../utils/event-tracker';
+import RouteHistory from '../mixins/route-history';
 
-export default Ember.Route.extend({
+export default Ember.Route.extend(RouteHistory, {
     beforeModel: function () {
         this.controllerFor('test').set('loading', "Preparing test");
     },
@@ -53,7 +54,7 @@ export default Ember.Route.extend({
     /*
      * Prerender readied in Test.Controller.setTimeStarted
      */
-    setupController: function (controller, model) {
+    setupController: function (controller, model, transition) {
         if (!model)
             return;
 
@@ -67,6 +68,12 @@ export default Ember.Route.extend({
             if (!description)
                 description = "This mcq test on has " + model.get('totalQuestions') + " questions! Take it now for free!";
             this.send('updatePageDescription', description);
+
+
+            // Send Route to RouteHistory
+            var routePath = "test",
+                routeLabel = model.get('title');
+            transition.send('addRouteToHistory', routePath, routeLabel, transition);
         }
         model.get('questions').then(function (questions) {
             /*

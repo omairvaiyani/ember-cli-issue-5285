@@ -1,9 +1,10 @@
 import Ember from 'ember';
 import ParseHelper from '../../utils/parse-helper';
+import RouteHistory from '../../mixins/route-history';
 
-export default Ember.Route.extend({
+export default Ember.Route.extend(RouteHistory, {
 
-    model: function (params, transition) {
+    model: function (params) {
 
         // TODO sort out meta tags
         //if (!this.get('metaTagsSorted'))
@@ -44,6 +45,22 @@ export default Ember.Route.extend({
                 console.dir(error);
                 // TODO switch template to 404
             });
+    },
+
+    setupController: function (controller, model, transition) {
+        controller.set('model', model);
+
+        // Send Route to RouteHistory
+        if (model) {
+            var routePath = "index.user",
+                routeLabel;
+            if(controller.get('isCurrentUser')) {
+                routeLabel = "My Study";
+            } else  {
+                routeLabel = model.get('firstName') + "'s Quizzes";
+            }
+            transition.send('addRouteToHistory', routePath, routeLabel, transition, 'user_slug');
+        }
     },
 
 

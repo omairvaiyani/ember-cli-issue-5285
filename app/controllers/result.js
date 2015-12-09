@@ -2,8 +2,9 @@ import Ember from 'ember';
 import ParseHelper from '../utils/parse-helper';
 import CurrentUser from '../mixins/current-user';
 import EventTracker from '../utils/event-tracker';
+import RouteHistory from '../mixins/route-history';
 
-export default Ember.Controller.extend(CurrentUser, {
+export default Ember.Controller.extend(CurrentUser, RouteHistory, {
     didPass: function () {
         return this.get('model.score') > 39;
     }.property('model.score'),
@@ -18,7 +19,10 @@ export default Ember.Controller.extend(CurrentUser, {
     isTabIncorrect: false,
 
     allResponses: function () {
-        var allResponses = [];
+        var allResponses = new Ember.A();
+        if(!this.get('model.questions') || !this.get('model.responses'))
+            return allResponses;
+
         this.get('model.questions').forEach(function (question) {
             var questionHasResponse = false;
             this.get('model.responses').forEach(function (response) {
@@ -42,20 +46,43 @@ export default Ember.Controller.extend(CurrentUser, {
         }.bind(this));
 
         return allResponses;
-    }.property('model.responses.length'),
+    }.property('model.responses.length', 'model.questions.length'),
 
     correctResponses: function () {
+        if(!this.get('model.response'))
+            return new Ember.A();
         return this.get('model.responses').filterBy('isCorrect', true);
     }.property('model.responses.length'),
 
     incorrectResponses: function () {
+        if(!this.get('allResponses') || !this.get('model.response'))
+            return new Ember.A();
+
         if (this.get('allResponses.length'))
             return this.get('allResponses').filterBy('isCorrect', false);
         else
             return this.get('model.responses').filterBy('isCorrect', false);
     }.property('allResponses.length'),
 
+
+    setGoBackTo: function (skip) {
+        var index = skip ? skip : 0;
+
+        var previousRoute = this.get('previousRoutes').objectAt(index);
+        if (!previousRoute)
+            return;
+
+        switch (previousRoute.get('path')) {
+            case "test":
+            case "test.index":
+                this.setGoBackTo(++index);
+                return;
+        }
+        this.set('goBackTo', previousRoute);
+    },
+
     categoryTests: [],
+
     getCategoryTests: function () {
         if (!this.get('model.test.category.id') || this.get('categoryTests.length'))
             return;

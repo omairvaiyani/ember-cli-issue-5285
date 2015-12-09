@@ -37,6 +37,7 @@ export default Ember.Controller.extend({
         var user;
         this.set('navbarTransparent', false);
         this.set('hideNavbarSearch', false);
+
         switch (path) {
             case "index":
                 title += defaultTitle;
@@ -121,6 +122,8 @@ export default Ember.Controller.extend({
                 title += defaultTitle;
                 break;
         }
+        // Code here may not run after certain switch cases.
+        // Only update page title
         if (!title || !title.length)
             title = defaultTitle;
 

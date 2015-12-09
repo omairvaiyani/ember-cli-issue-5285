@@ -8,7 +8,7 @@
             {{!-- Author Details --}}
             <div class="margin-left-16 margin-right-16">
                 {{profile-picture user=user height=80 width=80}}
-                <h4 class="text-uppercase">{{#link-to 'user' user.slug}}{{user.name}}{{/link-to}}</h4>
+                <h4 class="text-uppercase">{{#link-to 'index.user' user.slug}}{{user.name}}{{/link-to}}</h4>
 
                 {{!-- Education --}}
                 {{#if user.educationCohort}}

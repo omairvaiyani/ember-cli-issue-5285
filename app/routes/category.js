@@ -1,6 +1,7 @@
 import Ember from 'ember';
+import RouteHistory from '../mixins/route-history';
 
-export default Ember.Route.extend({
+export default Ember.Route.extend(RouteHistory, {
     model: function (params) {
         if(params.category_slug.toLowerCase() === "all")
             return {browseAll: true};
@@ -13,7 +14,7 @@ export default Ember.Route.extend({
      * This is due to subcategories being params and not models
      * for the route.
      */
-    setupController: function(controller, model) {
+    setupController: function(controller, model, transition) {
         if(!model) {
             this.transitionTo('notFound');
             return;
@@ -35,6 +36,14 @@ export default Ember.Route.extend({
         }
 
         controller.set('model', model);
+
+        if(model.get('distinctName')) {
+            // Send Route to RouteHistory
+            var routePath = "category",
+                routeLabel = model.get('distinctName') + " Quizzes";
+            transition.send('addRouteToHistory', routePath, routeLabel, transition, 'category_slug');
+        }
+
         controller.set('browseAll', !model.id);
     }
 });

@@ -102,12 +102,20 @@
                         {{/link-to}}
                     </div>
 
-                    <div class="action-link margin-bottom-8">
-                        <i class="fa fa-fw fa-book margin-right-8"></i>
-                        {{#link-to 'index.user' model.test.author.slug class="action-item margin-bottom-8"}}
-                            <span>Back to My Study</span>
-                        {{/link-to}}
-                    </div>
+                    {{#if goBackTo}}
+                        <div class="action-link margin-bottom-8">
+                            <i class="fa fa-fw fa-book margin-right-8"></i>
+                            {{#if goBackTo.param}}
+                                {{#link-to goBackTo.path goBackTo.param class="action-item margin-bottom-8"}}
+                                    <span>Back to {{goBackTo.label}}</span>
+                                {{/link-to}}
+                            {{else}}
+                                {{#link-to goBackTo.path class="action-item margin-bottom-8"}}
+                                    <span>Back to {{goBackTo.label}}</span>
+                                {{/link-to}}
+                            {{/if}}
+                        </div>
+                    {{/if}}
 
                     <div class="action-link">
                         <i class="fa fa-fw fa-search margin-right-8"></i>

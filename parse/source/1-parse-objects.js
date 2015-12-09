@@ -403,7 +403,7 @@ Parse.User.prototype.checkBadgeProgressions = function (userEvent) {
         });
         var promises = [];
         // First save all badgeProgressions (due to tally + currentLevelProgress updates)
-        if (badgeProgressions.length)
+        if (badgeProgressions && badgeProgressions.length)
             promises.push(Parse.Object.saveAll(badgeProgressions));
 
         return Parse.Promise.when(promises);

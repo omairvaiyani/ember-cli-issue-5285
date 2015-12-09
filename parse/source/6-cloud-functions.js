@@ -521,10 +521,10 @@ Parse.Cloud.define('getCommunityTest', function (request, response) {
 
     query.find().then(function (result) {
         var test = result[0];
-        if (!test)
-            return response.error("Test not found");
+        if (!test || !test.author())
+            return response.error("Test not found or test author not found.");
 
-        if (user && user.id === test.get('author').id)
+        if (user && user.id === test.author().id)
             requestFromAuthor = true;
 
         // Query includes private tests in case the test
@@ -628,6 +628,7 @@ Parse.Cloud.define('saveTestAttempt', function (request, status) {
         responses.push(response);
     });
 
+    Parse.Cloud.useMasterKey();
     Parse.Object.saveAll(responses).then(function () {
         var promises = [];
         // Add responses to attempt payload
