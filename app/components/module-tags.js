@@ -102,21 +102,23 @@ export default Ember.Component.extend({
     autoEndNewTagInsertion: function () {
         var parentController = this.get('parentController');
 
+        var clickHandler = function (event) {
+            if (!$(event.target).closest('#new-tag-container').length) {
+                if (parentController.get('addingTag')) {
+                    parentController.send('toggleAddingNewTag');
+                }
+            }
+        };
+
         if (parentController.get('addingTag')) {
             // set click event
             setTimeout(function () {
-                $(document).click(function (event) {
-                    if (!$(event.target).closest('#new-tag-container').length) {
-                        if (parentController.get('addingTag')) {
-                            parentController.send('toggleAddingNewTag');
-                        }
-                    }
-                }.bind(this));
+                $(document).click(clickHandler);
             }, 200);
 
         } else {
             // off click event
-            $(document).off('click');
+            $(document).off('click', 'body', clickHandler);
         }
     }.observes('parentController.addingTag'),
 
@@ -129,22 +131,24 @@ export default Ember.Component.extend({
                 editingTag = true;
         });
 
+        var clickHandler = function (event) {
+            if (!$(event.target).closest('#edit-tag-container').length) {
+                if (editingTag) {
+                    editingTag = false;
+                    _this.send('finishEditingTag');
+                }
+            }
+        };
+
         if (editingTag) {
             // set click event
             setTimeout(function () {
-                $(document).click(function (event) {
-                    if (!$(event.target).closest('#edit-tag-container').length) {
-                        if (editingTag) {
-                            editingTag = false;
-                            _this.send('finishEditingTag');
-                        }
-                    }
-                }.bind(this));
+                $(document).click(clickHandler);
             }, 200);
 
         } else {
             // off click event
-            $(document).off('click');
+            $(document).off('click', 'body', clickHandler);
         }
     }.observes('tagArray.@each.editingTag'),
 
