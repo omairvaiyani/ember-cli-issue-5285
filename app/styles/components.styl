@@ -102,7 +102,7 @@
   background-color colorBackgroundCard
   width 100%
   padding marginPrimary
-  border-radius 10px
+  border-radius cardBorderRadius
   border 1px solid colorBorder
   box-shadow none
   color colorText
@@ -310,6 +310,12 @@ textarea.form-input
       .btn.dropdown-toggle
         padding: 5px 5px;
         border-left 1px solid colorBorder
+        @media(min-width: screenSmall)
+          border-radius 0 cardBorderRadius 0 0
+          border-left: 1px solid colorBorder;
+          border-right: 1px solid colorBorder;
+          border-top: 1px solid colorBorder;
+          margin: -2px !important;
   .full-hr
     width: calc(100% + 16px);
     margin-left: -8px !important
