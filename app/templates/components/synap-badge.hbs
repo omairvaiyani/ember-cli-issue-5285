@@ -1,7 +1,9 @@
 <div {{bind-attr class=":badge-container badgeProgression.isUnlocked"}}>
+    {{#tool-tipster title=badgeProgression.badge.description class="inline-block"}}
     <div class="icon-container">
         <img {{bind-attr src=badgeProgression.badge.icon.secureUrl}} class="icon" />
         <div class="gloss-overlay"></div>
     </div>
     <span class="title">{{badgeProgression.badge.title}}</span>
+    {{/tool-tipster}}
 </div>
