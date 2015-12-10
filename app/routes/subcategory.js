@@ -1,6 +1,8 @@
 import Ember from 'ember';
+import RouteHistory from '../mixins/route-history';
 
-export default Ember.Route.extend({
+export default Ember.Route.extend(RouteHistory, {
+
     model: function (params) {
         var recordArray = this.store.all('category').filterBy('slug', params.subcategory_slug);
         if (recordArray.objectAt(0))
@@ -8,14 +10,16 @@ export default Ember.Route.extend({
         else
             console.error("category not found");
     },
+
     renderTemplate: function () {
         this.render('category');
     },
+
     controllerName: 'category',
 
     controller: null,
 
-    setupController: function (controller, model) {
+    setupController: function (controller, model, transition) {
         if (!model) {
             this.transitionTo('notFound');
             return;
@@ -46,6 +50,14 @@ export default Ember.Route.extend({
         model.set('isActive', true);
 
         controller.set('model', model);
+
+        if (model.get('distinctName')) {
+            // Send Route to RouteHistory
+            var routePath = "subcategory",
+                routeLabel = model.get('distinctName') + " Quizzes";
+            transition.send('addRouteToHistory', routePath, routeLabel, transition, 'category_slug',
+                'subcategory_slug');
+        }
     },
 
     actions: {

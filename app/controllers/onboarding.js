@@ -277,10 +277,17 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
         data.signUpSource = "Web";
         data.srIntensityLevel = this.get('user.srIntensityLevel');
         data.moduleTags = this.get('user.moduleTags');
-        if (this.get('user.profilePicture'))
-            data.profilePicture = this.get('user.profilePicture');
         if (this.get('educationCohort'))
             data.educationCohort = ParseHelper.generatePointer(this.get('user.educationCohort'), 'EducationCohort');
+
+        /*
+         * If user added a profile picture, start saving it
+         * async. Look for callback in actions 'saveUploadedImage'
+         */
+        if (this.get('imageFile.base64.length')) {
+            this.send('uploadImage');
+        }
+
         return data;
     },
 
@@ -368,17 +375,6 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
             }.bind(this));
         },
 
-        // Image uploaded to server after
-        // user presses "register", we
-        // we now need to same the image
-        // to the user object.
-        saveUploadedImage: function (image) {
-            this.send('incrementLoadingItems');
-            this.set('user.profilePicture', image);
-            // This is converted to a currentUser in the
-            // final callback from registration.
-        },
-
         registerWithEmailAsyncButton: function () {
             $("#onboarding-registerWithEmail").click();
         },
@@ -392,10 +388,6 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
             this.set('signUpValidationErrors.email', FormValidation.email(email.trim()));
             this.set('signUpValidationErrors.password', FormValidation.password(password.trim()));
             if (!this.get('signUpValidationHasErrors')) {
-                // If uploaded image, save it
-                if (this.get('imageFile.url') !== this.get('user.profileImageURL')) {
-                    this.send('uploadImage'); // receives a callback at actions.savedUploadedImage
-                }
                 var data = {
                     name: name.capitalize().trim(),
                     username: email.trim(),
@@ -430,12 +422,19 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
          *
          * This is a callback, sent after ApplicationRoute
          * has finished registering the user. We can now
-         * add the extra info onto the currentUser, such
-         * as educationCohort, profilePicture and spaced
-         * repetition markers.
+         * run the user event function to get some points
+         * for the user for registering. We also begin
+         * setting up spaced repetition in the background.
          *
          */
         registrationComplete: function () {
+            // The uploaded image will either be set to currentUser
+            // in actions.saveUploadedImage or, if currentUser isn't
+            // ready by then, it'll be set on the local, 'user' obj.
+            if (this.get('user.profilePicture')) {
+                this.set('currentUser.profilePicture', this.get('user.profilePicture'));
+            }
+
             this.set('registrationComplete', true);
 
             ParseHelper.cloudFunction(this, 'newUserEvent', {type: "registered"}).then(function (result) {
@@ -450,20 +449,29 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
                 }
             }.bind(this));
 
-            /*this.set('currentUser.educationCohort', this.get('user.educationCohort'));
-            this.set('currentUser.profilePicture', this.get('user.profilePicture'));
-            this.set('currentUser.srIntensityLevel', this.get('user.srIntensityLevel'));
-            this.set('currentUser.moduleTags', this.get('user.moduleTags'));
-            this.get('currentUser').save().then(function () {
-                // Activating Spaced Repetition requires user to be registered first.
-                // The above changes are saved first as the cloud function for SR
-                // requires the client to 'reload' the user object. This can cause
-                // inconsistencies with previous unsaved changes.
-                if (this.get('currentUser.srIntensityLevel') > 0) {
-                    this.send('activateSpacedRepetitionForUser');
-                }
-            }.bind(this));*/
+        },
 
+        /**
+         * @Action Save Uploaded Image
+         *
+         * Callback from ImageUploadMixin which is called
+         * by this controller when the user registers,
+         * see this.appendUserDataForRegistration().
+         *
+         * Here, we receive the imageData (name, url),
+         * with the correct parse-file transformation,
+         * and set it to the current question, and save it.
+         * Async from saveQuestion and updateQuestion.
+         *
+         * @param {Object} imageData
+         */
+        saveUploadedImage: function (imageData) {
+            if(this.get('currentUser')) {
+                this.set('currentUser.profilePicture', imageData);
+                this.get('currentUser').save();
+            } else {
+                this.set('user.profilePicture', imageData);
+            }
         },
 
         finishOnboarding: function () {
