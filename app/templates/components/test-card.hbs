@@ -74,7 +74,9 @@
 
         <div class="right inline-top">
             <h4 class="margin-bottom-8 title">
-                {{test.title}}
+                {{#link-to 'test' test.slug}}
+                    {{test.title}}
+                {{/link-to}}
             </h4>
 
             <p class="margin-bottom-8 small description">{{test.description}}</p>
