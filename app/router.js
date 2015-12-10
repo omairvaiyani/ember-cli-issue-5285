@@ -35,6 +35,7 @@ Router.map(function () {
     });
 
     /*
+     * @Deprecated with index.user
      * User profiles and profile editing
      */
     this.resource('user', {path: '/user/:user_slug'}, function () {
