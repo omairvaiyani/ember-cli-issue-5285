@@ -23,6 +23,25 @@
         {{#unless preparingSpacedRepetition}}
             <div class="form-group">
                 <article class="col-sm-6">
+                    <h5 class="control-label">Spaced Practice is ON<br>
+                        <small>Spaced Practice sends you helpful notifications to optimise your studying!.</small>
+                    </h5>
+                </article>
+
+                <div class="col-sm-6">
+                    <div class="togglebutton togglebutton-danger">
+                        <label class="margin-top-16 pull-right">
+                            {{input type="checkbox" checked=currentUser.srActivated}}
+                            <span class="toggle"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+        <br/>
+
+            <div class="form-group">
+                <article class="col-sm-6">
                     <h5 class="control-label">Study intensity <br>
                         <small>
                             Increase this as you come closer to exams. We will adjust the content
@@ -131,22 +150,7 @@
                     {{/each}}
                 </section>
             {{/each}}
-            <div class="form-group">
-                <article class="col-sm-6">
-                    <h5 class="control-label">Turn off 'Spaced Practice' <br>
-                        <small>If you're getting too many notifications, try lowering your Study Intensity.</small>
-                    </h5>
-                </article>
 
-                <div class="col-sm-6">
-                    <div class="togglebutton togglebutton-danger">
-                        <label class="margin-top-16 pull-right">
-                            {{input type="checkbox" checked=currentUser.srActivated}}
-                            <span class="toggle"></span>
-                        </label>
-                    </div>
-                </div>
-            </div>
         {{else}}
             <h4 class="text-center">Preparing ...</h4>
         {{/unless}}
