@@ -45,7 +45,11 @@
                     <div class="row">
                         <div {{bind-attr class=':col-md-12 :question-list-item isCreatingNewQuestion:active-question'}}>
                             {{#link-to 'edit.newQuestion' this.model}}
-                                + New question
+                                {{#if isCreatingNewQuestion}}
+                                    Q{{currentQuestionNumber}}: {{currentQuestion.stem}}
+                                {{else}}
+                                    + New question
+                                {{/if}}
                             {{/link-to}}
                         </div>
                     </div>
@@ -57,7 +61,11 @@
         <article class="col-sm-8 col-md-6 col-lg-7 col-fix-middle">
             <div class="panel panel-primary card">
                 <div class="panel-heading">
-                    <strong>QUESTION</strong>
+                    {{#if currentQuestion}}
+                        <strong>QUESTION {{currentQuestionNumber}}</strong>
+                    {{else}}
+                        <strong>CREATE A NEW QUESTION</strong>
+                    {{/if}}
                 </div>
                 <div class="panel-body">
                     {{outlet}}

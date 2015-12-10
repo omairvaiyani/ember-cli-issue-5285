@@ -311,6 +311,8 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
                     message: error.error
                 };
                 this.send('addNotification', notification);
+            }.bind(this)).then(function () {
+               this.set('model', null);
             }.bind(this));
         },
 

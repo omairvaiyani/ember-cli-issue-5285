@@ -51,6 +51,18 @@ export default Ember.Controller.extend(CurrentUser, DeleteWithUndo, {
 
     newTag: "",
 
+    currentQuestion: function () {
+        return this.get('controllers.editQuestion.model');
+    }.property('controllers.editQuestion.model'),
+
+    currentQuestionNumber: function () {
+        var currentQuestion = this.get('currentQuestion');
+        if(currentQuestion && this.get('model.questions').contains(currentQuestion))
+            return this.get('model.questions').indexOf(currentQuestion) + 1;
+        else
+            return this.get('model.questions.length') + 1;
+    }.property('currentQuestion', 'model.questions.length'),
+
     actions: {
         removeCategory: function (category) {
             this.set('model.category', null);
