@@ -3,8 +3,6 @@ import RouteHistory from '../mixins/route-history';
 
 export default Ember.Route.extend(RouteHistory, {
     model: function (params, transition) {
-        console.dir(params);
-        console.dir(transition);
         if(params.category_slug.toLowerCase() === "all")
             return {browseAll: true};
         var recordArray = this.store.all('category').filterBy('slug', params.category_slug);
