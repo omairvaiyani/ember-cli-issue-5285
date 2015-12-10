@@ -57,12 +57,17 @@
             </div>
         </form>
     </div>
+    <hr class="mini-hr"/>
     <div class="row">
         <div class="col-md-8 col-md-offset-2 text-center margin-bottom-16">
             {{#if betaUnlocked}}
                 <span class="linkify small" {{action 'openModal' 'application/modal/register' 'application'}}>
                     Register a free account
                 </span>
+            {{else}}
+                <h5 class="linkify" {{action 'takeUserFromLoginModalToRequestBetaInvite'}}>
+                    Request a Beta Invite
+                </h5>
             {{/if}}
         </div>
     </div>

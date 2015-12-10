@@ -507,6 +507,19 @@ export default Ember.Controller.extend({
                 receivePromotionalEmails: currentUser.get('receivePromotionalEmails'),
                 created_at: Date.parse(currentUser.get('createdAt')) / 1000
             });
+        },
+
+        /**
+         * @Action Take User from Login Modal to Request Beta Invite
+         * Temporary function, simply closes modal, goes to home
+         * page, scrolls and focuses to request beta invite.
+         */
+        takeUserFromLoginModalToRequestBetaInvite: function () {
+            this.send('closeModal');
+            this.transitionTo('index');
+            setTimeout(function () {
+                this.get('controllers.index').send('indexBackToTopScroll');
+            }.bind(this), 500);
         }
     }
 });
