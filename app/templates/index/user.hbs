@@ -4,11 +4,11 @@
         <div class="card">
             <section class="row">
                 <article class="col-xs-5">
-                    {{profile-picture user=model height=90 width=90 class="inline-top margin-right-8"}}
+                    {{profile-picture user=model height=80 width=80 class="inline-top margin-right-8"}}
                     <div class="inline-top">
                         <h3 class="no-margin">{{model.name}}</h3>
 
-                        <p>{{model.level.title}}</p>
+                       <p>{{model.level.title}}</p>
                         {{level-progress points=model.points level=model.level}}
                     </div>
                 </article>
