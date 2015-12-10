@@ -136,15 +136,19 @@ margin-top 4 !important
   margin-left auto !important
   margin-right auto !important
 
-maxTwoLines()
-  /* Max Two lines, bit of black magic involved */
-  overflow: visible;
+maxOneLine(lineHeight, maxHeight)
+  /* Max lines, bit of black magic involved */
+  overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
-  line-height: 16px; /* fallback */
-  max-height: 32px; /* fallback */
-  -webkit-line-clamp: 2; /* number of lines to show */
+  line-height: lineHeight  /* fallback */
+  max-height: maxHeight /* fallback */
+  -webkit-line-clamp: 1; /* number of lines to show */
   -webkit-box-orient: vertical;
+
+maxTwoLines(lineHeight, maxHeight)
+  maxOneLine(lineHeight, maxHeight * 2)
+  -webkit-line-clamp: 2; /* number of lines to show */
 
 .padding-bottom-0 {
   padding-bottom: 0

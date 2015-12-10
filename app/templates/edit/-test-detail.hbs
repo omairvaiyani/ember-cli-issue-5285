@@ -69,8 +69,7 @@
         <section class="row">
             <article class="col-xs-12 margin-bottom-8">
                 <div class="privacy-switch">
-                    {{input type="checkbox" checked=model.isPublic class="privacy-switch-checkbox"
-                    id="privacy-switch"}}
+                    {{input type="checkbox" checked=model.isPublic class="privacy-switch-checkbox"}}
                     <label class="privacy-switch-label" for="privacy-switch">
                         <span class="privacy-switch-inner"></span>
                         <span class="privacy-switch-switch"></span>
@@ -80,9 +79,9 @@
             <article class="col-xs-12 no-margin">
                 <p class="small">
                     {{#if model.isPublic}}
-                        This quiz will be visible to everyone.
+                        This quiz is visible to everyone.
                     {{else}}
-                        Only you will see this quiz.
+                        This quiz is only visible to you.
                     {{/if}}
                 </p>
             </article>

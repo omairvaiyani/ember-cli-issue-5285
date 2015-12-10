@@ -1,12 +1,12 @@
 <div class="page-header">
     <div class="dark-overlay"></div>
     <div class="content-body">
-        <h1 class="title margin-top-0">
+        <h1 class="title margin-top-0 margin-bottom-0">
             <span class="editable" {{action 'openEditInfoModal'}}>
                 {{model.title}}
             </span>
         </h1>
-        <h4 class="subtitle">
+        <h4 class="subtitle margin-top-0 margin-bottom-8">
             <span class="editable" {{action 'openEditInfoModal'}}>
                 {{model.description}}
             </span>
@@ -16,7 +16,7 @@
             {{category-tags test=model canEdit=false inverseStyle=true center=true class="inline-top"
             overrideAction='openEditInfoModal' parentController=this}}
             {{module-tags tags=model.tags canEdit=false inverseStyle=true center=true class="inline-top"
-            overrideAction='openEditInfoModal' parentController=this}}
+            overrideAction='openEditInfoModal' parentController=this showMax=3}}
         </div>
     </div>
 </div>

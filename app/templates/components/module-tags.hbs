@@ -1,34 +1,53 @@
 <div {{bind-attr class=":tags :margin-bottom-8 center:text-center centre:text-center"}}>
     {{#each tagArray as |tagObject index|}}
+
         {{#if canEdit}}
-            {{#unless tagObject.editingTag}}
-                <div {{bind-attr class=":module-tag :has-icon"}} {{action "editTag" tagObject}}>
-                    <i class="fa fa-fw fa-tag icon"></i>
-                    <span>{{tagObject.tag}}</span>
-                    <i class="fa fa-fa fa-times-circle remove-tag" {{action "removeTag" index}}></i>
-                </div>
-            {{else}}
-                <div {{bind-attr class=":module-tag :edit-tag :has-icon"}}>
+            {{!-- Edit Tag --}}
+            {{#if tagObject.editingTag}}
+                <div {{bind-attr class=":module-tag :edit-tag :has-icon"}} id="edit-tag-container">
                     <i class="fa fa-fw fa-pencil-square icon"></i>
-                    {{input type='text' value=tagObject.tag
+                    {{input type='text' value=tagObject.tag maxlength=20
                     action="finishEditingTag" id=tagObject.id}}
                     <div class="action-button" {{action 'finishEditingTag'}}>
                         <span>+</span>
                     </div>
                 </div>
-            {{/unless}}
+            {{else}}
+                {{!-- List of Editable Tags --}}
+                <div {{bind-attr class=":module-tag :has-icon"}} {{action "editTag" tagObject}}>
+                    <i class="fa fa-fw fa-tag icon"></i>
+                    <span>{{tagObject.tag}}</span>
+                    <i class="fa fa-fa fa-times-circle remove-tag" {{action "removeTag" index}}></i>
+                </div>
+            {{/if}}
 
         {{else}}
-            <div {{bind-attr class=":module-tag canEdit::no-edit :has-icon inverseStyle:inverse small"}}
-                {{action "tagClicked"}}>
-                <i class="fa fa-fw fa-tag icon"></i>
-                <span>{{tagObject.tag}}</span>
-            </div>
+            {{!-- List of Tags | No Edit --}}
+            {{#if tagObject.show}}
+                <div {{bind-attr class=":module-tag :no-edit :has-icon showMax:limit-width inverseStyle:inverse small"}}
+                    {{action "tagClicked"}}>
+                    <i class="fa fa-fw fa-tag icon"></i>
+                    <span>{{tagObject.tag}}</span>
+                </div>
+            {{/if}}
         {{/if}}
+
     {{/each}}
+
+    {{!-- Overflow Tag | No Edit | showMax > 0 --}}
+    {{#if showOverflowTag}}
+        <div {{bind-attr class=":module-tag :no-edit :has-icon :limit-width inverseStyle:inverse small"}}
+            {{action "showOverflowTags"}}>
+            <i class="fa fa-fw fa-tags icon"></i>
+            <span>+{{moreTags}}</span>
+        </div>
+    {{/if}}
+
+    {{!-- Add New Tag --}}
     {{#if canEdit}}
+        {{!-- Adding New Tag | Input Visible --}}
         {{#if parentController.addingTag}}
-            <div {{bind-attr class=":module-tag :new-tag :has-icon"}}>
+            <div {{bind-attr class=":module-tag :new-tag :has-icon"}} id="new-tag-container">
                 <i class="fa fa-fw fa-pencil-square icon"></i>
                 {{input type='text' value=parentController.newTag
                 id="new-tag" action="toggleAddingNewTag"}}
@@ -37,6 +56,7 @@
                 </div>
             </div>
         {{else}}
+            {{!-- Placeholder for Adding New Tag --}}
             <div {{bind-attr class=":module-tag :new-tag"}} {{action 'toggleAddingNewTag'}}>
                 <span>Add {{tagOrModule}}</span>
 

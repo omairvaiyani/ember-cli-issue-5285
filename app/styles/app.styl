@@ -349,8 +349,8 @@ hr.user-message-item-separator {
   background-image: url("/img/index-page-cover.jpg");
   background-size: cover;
   background-position-y: 65%;
-  min-height: 220px;
-  @media (min-width screenMedium)
+  min-height: 250px;
+  @media (min-width screenSmall)
     min-height 150px
   .dark-overlay
     z-index 1
@@ -358,7 +358,7 @@ hr.user-message-item-separator {
     position: absolute;
     left: 0;
     right: 0;
-    top: calc(50% - 50px);
+    top: calc(50% - 100px);
     bottom: 0;
     z-index: 2;
     line-height: 100px;
@@ -367,10 +367,13 @@ hr.user-message-item-separator {
     @media (min-width screenSmall)
       width screenSmall - 32px
       left calc(50% - 368px)
+      top: calc(50% - 50px);
     .title
-      margin-top 16px
+      maxOneLine(46px, 46px)
+      margin-top 8px
       font-weight 400
     .subtitle
+      maxOneLine(20px, 22px)
       margin-bottom 0
       font-style italic
       font-weight 400
@@ -380,6 +383,8 @@ hr.user-message-item-separator {
     .extras
       font-size 12px
       margin-top marginSecondary
+      padding 0 marginSecondary
+      line-height normal
   &.with-action-container
     height 220px
     .content-body
