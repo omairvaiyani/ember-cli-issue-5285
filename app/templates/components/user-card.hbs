@@ -70,9 +70,16 @@
                 {{user.numberOfFollowers}} {{pluralize-word 'follower' user.numberOfFollowers}}
             </h4>
         </div>
-        <button class="btn btn-success btn-sm follow-button" {{action 'followUser' user}}>
-            Follow
-        </button>
+        {{#if showFollow}}
+            <button class="btn btn-success btn-sm follow-button" {{action 'followUser' user}}>
+                Follow
+            </button>
+        {{/if}}
+        {{#if showUnfollow}}
+            <button class="btn btn-success btn-sm follow-button unfollow" {{action 'unfollowUser' user}}>
+                Unfollow
+            </button>
+        {{/if}}
     </div>
 {{/if}}
 

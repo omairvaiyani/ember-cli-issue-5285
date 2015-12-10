@@ -535,46 +535,46 @@ export default Ember.Route.extend({
             currentUser.incrementProperty('numberFollowing');
             user.incrementProperty('numberOfFollowers');
             currentUser.get('following').pushObject(user);
+
             if (user.get('followers'))
                 user.get('followers').pushObject(currentUser);
 
-            Parse.Cloud.run('followUser',
-                {
-                    userIdToFollow: user.get('id')
-                }, {
-                    success: function (response) {
-                    }.bind(this),
-                    error: function (error) {
-                        console.log("There was an error: " + error);
-                        currentUser.decrementProperty('numberFollowing');
-                        user.decrementProperty('numberOfFollowers');
-                        if (user.get('followers'))
-                            user.get('followers').removeObject(currentUser);
-                        currentUser.get('following').removeObject(user);
-                    }.bind(this)
-                });
+            ParseHelper.cloudFunction(this, 'followUser', {userIdToFollow: user.get('id')}).then(function () {
+
+            }, function (error) {
+                console.dir(error);
+                currentUser.decrementProperty('numberFollowing');
+                user.decrementProperty('numberOfFollowers');
+                if (user.get('followers'))
+                    user.get('followers').removeObject(currentUser);
+
+                currentUser.get('following').removeObject(user);
+                currentUser.get('following').removeObject(user.get('content'));
+            });
         },
 
         unfollowUser: function (user) {
             var currentUser = this.get('currentUser');
             currentUser.decrementProperty('numberFollowing');
             user.decrementProperty('numberOfFollowers');
+
             currentUser.get('following').removeObject(user);
-            if (user.get('followers'))
+            currentUser.get('following').removeObject(user.get('content'));
+
+            if (user.get('followers')) {
                 user.get('followers').removeObject(currentUser);
-            Parse.Cloud.run('unfollowUser', {userIdToUnfollow: user.get('id')},
-                {
-                    success: function (success) {
-                    }.bind(this),
-                    error: function (error) {
-                        console.log("There was an error: " + error);
-                        currentUser.incrementProperty('numberFollowing');
-                        user.incrementProperty('numberOfFollowers');
-                        if (user.get('followers'))
-                            user.get('followers').pushObject(currentUser);
-                        currentUser.get('following').pushObject(user);
-                    }.bind(this)
-                });
+            }
+
+            ParseHelper.cloudFunction(this, 'unfollowUser', {userIdToUnfollow: user.get('id')}).then(function () {
+
+            }, function (error) {
+                console.dir(error);
+                currentUser.incrementProperty('numberFollowing');
+                user.incrementProperty('numberOfFollowers');
+                if (user.get('followers'))
+                    user.get('followers').pushObject(currentUser);
+                currentUser.get('following').pushObject(user);
+            });
         },
 
         bulkFollow: function (users, callback) {

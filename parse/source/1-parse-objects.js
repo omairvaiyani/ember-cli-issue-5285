@@ -707,6 +707,20 @@ Parse.User.prototype.srAllTests = function () {
 Parse.User.prototype.srCompletedAttempts = function () {
     return this.relation('srCompletedAttempts');
 };
+/**
+ * @Property followers
+ * @returns {Parse.Relation<Parse.User>}
+ */
+Parse.User.prototype.followers = function () {
+    return this.relation('followers');
+};
+/**
+ * @Property following
+ * @returns {Parse.Relation<Parse.User>}
+ */
+Parse.User.prototype.following = function () {
+    return this.relation('following');
+};
 /****
  * ---------
  * UserEvent

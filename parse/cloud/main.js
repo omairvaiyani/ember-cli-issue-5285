@@ -707,6 +707,20 @@ Parse.User.prototype.srAllTests = function () {
 Parse.User.prototype.srCompletedAttempts = function () {
     return this.relation('srCompletedAttempts');
 };
+/**
+ * @Property followers
+ * @returns {Parse.Relation<Parse.User>}
+ */
+Parse.User.prototype.followers = function () {
+    return this.relation('followers');
+};
+/**
+ * @Property following
+ * @returns {Parse.Relation<Parse.User>}
+ */
+Parse.User.prototype.following = function () {
+    return this.relation('following');
+};
 /****
  * ---------
  * UserEvent
@@ -2807,6 +2821,10 @@ Parse.Cloud.afterSave(Parse.User, function (request) {
  * - Set default parameters + ACL
  * - Generate slug (async)
  *
+ * Existing test:
+ * - Issue with deleted questions not being removed
+ * due to __AddUnique REST call. Here we check if
+ * a question should be removed from the test.
  */
 Parse.Cloud.beforeSave(Test, function (request, response) {
     var test = request.object,
@@ -2821,8 +2839,6 @@ Parse.Cloud.beforeSave(Test, function (request, response) {
         }
     } else {
         // Existing test
-        logger.log("test-questions", test.questions().length);
-        logger.log("test-dirty-keys", test.dirtyKeys());
         test.set('totalQuestions', test.questions().length);
 
         if (_.contains(test.dirtyKeys(), "isPublic")) {
@@ -3247,6 +3263,57 @@ Parse.Cloud.define('loadMyTestsList', function (request, response) {
 
 });
 
+
+/**
+ * @CloudFunction Load Followers and Following
+ * @Temporary This won't be efficient past 100 users
+ * TODO create an on-the-fly function to check followers/following
+ *
+ * Done as part of client-app initiation
+ * - Followers
+ * - Following
+ */
+Parse.Cloud.define('loadFollowersAndFollowing', function (request, response) {
+    var user = request.user,
+        promises = [];
+
+    Parse.Cloud.useMasterKey();
+    if (!user)
+        return response.error("You must be logged in.");
+
+    var followersQuery = user.followers().query();
+    followersQuery.limit(100);
+    followersQuery.include('educationCohort');
+    followersQuery.notEqualTo('isObjectDeleted', true);
+    promises.push(followersQuery.find());
+
+    var followingQuery = user.following().query();
+    followingQuery.limit(100);
+    followingQuery.notEqualTo('isObjectDeleted', true);
+    followingQuery.include('educationCohort');
+    promises.push(followingQuery.find());
+
+    Parse.Promise.when(promises).then(function (followers, following) {
+        var minifiedFollowers = [];
+        _.each(followers, function (follower) {
+            minifiedFollowers.push(follower.minimalProfile());
+        });
+        var minifiedFollowing = [];
+        _.each(following, function (followee) {
+            minifiedFollowing.push(followee.minimalProfile());
+        });
+
+        var result = {
+            followers: minifiedFollowers,
+            following: minifiedFollowing
+        };
+        response.success(result);
+    }, function (error) {
+        response.error(error);
+    });
+
+});
+
 /**
  * @CloudFunction Load Recent Attempts for User
  *
@@ -3494,6 +3561,13 @@ Parse.Cloud.define('deleteObjects', function (request, response) {
 
     switch (className) {
         case "Test":
+            promise = objectQuery.each(function (object) {
+                object.set('isObjectDeleted', true);
+                object.set('isPublic', false);
+                object.setACL(new Parse.ACL());
+                return object.save();
+            });
+            break;
         case "Question":
             promise = objectQuery.each(function (object) {
                 object.set('isObjectDeleted', true);
@@ -4554,6 +4628,140 @@ Parse.Cloud.define('getUserProfile', function (request, response) {
         response.error(error);
     });
 });
+
+/**
+ * @CloudFunction Follow User
+ *
+ * Adds user to current user in the 'following'
+ * relation, increments currentUser's
+ * numberFollowing. Updates relation and
+ * numberOfFollowers for the recipient
+ * user too - plus sends a push notification
+ * to them.
+ *
+ * @param {String} userIdToFollow
+ */
+Parse.Cloud.define("followUser", function (request, response) {
+    Parse.Cloud.useMasterKey();
+
+    var currentUser = request.user,
+        userToFollow = new Parse.User();
+
+    if (!currentUser) {
+        return response.error("You must be logged in.");
+    }
+
+    userToFollow.id = request.params.userIdToFollow;
+
+    return userToFollow.fetch().then(function () {
+        userToFollow.followers().add(currentUser);
+        currentUser.following().add(userToFollow);
+        return Parse.Promise.when([userToFollow.save(), currentUser.save()]);
+    }).then(function () {
+        // Fail safe to accurately count followers/following
+        // Can't just increment in case the user was already followed/unfollowed
+        var followerCountQuery = userToFollow.followers().query(),
+            followingCountQuery = currentUser.following().query();
+
+        // Notify followed user by push
+        var query = new Parse.Query(Parse.Installation);
+        query.equalTo('user', userToFollow);
+
+        var pushNotification = Parse.Push.send({
+            where: query,
+            data: {
+                alert: currentUser.get('name') + " started following you!",
+                badge: "Increment",
+                sound: "default.caf",
+                title: "You have a new Synap Follower!",
+                userId: currentUser.id,
+                userName: currentUser.get('name'),
+                pushType: "newFollower"
+            }
+        });
+
+        return Parse.Promise.when([followerCountQuery.count(), followingCountQuery.count(), pushNotification]);
+    }).then(function (followerCount, followingCount) {
+        userToFollow.set('numberOfFollowers', followerCount);
+        currentUser.set('numberFollowing', followingCount);
+        return Parse.Promise.when([userToFollow.save(), currentUser.save()]);
+    }).then(function () {
+
+        // TODO update facebook graph?
+        /*if (!mainUser.get('authData') || !mainUser.get('authData').facebook
+         || !mainUser.get('authData').facebook.access_token) {
+         return;
+         }
+         return Parse.Cloud.httpRequest({
+         method: 'POST',
+         url: FB.API.url + 'og.follows',
+         params: {
+         access_token: mainUser.get('authData').facebook.access_token,
+         profile: MyCQs.baseUrl + userToFollow.get('slug')
+         }
+         }).then(function (httpResponse) {
+         var graphActionId;
+         if (httpResponse && httpResponse.data)
+         graphActionId = httpResponse.data.id;
+         return response.success({
+         graphActionId: graphActionId,
+         numberFollowing: mainUser.get('numberFollowing'),
+         numberOfFollowers: userToFollow.get('numberOfFollowers')
+         });
+         })
+         */
+
+        response.success();
+    }, function (error) {
+        response.error(error);
+    });
+});
+
+/**
+ * @CloudFunction Unfollow User
+ *
+ * Removes user from current user' 'following'
+ * relation, decrements currentUser's
+ * numberFollowing. Updates relation and
+ * numberOfFollowers for the recipient
+ * user too.
+ *
+ * @param {String} userIdToUnfollow
+ */
+Parse.Cloud.define("unfollowUser", function (request, response) {
+    Parse.Cloud.useMasterKey();
+
+    var currentUser = request.user,
+        userToUnfollow = new Parse.User();
+
+    if (!currentUser) {
+        return response.error("You must be logged in.");
+    }
+
+    userToUnfollow.id = request.params.userIdToUnfollow;
+
+    return userToUnfollow.fetch().then(function () {
+        userToUnfollow.followers().remove(currentUser);
+        currentUser.following().remove(userToUnfollow);
+        return Parse.Promise.when([userToUnfollow.save(), currentUser.save()]);
+    }).then(function () {
+        // Fail safe to accurately count followers/following
+        // Can't just increment in case the user was already followed/unfollowed
+        var followerCountQuery = userToUnfollow.followers().query(),
+            followingCountQuery = currentUser.following().query();
+
+        return Parse.Promise.when([followerCountQuery.count(), followingCountQuery.count()]);
+    }).then(function (followerCount, followingCount) {
+        userToUnfollow.set('numberOfFollowers', followerCount);
+        currentUser.set('numberFollowing', followingCount);
+        return Parse.Promise.when([userToUnfollow.save(), currentUser.save()]);
+    }).then(function () {
+        response.success();
+    }, function (error) {
+        response.error(error);
+    });
+});
+
 
 /*
  * TASK WORKER

@@ -2,23 +2,31 @@ import Ember from 'ember';
 import ParseHelper from '../utils/parse-helper';
 
 export default Ember.Route.extend({
-    model: function (params, transition) {
-        // TODO undo commented code and figure out error
-        //if (!this.get('metaTagsSorted'))
-          //  this.sortOutMetaTags(params, transition);
 
+    model: function (params, transition) {
         transition.send('incrementLoadingItems');
-        var where = {
-            "slug": params.test_slug
-        };
-        return this.store.findQuery('test', {where: JSON.stringify(where)})
-            .then(function (results) {
-                if (results.objectAt(0)) {
-                    return results.objectAt(0);
-                } else {
-                    return;
-                }
-            }.bind(this));
+
+        var test = this.store.all('test').filterBy('slug', params.test_slug).objectAt(0);
+
+        if (test && this.checkIfLocalTestHasQuestionsLoaded(test)) {
+            return test;
+        }
+
+        return ParseHelper.cloudFunction(this, 'getCommunityTest', {slug: params.test_slug})
+            .then(function (response) {
+                return ParseHelper.extractRawPayload(this.store, 'test', response);
+            }.bind(this), function (error) {
+                console.dir(error);
+                // TODO switch template to 404
+            });
+
+    },
+
+    // See TestRoute for info, duplicate code.
+    checkIfLocalTestHasQuestionsLoaded: function (test) {
+        if (test._data && test._data.questions && test._data.questions[0] && test._data.questions[0]._data
+            && test._data.questions[0]._data.stem)
+            return true;
     },
 
     setupController: function (controller, model, transition) {

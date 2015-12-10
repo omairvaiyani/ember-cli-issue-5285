@@ -233,6 +233,22 @@ export default {
             if(educationCohort)
                 currentUser.set('educationCohort', educationCohort);
         }
+
+        // Followers
+        if (response.followers) {
+            var followers = this.extractRawPayload(store, 'parse-user',
+                response.followers);
+            currentUser.set('followers', new Ember.A());
+            currentUser.get('followers').addObjects(followers);
+        }
+        // Following
+        if (response.following) {
+            var following = this.extractRawPayload(store, 'parse-user',
+                response.following);
+            currentUser.set('following', new Ember.A());
+            currentUser.get('following').addObjects(following);
+        }
+
         // @deprecated SR Latest Test
         if (response.srLatestTest) {
             var srLatestTest = this.extractRawPayload(store, 'test',
