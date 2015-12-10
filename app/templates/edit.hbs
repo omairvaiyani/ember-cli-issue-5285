@@ -66,21 +66,14 @@
         </article>
 
         {{!-- Action Panel --}}
-        <article class="col-sm-12 col-md-3 col-lg-2">
+        <article class="col-sm-12 col-md-3 col-lg-2 margin-bottom-16">
             <div class="panel panel-default card">
                 <div class="panel-heading">
                     <strong>FINALIZE</strong>
                 </div>
                 <div class="panel-body text-center">
-                    <div class="margin-bottom-8">
-                        <div class="privacy-switch text-left margin-auto">
-                            {{input type="checkbox" checked=model.isPublic class="privacy-switch-checkbox"
-                            id="privacy-switch"}}
-                            <label class="privacy-switch-label" for="privacy-switch">
-                                <span class="privacy-switch-inner"></span>
-                                <span class="privacy-switch-switch"></span>
-                            </label>
-                        </div>
+                    <div class="margin-bottom-16">
+                        {{visibility-switch checked=model.isPublic class="center-component"}}
                     </div>
 
                     <button class="btn btn-success btn-with-icon action-button"

@@ -868,3 +868,46 @@ input[type="range"]::-webkit-slider-thumb {
   border-left 1px solid alpha(colorLightText, 0.45)
   display inline-block
   vertical-align middle
+
+.visibility-switch
+  position relative
+  background colorBackground
+  border-radius cardBorderRadius
+  border 2px solid colorBorder
+  height 36px
+  width 100px
+  line-height normal
+  cursor pointer
+  text-align left
+  &:hover
+    background darken(colorBackground, 2)
+  .switch-text-label
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background: transparent;
+    padding-left: 12px;
+    color colorText
+    font-weight 400
+    font-size 16px
+    cursor pointer
+  .switch-indicator
+    cursor pointer
+    float right
+    background colorBorder
+    border-radius 50%
+    border 2px solid darken(colorBorder, 10)
+    width: 24px;
+    height: 24px;
+    background: #f7f7f7;
+    position: absolute;
+    right: 8px;
+    top: 4px;
+  input[type=checkbox]
+    visibility hidden
+    &:hover ~ .switch-indicator
+      background darken(colorBorder, 3)
+    &:checked ~ .switch-indicator
+      background colorInfo

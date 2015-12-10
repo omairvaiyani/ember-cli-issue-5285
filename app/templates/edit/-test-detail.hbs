@@ -60,30 +60,15 @@
 {{!-- Visbility row --}}
 <section class="row">
     <article class="col-xs-12">
-        <section class="row">
-            <article class="col-xs-12  margin-bottom-8">
+        <section class="row margin-bottom-8">
+            <article class="col-xs-12">
                 <h4>Quiz Visibility</h4>
             </article>
         </section>
 
-        <section class="row">
-            <article class="col-xs-12 margin-bottom-8">
-                <div class="privacy-switch">
-                    {{input type="checkbox" checked=model.isPublic class="privacy-switch-checkbox"}}
-                    <label class="privacy-switch-label" for="privacy-switch">
-                        <span class="privacy-switch-inner"></span>
-                        <span class="privacy-switch-switch"></span>
-                    </label>
-                </div>
-            </article>
-            <article class="col-xs-12 no-margin">
-                <p class="small">
-                    {{#if model.isPublic}}
-                        This quiz is visible to everyone.
-                    {{else}}
-                        This quiz is only visible to you.
-                    {{/if}}
-                </p>
+        <section class="row margin-bottom-16">
+            <article class="col-xs-12">
+               {{visibility-switch checked=model.isPublic}}
             </article>
         </section>
     </article>
