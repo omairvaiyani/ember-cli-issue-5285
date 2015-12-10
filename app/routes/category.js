@@ -2,7 +2,9 @@ import Ember from 'ember';
 import RouteHistory from '../mixins/route-history';
 
 export default Ember.Route.extend(RouteHistory, {
-    model: function (params) {
+    model: function (params, transition) {
+        console.dir(params);
+        console.dir(transition);
         if(params.category_slug.toLowerCase() === "all")
             return {browseAll: true};
         var recordArray = this.store.all('category').filterBy('slug', params.category_slug);
@@ -36,13 +38,21 @@ export default Ember.Route.extend(RouteHistory, {
         }
 
         controller.set('model', model);
+        var routePath = "category",
+            routeLabel;
 
-        if(model.get('distinctName')) {
+        if(model && !model.browseAll && model.get('distinctName')) {
             // Send Route to RouteHistory
-            var routePath = "category",
-                routeLabel = model.get('distinctName') + " Quizzes";
-            transition.send('addRouteToHistory', routePath, routeLabel, transition, 'category_slug');
+             routeLabel = model.get('distinctName') + " Quizzes";
+        } else {
+            // Send Route to RouteHistory
+            routeLabel = "Searching Quizzes";
+            var searchTerm = transition.queryParams.searchTerm;
+            if(searchTerm) {
+                routeLabel = "Searching '" + searchTerm + "'";
+            }
         }
+        transition.send('addRouteToHistory', routePath, routeLabel, transition, 'category_slug');
 
         controller.set('browseAll', !model.id);
     }

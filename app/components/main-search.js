@@ -93,6 +93,7 @@ export default Ember.Component.extend({
 
         // By click outside the input or results (includes the X span)
         navbarSearchBlurred: function () {
+            // TODO refactor this to 'off' the handler when component is removed
             // Set up a jQuery function to hide the input
             // if clicked outside the form-control or
             // the popdown results div, or the X span.
@@ -100,6 +101,8 @@ export default Ember.Component.extend({
                 $(document).mouseup(function (e) {
                     var container = this.$(),
                         modal = $("#myModal");
+                    if(!container)
+                        return;
                     if (!container.is(e.target) && !modal.is(e.target)
                         && (_.contains(e.target.classList, "close-icon") ||
                             (container.has(e.target).length === 0 &&
@@ -121,7 +124,7 @@ export default Ember.Component.extend({
         },
 
         navbarSearchTakeToBrowseForResults: function () {
-            this.transitionTo('category', "all",
+            this.get('parentController').transitionTo('category', "all",
                 {
                     queryParams: {searchTerm: this.get('searchTerm')}
                 });
