@@ -116,6 +116,17 @@
   vertical-align middle
   margin-right 8px
 
+/*
+ * Need for small screens so that the
+ * menu drops down within the screen.
+ */
+.dropdown-menu
+  right 0
+  left inherit
+  @media(min-width screenSmall)
+    left 0
+    right inherit
+
 .form-horizontal
   .control-label
     text-align left !important
