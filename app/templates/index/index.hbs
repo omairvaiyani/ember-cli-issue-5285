@@ -6,17 +6,12 @@
             {{/unless}}
         {{/if}}
 
-        <br><br><br>
-        <p class="text-center">
-            User Tiles in Development.<br>
+        <div class="tiles-container">
+            {{#each currentUser.tiles as |tile|}}
+                {{user-tile tile=tile class=tile.type parentController=this}}
+            {{/each}}
+        </div>
 
-            "Create First Test"<br>
-            "Recommended Tests"<br>
-            "Complete Profile Card"<br>
-            "Set Up Spaced Repetition Times".<br>
-
-            For now, see "My Study Area", on the left.
-        </p>
     </article>
 
     {{#if showCurrentUserMiniProfile}}

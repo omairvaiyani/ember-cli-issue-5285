@@ -1,0 +1,7 @@
+<div {{action tile.actionName}} {{bind-attr
+    class=":tile :card tile.spacedRepetition tile.createTest tile.recommendedTest"}}>
+    <p class="tile-label">{{tile.label}}</p>
+    <h4 class="title">{{tile.title}}</h4>
+    <img class="icon" {{bind-attr src=tile.iconUrl}}/>
+    <span class="linkify action-link" {{action tile.actionName tile}}>{{tile.actionLabel}}</span>
+</div>

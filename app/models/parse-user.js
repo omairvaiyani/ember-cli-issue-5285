@@ -124,6 +124,7 @@ var ParseUser = ParseUserModel.extend(ParseMixin, {
     srLatestTestDismissed: DS.attr('boolean'),
     srCompletedAttempts: new Ember.A(),
     moduleTags: DS.attr(),
+
     /*
      * Stats
      */
@@ -164,7 +165,9 @@ var ParseUser = ParseUserModel.extend(ParseMixin, {
             myTests.pushObjects(this.get('savedTests'));
 
         return myTests.sortBy('title');
-    }.property('createdTests.length', 'savedTests.length')
+    }.property('createdTests.length', 'savedTests.length'),
+
+    tiles: new Ember.A()
 });
 
 ParseUserModel.reopenClass({

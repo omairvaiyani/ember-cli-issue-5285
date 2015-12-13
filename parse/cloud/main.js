@@ -134,6 +134,60 @@ Parse.Object.prototype.fetchIfNeeded = function () {
     }
 };
 /**
+ * @Function Fetch srLatestAttempt
+ * If srLatestAttempt not loaded, fetch.
+ *
+ * @returns {Parse.Promise<Parse.Object>}
+ */
+Parse.Object.prototype.fetchSrLatestAttempt = function () {
+    // This is a good, but not foolproof, way to check
+    // if the object is fetched or not.
+    if (!this.srLatestTest() || !this.srLatestTest().createdAt) {
+        // This works.
+        var userQuery = new Parse.Query(Parse.User);
+        userQuery.include('srLatestTest', 'questions');
+        return userQuery.get(this.id).then(function (user) {
+            return Parse.Promise.as(user.srLatestTest());
+        });
+    } else {
+        // This hasn't been tested yet
+        // Might not work?
+        return Parse.Promise.as(this);
+    }
+};
+/**
+ * @Function Get Recommended Test
+ * Figures out a decent recommended test
+ * for the user.
+ *
+ * @returns {Parse.Promise<Parse.Object>}
+ */
+Parse.User.prototype.getRecommendedTest = function () {
+    var testQueryFilterTags = new Parse.Query(Test);
+    testQueryFilterTags.containedIn('tags', this.moduleTags());
+
+    var testQueryFilterCategories = new Parse.Query(Test);
+    testQueryFilterCategories.equalTo('category',
+        {"__type": "Pointer", "className": "Category", "objectId": "2mKmgcqKRf"});
+
+    var mainQuery = Parse.Query.or(testQueryFilterTags, testQueryFilterCategories);
+    mainQuery.include('author', 'questions');
+    mainQuery.notEqualTo('author', this);
+    mainQuery.greaterThan('totalQuestions', 4);
+    mainQuery.equalTo('isPublic', true);
+    mainQuery.notEqualTo('isGenerated', true);
+    // Masterkey to find author
+    Parse.Cloud.useMasterKey();
+    return mainQuery.find().then(function (tests) {
+        logger.log("recommended-test-result", "Tests found " + tests.length);
+        var recommendedTest = _.shuffle(tests)[0];
+        return Parse.Promise.as(recommendedTest);
+    }, function (error) {
+        logger.log("recommended-test-error", error);
+        console.error("Parse.User.getRecommendedTests error: " + JSON.stringify(error));
+    });
+};
+/**
  * @Function Delete Index Object
  * Removes search index of object
  * @returns {Parse.Promise<Parse.Object>}
@@ -720,6 +774,13 @@ Parse.User.prototype.followers = function () {
  */
 Parse.User.prototype.following = function () {
     return this.relation('following');
+};
+/**
+ * @Property moduleTags
+ * @returns {Array<String>}
+ */
+Parse.User.prototype.moduleTags = function () {
+    return this.get('moduleTags');
 };
 /****
  * ---------
@@ -2765,8 +2826,6 @@ Parse.Cloud.beforeSave(Parse.User, function (request, response) {
     var user = request.object,
         promises = [];
 
-    logger.log("user-before-save", user.earnedBadges());
-    logger.log("user-dirty-keys", user.dirtyKeys());
     if (user.isNew()) {
         user.setDefaults();
         promises.push(user.assignBadgeProgressions());
@@ -3342,6 +3401,69 @@ Parse.Cloud.define('loadRecentAttemptsForUser', function (request, response) {
         response.error(error);
     });
 
+});
+
+/**
+ * @CloudFunction Refresh Tiles for User
+ *
+ * Call on app load and subsequently every
+ * five minutes to get new recommendations
+ * and updates.
+ *
+ * @return {Array<Object> tiles}
+ */
+Parse.Cloud.define('refreshTilesForUser', function (request, response) {
+    var user = request.user,
+        tiles = [],
+        srLatestTest,
+        recommendTest,
+        promises = [];
+
+    if (!user)
+        return response.error("You must be logged in.");
+
+    var typesOfTiles = ["spacedRepetition", "recommendedTest"],
+        tilesToFetch = ["spacedRepetition", "recommendedTest"];
+
+    _.each(tilesToFetch, function (tileToFetch) {
+        switch(tileToFetch) {
+            case "spacedRepetition":
+                promises.push(srLatestTest = user.fetchSrLatestAttempt());
+                break;
+            case "recommendedTest":
+                promises.push(recommendTest = user.getRecommendedTest());
+                break;
+        }
+    });
+    Parse.Promise.when(promises).then(function () {
+        // Can't add promise results as params on this function
+        // as the order is shuffled. Result stored in _result[0].
+        if(srLatestTest && (srLatestTest = srLatestTest._result[0])) {
+            tiles.push({
+                type: "spacedRepetition",
+                label: "Spaced Repetition",
+                title: srLatestTest.title(),
+                iconUrl: '/img/srs-icon.png',
+                actionName: 'openTestModal',
+                actionLabel: 'Take Quiz',
+                test: srLatestTest
+            });
+        }
+        if(recommendTest && (recommendTest = recommendTest._result[0])) {
+            tiles.push({
+                type: "recommendedTest",
+                label: "Recommended for you",
+                title: recommendTest.title(),
+                iconUrl: '/img/take-quiz.png',
+                actionName: 'openTestModal',
+                actionLabel: 'Take Quiz',
+                test: recommendTest.minifyAuthorProfile()
+            });
+        }
+        response.success({tiles: tiles});
+    }, function (error) {
+        response.error(error);
+    });
 });
 
 /**

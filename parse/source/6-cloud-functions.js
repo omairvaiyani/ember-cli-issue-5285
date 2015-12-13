@@ -301,6 +301,69 @@ Parse.Cloud.define('loadRecentAttemptsForUser', function (request, response) {
 });
 
 /**
+ * @CloudFunction Refresh Tiles for User
+ *
+ * Call on app load and subsequently every
+ * five minutes to get new recommendations
+ * and updates.
+ *
+ * @return {Array<Object> tiles}
+ */
+Parse.Cloud.define('refreshTilesForUser', function (request, response) {
+    var user = request.user,
+        tiles = [],
+        srLatestTest,
+        recommendTest,
+        promises = [];
+
+    if (!user)
+        return response.error("You must be logged in.");
+
+    var typesOfTiles = ["spacedRepetition", "recommendedTest"],
+        tilesToFetch = ["spacedRepetition", "recommendedTest"];
+
+    _.each(tilesToFetch, function (tileToFetch) {
+        switch(tileToFetch) {
+            case "spacedRepetition":
+                promises.push(srLatestTest = user.fetchSrLatestAttempt());
+                break;
+            case "recommendedTest":
+                promises.push(recommendTest = user.getRecommendedTest());
+                break;
+        }
+    });
+    Parse.Promise.when(promises).then(function () {
+        // Can't add promise results as params on this function
+        // as the order is shuffled. Result stored in _result[0].
+        if(srLatestTest && (srLatestTest = srLatestTest._result[0])) {
+            tiles.push({
+                type: "spacedRepetition",
+                label: "Spaced Repetition",
+                title: srLatestTest.title(),
+                iconUrl: '/img/srs-icon.png',
+                actionName: 'openTestModal',
+                actionLabel: 'Take Quiz',
+                test: srLatestTest
+            });
+        }
+        if(recommendTest && (recommendTest = recommendTest._result[0])) {
+            tiles.push({
+                type: "recommendedTest",
+                label: "Recommended for you",
+                title: recommendTest.title(),
+                iconUrl: '/img/take-quiz.png',
+                actionName: 'openTestModal',
+                actionLabel: 'Take Quiz',
+                test: recommendTest.minifyAuthorProfile()
+            });
+        }
+        response.success({tiles: tiles});
+    }, function (error) {
+        response.error(error);
+    });
+});
+
+/**
  * @CloudFunction Get Memory Strength for Tests
  * You can send an array of tests, test pointers or test objectIds.
  * @param {Array<Test> || Array<Parse.Pointers> || Array<String>} tests

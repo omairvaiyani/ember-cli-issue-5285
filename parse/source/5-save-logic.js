@@ -14,8 +14,6 @@ Parse.Cloud.beforeSave(Parse.User, function (request, response) {
     var user = request.object,
         promises = [];
 
-    logger.log("user-before-save", user.earnedBadges());
-    logger.log("user-dirty-keys", user.dirtyKeys());
     if (user.isNew()) {
         user.setDefaults();
         promises.push(user.assignBadgeProgressions());
