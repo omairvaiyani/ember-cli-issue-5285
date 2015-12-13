@@ -626,6 +626,6 @@ export default Ember.Controller.extend(CurrentUser, SortBy, DeleteWithUndo, {
                     confirmCreateTest);
             }
         }
-    }.observes('isEditMode', 'hasBegunEditingProfile'),
+    }.observes('isEditMode', 'hasBegunEditingProfile')
 
 });

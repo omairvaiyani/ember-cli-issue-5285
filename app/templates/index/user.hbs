@@ -1,63 +1,63 @@
 <section class="row margin-bottom-16">
     <article class="col-xs-12">
         {{#if model}}
-        <div class="card">
-            <section class="row">
-                <article class="col-xs-5">
-                    {{profile-picture user=model height=80 width=80 class="inline-top margin-right-8"}}
-                    <div class="inline-top">
-                        <h3 class="no-margin">{{model.name}}</h3>
+            <div class="card">
+                <section class="row">
+                    <article class="col-xs-5">
+                        {{profile-picture user=model height=80 width=80 class="inline-top margin-right-8"}}
+                        <div class="inline-top">
+                            <h3 class="no-margin">{{model.name}}</h3>
 
-                       <p>{{model.level.title}}</p>
-                        {{level-progress points=model.points level=model.level}}
-                    </div>
-                </article>
+                            <p>{{model.level.title}}</p>
+                            {{level-progress points=model.points level=model.level}}
+                        </div>
+                    </article>
 
-                <article class="col-xs-7">
-                    <div class="overview-stat-container inline-block">
-                        <h4 class="stat">
-                            {{model.numberOfTestsCreated}}
-                        </h4>
-                        <h4 class="small">
-                            Quizzes Created
-                        </h4>
-                    </div>
+                    <article class="col-xs-7">
+                        <div class="overview-stat-container inline-block">
+                            <h4 class="stat">
+                                {{model.numberOfTestsCreated}}
+                            </h4>
+                            <h4 class="small">
+                                Quizzes Created
+                            </h4>
+                        </div>
 
-                    <div class="vertical-separator"></div>
+                        <div class="vertical-separator"></div>
 
-                    <div class="overview-stat-container inline-block">
-                        <h4 class="stat">
-                            {{model.numberOfAttempts}}
-                        </h4>
-                        <h4 class="small">
-                            Quizzes Taken
-                        </h4>
-                    </div>
+                        <div class="overview-stat-container inline-block">
+                            <h4 class="stat">
+                                {{model.numberOfAttempts}}
+                            </h4>
+                            <h4 class="small">
+                                Quizzes Taken
+                            </h4>
+                        </div>
 
-                    <div class="vertical-separator"></div>
+                        <div class="vertical-separator"></div>
 
-                    <div class="overview-stat-container inline-block">
-                        <h4 class="stat">
-                            {{model.numberOfBadgesUnlocked}}
-                        </h4>
-                        <h4 class="small">
-                            Badges Unlocked
-                        </h4>
-                    </div>
+                        <div class="overview-stat-container inline-block">
+                            <h4 class="stat">
+                                {{model.numberOfBadgesUnlocked}}
+                            </h4>
+                            <h4 class="small">
+                                Badges Unlocked
+                            </h4>
+                        </div>
 
-                    <div class="vertical-separator"></div>
+                        <div class="vertical-separator"></div>
 
-                    <div class="overview-stat-container inline-block">
-                        <h4 class="stat">
-                            {{model.numberOfFollowers}}
-                        </h4>
-                        <h4 class="small">
-                            Followers
-                        </h4>
-                    </div>
-                </article>
-            </section>
-        </div>
+                        <div class="overview-stat-container inline-block">
+                            <h4 class="stat">
+                                {{model.numberOfFollowers}}
+                            </h4>
+                            <h4 class="small">
+                                Followers
+                            </h4>
+                        </div>
+                    </article>
+                </section>
+            </div>
         {{else}}
             <br>
             <br>
@@ -65,32 +65,32 @@
             <p class="text-center">
                 Hmm... we don't have a user with that name. Please check your link and try again!
             </p>
-    {{/if}}
+        {{/if}}
     </article>
 </section>
 {{#if model}}
-<section class="row">
+    <section class="row">
 
-    <article class="col-xs-12 col-sm-9">
-        {{partial 'index/user/my-tests'}}
-    </article>
+        <article class="col-xs-12 col-sm-8">
+            {{partial 'index/user/my-tests'}}
+        </article>
 
-    <article class="col-xs-12 col-sm-3 col-fix-right">
-        <div class="panel panel-success card">
+        <article class="col-xs-12 col-sm-4 col-fix-right">
+            <div class="panel panel-default card">
 
-            <div class="panel-heading">
-                <h4 class="no-margin">
-                    Trophy Case
-                </h4>
+                <div class="panel-heading">
+                    <h4 class="no-margin">
+                        Achievements
+                    </h4>
+                </div>
+                <div class="panel-body">
+                    {{#each model.badgeProgressions as |badgeProgression|}}
+                        {{synap-badge badgeProgression=badgeProgression}}
+                    {{/each}}
+                </div>
+
             </div>
-            <div class="panel-body">
-                {{#each model.badgeProgressions as |badgeProgression|}}
-                    {{synap-badge badgeProgression=badgeProgression}}
-                {{/each}}
-            </div>
-
-        </div>
-    </article>
-</section>
+        </article>
+    </section>
 {{/if}}
 

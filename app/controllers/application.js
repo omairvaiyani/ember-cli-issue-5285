@@ -4,7 +4,7 @@ import EventTracker from '../utils/event-tracker';
 import CryptoHash from '../utils/crypto-hash';
 
 export default Ember.Controller.extend({
-    needs: ['index', 'user', 'test', 'category'],
+    needs: ['index', 'index/user', 'test', 'category'],
 
     /*
      * Observes for route transitions and currentUser.totalUnreadMessages.length
@@ -178,6 +178,9 @@ export default Ember.Controller.extend({
             // Check if User has been Initialised
             var promise = new Parse.Promise();
 
+            // Set Up Current User Tiles
+            this.get('controllers.index').getAndSetCurrentUserTiles();
+
             // If the user was previously logged in, sessionToken is validated
             // in the SessionInitializer along with the initialiseApp Cloud function
             // - else, we need the cloud function part here
@@ -204,7 +207,7 @@ export default Ember.Controller.extend({
                 return ParseHelper.cloudFunction(this, 'loadMyTestsList', {});
             }.bind(this)).then(function (response) {
                 ParseHelper.handleRelationalDataResponseForUser(this.store, currentUser, response);
-                this.get('controllers.index').myTestsListUpdate();
+                this.get('controllers.index/user').myTestsListUpdate();
                 return ParseHelper.cloudFunction(this, 'loadFollowersAndFollowing', {});
             }.bind(this)).then(function (response) {
                 ParseHelper.handleRelationalDataResponseForUser(this.store, currentUser, response);
