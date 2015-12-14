@@ -31,28 +31,30 @@ export default Ember.Component.extend({
         queries.push(userQuery);
         ParseHelper.cloudFunction(this.get('parentController'), 'performSearch', {multipleQueries: queries})
             .then(function (response) {
-            var testResponse = response.results[0],
-                userResponse = response.results[1],
-                tests = ParseHelper.extractRawPayload(this.get('parentController').store, 'test', testResponse.hits),
-                users = ParseHelper.extractRawPayload(this.get('parentController').store, 'parse-user', userResponse.hits);
+                if(!this)
+                    return;
+                var testResponse = response.results[0],
+                    userResponse = response.results[1],
+                    tests = ParseHelper.extractRawPayload(this.get('parentController').store, 'test', testResponse.hits),
+                    users = ParseHelper.extractRawPayload(this.get('parentController').store, 'parse-user', userResponse.hits);
 
-            // Algolia cache's results which should be great BUT
-            // Ember-Data removes the .id from payloads when extracting
-            // This causes an error on 'response.hits' cache as their
-            // 'id' has been removed.
-            this.get('searchClient').clearCache();
+                // Algolia cache's results which should be great BUT
+                // Ember-Data removes the .id from payloads when extracting
+                // This causes an error on 'response.hits' cache as their
+                // 'id' has been removed.
+                this.get('searchClient').clearCache();
 
-            this.set('navbarSearchTotalTestResults', testResponse.nbHits);
-            this.set('navbarSearchTotalUserResults', userResponse.nbHits);
+                this.set('navbarSearchTotalTestResults', testResponse.nbHits);
+                this.set('navbarSearchTotalUserResults', userResponse.nbHits);
 
-            this.get('navbarSearchResults.tests').clear();
-            this.get('navbarSearchResults.tests').addObjects(tests);
+                this.get('navbarSearchResults.tests').clear();
+                this.get('navbarSearchResults.tests').addObjects(tests);
 
-            this.get('navbarSearchResults.users').clear();
-            this.get('navbarSearchResults.users').addObjects(users);
+                this.get('navbarSearchResults.users').clear();
+                this.get('navbarSearchResults.users').addObjects(users);
 
-            this.set('navbarSearchFetching', false);
-        }.bind(this));
+                this.set('navbarSearchFetching', false);
+            }.bind(this));
     },
 
     throttleNavbarSearch: function () {
@@ -102,7 +104,7 @@ export default Ember.Component.extend({
                 $(document).mouseup(function (e) {
                     var container = this.$(),
                         modal = $("#myModal");
-                    if(!container)
+                    if (!container)
                         return;
                     if (!container.is(e.target) && !modal.is(e.target)
                         && (_.contains(e.target.classList, "close-icon") ||

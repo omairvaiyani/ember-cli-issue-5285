@@ -179,11 +179,9 @@ Parse.User.prototype.getRecommendedTest = function () {
     // Masterkey to find author
     Parse.Cloud.useMasterKey();
     return mainQuery.find().then(function (tests) {
-        logger.log("recommended-test-result", "Tests found " + tests.length);
         var recommendedTest = _.shuffle(tests)[0];
         return Parse.Promise.as(recommendedTest);
     }, function (error) {
-        logger.log("recommended-test-error", error);
         console.error("Parse.User.getRecommendedTests error: " + JSON.stringify(error));
     });
 };

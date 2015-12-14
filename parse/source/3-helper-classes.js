@@ -245,16 +245,19 @@ var getAuthorsFromTestsSearch = function (tests) {
             authorObjectIds.push(test.author.objectId);
         }
     });
+    logger.log("authorObjectIds", authorObjectIds);
     var authorQuery = new Parse.Query(Parse.User);
     authorQuery.containedIn("objectId", authorObjectIds);
     return authorQuery.find().then(function (authors) {
+        logger.log("authors-found", authors.length);
         var minimisedAuthors = [];
         _.each(authors, function (author) {
             minimisedAuthors.push(author.minimalProfile());
         });
+        logger.log("minified-authors", minimisedAuthors);
         _.each(tests, function (test) {
             test.author = _.filter(minimisedAuthors, function (author) {
-                return author.id === test.author.objectId;
+                return author.objectId === test.author.objectId;
             })[0];
         });
         return tests;
