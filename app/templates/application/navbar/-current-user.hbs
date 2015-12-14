@@ -1,10 +1,10 @@
-<li>
+{{#link-to 'index.user' currentUser.slug  tagName='li'}}
     {{#link-to 'index.user' currentUser.slug tagName='a' classNames='navbar-right-adjust'}}
         <img class='profile-thumbnail' {{bind-attr src=currentUser.profileImageURL}} />
 
         <div>{{currentUser.firstName}}</div>
     {{/link-to}}
-</li>
+{{/link-to}}
 <li>
     <a id="accountDropdown"
        data-toggle="dropdown"><span class="caret"></span></a>
