@@ -3,8 +3,9 @@ import CurrentUser from '../mixins/current-user';
 import EventTracker from '../utils/event-tracker';
 import ParseHelper from '../utils/parse-helper';
 import DeleteWithUndo from '../mixins/delete-with-undo';
+import TagsAndCats from '../mixins/tags-and-cats';
 
-export default Ember.Controller.extend(CurrentUser, DeleteWithUndo, {
+export default Ember.Controller.extend(CurrentUser, DeleteWithUndo, TagsAndCats, {
     needs: ['application', 'editQuestion'],
 
     isTestDirty: function () {
@@ -48,8 +49,6 @@ export default Ember.Controller.extend(CurrentUser, DeleteWithUndo, {
         return this.get('controllers.application.currentPath') === "edit.newQuestion";
     }.property('controllers.application.currentPath'),
 
-
-    newTag: "",
 
     currentQuestion: function () {
         return this.get('controllers.editQuestion.model');
@@ -227,30 +226,6 @@ export default Ember.Controller.extend(CurrentUser, DeleteWithUndo, {
                     this.transitionTo('testInfo', this.get('model.slug'));
             }.bind(this);
             this.send('saveTest', callback);
-        },
-
-        /**
-         * ADDING AND REMOVING TAGS
-         */
-        toggleAddingNewTag: function () {
-            if (this.get('newTag.length')) {
-                if (!this.get('model.tags')) {
-                    // Unlikely, as CreateRoute.model sets this
-                    this.set('model.tags', new Ember.A());
-                }
-                this.get('model.tags').pushObject(this.get('newTag'));
-                this.set('newTag', "");
-            }
-
-            this.set('addingTag', !this.get('addingTag'));
-            setTimeout(function () {
-                if (this.get('addingTag'))
-                    Ember.$("#new-tag").focus();
-            }.bind(this), 150);
-        },
-
-        removeTag: function (tagIndex) {
-            this.get('model.tags').removeAt(tagIndex);
         },
 
         openEditInfoModal: function () {

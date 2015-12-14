@@ -69,7 +69,8 @@
                 </article>
 
                 <div class="col-sm-6 margin-top-16">
-                    {{currentUser.educationCohort.moduleTags}}
+                    {{module-tags tags=currentUser.moduleTags canEdit=true parentController=this
+                    small=true}}
                 </div>
             </div>
 

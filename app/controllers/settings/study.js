@@ -1,8 +1,9 @@
 import Ember from 'ember';
 import CurrentUser from '../../mixins/current-user';
 import ParseHelper from '../../utils/parse-helper';
+import TagsAndCats from '../../mixins/tags-and-cats';
 
-export default Ember.Controller.extend(CurrentUser, {
+export default Ember.Controller.extend(CurrentUser, TagsAndCats, {
     preparingSpacedRepetition: false,
 
     daysOfTheWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
@@ -20,18 +21,26 @@ export default Ember.Controller.extend(CurrentUser, {
             this.send('activateSpacedRepetition');
     }.observes('currentUser.srActivated'),
 
+
+    moduleTagsDidChangeObserver: function () {
+        this.set('moduleTagsDidChange', true);
+    }.observes('currentUser.moduleTags.length'),
+
     /**
      * @Property Current User Did Dirty
      * Checks current user for direct
      * changes. Internal object changes
      * are not monitored by default:
-     * only extra property to check
-     * is the do not disturb array -
+     * Extra properties to check
+     * are the do not disturb array -
      * see actions.toggleSlot
+     * and moduleTags, see
+     * moduleTagsDidChangeObserver.
      */
     currentUserDidDirty: function () {
-        return this.get('currentUser.isDirty') || this.get('srDoNotDisturbTimesAltered');
-    }.property('currentUser.isDirty', 'srDoNotDisturbTimesAltered'),
+        return this.get('currentUser.isDirty') || this.get('srDoNotDisturbTimesAltered')
+            || this.get('moduleTagsDidChange');
+    }.property('currentUser.isDirty', 'srDoNotDisturbTimesAltered', 'moduleTagsDidChange'),
 
     studyIntensityLabel: function () {
         switch (this.get('currentUser.srIntensityLevel')) {
@@ -78,10 +87,15 @@ export default Ember.Controller.extend(CurrentUser, {
             this.set('srDoNotDisturbTimesAltered', true);
         },
 
+        removeTag: function (tagIndex) {
+            this.get('currentUser.moduleTags').removeAt(tagIndex);
+        },
+
         saveChanges: function (callback) {
             var promise = this.get('currentUser').save().then(function () {
                 // For isDirty/Saving purposes
                 this.set('srDoNotDisturbTimesAltered', false);
+                this.set('moduleTagsDidChangeObserver', false);
 
                 var notification = {
                     type: "saved",
