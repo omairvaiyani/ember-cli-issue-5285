@@ -19,8 +19,16 @@ export default Ember.View.extend({
         if(this.get('width'))
             style += "width:"+this.get('width')+"px;";
 
-        style += "border-color:#505050;border-style: solid;border-radius: 50%;"; // add border radius to the image
-
+        if(this.get('border')) {
+            console.log("Border param found");
+            if (this.get('border') === 1) {
+            style += "border-color:#505050;border-style: solid;border-radius: 50%;"; // add border radius to the image
+            }
+        }
+        else {
+            console.log("Border param NOT found");
+            style += "border-color:#505050;border-style: solid;border-radius: 50%;"; // add border radius to the image
+        }
         return style;
     }.property('user')
 });
