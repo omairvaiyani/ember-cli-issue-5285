@@ -35,6 +35,8 @@ export default Ember.Controller.extend(CurrentUser, SortBy, DeleteWithUndo, {
 
     isEditMode: false,
 
+    friendsShouldShowFollowers: true,
+
     /**
      * @Property
      * For the User to select what tests
@@ -348,6 +350,18 @@ export default Ember.Controller.extend(CurrentUser, SortBy, DeleteWithUndo, {
     }.property('temporaryChanges.name.length', 'temporaryChanges.profilePicture', 'temporaryChanges.coverPicture'),
 
     actions: {
+
+        showFollowersInFriends: function () {
+            console.log("A");
+            console.dir(this.get('model.followers'));
+            console.dir(this.get('model'));
+            this.set('friendsShouldShowFollowers', true);
+        },
+
+        showFollowingInFriends: function () {
+            console.log("B");
+            this.set('friendsShouldShowFollowers', false);
+        },
 
         enableEditMode: function () {
             this.set('temporaryChanges.name', this.get('name'));
