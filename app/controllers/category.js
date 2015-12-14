@@ -156,7 +156,7 @@ export default Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, Estimat
     seoPageHeader: function () {
         var pageTitle;
         if (this.get('model.id'))
-            pageTitle = Em.getWithDefault(this.get('model'), 'secondaryName', this.get('model.name')) + " MCQs";
+            pageTitle = this.get('model.distinctName') + " MCQs";
         else
             pageTitle = "Browse";
         this.send('updatePageTitle', pageTitle);
