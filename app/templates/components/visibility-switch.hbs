@@ -1,5 +1,5 @@
 <div class="visibility-switch">
-    <label for="privacy-switch" class="switch-text-label">Public</label>
-    {{input type="checkbox" checked=checked id="privacy-switch"}}
-    <label for="privacy-switch" class="switch-indicator"></label>
+    <label {{bind-attr for=checkboxDynamicId}} class="switch-text-label">Public</label>
+    {{input type="checkbox" checked=checked id=checkboxDynamicId}}
+    <label {{bind-attr for=checkboxDynamicId}} class="switch-indicator"></label>
 </div>

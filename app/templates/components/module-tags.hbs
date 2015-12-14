@@ -46,7 +46,7 @@
     {{!-- Add New Tag --}}
     {{#if canEdit}}
         {{!-- Adding New Tag | Input Visible --}}
-        {{#if parentController.addingTag}}
+        {{#if addingTag}}
             <div {{bind-attr class=":module-tag :new-tag :has-icon"}} id="new-tag-container">
                 <i class="fa fa-fw fa-pencil-square icon"></i>
                 {{input type='text' value=parentController.newTag

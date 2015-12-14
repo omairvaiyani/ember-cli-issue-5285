@@ -454,8 +454,8 @@ export default Ember.Route.extend({
          *   supplied, model can be second param.
          *
          *  @param {String} modalName (Template)
-         * @param {String} controller (Name)
-         * @param {Object} model
+         * @param {*} controller (Name, boolean if same as route, or Controller)
+         * @param {DS.Model} model
          * @returns {*}
          */
         openModal: function (modalName, controller, model) {
@@ -463,6 +463,10 @@ export default Ember.Route.extend({
 
             if (controller === true)
                 controller = modalName;
+
+            else if (controller && typeof controller !== "string") {
+                // controller included as "this"
+            }
 
             if (model)
                 this.controllerFor(controller).set('model', model);

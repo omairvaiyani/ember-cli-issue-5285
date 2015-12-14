@@ -1,6 +1,10 @@
 import Ember from 'ember';
 
 export default Ember.Component.extend({
+    addingTag: function () {
+        return this.get('parentController.addingTag');
+    }.property('parentController.addingTag'),
+
     /**
      * @Property {Array<String>} Tags
      * Provided by parent template
@@ -99,31 +103,55 @@ export default Ember.Component.extend({
         this.tagArrayUpdate();
     }.on('init'),
 
+    /**
+     * @Observer Auto End New Tag Insertion
+     * Called when 'addingTag' changes, we
+     * set a click handler to end tag
+     * insertion if user clicks outside of
+     * it.
+     *
+     * Handler is removed once user finishes
+     * adding tag OR when the component is
+     * destroyed.
+     */
     autoEndNewTagInsertion: function () {
-        var parentController = this.get('parentController');
+        var parentController = this.get('parentController'),
+            _this = this;
 
-        var clickHandler = function (event) {
-            if (!$(event.target).closest('#new-tag-container').length) {
-                if (parentController.get('addingTag')) {
-                    parentController.send('toggleAddingNewTag');
-                }
-            }
-        };
-
-        if (parentController.get('addingTag')) {
-            // set click event
+        if (_this.get('addingTag')) {
+            // set click event handler
             setTimeout(function () {
-                $(document).click(clickHandler);
+                if(!_this.get('!autoEndNewTagInsertionClickHandlerIsSet')){
+                    $(document).bind('click.endNewTagInsertion', function (event) {
+                        if (!$(event.target).closest("#new-tag-container").length) {
+                            if (parentController.get('addingTag')) {
+                                parentController.send('toggleAddingNewTag');
+                            }
+                        }
+                    });
+                    _this.set('autoEndNewTagInsertionClickHandlerIsSet', true);
+                }
             }, 200);
-
         } else {
             // off click event
-            $(document).off('click', 'body', clickHandler);
+            this.send('unbindEventHandlers');
         }
-    }.observes('parentController.addingTag'),
+    }.observes('addingTag'),
 
-    autoEndEditTag: function () {
-        var _this = this,
+    /**
+     * @Observer Auto End Editing Tag
+     * Called when a tag is being edited, we
+     * set a click handler to end tag
+     * edit if user clicks outside of
+     * it.
+     *
+     * Handler is removed once user finishes
+     * editing tag OR when the component is
+     * destroyed.
+     */
+    autoEndEditingTag: function () {
+        var parentController = this.get('parentController'),
+            _this = this,
             editingTag = false;
 
         this.get('tagArray').forEach(function (tagObject) {
@@ -131,26 +159,36 @@ export default Ember.Component.extend({
                 editingTag = true;
         });
 
-        var clickHandler = function (event) {
-            if (!$(event.target).closest('#edit-tag-container').length) {
-                if (editingTag) {
-                    editingTag = false;
-                    _this.send('finishEditingTag');
-                }
-            }
-        };
-
         if (editingTag) {
-            // set click event
+            // set click event handler
             setTimeout(function () {
-                $(document).click(clickHandler);
+                if(!_this.get('!autoEndEditingTagClickHandlerIsSet')){
+                    $(document).bind('click.endEditTag', function (event) {
+                        if (!$(event.target).closest('#edit-tag-container').length) {
+                            if (editingTag) {
+                                editingTag = false;
+                                _this.send('finishEditingTag');
+                            }
+                        }
+                    });
+                    _this.set('autoEndEditingTagClickHandlerIsSet', true);
+                }
             }, 200);
-
         } else {
             // off click event
-            $(document).off('click', 'body', clickHandler);
+            this.send('unbindEventHandlers');
         }
     }.observes('tagArray.@each.editingTag'),
+
+    /**
+     * @Override Will Destroy
+     * Called by Ember.Component,
+     * We remove jQuery click handlers
+     * here to avoid memory leaks.
+     */
+    willDestroy: function () {
+        this.send('unbindEventHandlers');
+    },
 
     actions: {
         tagClicked: function () {
@@ -163,8 +201,7 @@ export default Ember.Component.extend({
         },
 
         toggleAddingNewTag: function () {
-            var parentController = this.get('parentController');
-            parentController.send('toggleAddingNewTag');
+            this.get('parentController').send('toggleAddingNewTag');
         },
 
         /**
@@ -219,6 +256,21 @@ export default Ember.Component.extend({
                 console.log("ModuleTagsComponent error, no showOverflowTagsAction defined.");
             else
                 this.get('parentController').send(action);
+        },
+
+        /**
+         * @Action Unbind Event Handlers
+         * Called from
+         * - this.autoEndNewTagInsertion,
+         * - this.autoEndEditingTag
+         * - this.willDestroy
+         */
+        unbindEventHandlers: function () {
+            $(document).unbind('click.endNewTagInsertion');
+            this.set('autoEndNewTagInsertionClickHandlerIsSet', false);
+
+            $(document).unbind('click.endEditTag');
+            this.set('autoEndEditingTagClickHandlerIsSet', false);
         }
     }
 });

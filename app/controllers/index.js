@@ -54,7 +54,7 @@ Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, EstimateMemoryStrength
     getAndSetCurrentUserTiles: function () {
         if (!this.get('showUserPage') || !this.get('currentUser.initialisedFor') ||
             this.get('fetchingCurrentUserTiles'))
-            return console.log("tile set up cancelled");
+            return;
 
         // To avoid multiple concurrent calls due to observer updates
         this.set('fetchingCurrentUserTiles', true);

@@ -241,6 +241,7 @@ export default Ember.Controller.extend(CurrentUser, DeleteWithUndo, {
                 this.get('model.tags').pushObject(this.get('newTag'));
                 this.set('newTag', "");
             }
+
             this.set('addingTag', !this.get('addingTag'));
             setTimeout(function () {
                 if (this.get('addingTag'))
@@ -253,7 +254,7 @@ export default Ember.Controller.extend(CurrentUser, DeleteWithUndo, {
         },
 
         openEditInfoModal: function () {
-            this.send('openModal', 'edit/modal/edit-info', 'create', this.get('model'));
+            this.send('openModal', 'edit/modal/edit-info', this);
         }
     }
 
