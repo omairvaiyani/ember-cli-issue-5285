@@ -156,13 +156,20 @@ Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, EstimateMemoryStrength
      * Only if a guest visits the homepage.
      * This trigger is removed on IndexRoute exit.
      */
-    resizeIndexCoverVideo: function () {
+    resizeIndexCover: function () {
         var calculateHeight = function () {
-            var height = $(window).outerHeight() - 140;
+            var height = $(window).outerHeight() - 136,
+                width = $(window).outerWidth();
+            // Need more space at the bottom on mobile screens
+            if(width < 768)
+                height = height - 60;
+
             if (height < 400)
                 height = 400;
-            else if (height > 620)
-                height = 620;
+
+            else if (height > 820)
+                height = 820;
+
             return height;
         };
 
@@ -200,15 +207,9 @@ Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, EstimateMemoryStrength
          ***
          */
         toggleAnimationVideoContainer: function () {
-            var _this = this,
-                loop = $("#index-page-video").get(0);
+            var _this = this;
 
             _this.toggleProperty('showFullAnimationVideo');
-
-            if (this.get('showFullAnimationVideo'))
-                loop.pause();
-            else
-                loop.play();
 
             setTimeout(function () {
                 var videoContainer = $(".full-animation-video-container");
@@ -216,7 +217,6 @@ Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, EstimateMemoryStrength
                 if (_this.get('showFullAnimationVideo')) {
                     videoContainer.on('click', function () {
                         _this.set('showFullAnimationVideo', false);
-                        loop.play();
                     });
                 } else {
                     videoContainer.off('click');
