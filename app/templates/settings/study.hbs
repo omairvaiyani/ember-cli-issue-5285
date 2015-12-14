@@ -155,4 +155,11 @@
             <h4 class="text-center">Preparing ...</h4>
         {{/unless}}
     {{/if}}
+
+    {{#if currentUserDidDirty}}
+        <hr class="full-hr"/>
+
+        {{async-button default="Save Changes" action="saveChanges" pending="Saving..."
+        fulfilled="Saved!" class="btn btn-success" reset=true}}
+    {{/if}}
 </form>
