@@ -1,5 +1,5 @@
 <section class="row">
-    <article class="col-xs-12 col-sm-8">
+    <article class="col-xs-12 col-sm-9">
         {{#if currentUser.srLatestTest}}
             {{#unless currentUser.srLatestTestDismissed}}
                 {{test-card test=currentUser.srLatestTest parentController=this isLatestSRTest=true}}
@@ -7,15 +7,21 @@
         {{/if}}
 
         <div class="tiles-container">
-            {{#each currentUser.tiles as |tile|}}
-                {{user-tile tile=tile class=tile.type parentController=this}}
-            {{/each}}
+            {{#if currentUser.tiles}}
+                {{#each currentUser.tiles as |tile|}}
+                    {{user-tile tile=tile class=tile.type parentController=this}}
+                {{/each}}
+            {{else}}
+                <h3 class="text-center">
+                    {{loading-bar isLoading=true class="loading-bar"}}
+                </h3>
+            {{/if}}
         </div>
 
     </article>
 
     {{#if showCurrentUserMiniProfile}}
-        <div class="col-xs-12 col-sm-4 col-fix-right">
+        <div class="col-xs-12 col-sm-3 col-fix-right">
             <section class="row">
                 <article class="col-md-12">
                     <div class="card">
