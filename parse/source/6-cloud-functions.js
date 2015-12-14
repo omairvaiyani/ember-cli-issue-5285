@@ -1587,8 +1587,12 @@ Parse.Cloud.define("checkBetaAccess", function (request, response) {
 Parse.Cloud.define('getHotTests', function (request, response) {
     var hotTestsQuery = new Parse.Query(Test);
 
-    hotTestsQuery.greaterThan('createdAt', moment().subtract(20, 'weeks').toDate());
+    // TODO enable creation date to get hot new tests
+    //hotTestsQuery.greaterThan('createdAt', moment().subtract(20, 'weeks').toDate());
+
     hotTestsQuery.descending('numberOfAttempts');
+    hotTestsQuery.notEqualTo('isGenerated', true);
+    hotTestsQuery.equalTo('isPublic', true);
     hotTestsQuery.limit(3);
     // Needed for author fetching
     Parse.Cloud.useMasterKey();
