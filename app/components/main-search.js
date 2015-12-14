@@ -29,7 +29,8 @@ export default Ember.Component.extend({
             };
         queries.push(testQuery);
         queries.push(userQuery);
-        this.get('searchClient').search(queries).then(function (response) {
+        ParseHelper.cloudFunction(this.get('parentController'), 'performSearch', {multipleQueries: queries})
+            .then(function (response) {
             var testResponse = response.results[0],
                 userResponse = response.results[1],
                 tests = ParseHelper.extractRawPayload(this.get('parentController').store, 'test', testResponse.hits),

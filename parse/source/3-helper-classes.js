@@ -73,6 +73,16 @@ String.prototype.camelCaseToNormal = function (capitalize) {
     else
         return normal.toLowerCase();
 };
+
+/**
+ * @Function Starts With
+ * @param {String} prefix
+ * @returns {boolean}
+ */
+String.prototype.startsWith = function (prefix) {
+    return this.slice(0, prefix.length) == prefix;
+};
+
 /**
  * @Function Percentage
  * @param {integer} number1
@@ -80,7 +90,7 @@ String.prototype.camelCaseToNormal = function (capitalize) {
  * @returns {number}
  */
 var percentage = function (number1, number2) {
-    if(!number1 || number2)
+    if (!number1 || number2)
         return 0;
     return Math.floor((number1 / number2) * 100);
 };
@@ -177,7 +187,7 @@ var sendEmail = function (templateName, email, user, data) {
         fullName = "",
         globalData = data ? data : [];
 
-    if(user && user.get('name')) {
+    if (user && user.get('name')) {
         fullName = user.get('name');
         firstName = fullName.split(" ")[0];
         globalData.push({"name": "FNAME", "content": firstName});
@@ -220,10 +230,33 @@ var sendEmail = function (templateName, email, user, data) {
         async: true
     }, {
         success: function (httpResponse) {
-            console.log("Sent "+templateName+" email: " + JSON.stringify(httpResponse));
+            console.log("Sent " + templateName + " email: " + JSON.stringify(httpResponse));
         },
         error: function (httpResponse) {
-            console.error("Error sending "+templateName+"  email: " + JSON.stringify(httpResponse));
+            console.error("Error sending " + templateName + "  email: " + JSON.stringify(httpResponse));
         }
+    });
+};
+
+var getAuthorsFromTestsSearch = function (tests) {
+    var authorObjectIds = [];
+    _.each(tests, function (test) {
+        if (test.author && test.author.objectId) {
+            authorObjectIds.push(test.author.objectId);
+        }
+    });
+    var authorQuery = new Parse.Query(Parse.User);
+    authorQuery.containedIn("objectId", authorObjectIds);
+    return authorQuery.find().then(function (authors) {
+        var minimisedAuthors = [];
+        _.each(authors, function (author) {
+            minimisedAuthors.push(author.minimalProfile());
+        });
+        _.each(tests, function (test) {
+            test.author = _.filter(minimisedAuthors, function (author) {
+                return author.id === test.author.objectId;
+            })[0];
+        });
+        return tests;
     });
 };

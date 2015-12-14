@@ -2654,6 +2654,16 @@ String.prototype.camelCaseToNormal = function (capitalize) {
     else
         return normal.toLowerCase();
 };
+
+/**
+ * @Function Starts With
+ * @param {String} prefix
+ * @returns {boolean}
+ */
+String.prototype.startsWith = function (prefix) {
+    return this.slice(0, prefix.length) == prefix;
+};
+
 /**
  * @Function Percentage
  * @param {integer} number1
@@ -2661,7 +2671,7 @@ String.prototype.camelCaseToNormal = function (capitalize) {
  * @returns {number}
  */
 var percentage = function (number1, number2) {
-    if(!number1 || number2)
+    if (!number1 || number2)
         return 0;
     return Math.floor((number1 / number2) * 100);
 };
@@ -2758,7 +2768,7 @@ var sendEmail = function (templateName, email, user, data) {
         fullName = "",
         globalData = data ? data : [];
 
-    if(user && user.get('name')) {
+    if (user && user.get('name')) {
         fullName = user.get('name');
         firstName = fullName.split(" ")[0];
         globalData.push({"name": "FNAME", "content": firstName});
@@ -2801,11 +2811,34 @@ var sendEmail = function (templateName, email, user, data) {
         async: true
     }, {
         success: function (httpResponse) {
-            console.log("Sent "+templateName+" email: " + JSON.stringify(httpResponse));
+            console.log("Sent " + templateName + " email: " + JSON.stringify(httpResponse));
         },
         error: function (httpResponse) {
-            console.error("Error sending "+templateName+"  email: " + JSON.stringify(httpResponse));
+            console.error("Error sending " + templateName + "  email: " + JSON.stringify(httpResponse));
         }
+    });
+};
+
+var getAuthorsFromTestsSearch = function (tests) {
+    var authorObjectIds = [];
+    _.each(tests, function (test) {
+        if (test.author && test.author.objectId) {
+            authorObjectIds.push(test.author.objectId);
+        }
+    });
+    var authorQuery = new Parse.Query(Parse.User);
+    authorQuery.containedIn("objectId", authorObjectIds);
+    return authorQuery.find().then(function (authors) {
+        var minimisedAuthors = [];
+        _.each(authors, function (author) {
+            minimisedAuthors.push(author.minimalProfile());
+        });
+        _.each(tests, function (test) {
+            test.author = _.filter(minimisedAuthors, function (author) {
+                return author.id === test.author.objectId;
+            })[0];
+        });
+        return tests;
     });
 };/*
  * BACKGROUND JOBS
@@ -3426,7 +3459,7 @@ Parse.Cloud.define('refreshTilesForUser', function (request, response) {
         tilesToFetch = ["spacedRepetition", "recommendedTest"];
 
     _.each(tilesToFetch, function (tileToFetch) {
-        switch(tileToFetch) {
+        switch (tileToFetch) {
             case "spacedRepetition":
                 promises.push(srLatestTest = user.fetchSrLatestAttempt());
                 break;
@@ -3438,7 +3471,7 @@ Parse.Cloud.define('refreshTilesForUser', function (request, response) {
     Parse.Promise.when(promises).then(function () {
         // Can't add promise results as params on this function
         // as the order is shuffled. Result stored in _result[0].
-        if(srLatestTest && (srLatestTest = srLatestTest._result[0])) {
+        if (srLatestTest && (srLatestTest = srLatestTest._result[0])) {
             tiles.push({
                 type: "spacedRepetition",
                 label: "Spaced Repetition",
@@ -3449,7 +3482,7 @@ Parse.Cloud.define('refreshTilesForUser', function (request, response) {
                 test: srLatestTest
             });
         }
-        if(recommendTest && (recommendTest = recommendTest._result[0])) {
+        if (recommendTest && (recommendTest = recommendTest._result[0])) {
             tiles.push({
                 type: "recommendedTest",
                 label: "Recommended for you",
@@ -4883,6 +4916,44 @@ Parse.Cloud.define("unfollowUser", function (request, response) {
         return Parse.Promise.when([userToUnfollow.save(), currentUser.save()]);
     }).then(function () {
         response.success();
+    }, function (error) {
+        response.error(error);
+    });
+});
+
+Parse.Cloud.define('performSearch', function (request, response) {
+    Parse.Cloud.useMasterKey();
+    var indexName = request.params.indexName,
+        searchTerm = request.params.searchTerm,
+        options = request.params.options,
+        multipleQueries = request.params.multipleQueries,
+        searchResults;
+
+    var searchPromise;
+    if (multipleQueries) {
+        searchPromise = algoliaClient.search(multipleQueries);
+    } else {
+        searchPromise = algoliaClient.initIndex(indexName).search(searchTerm, options)
+    }
+
+    searchPromise.then(function (result) {
+        searchResults = result;
+
+        var tests;
+        if (multipleQueries) {
+            tests = searchResults.results[0];
+        } else if (indexName.startsWith("Test"))
+            tests = searchResults.hits;
+
+        if (tests)
+            return getAuthorsFromTestsSearch(tests);
+    }).then(function (tests) {
+        if(multipleQueries)
+            searchResults.results[0] = tests;
+        else if (indexName.startsWith("Test"))
+            searchResults.hits = tests;
+
+        response.success(searchResults);
     }, function (error) {
         response.error(error);
     });

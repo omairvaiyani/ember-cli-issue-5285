@@ -25,21 +25,17 @@ export default Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, Estimat
         return this.get('applicationController.searchClient');
     }.property('applicationController.searchClient'),
 
-    testIndex: function () {
+    testIndexName: function () {
         // TODO add more indices to match listOrders
         switch (this.get('listOrder.value')) {
             case "relevance":
-                return this.get('searchClient').initIndex('Test');
-                break;
+                return "Test";
             case "title":
-                return this.get('searchClient').initIndex('Test_title(ASC)');
-                break;
+                return "Test_title(ASC)";
             case "difficulty":
-                return this.get('searchClient').initIndex('Test_difficulty(DESC)');
-                break;
+                return "Test_difficulty(DESC)";
             default:
-                return this.get('searchClient').initIndex('Test');
-                break;
+                return "Test";
         }
     }.property('listOrder'),
 
@@ -104,13 +100,17 @@ export default Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, Estimat
         if (fetchMore)
             page = this.get('currentResultsPage') + 1;
 
-        return this.get('testIndex').search(this.get('searchTerm'),
+        return ParseHelper.cloudFunction(this, 'performSearch',
             {
-                tagFilters: this.get('activeTags'),
-                facets: "category.objectId",
-                facetFilters: [categoryFilter],
-                hitsPerPage: 10,
-                page: page
+                indexName: this.get('testIndexName'),
+                searchTerm: this.get('searchTerm'),
+                options: {
+                    tagFilters: this.get('activeTags'),
+                    facets: "category.objectId",
+                    facetFilters: [categoryFilter],
+                    hitsPerPage: 10,
+                    page: page
+                }
             }).then(function (response) {
                 if (response.query !== this.get('searchTerm'))
                     return;
@@ -121,13 +121,6 @@ export default Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, Estimat
                     this.set('moreResultsToFetch', false);
                 this.set('totalResults', response.nbHits);
                 var tests = ParseHelper.extractRawPayload(this.store, 'test', response.hits);
-
-
-                // Algolia cache's results which should be great BUT
-                // Ember-Data removes the .id from payloads when extracting
-                // This causes an error on 'response.hits' cache as their
-                // 'id' has been removed.
-                this.get('testIndex').clearCache();
 
                 if (!fetchMore) {
                     this.get('tests').clear();
@@ -150,7 +143,7 @@ export default Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, Estimat
 
     throttleGetTests: function () {
         Ember.run.debounce(this, this.getTests, 200);
-    }.observes('searchTerm.length', 'activeTags.length', 'activeCategories.length', 'testIndex',
+    }.observes('searchTerm.length', 'activeTags.length', 'activeCategories.length', 'testIndexName',
         'model.id', 'readyToGetTests'),
 
     /*

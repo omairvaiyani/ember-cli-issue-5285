@@ -323,7 +323,7 @@ Parse.Cloud.define('refreshTilesForUser', function (request, response) {
         tilesToFetch = ["spacedRepetition", "recommendedTest"];
 
     _.each(tilesToFetch, function (tileToFetch) {
-        switch(tileToFetch) {
+        switch (tileToFetch) {
             case "spacedRepetition":
                 promises.push(srLatestTest = user.fetchSrLatestAttempt());
                 break;
@@ -335,7 +335,7 @@ Parse.Cloud.define('refreshTilesForUser', function (request, response) {
     Parse.Promise.when(promises).then(function () {
         // Can't add promise results as params on this function
         // as the order is shuffled. Result stored in _result[0].
-        if(srLatestTest && (srLatestTest = srLatestTest._result[0])) {
+        if (srLatestTest && (srLatestTest = srLatestTest._result[0])) {
             tiles.push({
                 type: "spacedRepetition",
                 label: "Spaced Repetition",
@@ -346,7 +346,7 @@ Parse.Cloud.define('refreshTilesForUser', function (request, response) {
                 test: srLatestTest
             });
         }
-        if(recommendTest && (recommendTest = recommendTest._result[0])) {
+        if (recommendTest && (recommendTest = recommendTest._result[0])) {
             tiles.push({
                 type: "recommendedTest",
                 label: "Recommended for you",
@@ -1780,6 +1780,44 @@ Parse.Cloud.define("unfollowUser", function (request, response) {
         return Parse.Promise.when([userToUnfollow.save(), currentUser.save()]);
     }).then(function () {
         response.success();
+    }, function (error) {
+        response.error(error);
+    });
+});
+
+Parse.Cloud.define('performSearch', function (request, response) {
+    Parse.Cloud.useMasterKey();
+    var indexName = request.params.indexName,
+        searchTerm = request.params.searchTerm,
+        options = request.params.options,
+        multipleQueries = request.params.multipleQueries,
+        searchResults;
+
+    var searchPromise;
+    if (multipleQueries) {
+        searchPromise = algoliaClient.search(multipleQueries);
+    } else {
+        searchPromise = algoliaClient.initIndex(indexName).search(searchTerm, options)
+    }
+
+    searchPromise.then(function (result) {
+        searchResults = result;
+
+        var tests;
+        if (multipleQueries) {
+            tests = searchResults.results[0];
+        } else if (indexName.startsWith("Test"))
+            tests = searchResults.hits;
+
+        if (tests)
+            return getAuthorsFromTestsSearch(tests);
+    }).then(function (tests) {
+        if(multipleQueries)
+            searchResults.results[0] = tests;
+        else if (indexName.startsWith("Test"))
+            searchResults.hits = tests;
+
+        response.success(searchResults);
     }, function (error) {
         response.error(error);
     });
