@@ -128,6 +128,17 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
         }
     }.observes('stem'),
 
+    imageUploadedAndQuestionSaved: function () {
+        if(this.get('uploadedImage') && this.get('savedQuestion')) {
+            var question = this.get('savedQuestion');
+            question.set('image', this.get('uploadedImage'));
+            question.save().then(function () {
+                this.set('uploadedImage', false);
+                this.set('savedQuestion', null);
+            }.bind(this));
+        }
+    }.observes('uploadedImage', 'savedQuestion'),
+
     actions: {
         clearValidity: function () {
             this.set('validity.question.hasErrors', false);
@@ -223,6 +234,7 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
              * async. Two save calls will be made.
              */
             if (this.get('imageFile.base64.length')) {
+                this.set('uploadingImage', true);
                 this.send('uploadImage');
             }
             this.get('questions').pushObject(question);
@@ -234,6 +246,12 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
                 this.get('questions').removeObject(question);
                 question = ParseHelper.extractRawPayload(this.store, 'question', response.question);
                 this.get('questions').pushObject(question);
+
+                if(this.get('uploadingImage')) {
+                    // See this.imageUploadedAndQuestionSaved
+                    this.set('savedQuestion', question);
+                    this.set('uploadingImage', false);
+                }
 
                 this.send('newUserEvent', response);
                 return this.get('test').save();
@@ -277,16 +295,19 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
             this.send('incrementLoadingItems');
             this.set('updating', true);
 
+            var question = this.get('model');
+
             window.scrollTo(0, 0);
             this.transitionToRoute('edit.index');
 
-            this.set('model.tags', this.get('test.tags'));
+            question.set('tags', this.get('test.tags'));
 
             /*
              * If user added an image, start saving it
              * async. Two save calls will be made.
              */
             if (this.get('imageFile.base64.length')) {
+                this.set('uploadingImage', true);
                 this.send('uploadImage');
             }
 
@@ -294,7 +315,14 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
              * If user added, updated, edited or removed image,
              * save that first then the question.
              */
-            this.get('model').save().then(function () {
+            question.save().then(function () {
+
+                if(this.get('uploadingImage')) {
+                    // See this.imageUploadedAndQuestionSaved
+                    this.set('savedQuestion', question);
+                    this.set('uploadingImage', false);
+                }
+
                 this.set('updating', false);
                 this.send('decrementLoadingItems');
                 var notification = {
@@ -322,16 +350,11 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
          * Callback from ImageUploadMixin which is called
          * by this controller when the question is saved.
          *
-         * Here, we receive the imageData (name, url),
-         * create the correct parse-file transformation,
-         * and set it to the current question, and save it.
-         * Async from saveQuestion and updateQuestion.
-         *
          * @param {Object} imageData
          */
         saveUploadedImage: function (imageData) {
-            this.set('model.image', imageData);
-            this.get('model').save();
+            // See imageUploadedAndQuestionSaved
+            this.set('uploadedImage', imageData);
         },
 
         viewImage: function () {
