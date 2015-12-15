@@ -4,6 +4,7 @@
 /dist
 /tmp
 /parse/public/*
+/parse/cloud/main.js
 /aws/node_modules/*
 /aws/Archive.zip
 
