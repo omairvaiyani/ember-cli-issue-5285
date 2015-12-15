@@ -340,7 +340,7 @@ Parse.Cloud.define('refreshTilesForUser', function (request, response) {
                 type: "spacedRepetition",
                 label: "Spaced Repetition",
                 title: srLatestTest.title(),
-                iconUrl: '/img/srs-icon.png',
+                iconUrl: APP.baseCDN + 'img/features/srs-icon.png',
                 actionName: 'openTestModal',
                 actionLabel: 'Take Quiz',
                 test: srLatestTest
@@ -351,7 +351,7 @@ Parse.Cloud.define('refreshTilesForUser', function (request, response) {
                 type: "recommendedTest",
                 label: "Recommended for you",
                 title: recommendTest.title(),
-                iconUrl: '/img/take-quiz.png',
+                iconUrl: APP.baseCDN +'img/features/take-quiz.png',
                 actionName: 'openTestModal',
                 actionLabel: 'Take Quiz',
                 test: recommendTest.minifyAuthorProfile()
@@ -1843,5 +1843,7 @@ Parse.Cloud.define('performSearch', function (request, response) {
         response.error(error);
     });
 });
+
+Parse.Cloud
 
 

@@ -21,16 +21,6 @@ Stripe.initialize('sk_test_AfBhaEg8Yojoc1hylUI0pdtc'); // testing key
 //Stripe.initialize('sk_live_AbPy747DUMLo8qr53u5REcaX'); // live key
 
 var APP = {
-    baseUrl: 'https://synap.mycqs.com/',
-    baseCDN: 'https://d3uzzgmigql815.cloudfront.net/'
-};
-var FB = {
-    API: {
-        url: 'https://graph.facebook.com/v2.3/me/'
-    },
-    GraphObject: {
-        appId: "394753023893264",
-        namespace: "mycqs_app",
-        testUrl: APP.baseUrl + "test/"
-    }
+    baseUrl: 'https://synap.ac/',
+    baseCDN: 'https://s3-eu-west-1.amazonaws.com/synap-dev-assets/'
 };
