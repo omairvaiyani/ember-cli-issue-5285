@@ -7,14 +7,11 @@ export default Ember.Controller.extend(CurrentUser, {
     loading: 'Preparing test...',
 
     setTimeStarted: function () {
-        if (!this.get('preparingTest')) {
-            this.set('timeStarted', new Date());
+        this.set('timeStarted', new Date());
+        setTimeout(function () {
             this.send('prerenderReady');
-            setTimeout(function () {
-                EventTracker.recordEvent(EventTracker.STARTED_TEST, this.get('model'), this.get('currentUser'));
-            }.bind(this), 1000);
-        }
-    }.observes('preparingTest'),
+        }.bind(this), 4000);
+    }.on('init'),
 
     shuffledQuestions: new Ember.A(),
 
@@ -60,7 +57,7 @@ export default Ember.Controller.extend(CurrentUser, {
     inPrintView: false,
 
     testUrl: function () {
-        if(!this.get('model.slug'))
+        if (!this.get('model.slug'))
             return "";
         return "https://mycqs.com/test/" + this.get('model.slug');
     }.property('model.slug.length'),
@@ -73,7 +70,7 @@ export default Ember.Controller.extend(CurrentUser, {
     }.property('questionsAnswered.length', 'shuffledQuestions.length'),
 
     questionProgressStyle: function () {
-        return "width: "+this.get('questionProgress')+"%;";
+        return "width: " + this.get('questionProgress') + "%;";
     }.property('questionProgress'),
 
     finishTestAlertMessage: function () {
@@ -82,15 +79,30 @@ export default Ember.Controller.extend(CurrentUser, {
             questionsAnswered = this.get('questionsAnswered.length'),
             questionsSkipped = totalQuestions - questionsAnswered;
 
-        if(!questionsSkipped)
-            message = "You have answered all "+this.get('shuffledQuestions.length')+" questions.";
+        if (!questionsSkipped)
+            message = "You have answered all " + this.get('shuffledQuestions.length') + " questions.";
         else if (questionsAnswered)
-            message = "You have skipped "+ questionsSkipped +" questions.";
+            message = "You have skipped " + questionsSkipped + " questions.";
         else
-            message = "You have not answered any of the "+totalQuestions+" questions.";
+            message = "You have not answered any of the " + totalQuestions + " questions.";
 
         return message;
     }.property('shuffledQuestions.length', 'questionsAnswered.length'),
+
+    /**
+     * @Observer Check if Attempt and Responses Saved
+     * This is part of the Mark Test flow,
+     * see this.actions.markTest()
+     */
+    checkIfAttemptAndResponsesSaved: function () {
+        if (this.get('attemptSaved') && this.get('responsesSaved')) {
+            setTimeout(function () {
+                // Issues with response array duplication
+                // Timeout seems to sort this
+                this.send('finaliseNewAttempt');
+            }.bind(this), 1000);
+        }
+    }.observes('attemptSaved', 'responsesSaved'),
 
     actions: {
         optionSelected: function (optionIndex) {
@@ -124,10 +136,12 @@ export default Ember.Controller.extend(CurrentUser, {
                     this.send('confirmFinish');
             }.bind(this), 250);
         },
+
         previousQuestion: function () {
             if (this.get('currentQuestionIndex'))
                 this.decrementProperty('currentQuestionIndex');
         },
+
         nextQuestion: function () {
             if (this.get('currentQuestionIndex') < (this.get('shuffledQuestions.length') - 1))
                 this.incrementProperty('currentQuestionIndex');
@@ -135,6 +149,7 @@ export default Ember.Controller.extend(CurrentUser, {
                 this.send('confirmFinish');
 
         },
+
         confirmFinish: function () {
             this.send('openModal', 'test/modals/finish-test', 'test');
         },
@@ -142,23 +157,40 @@ export default Ember.Controller.extend(CurrentUser, {
          * ---------
          * Mark Test
          * ---------
-         * Currently the responses objects are all saved individually
-         * It takes too long and the results page requires the objects
+         * @Current being rewritten
          */
         isMarking: false,
+
+        /**
+         * @Action Mark Test
+         *
+         * Read carefully to understand flow
+         * Flow 1a
+         * - Attempt generated
+         * - Score marked with responses generated
+         * - Attempt saved WITHOUT responses
+         * - Saved attempt set with unsaved responses
+         * - Flow 2 primed
+         * - *TRANSITION* to results page
+         * Flow 1b
+         * - Responses saved in batch call
+         * - Flow 2 primed
+         * Flow 2 (see this.checkIfAttemptAndResponsesSaved)
+         * - Replaced saved responses with local unsaved responses on attempt
+         * - Save attempt using REST
+         * - Call finaliseNewAttempt for gamification purposes
+         */
         markTest: function () {
             this.send('incrementLoadingItems');
             this.send('closeModal');
             this.set('loading', 'Marking test...');
-            var attempt;
-            if (!this.get('isGeneratedAttempt')) {
-                attempt = this.store.createRecord('attempt', {
-                    test: this.get('model')
-                });
-                if (this.get('currentUser'))
-                    attempt.set('user', this.get('currentUser'));
-            } else
-                attempt = this.get('model');
+
+            var attempt = this.store.createRecord('attempt', {
+                test: this.get('model')
+            });
+
+            if (this.get('currentUser'))
+                attempt.set('user', this.get('currentUser'));
 
             attempt.set('timeStarted', this.get('timeStarted'));
             attempt.set('timeCompleted', new Date());
@@ -172,7 +204,7 @@ export default Ember.Controller.extend(CurrentUser, {
              * - Add response to 'responses' array
              */
             var score = 0,
-                responsesArray = [];
+                responsesArray = new Ember.A();
 
             this.get('questionsAnswered').forEach(function (question) {
                 var chosenAnswer, correctAnswer, isCorrect = false;
@@ -186,20 +218,7 @@ export default Ember.Controller.extend(CurrentUser, {
                 if (chosenAnswer === correctAnswer) {
                     isCorrect = true;
                     score++;
-                    /*
-                    if (this.get('currentUser.zzishActivityId:' + EventTracker.STARTED_TEST)) {
-                        Zzish.logAction(this.get('currentUser.zzishActivityId:' + EventTracker.STARTED_TEST),
-                            question.get('stem'), 1);
-                    }*/
                 }
-                /*
-                if (this.get('currentUser.zzishActivityId:' + EventTracker.STARTED_TEST)) {
-                    var biScore = 0;
-                    if (isCorrect)
-                        biScore = 1;
-                    Zzish.logAction(this.get('currentUser.zzishActivityId:' + EventTracker.STARTED_TEST),
-                        question.get('stem'), chosenAnswer, biScore);
-                }*/
 
                 // Storing options in array as we may have
                 // multiple correct options in the future
@@ -216,62 +235,59 @@ export default Ember.Controller.extend(CurrentUser, {
             }.bind(this));
 
             score = (score / this.get('shuffledQuestions.length')) * 100;
-            attempt.set('score', score);
+            attempt.set('score', Math.round(score));
 
-            attempt.get('questions')
-                .then(function (questions) {
-                    questions.addObjects(this.get('shuffledQuestions'));
-                    return attempt.get('responses');
-                }.bind(this))
-                .then(function (responses) {
-                    //responses.addObjects(responsesArray);
-                    //console.dir({responsesArray: responsesArray, responses: responses,
-                    //    attemptResponses: attempt.get('responses')});
-                    return ParseHelper.cloudFunction(this, 'saveTestAttempt', {attempt: attempt, responses: responsesArray});
-                }.bind(this))
-                .then(function (result) {
-                    var attempt = ParseHelper.extractRawPayload(this.store, 'attempt', result.attempt),
-                        uniqueResponses = ParseHelper.extractRawPayload(this.store, 'unique-response', result.uniqueResponses);
+            attempt.get('questions').addObjects(this.get('shuffledQuestions'));
+            attempt.save().then(function () {
+                this.set('attemptSaved', attempt);
 
-                    this.send('newUserEvent', result);
-                    this.get('currentUser.uniqueResponses').addObjects(uniqueResponses);
-                    this.set('unsavedAttempt', attempt);
-                    this.transitionToRoute('result.new');
-                    this.send('decrementLoadingItems');
-                }.bind(this));
+                if (!attempt.get('response.length'))
+                    attempt.get('responses').addObjects(responsesArray);
+                this.transitionTo('result', attempt);
 
-           /* var arrayOfPromises = [];
-            responsesArray.forEach(function (response) {
-                arrayOfPromises.push(response.save());
+            }.bind(this), function (error) {
+                console.error(error);
+            }).then(function () {
+                this.send('decrementLoadingItems');
+            }.bind(this));
+
+            ParseHelper.saveAll(this, 'Response', responsesArray).then(function (responses) {
+                this.set('responsesSaved', responses);
+            }.bind(this), function (error) {
+                console.dir(error);
             });
-            Em.RSVP.Promise.all(arrayOfPromises).then(function (result) {
-                //savedResponses = result;
-                return attempt.save();
-            }.bind(this))
-                .then(function () {
-                    //EventTracker.recordEvent(EventTracker.COMPLETED_TEST, attempt, this.get('currentUser'));
-                    if (this.get('currentUser')) {
-                        if (this.get('currentUser.attempts'))
-                            this.get('currentUser.attempts').insertAt(0, attempt);
-                        this.get('currentUser').incrementProperty('numberOfAttempts');
-                        this.store.createRecord('action', {
-                            user: this.get('currentUser'),
-                            type: 'attemptFinished',
-                            test: attempt.get('test'),
-                            attempt: attempt,
-                            value: score
-                        });
-                        *//*if (this.get('currentUser.zzishActivityId:' + EventTracker.STARTED_TEST)) {
-                            var passed = score > 50;
-                            if (passed)
-                                passed = "Passed";
-                            else
-                                passed = "Failed";
-                            Zzish.logAction(this.get('currentUser.zzishActivityId:' + EventTracker.STARTED_TEST),
-                                "Finished test", passed, score);
-                        }*//*
-                    }
-                }.bind(this));*/
+        },
+
+        /**
+         * @Action Finalise New Attempt
+         * Called from this.checkIfAttemptAndResponsesSaved()
+         * Once attempt AND responses are separately saved,
+         * this function is called to set the responses
+         * onto the attempt and save it once more.
+         *
+         * A cloud code function is called to finalise
+         * this attempt - gamification etc.
+         *
+         * By this point, the user is already viewing
+         * their results - this happens in the background.
+         */
+        finaliseNewAttempt: function () {
+            this.get('attemptSaved.responses').clear();
+            this.get('attemptSaved.responses').addObjects(this.get('responsesSaved'));
+
+            this.get('attemptSaved').save().then(function (attempt) {
+                return ParseHelper.cloudFunction(this, 'finaliseNewAttempt', {
+                    attemptId: attempt.get('id')
+                });
+            }.bind(this)).then(function (result) {
+                // Update local attempt record
+                ParseHelper.extractRawPayload(this.store, 'attempt', result.attempt);
+            }.bind(this), function (error) {
+                console.error(error);
+            }).then(function () {
+                this.set('attemptSaved', null);
+                this.set('responsesSaved', null);
+            }.bind(this));
         },
 
         enlargeQuestionImage: function () {
@@ -314,4 +330,5 @@ export default Ember.Controller.extend(CurrentUser, {
         }
     }
 
-});
+})
+;

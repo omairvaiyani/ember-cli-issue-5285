@@ -26,10 +26,7 @@ export default Ember.Controller.extend(CurrentUser, RouteHistory, {
         this.get('model.questions').forEach(function (question) {
             var questionHasResponse = false;
             this.get('model.responses').forEach(function (response) {
-                var responseQuestionId = response.get('_data.question');
-                if (!responseQuestionId)
-                    responseQuestionId = response.get('_data.question');
-                if (responseQuestionId === question.get('id')) {
+                if (response.get('question.id') === question.get('id')) {
                     allResponses.pushObject(response);
                     questionHasResponse = true;
                 }
@@ -49,19 +46,20 @@ export default Ember.Controller.extend(CurrentUser, RouteHistory, {
     }.property('model.responses.length', 'model.questions.length'),
 
     correctResponses: function () {
-        if(!this.get('model.response'))
+        if(!this.get('model.responses.length'))
             return new Ember.A();
-        return this.get('model.responses').filterBy('isCorrect', true);
+        return this.get('model.responses').filter(function (response) {
+            return response.get('isCorrect');
+        });
     }.property('model.responses.length'),
 
     incorrectResponses: function () {
-        if(!this.get('allResponses') || !this.get('model.response'))
+        if(!this.get('allResponses') || !this.get('model.responses'))
             return new Ember.A();
 
-        if (this.get('allResponses.length'))
-            return this.get('allResponses').filterBy('isCorrect', false);
-        else
-            return this.get('model.responses').filterBy('isCorrect', false);
+        return this.get('model.responses').filter(function (response) {
+            return !response.get('isCorrect');
+        });
     }.property('allResponses.length'),
 
 

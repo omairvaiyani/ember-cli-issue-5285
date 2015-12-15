@@ -1304,7 +1304,6 @@ var Test = Parse.Object.extend("Test", {
             return testJSON;
         } else
             return this;
-
     }
 }, {
     /**
@@ -1682,6 +1681,14 @@ var Attempt = Parse.Object.extend("Attempt", {
     },
 
     /**
+     * @Property isFinalised
+     * @returns {Boolean}
+     */
+    isFinalised: function () {
+        return this.get('isFinalsied');
+    },
+
+    /**
      * @Function Set Defaults
      * Sets timeTaken in seconds
      * to complete attempt.
@@ -1704,9 +1711,16 @@ var Attempt = Parse.Object.extend("Attempt", {
         if (this.score())
             this.set('score', Math.round(this.score()));
 
+        if(!this.responses())
+            this.set('responses', []);
+
+        this.set('isFinalised', this.responses().length > 0);
+
         var ACL = new Parse.ACL();
+
         if (this.user()) {
             ACL.setReadAccess(this.user(), true);
+            ACL.setWriteAccess(this.user(), true);
         } else {
             ACL.setPublicReadAccess(true);
         }
@@ -3017,6 +3031,13 @@ Parse.Cloud.beforeSave(Attempt, function (request, response) {
         promises.push(attempt.setDefaults());
     }
 
+    if(!attempt.isFinalised() && attempt.responses().length) {
+        var ACL = attempt.getACL();
+        ACL.setWriteAccess(attempt.user(), false);
+        attempt.setACL(ACL);
+        attempt.set('isFinalised', true);
+    }
+
     Parse.Promise.when(promises).then(function () {
         response.success();
     }, function (error) {
@@ -3801,67 +3822,50 @@ Parse.Cloud.define('getCommunityTest', function (request, response) {
 });
 
 /**
- * @Unfinished, read TODOs
- * @CloudFunction Search Index
+ * @CloudFunction Get Attempt
  *
- * Conducts a search query using
- * Algolia.
+ * Used so that attempt.test.author
+ * is fetched too.
  *
- * @param {String} className
- * @param {String} sortIndex
- * @param {String} searchTerm
- * @param {Object} searchOptions
- * @return {Object} response
+ * @return {String} id
  */
-Parse.Cloud.define('searchIndex', function (request, response) {
-    var className = request.params.className,
-        sortIndex = request.params.sortIndex,
-        searchTerm = request.params.searchTerm,
-        searchOptions = request.params.searchOptions ? request.params.searchOptions : {};
+Parse.Cloud.define('getAttempt', function (request, response) {
+    var user = request.user,
+        id = request.params.id;
 
-    if (!className)
-        return response.error("Please provide an className.");
+    Parse.Cloud.useMasterKey();
+    var attemptQuery = new Parse.Query(Attempt);
+    attemptQuery.include('test.author');
+    attemptQuery.include('responses');
+    attemptQuery.include('questions');
 
-    var searchIndex = algoliaClient.initIndex(className);
-    // TODO utilise sortIndex
+    attemptQuery.get(id).then(function (attempt) {
+        var requestFromAuthor = false;
+        if (user && user.id === attempt.test().author().id)
+            requestFromAuthor = true;
 
-    searchIndex.search(searchTerm, searchOptions).then(function (algResponse) {
-        var hits = algResponse.hits,
-            records = [];
-        _.each(hits, function (hit) {
-            if (className === "User")
-                className = "_User";
-            var query = new Parse.Query(className);
-            query.containedIn("objectId", objectIds);
-            /*
-             var object = new Parse.Object(className);
-             object.id = hit.objectId;
-             object.createdAt = hit.createdAt;
-             object.updatedAt = hit.updatedAt;
-
-             switch (className) {
-             case "Test":
-             var props = ["title", "author", "category", "description", "questions", "difficulty",
-             "totalQuestions", "tags", "slug", "isPublic", "averageScore", "numberOfAttempts",
-             "isGenerated", "isPublic", "isProfessional", "isSpacedRepetition", "quality"];
-             _.each(props, function (prop) {
-             object.set(prop, hit.prop);
-             });
-             break;
-             // TODO case for User
-             }
-
-             records.push(object);*/
-        });
-        Parse.Cloud.useMasterKey();
-        // TODO Figure out how to send these records without saving them, as Parse won't let us
-        response.success({records: records, meta: algResponse});
+        // Query includes private tests in case the test
+        // belongs to the user. We check it manually here.
+        var author;
+        if (!requestFromAuthor) {
+            author = attempt.test().author();
+        }
+        // Minifying results in 'unsaved' changes.
+        // Must return as JSON and handle included
+        // records
+        var questions = attempt.questions();
+        var responses = attempt.responses();
+        var attemptJSON = attempt.toJSON();
+        attemptJSON.questions = questions;
+        attemptJSON.responses = responses;
+        response.success({attempt: attempt, author: author.minimalProfile()});
     }, function (error) {
         response.error(error);
     });
 });
 
 /**
+ * @Deprecated
  * @CloudFunction Save Test Attempt
  * Takes individual responses and saves each one,
  * storing the array of responses in a new attempt
@@ -3906,6 +3910,48 @@ Parse.Cloud.define('saveTestAttempt', function (request, status) {
 
         return Parse.Promise.when(promises);
     }).then(function (attempt, uniqueResponses, userEvent) {
+        status.success({
+            attempt: attempt, uniqueResponses: uniqueResponses,
+            userEvent: userEvent
+        });
+    }, function (error) {
+        status.error(error);
+    });
+});
+
+/**
+ * @CloudFunction Finalise New Attempt
+ * Call after attempt has already been
+ * saved.
+ *
+ * This function creates uniqueResponses
+ * AND handles gamification.
+ *
+ * @param {Object} attempt
+ * @return {{attempt: Attempt, userEvent: UserEvent}}
+ */
+Parse.Cloud.define('finaliseNewAttempt', function (request, status) {
+    var user = request.user,
+        attempt,
+        attemptId = request.params.attemptId,
+        attemptQuery = new Parse.Query(Attempt);
+
+    attemptQuery.include('responses');
+    attemptQuery.get(attemptId).then(function (result) {
+        attempt = result;
+        var promises = [];
+
+        // Basic Stat Update, user will be saved in .addUniqueResponses function
+        // (unique stats done on TaskWorker)
+        user.increment('numberOfAttempts');
+
+        // Create or update uniqueResponses, user saved in here
+        promises.push(user.addUniqueResponses(attempt.responses()));
+
+        promises.push(UserEvent.newEvent("finishedQuiz", [attempt], user));
+
+        return Parse.Promise.when(promises);
+    }).then(function (uniqueResponses, userEvent) {
         status.success({
             attempt: attempt, uniqueResponses: uniqueResponses,
             userEvent: userEvent
@@ -4949,7 +4995,7 @@ Parse.Cloud.define('performSearch', function (request, response) {
         if (tests)
             return getAuthorsFromTestsSearch(tests);
     }).then(function (tests) {
-        if(multipleQueries)
+        if (multipleQueries)
             searchResults.results[0] = tests;
         else if (indexName.startsWith("Test"))
             searchResults.hits = tests;

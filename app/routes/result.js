@@ -3,18 +3,23 @@ import ParseHelper from '../utils/parse-helper';
 
 export default Ember.Route.extend({
     model: function (params) {
-        var where = {
-            "objectId": params.attempt_id
-        };
-        // TODO fetch using parse cloud code to get author
-        return ParseHelper.findQuery(this, 'Attempt', {where: where, include: "responses,questions"})
-            .then(function (result) {
-                if (result.objectAt(0))
-                    return result.objectAt(0);
-                else
-                    console.log("Result not found, handle it.");
-            }, function (error) {
+        var attempt = this.store.all('attempt').filterBy('id', params.attempt_id).objectAt(0);
+
+        if (attempt) {
+            return attempt;
+        }
+
+        return ParseHelper.cloudFunction(this, 'getAttempt', {id: params.attempt_id})
+            .then(function (response) {
+                // Need to extract author, it's too deep to extract through the attempt
+                var author = response.author;
+                // Author only sent if different from currentUser
+                if (author)
+                    ParseHelper.extractRawPayload(this.store, 'parse-user', author);
+                return ParseHelper.extractRawPayload(this.store, 'attempt', response.attempt);
+            }.bind(this), function (error) {
                 console.dir(error);
+                // TODO switch template to 404
             });
     },
 

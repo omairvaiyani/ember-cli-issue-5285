@@ -51,6 +51,62 @@ export default {
     },
 
     /**
+     * @Function Save All
+     *
+     * // TODO, currently only works for "Response" class
+     *
+     * @param context
+     * @param {string} className eg. _User
+     * @param {Ember.A<DS.Model>}records
+     * @returns {Ember.RSVP.Promise}
+     */
+    saveAll: function (context, className, records) {
+        var adapter = context.store.adapterFor('application'),
+            batchOperations = [],
+            _this = this;
+
+        records.forEach(function (record) {
+            var recordJSON = record.toJSON(),
+                pointerFields = [];
+            // Due to issues with pointer fields, this has to be done
+            switch(className) {
+                case "Response":
+                    pointerFields.push({key: "question", class: "Question"});
+                    pointerFields.push({key: "test", class: "Test"});
+                    pointerFields.push({key: "user", class: "_User"});
+                    break;
+            }
+            _.each(pointerFields, function (pointerField) {
+                recordJSON[pointerField.key] = _this.generatePointer(record.get(pointerField.key), pointerField.class);
+            });
+            batchOperations.push({
+                method: "POST",
+                path: "/1/classes/"+className,
+                body: recordJSON
+            });
+        });
+
+        // TODO max limit is 50 operations, split into multiple
+
+        return new Ember.RSVP.Promise(function (resolve, reject) {
+            adapter.ajax("https://api.parse.com/1/batch/", "POST", {data: {requests: batchOperations}}).then(
+                function (response) {
+                    var rawPayload = [];
+                    _.each(response, function (payload) {
+                       rawPayload.push(payload.success);
+                    });
+                    var modelType = "parse-user";
+                    if(className !== "_User")
+                        modelType = className.dasherize();
+                    resolve(_this.extractRawPayload(context.store, modelType, rawPayload));
+                },
+                function (reason) {
+                    reject(reason.responseJSON);
+                });
+        });
+    },
+
+    /**
      * @Function Upload File
      * Needed as Parse.File.save will not work.
      * Check mixins/image-upload for use example.
@@ -157,11 +213,11 @@ export default {
                         return;
                     if (relationship.kind === 'belongsTo') {
                         // check if the record is embedded or just a pointer
+
                         if (relation.__type === "Pointer")
                             return;
                         var serialisedRelation = serializer.extractArray(store,
                             relationship.type, {results: [relation]});
-
                         var relationType = relationship.type;
                         // This bit is a patch - not sure why the function
                         // store.pushMany() will accept relationship.parentType

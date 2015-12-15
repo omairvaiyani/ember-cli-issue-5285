@@ -171,6 +171,13 @@ Parse.Cloud.beforeSave(Attempt, function (request, response) {
         promises.push(attempt.setDefaults());
     }
 
+    if(!attempt.isFinalised() && attempt.responses().length) {
+        var ACL = attempt.getACL();
+        ACL.setWriteAccess(attempt.user(), false);
+        attempt.setACL(ACL);
+        attempt.set('isFinalised', true);
+    }
+
     Parse.Promise.when(promises).then(function () {
         response.success();
     }, function (error) {

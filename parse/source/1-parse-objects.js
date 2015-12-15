@@ -1304,7 +1304,6 @@ var Test = Parse.Object.extend("Test", {
             return testJSON;
         } else
             return this;
-
     }
 }, {
     /**
@@ -1682,6 +1681,14 @@ var Attempt = Parse.Object.extend("Attempt", {
     },
 
     /**
+     * @Property isFinalised
+     * @returns {Boolean}
+     */
+    isFinalised: function () {
+        return this.get('isFinalsied');
+    },
+
+    /**
      * @Function Set Defaults
      * Sets timeTaken in seconds
      * to complete attempt.
@@ -1704,9 +1711,16 @@ var Attempt = Parse.Object.extend("Attempt", {
         if (this.score())
             this.set('score', Math.round(this.score()));
 
+        if(!this.responses())
+            this.set('responses', []);
+
+        this.set('isFinalised', this.responses().length > 0);
+
         var ACL = new Parse.ACL();
+
         if (this.user()) {
             ACL.setReadAccess(this.user(), true);
+            ACL.setWriteAccess(this.user(), true);
         } else {
             ACL.setPublicReadAccess(true);
         }
