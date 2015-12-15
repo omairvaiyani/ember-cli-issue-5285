@@ -21,7 +21,7 @@ export default Ember.Route.extend({
         else {
             controller.set("betaInvite", model);
             localStorage.setItem("betaActivationId",  model.objectId);
-            this.transitionTo('onboarding');
+            this.replaceWith('onboarding');
 
             var notification = {
                 type: "success",
