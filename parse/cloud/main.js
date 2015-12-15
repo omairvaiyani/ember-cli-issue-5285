@@ -3290,7 +3290,6 @@ Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
  * - - Level
  * - - EarnedBadges
  * - - BadgeProgressions (with Badge)
- * - - SrLatestTest
  *
  * @return {Object} {config, categories, user}
  */
@@ -3310,7 +3309,6 @@ Parse.Cloud.define('initialiseApp', function (request, response) {
         userQuery.include('educationCohort.studyField', 'educationCohort.institution');
         userQuery.include('earnedBadges');
         userQuery.include('badgeProgressions.badge');
-        userQuery.include('srLatestTest');
         promises.push(userQuery.get(user.id));
     }
 
