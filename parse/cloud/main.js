@@ -166,9 +166,9 @@ Parse.User.prototype.getRecommendedTest = function () {
     var testQueryFilterTags = new Parse.Query(Test);
     testQueryFilterTags.containedIn('tags', this.moduleTags());
 
+    // TODO check for previously used categories by user
     var testQueryFilterCategories = new Parse.Query(Test);
-    testQueryFilterCategories.equalTo('category',
-        {"__type": "Pointer", "className": "Category", "objectId": "2mKmgcqKRf"});
+    testQueryFilterCategories.containedIn('tags', this.moduleTags());
 
     var mainQuery = Parse.Query.or(testQueryFilterTags, testQueryFilterCategories);
     mainQuery.include('author', 'questions');
@@ -421,9 +421,11 @@ Parse.User.prototype.checkBadgeProgressions = function (userEvent) {
                 })[0];
             }
 
+            var oldTally = badgeProgression.tally();
             badgeProgression.set('tally', objectToCheck.get(badgeLevelCriteria.attribute));
 
-            if (objectToCheck.get(badgeLevelCriteria.attribute) === badgeLevelCriteria.target) {
+            if (oldTally !== badgeProgression.tally() &&
+                objectToCheck.get(badgeLevelCriteria.attribute) === badgeLevelCriteria.target) {
                 // If First Level achieved, add to User.earnedBadges
                 if (badgeProgression.badgeLevel() === 1) {
                     // Something wrong with .earnedBadges. Must generate pointer.
@@ -2579,18 +2581,8 @@ Stripe.initialize('sk_test_AfBhaEg8Yojoc1hylUI0pdtc'); // testing key
 //Stripe.initialize('sk_live_AbPy747DUMLo8qr53u5REcaX'); // live key
 
 var APP = {
-    baseUrl: 'https://synap.mycqs.com/',
-    baseCDN: 'https://d3uzzgmigql815.cloudfront.net/'
-};
-var FB = {
-    API: {
-        url: 'https://graph.facebook.com/v2.3/me/'
-    },
-    GraphObject: {
-        appId: "394753023893264",
-        namespace: "mycqs_app",
-        testUrl: APP.baseUrl + "test/"
-    }
+    baseUrl: 'https://synap.ac/',
+    baseCDN: 'https://s3-eu-west-1.amazonaws.com/synap-dev-assets/'
 };/*
  * HELPER CLASSES
  */
@@ -3498,7 +3490,7 @@ Parse.Cloud.define('refreshTilesForUser', function (request, response) {
                 type: "spacedRepetition",
                 label: "Spaced Repetition",
                 title: srLatestTest.title(),
-                iconUrl: '/img/srs-icon.png',
+                iconUrl: APP.baseCDN + 'img/features/srs-icon.png',
                 actionName: 'openTestModal',
                 actionLabel: 'Take Quiz',
                 test: srLatestTest
@@ -3509,7 +3501,7 @@ Parse.Cloud.define('refreshTilesForUser', function (request, response) {
                 type: "recommendedTest",
                 label: "Recommended for you",
                 title: recommendTest.title(),
-                iconUrl: '/img/take-quiz.png',
+                iconUrl: APP.baseCDN +'img/features/take-quiz.png',
                 actionName: 'openTestModal',
                 actionLabel: 'Take Quiz',
                 test: recommendTest.minifyAuthorProfile()
@@ -3846,18 +3838,14 @@ Parse.Cloud.define('getAttempt', function (request, response) {
 
         // Query includes private tests in case the test
         // belongs to the user. We check it manually here.
+        // Author sent separate for extraction purposes
+        // This code is critical for the website,
+        // See ResultRoute
         var author;
         if (!requestFromAuthor) {
             author = attempt.test().author();
         }
-        // Minifying results in 'unsaved' changes.
-        // Must return as JSON and handle included
-        // records
-        var questions = attempt.questions();
-        var responses = attempt.responses();
-        var attemptJSON = attempt.toJSON();
-        attemptJSON.questions = questions;
-        attemptJSON.responses = responses;
+
         response.success({attempt: attempt, author: author.minimalProfile()});
     }, function (error) {
         response.error(error);
@@ -5005,6 +4993,8 @@ Parse.Cloud.define('performSearch', function (request, response) {
         response.error(error);
     });
 });
+
+Parse.Cloud
 
 
 /*
