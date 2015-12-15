@@ -421,9 +421,11 @@ Parse.User.prototype.checkBadgeProgressions = function (userEvent) {
                 })[0];
             }
 
+            var oldTally = badgeProgression.tally();
             badgeProgression.set('tally', objectToCheck.get(badgeLevelCriteria.attribute));
 
-            if (objectToCheck.get(badgeLevelCriteria.attribute) === badgeLevelCriteria.target) {
+            if (oldTally !== badgeProgression.tally() &&
+                objectToCheck.get(badgeLevelCriteria.attribute) === badgeLevelCriteria.target) {
                 // If First Level achieved, add to User.earnedBadges
                 if (badgeProgression.badgeLevel() === 1) {
                     // Something wrong with .earnedBadges. Must generate pointer.
