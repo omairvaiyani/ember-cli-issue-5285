@@ -352,14 +352,10 @@ export default Ember.Controller.extend(CurrentUser, SortBy, DeleteWithUndo, {
     actions: {
 
         showFollowersInFriends: function () {
-            console.log("A");
-            console.dir(this.get('model.followers'));
-            console.dir(this.get('model'));
             this.set('friendsShouldShowFollowers', true);
         },
 
         showFollowingInFriends: function () {
-            console.log("B");
             this.set('friendsShouldShowFollowers', false);
         },
 
