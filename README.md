@@ -10,6 +10,7 @@
   - [Registering New Users](#registering-new-user)
     - [By Email](#by-email)
     - [By Facebook](#by-facebook)
+  - [Home Page](#home-page-for-current-user)    
   - [Creating a Quiz](#creating-a-quiz)     
   - [Basics of Parse Objects](#basics-of-parse-objects)
     - [Creating and Saving new questions](#creating-and-saving-new-questions)
@@ -93,15 +94,27 @@ Parse.User.become("session-token-here").then(function (user) {
   // The token could not be validated.
 });
 ```
-Regardless of whether the session is valid, you must run a 'Cloud Code Function' called ```initialiseWebsiteForUser``` which returns a number of crucial objects/arrays - a separate function ```initialiseAppForUser``` will be created once we have a better idea of what objects are not as critical on boot, in mobile platforms.
+Regardless of whether the session is valid, you must run a 'Cloud Code Function' called ```initialiseApp``` which returns a number of crucial objects/arrays.
 ```javascript
-Parse.Cloud.run("initialiseWebsiteForUser").then(function (response) {
+Parse.Cloud.run("initialiseApp").then(function (response) {
   // Store response.config and response.categories as global variables.
-  // Remaining objects within the response object will be discussed further in the document.
+  // Remaining objects are sent if user is logged in:
+  /*
+   response = {
+        config: {Parse.Config},
+        categories: {Array<Category>},
+        educationCohort: {EducationCohort}, // (with institution and studyField included)
+        level: {Level},
+        EarnedBadges: {Array<Badge>},
+        BadgeProgressions: {Array<BadgeProgress>}
+    }
+  */
 }, function (error) {
     console.log(JSON.stringify(error));  
 });
 ```
+Use this response to update the ```currentUser```, which will only have pointers to these fields when you log them in. Whilst it is possible to fetch these fields from the client - this method reduces the API calls on app load, given that we need to run it anyways to fetch the lastest Parse.Config and Categories.
+
 
 ## Basics of Parse Objects
 This sections is a brief run through of Parse Objects - This will help you follow along the rest of the API.
@@ -427,6 +440,83 @@ Parse.Cloud.run('createOrGetEducationCohort', {
                 }, function (error) {
                     console.log(JSON.stringify(error));
                 });
+```
+
+## Home Page for Current User
+Here we will discuss how to
+1. Get tiles (such as recommended test, spaced repetition tests, etc)
+2. Get the user's followers and following
+3. Get the user's list of tests (both created and saved/favourited)
+4. Get the user's most recent attempts*
+
+*We haven't figured out how these attempts will be displayed to the user. Leave this til the end - the website will implement it properly ASAP and so you can see how to design the list item.
+
+#### 1. Tiles
+This should be the first call on app load after the ```initialiseApp``` function. It will fetch info for what to display on the user's home page. Refer to the website's home page (logged in), for guidance on UX. 
+
+```javascript
+Parse.Cloud.run('refreshTilesForUser', {}).then(function (response) {
+    var tiles = response.tiles,
+    _.each(tiles, function (tile) {
+        console.dir(tile);
+        /*
+        {
+            type: "recommendedTest",
+            label: "Recommended for You",
+            title: "Kill Bill Trivia",
+            iconUrl: "https://cdn..~..png",
+            actionName: "goToRoute", // what to do when the user taps the tile
+            actionalLabel: "Start Now", // bottom left of the tile
+            routePath: "test" // Which page to go to if tapped,
+            test: {Test} // included items vary based on tile*
+        }
+        */
+    });
+});
+```
+The other type of tile is for spaced repetition. It's relatively simple/similar to the example above. When a larger variation of tiles are added, they'll be explained here properly. Note the 'type' attribute, use it to colour scheme the tiles separately. 
+
+#### 2. Followers and Following
+This should be the second call on app load after the ```initialiseApp``` function. It will fetch the current user's followers and following.
+
+```javascript
+Parse.Cloud.run('loadFollowersAndFollowing', {}).then(function (response) {
+    var followers = response.followers,
+        following = response.following;
+        
+    currentUser.set('followers', followers);
+    currentUser.set('following', following);
+});
+```
+This is limited to 100 for each of the two arrays. No need to load all of them. Indeed, this will cause problems once the user gets more than 100 of each, after which we'll need to check for followers/following on the fly, as the user comes across other users. We'll cross that bridge towards the end of the beta.
+
+#### 3. Load Tests List
+Almost there. This part fetches the users created and saved tests. Again, it's limited to 100 of each array. A lazy loading function will be introduced towards the end of the beta.
+
+```javascript
+Parse.Cloud.run('loadMyTestsList', {}).then(function (response) {
+    var createdTests = response.createdTests,
+        savedTests = response.savedTests;
+        
+    currentUser.set('createdTests', createdTests);
+    currentUser.set('savedTests', savedTests);
+});
+```
+Crucially, the savedTests object includes the author object. This requires the "master-key", as ALL users are private objects; they contain sensitive data such as email, account settings, etc. Therefore, this cloud function runs the query using a master key, and strips all author data of any sensitive information. This pattern is repeated when fetching tests in discover and anywhere else.
+
+#### 4. Load Recent Attempts
+Finally, here we load the users most recent attempts, 20 of them to be exact. Add the code to fetch the attempts, but don't display them just yet. Wait for the go ahead as the UX needs to be finalised on the web.
+
+```javascript
+Parse.Cloud.run('loadRecentAttemptsForUser', {}).then(function (response) {
+    var recentAttempts = response.recentAttempts;
+        
+    currentUser.set('recentAttempts', recentAttempts); 
+    // notice, this isn't actually a field on the Parse.User model - 
+    // we're only using it locally and temporarily.
+    // if the SDK flags a problem either straight away, or on save, 
+    // then store this array on a separate global object
+});
 ```
 
 ## Creating a Quiz
@@ -828,4 +918,8 @@ On major events, such as quiz creation and adding new questions, the cloud funct
 
 [Currently only listed one badge on the database, still working on this, but you can add the logic and test it by trying to achieve the 'First Step' badge, see the badge's ```criteria``` to familiarise yourself with its structure, and figure out how it is unlocked.]
 
-***In progress***
+
+
+
+
+
