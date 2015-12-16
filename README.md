@@ -857,18 +857,27 @@ Response = {
 ```
 We store ```test```, ```user``` and ```question``` on this object, even though responses are linked directly under an attempt (which stores these objects too), for convenience reasons. ```timeTaken``` is the number of seconds the user viewed that particular question. Note, it does not stop once the user has selected an option - if the user is still looking at the question, continue counting the seconds - this is true for when the user returns to the question after having answered it already. This ties in with ```hesitation```: by default, set this to ```false```. Switch to ```true``` if the user changes their mind, i.e. selects one option, then changes to another OR, if they skip the question and comes back to it.
 
-Whilst we only for one correct answer per question, and therefore, the ability to only select one option whilst taking quizzes, the ```Response``` object (and our Cloud Code functions) are written to be future proof, in case we allow users to have multiple correct answers. If that does happen, the client-side code for scoring an attempt will need a slight adjustment.
+Whilst we only allow for one correct answer per question, and therefore, the ability to only select one option whilst taking quizzes, the ```Response``` object (and our Cloud Code functions) are written to be future proof, in case we allow users to have multiple correct answers. If that does happen, the client-side code for scoring an attempt will need a slight adjustment.
 
-### Adding Responses to an Attempt
-Upon quiz completion, do not directly add responses to the attempt object. Instead, use the following Cloud Code function:
+### Better UX Practice
+An attempt object requires a lot of server-side processing what with all the individual responses being saved and gamification elements.
+
+## Saving the Attempt and Responses
+Before responses adding responses to the Attempt object, you must save them. Run the following code:
 
 ```javascript
-ParseHelper.Cloud.run('saveTestAttempt', {attempt: attempt, responses: responsesArray});
+attempt;
+Parse.Object.saveAll(responses).then(function (responses) {
+    attempt.set('responses', responses);
+    return attempt.save();
+}).then(function () {
+    return Parse.Cloud.run('finaliseNewAttempt', {id: attempt.id});
+}).then(function (response) {
+    attempt = response.attempt; // any updates to the object will be returned here
+    // response also has objects for gamification and spaced-rep {userEvent, uniqueResponses}
+});
 ```
-The ```saveTestAttempt``` Cloud Code function returns three things:
-1. The saved attempt object
-2. Unique Responses (Explained in the next section)
-3. Gamification objects (such as points added, badges awarded etc, see Gamification section).
+In the old version of this document, we simple had one Cloud Function (```saveTestAttempt```), which handled response saving, attempt saving and gamification handling. Unfortunately, this lead to a lot of ```timeout``` errors from Parse, which has resource limits of 15 seconds. Read the section on best practice for UX, below.
 
 ### The Unique Response Object
 This class is essentially the foundation of Synap's spaced-repetition system. It is generated and maintained entirely on Cloud Code. Whilst it is not handled routinely on client-side code, it is essential to be aware of it, and how it works. Before describing it, let's see what we store:
@@ -891,6 +900,9 @@ UniqueResponse =  {
 };
 ```
 A new instance of this class is created when a user takes a particular question for the first time. Each subsequent attempt by the same user, on the same question, will update the same ```UniqueResponse``` object. By keeping track of how often the user gets the question right, how long it has been since the last response, etc, we can calculate how well the user is familiar with the knowledge content of the question. **Notice** the ```memoryStrength``` field, it is an integer, out of 100, which depletes over time. On the client-side, you will have to display this value to the user, allowing them to see which quizzes they need to focus on the most.
+
+### Best Practice for UX
+Part of the reason behind splitting the attempt saving logic into chunks is so that we can display info to the user as quickly as possible. Instead of waiting for the final callback from ```finaliseNewAttempt```, simply take them to the results page as soon as the responses are saved and set locally on the attempt object. That way, the attempt can be saved in the background whilst the user sees their score. A pop up with points gained/badges earned can appear a few moments later. I appreciate this flow is a little unwieldly, and may need improvising on Titanium.
 
 ## Gamification
 
