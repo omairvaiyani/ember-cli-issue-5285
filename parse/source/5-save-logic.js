@@ -18,6 +18,11 @@ Parse.Cloud.beforeSave(Parse.User, function (request, response) {
         user.setDefaults();
         promises.push(user.assignBadgeProgressions());
         promises.push(user.generateSlug());
+    } else {
+        logger.log("user-dirty", user.dirtyKeys());
+        if(user.dirtyKeys() && _.contains(user.dirtyKeys(), "email")) {
+            user.username = user.get('email');
+        }
     }
     Parse.Promise.when(promises).then(function () {
         response.success();
