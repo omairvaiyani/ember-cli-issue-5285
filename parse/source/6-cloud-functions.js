@@ -763,8 +763,8 @@ Parse.Cloud.define('saveTestAttempt', function (request, status) {
  * This function creates uniqueResponses
  * AND handles gamification.
  *
- * @param {Object} attempt
- * @return {{attempt: Attempt, userEvent: UserEvent}}
+ * @param {String} attemptId
+ * @return {{attempt: Attempt, userEvent: UserEvent, uniqueResponses: uniqueResponses}}
  */
 Parse.Cloud.define('finaliseNewAttempt', function (request, status) {
     var user = request.user,
@@ -789,7 +789,8 @@ Parse.Cloud.define('finaliseNewAttempt', function (request, status) {
         return Parse.Promise.when(promises);
     }).then(function (uniqueResponses, userEvent) {
         status.success({
-            attempt: attempt, uniqueResponses: uniqueResponses,
+            attempt: attempt,
+            uniqueResponses: uniqueResponses,
             userEvent: userEvent
         });
     }, function (error) {
