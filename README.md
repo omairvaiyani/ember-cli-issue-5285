@@ -3,38 +3,36 @@
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
-
-  - [Prerequisites](#prerequisites)
-  - [Initialising the API](#initialising-the-api)
-  - [Initialising the App](#initialising-the-app)
-  - [Registering New Users](#registering-new-user)
-    - [By Email](#by-email)
-    - [By Facebook](#by-facebook)
-  - [Home Page](#home-page-for-current-user)    
-  - [Creating a Quiz](#creating-a-quiz)     
-  - [Basics of Parse Objects](#basics-of-parse-objects)
-    - [Creating and Saving new questions](#creating-and-saving-new-questions)
-    - [Adding a saved question to a Quiz](#adding-a-saved-question-to-a-quiz)
-    - [Updating questions](#updating-questions)
-    - [Deleting questions](#deleting-questions)
-    - [Additional Info for Quizzes](#additional-info-for-quizzes)
-  - [Finding Quizzes](#finding-quizzes)
-    - [Setting up Algolia](#setting-up-algolia)
-    - [Performing a Basic Quiz Search](#performing-a-basic-quiz-search)
-    - [Searching with Keywords](#searching-with-keywords)
-    - [Filtering by Tags](#filtering-by-tags)
-    - [Sorting Results](#sorting-results)
-    - [Finding all Quizzes for a Parent Category with Child Categories](#finding-all-quizzes-for-a-parent-category-with-child-categories)
-    - [Search for Users](#search-for-users)
-    - [Additional Info regarding Algolia](#additional-info-regarding-algolia)
-  - [Saving Quizzes](#saving-quizzes)
-  - [Taking Quizzes](#taking-quizzes)
-    - [Quiz Attempt](#quiz-attempt)
-      - [Calculate an Attempt Score](#calculate-an-attempt-score)
-    - [The Response Object](#the-response-object)
-    - [Adding Responses to an Attempt](#adding-responses-to-an-attempt)
-    - [The Unique Response Object](#the-unique-response-object)
-  - [Gamification](#gamification)
+- [Prerequisites](#prerequisites)
+- [Initialising the API](#initialising-the-api)
+- [Initialising the App](#initialising-the-app)
+- [Basics of Parse Objects](#basics-of-parse-objects)
+  - [Creating and Saving new questions](#creating-and-saving-new-questions)
+  - [Adding a saved question to a Quiz](#adding-a-saved-question-to-a-quiz)
+  - [Updating questions](#updating-questions)
+  - [Deleting questions](#deleting-questions)
+  - [Additional Info for Quizzes](#additional-info-for-quizzes)
+- [Finding Quizzes](#finding-quizzes)
+  - [Setting up Algolia](#setting-up-algolia)
+  - [Performing a Basic Quiz Search](#performing-a-basic-quiz-search)
+  - [Searching with Keywords](#searching-with-keywords)
+  - [Filtering by Tags](#filtering-by-tags)
+  - [Sorting Results](#sorting-results)
+  - [Finding all Quizzes for a Parent Category with Child Categories](#finding-all-quizzes-for-a-parent-category-with-child-categories)
+  - [Search for Users](#search-for-users)
+  - [Additional Info regarding Algolia](#additional-info-regarding-algolia)
+- [Saving Quizzes](#saving-quizzes)
+- [Taking Quizzes](#taking-quizzes)
+  - [Quiz Attempt](#quiz-attempt)
+  - [Calculate an Attempt Score](#calculate-an-attempt-score)
+  - [The Response Object](#the-response-object)
+  - [Adding Responses to an Attempt](#adding-responses-to-an-attempt)
+  - [The Unique Response Object](#the-unique-response-object)
+- [Gamification](#gamification)
+  - [Overview of Classes and Relations](#overview-of-classes-and-relations)
+  - [Getting User's Current Level and Points](#getting-users-current-level-and-points)
+  - [Getting User's Badges](#getting-users-badges)
+  - [Checking for Badge or Level Updates](#checking-for-badge-or-level-updates)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -363,7 +361,7 @@ FB.api('search', {q: "University Name".toLowerCase(), type: "page"},
 ```
 Store the selected record, we'll need in the next part.
 
-###  Creating the Institution
+### Creating the Institution
 Once you have got at least the name for the ```eductionalInstition```, you can perform this step. Though having the ```educationalInstitution.type``` is handy.
 
 ```javascript
@@ -396,7 +394,7 @@ var studyFieldObject = latestEducationalInfo.concentration;
 ```
 Else, run the Facebook search API and filter in ```object.category``` === ```"Interest"``` or ```"Field of study"```. It's just how Facebook categories the results.
 
-###  Creating the Study Field
+### Creating the Study Field
 Once you have got at least the name for the ```studyFiled```, you can perform this step.
 ```javascript
 Parse.Cloud.run('createOrUpdateStudyField', {
@@ -443,15 +441,18 @@ Parse.Cloud.run('createOrGetEducationCohort', {
 ```
 
 ## Home Page for Current User
+
 Here we will discuss how to
 1. Get tiles (such as recommended test, spaced repetition tests, etc)
 2. Get the user's followers and following
 3. Get the user's list of tests (both created and saved/favourited)
 4. Get the user's most recent attempts*
 
-*We haven't figured out how these attempts will be displayed to the user. Leave this til the end - the website will implement it properly ASAP and so you can see how to design the list item.
+*We haven't figured out how these attempts will be displayed to the user. Leave this til the end - 
+the website will implement it properly ASAP and so you can see how to design the list item.
 
-#### 1. Tiles
+### 1. Tiles
+
 This should be the first call on app load after the ```initialiseApp``` function. It will fetch info for what to display on the user's home page. Refer to the website's home page (logged in), for guidance on UX. 
 
 ```javascript
@@ -476,7 +477,7 @@ Parse.Cloud.run('refreshTilesForUser', {}).then(function (response) {
 ```
 The other type of tile is for spaced repetition. It's relatively simple/similar to the example above. When a larger variation of tiles are added, they'll be explained here properly. Note the 'type' attribute, use it to colour scheme the tiles separately. 
 
-#### 2. Followers and Following
+### 2. Followers and Following
 This should be the second call on app load after the ```initialiseApp``` function. It will fetch the current user's followers and following.
 
 ```javascript
@@ -490,7 +491,7 @@ Parse.Cloud.run('loadFollowersAndFollowing', {}).then(function (response) {
 ```
 This is limited to 100 for each of the two arrays. No need to load all of them. Indeed, this will cause problems once the user gets more than 100 of each, after which we'll need to check for followers/following on the fly, as the user comes across other users. We'll cross that bridge towards the end of the beta.
 
-#### 3. Load Tests List
+### 3. Load Tests List
 Almost there. This part fetches the users created and saved tests. Again, it's limited to 100 of each array. A lazy loading function will be introduced towards the end of the beta.
 
 ```javascript
@@ -504,7 +505,7 @@ Parse.Cloud.run('loadMyTestsList', {}).then(function (response) {
 ```
 Crucially, the savedTests object includes the author object. This requires the "master-key", as ALL users are private objects; they contain sensitive data such as email, account settings, etc. Therefore, this cloud function runs the query using a master key, and strips all author data of any sensitive information. This pattern is repeated when fetching tests in discover and anywhere else.
 
-#### 4. Load Recent Attempts
+### 4. Load Recent Attempts
 Finally, here we load the users most recent attempts, 20 of them to be exact. Add the code to fetch the attempts, but don't display them just yet. Wait for the go ahead as the UX needs to be finalised on the web.
 
 ```javascript
@@ -818,7 +819,7 @@ Attempt = {
 }
 ```
 Set the ```timeStarted``` on quiz load, then ```timeCompleted``` on finish. Score is calculated on the client-side as it's a simple process, therefore, a lot quicker for UX. Saving the attempt can take a little while as Cloud Code manages a lot of gamification in this flow. So it's best to show them the results quickly, and display a pop-up with 'points earned'/'levelled up' etc later.
-#### Calculate an Attempt Score
+### Calculate an Attempt Score
 ```javascript
 var numberOfCorrectResponse = 0;
 _.each(questions, function (question) {
@@ -893,7 +894,7 @@ A new instance of this class is created when a user takes a particular question 
 
 ## Gamification
 
-#### Overview of Classes and Relations
+### Overview of Classes and Relations
 Classes to note, ```Level```, ```Badge```, ```BadgeProgress``` and ```UserEvent```. Refer to Parse Data Browser and become familiar with attributes for each class.
 
 Every notable event by users in Synap are recorded. This includes things like, new quiz creation, adding questions, following users, taking quizzes, etc. Some events yield ```points```, which is a simple number attribute on the ```Parse.User``` class. The ```Level``` class is read-only, and has a list of predefined levels. As users earn points, we check if they 'levelled up' on the Cloud. Crucially, it's the ```UserEvent``` object which, whilst recording each important event, stores the number of ```pointsTransacted``` due to the event. The process of event generation (on the Cloud) checks for two things:
@@ -907,19 +908,13 @@ Users also have an array of pointers, initially empty, called ```earnedBadges```
 
 This is achieved by the ```BadgeProgression``` class. Upon signing up, the user will have badge progresssion for *all* badges, initially set to Level 1. An array of pointer to these is set on the user's ```badgeProgressions``` attribute. Note, if a badge progression's ```badgeLevel ==== 1```, it means they haven't unlocked the badge yet. Once the badge is unlocked, if the badge has further levels, the badge level will increment. In other words, the ```badgeLevel``` is the level the user is aiming to achieve next. Take a look at ```BadgeProgression.tally``` and ```BadgeProgression.currentLevelProgress```. This will be important for UI purposes.
 
-#### Getting User's Current Level and Points
+### Getting User's Current Level and Points
 These are by default, sent on the User object on log in/session retrieval.
 
-#### Getting User's Badges
+### Getting User's Badges
 These are sent on the app's initialiser Cloud Function under the properties ```earnedBadges``` and ```badgeProgressions```. Store them on the ```currentUser```. 
 
-#### Checking for Badge or Level Updates
+### Checking for Badge or Level Updates
 On major events, such as quiz creation and adding new questions, the cloud functions used will return a ```userEvent``` object. Check this for ```levelledUp``` (which will include a level object **if** the user levelled up) and ```badgesEarned``` (which will include an array of ```BadgeProgress``` objects **if** a new badge is earnt or levelled up). Finally, if badges are earned/levelled up, a further attribute on the ```userEvent``` object, ```badgesProgressToLevel```, is an array which stores the level to which the badge(s) have progressed. This is for historic state storing, as the pointer to each badge progression will change over time, but the ```userEvent``` may be accessed on a later date. Think scrolling down to old activites.
 
 [Currently only listed one badge on the database, still working on this, but you can add the logic and test it by trying to achieve the 'First Step' badge, see the badge's ```criteria``` to familiarise yourself with its structure, and figure out how it is unlocked.]
-
-
-
-
-
-
