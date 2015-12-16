@@ -3,6 +3,7 @@
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
+
 - [Prerequisites](#prerequisites)
 - [Initialising the API](#initialising-the-api)
 - [Initialising the App](#initialising-the-app)
@@ -26,8 +27,9 @@
   - [Quiz Attempt](#quiz-attempt)
   - [Calculate an Attempt Score](#calculate-an-attempt-score)
   - [The Response Object](#the-response-object)
-  - [Adding Responses to an Attempt](#adding-responses-to-an-attempt)
+  - [Saving the Attempt and Responses](#saving-the-attempt-and-responses)
   - [The Unique Response Object](#the-unique-response-object)
+  - [Best Practice for UX](#best-practice-for-ux)
 - [Gamification](#gamification)
   - [Overview of Classes and Relations](#overview-of-classes-and-relations)
   - [Getting User's Current Level and Points](#getting-users-current-level-and-points)
@@ -193,9 +195,8 @@ Parse.User {
 }
 ```
 
-
 ## Registering New Users
-There are two ways in which new users can sign up to Synap: Email and Facebook. Both methods are covered in this document. 
+Two flows, email and facebook. 
 
 ### By Email
 ```javascript
@@ -281,6 +282,8 @@ var signUpAuthorisedFacebookUser = function (data) {
 ```
 
 ## Setting Educational Info
+
+### Intro
 This is done after registration as it decouples the process - the education info is either manually entered by the user or confirmed by the user from data returned through FB. Furthermore, an ```educationCohort``` is created based on the ```institution```, ```studyField``` and ```studyYear```. This allows us to group colleagues together. This process is somewhat complicated and so, it's best to keep it separate from the registration function.
 
 ### Finding the Institution (without Facebook)
@@ -442,6 +445,7 @@ Parse.Cloud.run('createOrGetEducationCohort', {
 
 ## Home Page for Current User
 
+### Overview
 Here we will discuss how to
 1. Get tiles (such as recommended test, spaced repetition tests, etc)
 2. Get the user's followers and following
@@ -859,10 +863,7 @@ We store ```test```, ```user``` and ```question``` on this object, even though r
 
 Whilst we only allow for one correct answer per question, and therefore, the ability to only select one option whilst taking quizzes, the ```Response``` object (and our Cloud Code functions) are written to be future proof, in case we allow users to have multiple correct answers. If that does happen, the client-side code for scoring an attempt will need a slight adjustment.
 
-### Better UX Practice
-An attempt object requires a lot of server-side processing what with all the individual responses being saved and gamification elements.
-
-## Saving the Attempt and Responses
+### Saving the Attempt and Responses
 Before responses adding responses to the Attempt object, you must save them. Run the following code:
 
 ```javascript
