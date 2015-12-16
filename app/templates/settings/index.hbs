@@ -5,9 +5,8 @@
         <label for="email" class="col-sm-6 control-label">Email</label>
 
         <div class="col-sm-6">
-            {{input type="email" class="form-control text-align-right" id="email" style="text-align: right;"
-            placeholder="Email"
-            value=currentUser.email}}
+            {{input type="email" class="form-input text-right" id="email"
+            placeholder="Email" value=currentUser.email}}
         </div>
     </div>
     <hr>
@@ -44,4 +43,10 @@
             </button>
         </div>
     </div>
+    {{#if currentUser.isDirty}}
+        <hr class="full-hr"/>
+
+        {{async-button default="Save Changes" action="saveChanges" pending="Saving..."
+        fulfilled="Saved!" class="btn btn-success" reset=true}}
+    {{/if}}
 </form>
