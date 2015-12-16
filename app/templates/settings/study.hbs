@@ -38,7 +38,7 @@
                 </div>
             </div>
 
-        <br/>
+            <br/>
 
             <div class="form-group">
                 <article class="col-sm-6">
@@ -119,38 +119,41 @@
                 </div>
             </div>
 
-            <h4>Do not disturb <br>
-                <small>Everyone deserves a social life. Toggle on the hours and days when you <strong>do not</strong>
-                    want to revise. We'll avoid sleeping hours anyways.
-                </small>
-            </h4>
-            <section class="row margin-bottom-8">
-                <article class="col-sm-4">
-                    <strong>Day</strong>
-                </article>
-                {{#each slotsOfTheDay as |slot|}}
-                    <article class="col-sm-2">
-                        {{slot.times}}
-                    </article>
-                {{/each}}
-            </section>
-            {{#each currentUser.srDoNotDisturbTimes as |day dayIndex|}}
-                <section class="row text-center margin-bottom-8">
-                    <article class="col-sm-4 text-left">
-                        {{day.label}}
-                    </article>
-                    {{#each day.slots as |slot slotIndex|}}
-                        <article class="col-sm-2">
-                            <div class="togglebutton togglebutton-info">
-                                <label {{action 'toggleSlot' slotIndex dayIndex}}>
-                                    {{input type="checkbox" checked=slot.active}}
-                                    <span class="toggle"></span>
-                                </label>
-                            </div>
-                        </article>
-                    {{/each}}
-                </section>
-            {{/each}}
+        {{!--
+         <h4>Do not disturb <br>
+             <small>
+                 Everyone deserves a social life. We avoid sending you notifications when you're asleep.
+             </small>
+         </h4>
+
+         <section class="row margin-bottom-8">
+             <article class="col-sm-4">
+                 <strong>Day</strong>
+             </article>
+             {{#each slotsOfTheDay as |slot|}}
+                 <article class="col-sm-2">
+                     {{slot.times}}
+                 </article>
+             {{/each}}
+         </section>
+         {{#each currentUser.srDoNotDisturbTimes as |day dayIndex|}}
+             <section class="row text-center margin-bottom-8">
+                 <article class="col-sm-4 text-left">
+                     {{day.label}}
+                 </article>
+                 {{#each day.slots as |slot slotIndex|}}
+                     <article class="col-sm-2">
+                         <div class="togglebutton togglebutton-info">
+                             <label {{action 'toggleSlot' slotIndex dayIndex}}>
+                                 {{input type="checkbox" checked=slot.active}}
+                                 <span class="toggle"></span>
+                             </label>
+                         </div>
+                     </article>
+                 {{/each}}
+             </section>
+         {{/each}}
+         --}}
 
         {{else}}
             <h4 class="text-center">Preparing ...</h4>
