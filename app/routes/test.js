@@ -92,7 +92,7 @@ export default Ember.Route.extend(RouteHistory, {
              * a shuffled array of questions
              */
             controller.get('shuffledQuestions').clear();
-            controller.get('shuffledQuestions').addObjects(this.shuffle(questions));
+            controller.get('shuffledQuestions').addObjects(_.shuffle(questions.toArray()));
             /*
              * Loop through each shuffled question and:
              * - Get the options which are not empty
@@ -113,7 +113,7 @@ export default Ember.Route.extend(RouteHistory, {
                             nonEmptyOptions.push(option);
                     });
                 }
-                question.set('shuffledOptions', this.shuffle(nonEmptyOptions));
+                question.set('shuffledOptions', _.shuffle(nonEmptyOptions));
             }.bind(this));
             /*
              * Reset controller to Q1
@@ -126,11 +126,6 @@ export default Ember.Route.extend(RouteHistory, {
             console.log(error);
             this.send('decrementLoadingItems');
         }.bind(this));
-    },
-
-    shuffle: function (o) {
-        for (var j, x, i = o.length; i; j = Math.floor(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x);
-        return o;
     }
 
 });
