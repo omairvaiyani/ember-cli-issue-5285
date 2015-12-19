@@ -4,6 +4,7 @@ import ParseHelper from '../utils/parse-helper';
 import CurrentUser from '../mixins/current-user';
 import ImageUpload from '../mixins/image-upload';
 import ParseFile from 'ember-parse-adapter/file';
+
 /*
  * EditQuestionController for the following routes:
  * - edit.newQuestion
@@ -129,7 +130,7 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
     }.observes('stem'),
 
     imageUploadedAndQuestionSaved: function () {
-        if(this.get('uploadedImage') && this.get('savedQuestion')) {
+        if (this.get('uploadedImage') && this.get('savedQuestion')) {
             var question = this.get('savedQuestion');
             question.set('image', this.get('uploadedImage'));
             question.save().then(function () {
@@ -247,7 +248,7 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
                 question = ParseHelper.extractRawPayload(this.store, 'question', response.question);
                 this.get('questions').pushObject(question);
 
-                if(this.get('uploadingImage')) {
+                if (this.get('uploadingImage')) {
                     // See this.imageUploadedAndQuestionSaved
                     this.set('savedQuestion', question);
                     this.set('uploadingImage', false);
@@ -317,7 +318,7 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
              */
             question.save().then(function () {
 
-                if(this.get('uploadingImage')) {
+                if (this.get('uploadingImage')) {
                     // See this.imageUploadedAndQuestionSaved
                     this.set('savedQuestion', question);
                     this.set('uploadingImage', false);
@@ -340,7 +341,7 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
                 };
                 this.send('addNotification', notification);
             }.bind(this)).then(function () {
-               this.set('model', null);
+                this.set('model', null);
             }.bind(this));
         },
 

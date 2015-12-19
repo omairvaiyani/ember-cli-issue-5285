@@ -1,0 +1,29 @@
+<div class="further-reading-container">
+    {{#if canEdit}}
+        {{input type="url" placeholder="http://"
+        classNames="form-input" value=question.furtherReadingUrl}}
+    {{else}}
+    {{/if}}
+
+    {{#if question.furtherReadingMetaData}}
+        <div class="meta-data-container">
+            {{#if question.furtherReadingMetaData.image}}
+                <div class="image-container inline-top">
+                    <a {{bind-attr href=question.furtherReadingMetaData.url}} target="_blank">
+                        <img {{bind-attr src=question.furtherReadingMetaData.image}} />
+                    </a>
+                </div>
+            {{/if}}
+            <div class="info-container inline-top">
+                <p class="margin-top-0 margin-bottom-0">
+                    <a {{bind-attr href=question.furtherReadingMetaData.url}} target="_blank">
+                        <strong>
+                            {{question.furtherReadingMetaData.title}}
+                        </strong>
+                    </a>
+                </p>
+                <p class="small margin-bottom-0">{{question.furtherReadingMetaData.description}}</p>
+            </div>
+        </div>
+    {{/if}}
+</div>

@@ -101,9 +101,24 @@
         </h5>
     </div>
 </div>
+
 <div class="row margin-bottom-16">
     <div class="col-md-12">
         {{textarea placeholder="Give some feedback or an explanation for test takers."
         classNames="form-input" value=model.feedback}}
+    </div>
+</div>
+
+
+<div class="row">
+    <div class="col-md-12">
+        <h5><strong>FURTHER READING</strong>
+            <small>(OPTIONAL)</small>
+        </h5>
+    </div>
+</div>
+<div class="row margin-bottom-16">
+    <div class="col-md-12">
+        {{further-reading question=model canEdit=true parentController=this}}
     </div>
 </div>

@@ -9,7 +9,8 @@ var _ = require("underscore"),
     algoliaClient = algoliasearch('ONGKY2T0Y8', 'b13daea376f182bdee7a089ade58b656'),
     CryptoJS = require('cloud/crypto.js'), // Needed for Intercom hashing
     intercomKey = "Xhl5IzCrI-026mCaD5gqXpoO2WURA416KtCRlWsJ",
-    logger = require("cloud/logentries.js");
+    logger = require("cloud/logentries.js"),
+    cheerio = require('cloud/cheerio.js');
 
 // Algolia Search Master-Indices
 var testIndex = algoliaClient.initIndex('Test'),

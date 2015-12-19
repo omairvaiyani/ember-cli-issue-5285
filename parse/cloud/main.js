@@ -2569,7 +2569,8 @@ var _ = require("underscore"),
     algoliaClient = algoliasearch('ONGKY2T0Y8', 'b13daea376f182bdee7a089ade58b656'),
     CryptoJS = require('cloud/crypto.js'), // Needed for Intercom hashing
     intercomKey = "Xhl5IzCrI-026mCaD5gqXpoO2WURA416KtCRlWsJ",
-    logger = require("cloud/logentries.js");
+    logger = require("cloud/logentries.js"),
+    cheerio = require('cloud/cheerio.js');
 
 // Algolia Search Master-Indices
 var testIndex = algoliaClient.initIndex('Test'),
@@ -3504,7 +3505,7 @@ Parse.Cloud.define('refreshTilesForUser', function (request, response) {
                 type: "recommendedTest",
                 label: "Recommended for you",
                 title: recommendTest.title(),
-                iconUrl: APP.baseCDN +'img/features/take-quiz.png',
+                iconUrl: APP.baseCDN + 'img/features/take-quiz.png',
                 actionName: 'openTestModal',
                 actionLabel: 'Take Quiz',
                 test: recommendTest.minifyAuthorProfile()
@@ -3844,12 +3845,12 @@ Parse.Cloud.define('getAttempt', function (request, response) {
         // Author sent separate for extraction purposes
         // This code is critical for the website,
         // See ResultRoute
-        var author;
+        var author = attempt.test().author();
         if (!requestFromAuthor) {
-            author = attempt.test().author();
+            author = author.minimalProfile();
         }
 
-        response.success({attempt: attempt, author: author.minimalProfile()});
+        response.success({attempt: attempt, author: author});
     }, function (error) {
         response.error(error);
     });
@@ -4998,7 +4999,30 @@ Parse.Cloud.define('performSearch', function (request, response) {
     });
 });
 
-Parse.Cloud
+Parse.Cloud.define('fetchUrlMetaData', function (request, response) {
+    var url = request.params.url;
+
+    Parse.Cloud.httpRequest({url: url}).then(function (httpResponse) {
+        var stringHtml = httpResponse.text,
+            $ = cheerio.load(stringHtml),
+            title = $("meta[property='og:title']").attr("content"),
+            description = $("meta[name='description']").attr("content"),
+            image = $("meta[property='og:image']").attr("content");
+
+        if(!title)
+            title = $('head > title').text();
+        var metaData =  {
+            title: title,
+            description: description,
+            image: image,
+            url: url
+        };
+
+        response.success(metaData);
+    }, function (error) {
+        response.error(error);
+    });
+});
 
 
 /*

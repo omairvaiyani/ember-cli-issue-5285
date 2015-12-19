@@ -48,5 +48,12 @@
                 {{response.question.feedback}}
             </h5>
         {{/if}}
+        {{#if response.question.furtherReadingMetaData}}
+            <hr class="full-hr"/>
+            <h4 class="margin-top-24 margin-bottom-0 margin-left-16 margin-right-16">
+                Further Reading
+            </h4>
+            {{further-reading question=response.question parentController=this}}
+        {{/if}}
     </div>
 </div>

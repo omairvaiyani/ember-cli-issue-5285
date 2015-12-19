@@ -13,6 +13,7 @@ export default DS.Model.extend(ParseMixin, {
     difficulty: DS.attr('number'),
     tags: DS.attr(),
     isPublic: DS.attr('boolean'),
+    furtherReadingMetaData: DS.attr(),
 
     parseClassName: function() {
         return "Question";
