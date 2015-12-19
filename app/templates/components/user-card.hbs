@@ -62,22 +62,21 @@
 {{/if}}
 
 {{#if modalCard}}
-    <div class="author-info-card modal-type">
-        {{profile-picture user=user class="profile-image-container"}}
-        <div class="middle-section inline-block">
-            <h4 class="text-uppercase margin-top-0">{{user.name}}</h4>
-            <h4 class="small margin-bottom-0">
-                {{user.numberOfFollowers}} {{pluralize-word 'follower' user.numberOfFollowers}}
-            </h4>
-        </div>
+    <div class="author-info-card text-center modal-type">
+        <h4 class="text-uppercase margin-top-0">{{user.name}}</h4>
+        <span class="small margin-bottom-0 margin-right-8 inline-block">
+            {{user.numberOfFollowers}} {{pluralize-word 'follower' user.numberOfFollowers}}
+        </span>
         {{#if showFollow}}
-            <button class="btn btn-success btn-sm follow-button" {{action 'followUser' user}}>
-                Follow
+            <button class="btn btn-default btn-sm follow-button mini margin-top-0 margin-bottom-0"
+                {{action 'followUser' user}}>
+                <i class="fa fa-fw fa-user-plus"></i>
             </button>
         {{/if}}
         {{#if showUnfollow}}
-            <button class="btn btn-success btn-sm follow-button unfollow" {{action 'unfollowUser' user}}>
-                Unfollow
+            <button class="btn btn-default btn-sm follow-button mini unfollow  margin-top-0 margin-bottom-0"
+                {{action 'unfollowUser' user}}>
+                <i class="fa fa-fw fa-user-times"></i>
             </button>
         {{/if}}
     </div>

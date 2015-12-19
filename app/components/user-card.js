@@ -1,6 +1,8 @@
 import Ember from 'ember';
 
 export default Ember.Component.extend({
+    user: null,
+
     defaultCard: function () {
         return !this.get('cardType') || this.get('cardType') === "default";
     }.property('cardType'),
@@ -23,7 +25,7 @@ export default Ember.Component.extend({
 
     isThisTheCurrentUser: function () {
         return this.get('currentUser.id') === this.get('user.id');
-    }.property('currentUser'),
+    }.property('currentUser', 'user.id'),
 
     showMenuOverFlow: function () {
         return false;

@@ -26,4 +26,5 @@ export default Ember.Controller.extend(CurrentUser, {
             return false;
         return this.get('currentUser.following').contains(this.get('model.author.content'));
     }.property('currentUser.following.length', 'model.author.id')
+
 });

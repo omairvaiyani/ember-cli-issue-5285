@@ -151,16 +151,42 @@
         height 30px
     .middle-section
       width calc(100% - 172px)
-    .follow-button
-      width 106px
-      line-height normal
 
 .test-info-page
   .card
+    margin-top 46px
     max-width 600px
-    padding marginSecondary 0
+    padding 56px 0 marginSecondary 0
 
 .test-info-base
+  .test-author-image
+    position absolute
+    top -50px
+    left calc(50% - 50px)
+    height 100px
+    width 100px
+    border 1px solid colorSecondary
+    border-radius 50%
+    .profile-picture
+      height 98px
+      width 98px
+    img
+      margin marginPrimary
+      height calc(100% - 32px)
+    .gloss-overlay
+      position absolute
+      top 0
+      bottom 0
+      left 0
+      right 0
+      z-index 3
+      border-radius 50%
+      background: rgba(255, 255, 255, glossOverlayOpacity);
+      background: -moz-linear-gradient(-45deg, rgba(255, 255, 255, glossOverlayOpacity) 0%, rgba(255, 255, 255, glossOverlayOpacityLight) 50%, glossRightColor 50%, glossRightColor 71%, glossRightColor 100%);
+      background: -webkit-gradient(left top, right bottom, color-stop(0%, rgba(255, 255, 255, glossOverlayOpacity)), color-stop(50%, rgba(255, 255, 255, glossOverlayOpacityLight)), color-stop(50%, glossRightColor), color-stop(71%, glossRightColor), color-stop(100%, glossRightColor));
+      background: -webkit-linear-gradient(-45deg, rgba(255, 255, 255, glossOverlayOpacity) 0%, rgba(255, 255, 255, glossOverlayOpacityLight) 50%, glossRightColor 50%, glossRightColor 71%, glossRightColor 100%);
+      background: -o-linear-gradient(-45deg, rgba(255, 255, 255, glossOverlayOpacity) 0%, rgba(255, 255, 255, glossOverlayOpacityLight) 50%, glossRightColor 50%, glossRightColor 71%, glossRightColor 100%);
+      background: -ms-linear-gradient(-45deg, rgba(255, 255, 255, glossOverlayOpacity) 0%, rgba(255, 255, 255, glossOverlayOpacityLight) 50%, glossRightColor 50%, glossRightColor 71%, glossRightColor 100%);
   .modal-title
     color colorSecondary !important
     font-size 26px

@@ -1,10 +1,19 @@
 <div class="test-info-base">
 
+    <div class="test-author-image">
+        <div class="gloss-overlay"></div>
+        {{#if model.author}}
+            {{profile-picture user=model.author}}
+        {{else}}
+            <img src="img/icon-gradient-1024.png"/>
+        {{/if}}
+    </div>
+
     <div class="container-fluid">
         <section class="row">
             <article class="col-xs-12">
                 <h4 class="modal-title text-center margin-bottom-0">{{model.title}}</h4>
-                <h5 class="by-label text-center margin-top-0 margin-bottom-16">BY</h5>
+                <h5 class="by-label text-center margin-top-8 margin-bottom-8">BY</h5>
             </article>
         </section>
     </div>

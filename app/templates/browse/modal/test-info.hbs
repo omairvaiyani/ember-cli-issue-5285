@@ -1,13 +1,4 @@
 <div class="modal-body synap-modal top-image">
-    <div class="modal-image">
-        <div class="gloss-overlay"></div>
-        {{#if model.author}}
-            {{profile-picture user=model.author}}
-        {{else}}
-            <img src="img/icon-gradient-1024.png"/>
-        {{/if}}
-    </div>
-
     {{partial 'test/test-info-base'}}
 
     {{#if showSendToMobile}}
