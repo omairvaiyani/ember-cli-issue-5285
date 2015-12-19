@@ -35,7 +35,19 @@ export default Ember.Controller.extend(CurrentUser, SortBy, DeleteWithUndo, {
 
     isEditMode: false,
 
-    friendsShouldShowFollowers: true,
+    friendsListTab: "followers",
+
+    friendsShouldShowFollowers: function () {
+        return this.get('friendsListTab') === "followers";
+    }.property('friendsListTab'),
+
+    friendsShouldShowFollowing: function () {
+        return this.get('friendsListTab') === "following";
+    }.property('friendsListTab'),
+
+    friendsShouldShowSearch: function () {
+        return this.get('friendsListTab') === "search";
+    }.property('friendsListTab'),
 
     /**
      * @Property
@@ -351,12 +363,8 @@ export default Ember.Controller.extend(CurrentUser, SortBy, DeleteWithUndo, {
 
     actions: {
 
-        showFollowersInFriends: function () {
-            this.set('friendsShouldShowFollowers', true);
-        },
-
-        showFollowingInFriends: function () {
-            this.set('friendsShouldShowFollowers', false);
+        switchTabInFriendsList: function (tab) {
+            this.set('friendsListTab', tab);
         },
 
         enableEditMode: function () {

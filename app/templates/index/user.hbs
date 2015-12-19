@@ -94,7 +94,7 @@
         </article>
 
 
-        <article class="col-xs-12 col-sm-4">
+        <article class="col-xs-12 col-sm-4 col-fix-right">
             <div class="panel panel-default card">
 
                 <div class="panel-heading">
@@ -102,31 +102,62 @@
                         Friends
                     </h4>
                 </div>
-                <div class="panel-body">
 
-                    <ul class="nav nav-tabs margin-bottom-12 no-background">
-                        <li class="margin-right-16" {{action
-                        "showFollowersInFriends"}}>Followers</li>
-                        <li class="margin-right-16" {{action
-                        "showFollowingInFriends"}}>Following</li>
+                <div class="panel-body friends-list">
+                    <ul class="nav nav-tabs margin-bottom-16 no-background">
+                        <li {{bind-attr class="friendsShouldShowFollowers:active"}}
+                            {{action "switchTabInFriendsList" "followers"}}>
+                            <a href="javascript:void(0)"
+                                {{bind-attr class="friendsShouldShowFollowers:active"}}>
+                                Followers
+                            </a>
+                        </li>
+
+                        <li {{bind-attr class="friendsShouldShowFollowing:active"}}
+                            {{action "switchTabInFriendsList" "following"}}>
+                            <a href="javascript:void(0)"
+                                {{bind-attr class="friendsShouldShowFollowing:active"}}>
+                                Following
+                            </a>
+                        </li>
+
+                        <li {{bind-attr class="friendsShouldShowSearch:active"}}
+                            {{action "switchTabInFriendsList" "search"}}>
+                            <a href="javascript:void(0)"
+                                {{bind-attr class="friendsShouldShowSearch:active"}}>
+                                Find
+                            </a>
+                        </li>
                     </ul>
-                    <br/>
-                    {{#if friendsShouldShowFollowers}}
-                        {{#each model.followers as |follower|}}
-                            {{profile-picture user=follower height=50 width=50 border=0 class="inline-top margin-right-8
-                    margin-bottom-12"}}
-                        {{/each}}
 
-                    {{else}}
-                        {{#each model.following as |following|}}
-                            {{profile-picture user=following height=50 width=50 border=0 class="inline-top margin-right-8
-                    margin-bottom-12"}}
+                    {{#if friendsShouldShowFollowers}}
+
+                        {{#each model.followers as |follower|}}
+                            {{profile-picture user=follower height=50 width=50 border=0
+                            class="inline-top margin-right-8 margin-bottom-12"}}
                         {{/each}}
 
                     {{/if}}
+
+                    {{#if friendsShouldShowFollowing}}
+
+                        {{#each model.following as |following|}}
+                            {{profile-picture user=following height=50 width=50 border=0
+                            class="inline-top margin-right-8 margin-bottom-12"}}
+                        {{/each}}
+
+                    {{/if}}
+
+                    {{#if friendsShouldShowSearch}}
+
+                        <p>Search Function Not Built Yet</p>
+
+                    {{/if}}
                 </div>
+
             </div>
         </article>
+
 
     </section>
 {{/if}}
