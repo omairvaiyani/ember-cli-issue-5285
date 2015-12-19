@@ -356,6 +356,60 @@ textarea.form-input
       font-size 12px
       margin-bottom 0
 
+.main-search
+  position relative
+  .form-control
+    background-color darken(colorPrimary-300, 10)
+    width 100px
+    border-radius: 4px;
+    background-image none
+    padding 8px 24px 8px 8px
+    color colorPrimary-600 !important
+    transition width 0.2s
+    &:hover
+      background-color colorPrimary-300
+  span
+    position: absolute;
+    right: marginPrimary;
+    top: 15px;
+    font-size: 18px;
+    cursor pointer
+  &.is-focused
+    .form-control
+      width 300px
+      background-color white
+      color black !important
+    span
+      color black
+  .search-popdown
+    text-align left
+    background: #edeff0;
+    color black
+    border-radius: 3px;
+    border: 1px solid #d6dadc;
+    border-bottom-color: #c4c9cc;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, .15);
+    overflow: hidden;
+    overflow-y scroll
+    position: absolute;
+    left: 2px;
+    width: calc(100% - 2px);
+    min-height 115px
+    max-height 640px
+    z-index: 20;
+    -webkit-transform: translate3d(0, 0, 0);
+    transition width 0.2s
+    &.dual
+      width 600px
+    &.inline-results
+      position relative
+      margin-left 0
+      border none
+      box-shadow none
+      background none
+    h5
+      margin-bottom 0
+
 .memory-strength
   position relative
   text-align center

@@ -1,10 +1,11 @@
 {{!-- input field --}}
 {{input
-    type="text"
-    value=searchTerm
-    focus-in='navbarSearchFocused'
-    focus-out='navbarSearchBlurred'
-    placeholder=searchPlaceholder}}
+type="text"
+class="form-input"
+value=searchTerm
+focus-in='navbarSearchFocused'
+focus-out='navbarSearchBlurred'
+placeholder=searchPlaceholder}}
 {{!-- /input field --}}
 
 {{#if navbarSearchIsFocused}}
@@ -16,9 +17,9 @@
 {{/if}}
 
 {{#if navbarSearchIsFocused}}
-    <div {{bind-attr class=":search-popdown navbarSearchDual:dual"}}>
-        <div class="container-fluid">
-            {{#unless navbarSearchTerm.length}}
+    <div {{bind-attr class=":search-popdown navbarSearchDual:dual inlineResults"}}>
+        <div {{bind-attr class="inlineResults::container-fluid"}}>
+            {{#unless searchTerm.length}}
                 <p class="margin-top-8">Type to search...</p>
             {{else}}
                 {{#if navbarSearchFetching}}
@@ -31,27 +32,38 @@
             {{/unless}}
 
             {{#if navbarSearchTotalResults}}
-                <section class="row margin-top-8 margin-bottom-16">
+                <section {{bind-attr class=":row inlineResults::margin-top-8 margin-bottom-16"}}>
                     {{#if navbarSearchResults.tests.length}}
+
                         <article {{bind-attr class="navbarSearchResults.users.length:col-xs-6:col-xs-12"}}>
-                            <h5>TESTS</h5>
+                            {{#unless inlineResults}}
+                                <h5>TESTS</h5>
+                            {{/unless}}
+
                             {{#each navbarSearchResults.tests as |test|}}
                                 {{test-card test=test parentController=this cardType="miniList"}}
                             {{/each}}
                         </article>
+
                     {{/if}}
                     {{#if navbarSearchResults.users.length}}
+
                         <article {{bind-attr class="navbarSearchResults.tests.length:col-xs-6:col-xs-12
                                     navbarSearchResults.tests.length:col-fix-right"}}>
-                            <h5>USERS</h5>
+                            {{#unless inlineResults}}
+                                <h5>USERS</h5>
+                            {{/unless}}
+
                             {{#each navbarSearchResults.users as |user|}}
                                 {{#link-to 'index.user' user.slug tagName="div"}}
                                     {{user-card user=user parentController=this cardType="miniList"}}
                                 {{/link-to}}
                             {{/each}}
                         </article>
+
                     {{/if}}
                 </section>
+
                 <section class="row">
                     {{#if navbarSearchMoreTestsToShow}}
                         <article {{bind-attr class="navbarSearchResults.users.length:col-xs-6:col-xs-12"}}>
@@ -61,6 +73,7 @@
                         </article>
                     {{/if}}
                 </section>
+
             {{/if}}
         </div>
     </div>

@@ -91,10 +91,7 @@
                 </div>
 
             </div>
-        </article>
 
-
-        <article class="col-xs-12 col-sm-4 col-fix-right">
             <div class="panel panel-default card">
 
                 <div class="panel-heading">
@@ -109,7 +106,7 @@
                             {{action "switchTabInFriendsList" "followers"}}>
                             <a href="javascript:void(0)"
                                 {{bind-attr class="friendsShouldShowFollowers:active"}}>
-                                Followers
+                                Followers ({{model.numberOfFollowers}})
                             </a>
                         </li>
 
@@ -117,7 +114,7 @@
                             {{action "switchTabInFriendsList" "following"}}>
                             <a href="javascript:void(0)"
                                 {{bind-attr class="friendsShouldShowFollowing:active"}}>
-                                Following
+                                Following ({{model.numberFollowing}})
                             </a>
                         </li>
 
@@ -150,14 +147,14 @@
 
                     {{#if friendsShouldShowSearch}}
 
-                        <p>Search Function Not Built Yet</p>
+                        {{main-search usersOnly=true parentController=this inlineResults=true
+                        searchPlaceholder="Search for Friends..."}}
 
                     {{/if}}
                 </div>
 
             </div>
         </article>
-
 
     </section>
 {{/if}}

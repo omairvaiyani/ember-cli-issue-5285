@@ -9,6 +9,13 @@ export default Ember.Component.extend({
     }.property(),
 
     searchTerm: null,
+
+    inlineResults: false,
+
+    usersOnly: false,
+
+    testsOnly: false,
+
     navbarSearchResults: {tests: new Ember.A(), users: new Ember.A()},
 
     performNavbarSearch: function () {
@@ -27,31 +34,53 @@ export default Ember.Component.extend({
                     hitsPerPage: 5
                 }
             };
-        queries.push(testQuery);
-        queries.push(userQuery);
+        if (!this.get('usersOnly'))
+            queries.push(testQuery);
+        if (!this.get('testsOnly'))
+            queries.push(userQuery);
         ParseHelper.cloudFunction(this.get('parentController'), 'performSearch', {multipleQueries: queries})
             .then(function (response) {
-                if(!this)
+                if (!this)
                     return;
-                var testResponse = response.results[0],
-                    userResponse = response.results[1],
-                    tests = ParseHelper.extractRawPayload(this.get('parentController').store, 'test', testResponse.hits),
-                    users = ParseHelper.extractRawPayload(this.get('parentController').store, 'parse-user', userResponse.hits);
 
+                var testResponse,
+                    userResponse,
+                    tests,
+                    users;
+
+                if (this.get('usersOnly'))
+                    userResponse = response.results[0];
+                else if (this.get('testsOnly'))
+                    testResponse = response.results[0];
+                else {
+                    testResponse = response.results[0];
+                    userResponse = response.results[1];
+                }
+
+                if (testResponse)
+                    tests = ParseHelper.extractRawPayload(this.get('parentController').store, 'test', testResponse.hits);
+
+                if (userResponse)
+                    users = ParseHelper.extractRawPayload(this.get('parentController').store, 'parse-user', userResponse.hits);
                 // Algolia cache's results which should be great BUT
                 // Ember-Data removes the .id from payloads when extracting
                 // This causes an error on 'response.hits' cache as their
                 // 'id' has been removed.
                 this.get('searchClient').clearCache();
 
-                this.set('navbarSearchTotalTestResults', testResponse.nbHits);
-                this.set('navbarSearchTotalUserResults', userResponse.nbHits);
+                if (testResponse)
+                    this.set('navbarSearchTotalTestResults', testResponse.nbHits);
+
+                if (userResponse)
+                    this.set('navbarSearchTotalUserResults', userResponse.nbHits);
 
                 this.get('navbarSearchResults.tests').clear();
-                this.get('navbarSearchResults.tests').addObjects(tests);
+                if (tests)
+                    this.get('navbarSearchResults.tests').addObjects(tests);
 
                 this.get('navbarSearchResults.users').clear();
-                this.get('navbarSearchResults.users').addObjects(users);
+                if (users)
+                    this.get('navbarSearchResults.users').addObjects(users);
 
                 this.set('navbarSearchFetching', false);
             }.bind(this));
