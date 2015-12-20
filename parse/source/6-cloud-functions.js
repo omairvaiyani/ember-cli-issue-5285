@@ -375,7 +375,8 @@ Parse.Cloud.define('refreshTilesForUser', function (request, response) {
     _.each(tilesToFetch, function (tileToFetch) {
         switch (tileToFetch) {
             case "spacedRepetition":
-                promises.push(srLatestTest = user.fetchSrLatestAttempt());
+                if(!user.srLatestTestDismissed() && !user.srLatestTestIsTaken())
+                    promises.push(srLatestTest = user.fetchSrLatestAttempt());
                 break;
             case "recommendedTest":
                 promises.push(recommendTest = user.getRecommendedTest());

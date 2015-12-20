@@ -751,6 +751,20 @@ Parse.User.prototype.srLatestTest = function () {
     return this.get('srLatestTest');
 };
 /**
+ * @Property srLatestTestDismissed
+ * @returns {Test}
+ */
+Parse.User.prototype.srLatestTestDismissed = function () {
+    return this.get('srLatestTestDismissed');
+};
+/**
+ * @Property srLatestTestIsTaken
+ * @returns {Test}
+ */
+Parse.User.prototype.srLatestTestIsTaken = function () {
+    return this.get('srLatestTestIsTaken');
+};
+/**
  * @Property srAllTests
  * @returns {Parse.Relation<Test>}
  */
@@ -3534,7 +3548,8 @@ Parse.Cloud.define('refreshTilesForUser', function (request, response) {
     _.each(tilesToFetch, function (tileToFetch) {
         switch (tileToFetch) {
             case "spacedRepetition":
-                promises.push(srLatestTest = user.fetchSrLatestAttempt());
+                if(!user.srLatestTestDismissed() && !user.srLatestTestIsTaken())
+                    promises.push(srLatestTest = user.fetchSrLatestAttempt());
                 break;
             case "recommendedTest":
                 promises.push(recommendTest = user.getRecommendedTest());
