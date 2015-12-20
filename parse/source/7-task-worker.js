@@ -57,7 +57,7 @@ var WorkActions = {
  * @returns {WorkTask}
  */
 function srCycleTask(task) {
-    logger.log("Spaced Repetition Cycle","SR Cycle Begun");
+    logger.log("Spaced Repetition Cycle", "SR Cycle Begun");
 
     Parse.Cloud.useMasterKey();
     var initialPromises = [],
@@ -290,17 +290,21 @@ function updateTestStatsAfterAttemptTask(task, params, objects) {
         return Parse.Promise.when(author.fetch(), attemptsQuery.find());
     }).then(function (author, previousAttempts) {
         // Update Author
-        if(author.id !== user.id)
+        if (author.id !== user.id)
             author.increment('numberOfAttemptsByCommunity');
 
         // Update Author and User for Unique Attempt
         // Normal attempt count updated more immediately in
         // the first cloud function for attempt generation
         var isUnique = previousAttempts[0] && previousAttempts[0].id === attempt.id;
-        if(isUnique) {
-            if(author.id !== user.id)
+        if (isUnique) {
+            if (author.id !== user.id)
                 author.increment('numberOfUniqueAttemptsByCommunity');
             user.increment('numberOfUniqueAttempts');
+        }
+        if (user.get('averageScore') > 0 || attempt.score() > 0) {
+            user.set('averageScore', Math.round((user.get('averageScore') + attempt.score()) /
+                user.get('numberOfAttempts')));
         }
 
         return Parse.Promise.when(author.save(null, {useMasterKey: true}), user.save(null, {useMasterKey: true}));
