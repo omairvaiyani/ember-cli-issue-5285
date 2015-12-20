@@ -25,16 +25,6 @@ export default Ember.Controller.extend(CurrentUser, SortBy, DeleteWithUndo, {
         }
     }.property('isCurrentUser', 'currentUser.following.length'),
 
-    coverImageStyle: function () {
-        var coverImageURL = this.get('coverImageURL'),
-            coverImageOffsetY = this.get('coverImageOffsetY');
-        if (!coverImageOffsetY)
-            coverImageOffsetY = 0;
-        return "background-image:url(" + coverImageURL + ");background-position:center " + coverImageOffsetY + "%;";
-    }.property('coverImageURL.length', 'coverImageOffsetY'),
-
-    isEditMode: false,
-
     friendsListTab: "followers",
 
     friendsShouldShowFollowers: function () {
@@ -149,7 +139,7 @@ export default Ember.Controller.extend(CurrentUser, SortBy, DeleteWithUndo, {
         this.get('myTestsList').clear();
         this.get('myTestsList').addObjects(sortedOrderedAndFilteredList);
 
-        window.scrollTo(0,0);
+        window.scrollTo(0, 0);
     },
 
     /**
@@ -334,240 +324,40 @@ export default Ember.Controller.extend(CurrentUser, SortBy, DeleteWithUndo, {
             }.bind(this));
     }.observes('fbid'),
 
-    /*
-     * Edit mode
-     */
-    temporaryChanges: {
-        name: null,
-        profilePicture: null,
-        profileImageURL: null,
-        coverPicture: null,
-        coverImageURL: null,
-        coverImageStyle: null
-    },
-
-    /*
-     * Used to prevent transitions during
-     * Edit mode if dirty.
-     */
-    isEditModeDirtied: function () {
-        var temporaryChanges = this.get('temporaryChanges');
-        if (temporaryChanges.name !== this.get('name')) {
-            return true;
-        } else if (temporaryChanges.profilePicture || temporaryChanges.coverPicture) {
-            return true;
-        } else {
-            return false;
-        }
-    }.property('temporaryChanges.name.length', 'temporaryChanges.profilePicture', 'temporaryChanges.coverPicture'),
 
     actions: {
+
+        removeImage: function () {
+            this.set('model.profilePicture', undefined);
+
+            this.send('incrementLoadingItems');
+            this.get('model').save().then(function () {
+
+            }, function (error) {
+                console.dir(error);
+            }).then(function () {
+                this.send('decrementLoadingItems');
+            }.bind(this));
+        },
+
+        saveUploadedImage: function (imageData) {
+            this.set('model.profilePicture', imageData);
+
+            this.send('incrementLoadingItems');
+            this.get('model').save().then(function () {
+
+            }, function (error) {
+                console.dir(error);
+            }).then(function () {
+                this.send('decrementLoadingItems');
+            }.bind(this));
+        },
 
         switchTabInFriendsList: function (tab) {
             this.set('friendsListTab', tab);
         },
 
-        enableEditMode: function () {
-            this.set('temporaryChanges.name', this.get('name'));
-            this.set('isEditMode', true);
-        },
-
-        cancelEditMode: function () {
-            this.set('temporaryChanges.name', '');
-            this.set('temporaryChanges.profileImage', null);
-            this.set('temporaryChanges.profileImageURL', null);
-            this.set('temporaryChanges.coverPicture', null);
-            this.set('temporaryChanges.coverImageURL', null);
-            this.set('temporaryChanges.coverImageStyle', null);
-            this.set('isEditMode', false);
-        },
-
-        saveEditModeChanges: function () {
-            if (this.get('temporaryChanges.name.length'))
-                this.set('model.name', this.get('temporaryChanges.name'));
-            this.send('incrementLoadingItems');
-            if (this.get('temporaryChanges.profileImageURL.length')) {
-                var profilePicture = new this.store.adapterFor('parse-user').File(this.get('temporaryChanges.profilePicture').name(),
-                    this.get('temporaryChanges.profilePicture').url());
-                this.set('profilePicture', profilePicture);
-            }
-            if (this.get('temporaryChanges.coverImageURL.length')) {
-                var coverPicture = new this.store.adapterFor('parse-user').File(this.get('temporaryChanges.coverPicture').name(),
-                    this.get('temporaryChanges.coverPicture').url());
-                this.set('coverImage', coverPicture);
-            }
-            this.get('model').save().then(function () {
-                this.send('decrementLoadingItems');
-            }.bind(this));
-            this.send('cancelEditMode');
-        },
-
-        toggleEditProfileImageDropdown: function () {
-            this.toggleProperty('shouldShowEditProfileImageDropdown');
-        },
-
-        toggleEditCoverImageDropdown: function () {
-            this.toggleProperty('shouldShowEditCoverImageDropdown');
-        },
-
-        uploadProfileImagePhoto: function () {
-            this.send('incrementLoadingItems');
-            var file = document.getElementById("profileImageInput").files[0];
-            var parseFile = new Parse.File('profile-image.jpg', file);
-            return parseFile.save().then(function (image) {
-                this.send('decrementLoadingItems');
-                this.set('temporaryChanges.profilePicture', image);
-                this.set('temporaryChanges.profileImageURL', image.url());
-                this.set('shouldShowEditProfileImageDropdown', false);
-            }.bind(this));
-        },
-
-        uploadCoverImagePhoto: function () {
-            this.send('incrementLoadingItems');
-            var file = document.getElementById("coverImageInput").files[0];
-            var parseFile = new Parse.File('cover-image.jpg', file);
-            return parseFile.save().then(function (image) {
-                this.send('decrementLoadingItems');
-                this.set('temporaryChanges.coverPicture', image);
-                this.set('temporaryChanges.coverImageURL', image.url());
-                this.set('temporaryChanges.coverImageStyle', "background-image:url(" + this.get('temporaryChanges.coverImageURL') + ");");
-                this.set('shouldShowEditCoverImageDropdown', false);
-            }.bind(this));
-        },
-
-        removeProfileImage: function () {
-            this.set('profilePicture', null);
-            this.set('temporaryChanges.profilePicture', null);
-            this.set('temporaryChanges.profileImageURL', null);
-        },
-
-        removeCoverImage: function () {
-            this.set('coverImage', null);
-            this.set('temporaryChanges.coverImage', null);
-            this.set('temporaryChanges.coverImageURL', null);
-        },
-
-        switchList: function (list) {
-            switch (list) {
-                case "recentActivity":
-                    this.set('isMainListRecentActivity', true);
-                    this.set('isMainListTests', false);
-                    break;
-                case "tests":
-                    this.set('isMainListRecentActivity', false);
-                    this.set('isMainListTests', true);
-                    break;
-            }
-        },
-
-        educationalInstitutionSelected: function (object) {
-            if (!object) {
-                this.set('newEducationCohort.institution', undefined);
-                return;
-            }
-            var facebookId;
-            if (object.recordType === "facebook")
-                facebookId = object.id;
-            else
-                facebookId = object.facebookId;
-            ParseHelper.cloudFunction(this,'createOrUpdateInstitution', {
-                name: object.name,
-                facebookId: facebookId,
-                type: object.category // from facebook // TODO need non-facebook input
-            }).then(function (result) {
-                var institution = ParseHelper.extractRawPayload(this.store, 'institution', result);
-                this.set('newEducationCohort.institution', institution);
-            }.bind(this), function (error) {
-                console.dir(error);
-            });
-        },
-
-        studyFieldSelected: function (object) {
-            if (!object) {
-                this.set('newEducationCohort.institution', undefined);
-                return;
-            }
-
-            var facebookId;
-            if (object.recordType === "facebook")
-                facebookId = object.id;
-            else
-                facebookId = object.facebookId;
-            ParseHelper.cloudFunction(this, 'createOrUpdateStudyField', {
-                name: object.name,
-                facebookId: facebookId
-            }).then(function (result) {
-                var studyField = ParseHelper.extractRawPayload(this.store, 'study-field', result);
-                this.set('newEducationCohort.studyField', studyField);
-            }.bind(this), function (error) {
-                console.dir(error);
-            });
-        },
-
-        saveEducationCohort: function (callback) {
-            var promise;
-            if (this.get('studyingAtUniversity')) {
-                promise = ParseHelper.cloudFunction(this, 'createOrGetEducationCohort', {
-                    educationalInstitutionId: this.get('newEducationCohort.institution.id'),
-                    studyFieldId: this.get('newEducationCohort.studyField.id'),
-                    currentYear: this.get('newEducationCohort.currentYear'),
-                    graduationYear: this.get('newEducationCohort.graduationYear')
-                });
-            } else {
-                promise = ParseHelper.cloudFunction(this,'createOrGetEducationCohort', {
-                    educationalInstitutionId: this.get('newEducationCohort.institution.id')
-                });
-            }
-            callback(promise);
-
-            promise.then(function (result) {
-                this.send('closeModal');
-                var educationCohort = ParseHelper.extractRawPayload(this.store, 'education-cohort', result);
-                this.set('educationCohort', educationCohort);
-                this.get('model').save();
-            }.bind(this), function (error) {
-                console.dir(error);
-            });
-        },
-
-        clearAutocompleteList: function () {
-            this.get('autocompleteInstitutionNames').clear();
-            this.get('autocompleteCourseNames').clear();
-        },
-
-        followAllFacebookFriends: function () {
-            this.send('bulkFollow', this.get('facebookFriendsOnMyCQs'));
-        },
-
-        followAllSuggestedFollowing: function (callback) {
-            this.send('bulkFollow', this.get('suggestedFollowingAll'), callback);
-        },
-
-        /*
-         * First time login actions
-         */
-
-        welcomePersonaliseNow: function (isPositive) {
-            if (isPositive) {
-                this.send('enableEditMode');
-                this.set('hasBegunEditingProfile', true);
-            }
-        },
-
-        welcomeFindFacebookFriends: function (isPositive) {
-            if (isPositive) {
-                this.send('openModal', 'user/modal/facebook-friends', 'user');
-            }
-
-        },
-
-        createFirstTest: function (isPositive) {
-            if (isPositive) {
-                this.transitionTo('create');
-            }
-        },
-
-
+        // Check for deprecation
         deleteTest: function (test) {
             this.send('deleteObject', {
                 array: this.get('currentUser.createdTests'), object: test,

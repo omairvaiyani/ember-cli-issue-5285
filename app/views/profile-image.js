@@ -20,5 +20,5 @@ export default Ember.View.extend({
             style += "width:" + this.get('width') + "px;";
 
         return style;
-    }.property('user')
+    }.property('user.profileImageURL.length')
 });

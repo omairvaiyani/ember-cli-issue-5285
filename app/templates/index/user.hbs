@@ -4,12 +4,21 @@
             <div class="card">
                 <section class="row">
                     <article class="col-xs-5">
-                        {{profile-picture user=model height=80 width=80 class="inline-top margin-right-8"}}
-                        <div class="inline-top">
-                            <h3 class="no-margin">{{model.name}}</h3>
+                        <div class="main-profile-picture-container inline-block">
+                            {{#if isCurrentUser}}
+                                {{editable-image imageUrl=model.profileImageURL parentController=this
+                                previewClass="profile-picture" image=model.profilePicture
+                                saveAfterEdit=true}}
+                            {{else}}
+                                {{profile-picture user=model height=120 width=120 class="inline-top margin-right-8"}}
+                            {{/if}}
 
-                            <p>{{model.level.title}}</p>
-                            {{level-progress points=model.points level=model.level}}
+                            <div class="inline-top">
+                                <h3 class="no-margin">{{model.name}}</h3>
+
+                                <p>{{model.level.title}}</p>
+                                {{level-progress points=model.points level=model.level}}
+                            </div>
                         </div>
                     </article>
 

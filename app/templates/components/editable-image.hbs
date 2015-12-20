@@ -1,0 +1,18 @@
+<input type="file" {{bind-attr id=inputId}} class="hidden" {{action "previewImage" on="change"}}/>
+<img {{bind-attr src=imageFile.url id=imageHolderId}} class="hidden"/>
+
+<label {{bind-attr style=imageFile.style class=previewClasses for=editDropDownId}}></label>
+
+<div class="dropdown">
+    <button class="btn btn-default dropdown-toggle" type="button"
+            data-toggle="dropdown" aria-haspopup="true" aria-expanded="true"
+        {{bind-attr id=editDropDownId}}>
+        <i class="fa fa-fw fa-camera edit-icon"></i>
+    </button>
+    <ul class="dropdown-menu">
+        <li><a href="javascript:void(0)" {{action "triggleFileInput"}}>Upload Image</a></li>
+        {{#if showRemoveImage}}
+            <li><a href="javascript:void(0)" {{action "removeImage"}}>Remove</a></li>
+        {{/if}}
+    </ul>
+</div>

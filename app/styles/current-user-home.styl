@@ -1,3 +1,22 @@
+.friends-list
+  .nav
+    margin-top -(marginSecondary)
+    li
+      a
+        color colorText !important
+        padding-left 0
+        padding-right 0
+        margin-right marginPrimary
+      &.active
+        a
+          color black !important
+          border-bottom-color colorSecondary !important
+
+.main-profile-picture-container
+  .profile-picture
+    width 120px
+    height 120px
+
 .tiles-container
   position relative
   width 100%
@@ -64,18 +83,3 @@
         background  lighten(#475059, 2)
       .action-link
         color lighten(#475059, 50)
-
-
-.friends-list
-  .nav
-    margin-top -(marginSecondary)
-    li
-      a
-        color colorText !important
-        padding-left 0
-        padding-right 0
-        margin-right marginPrimary
-      &.active
-        a
-          color black !important
-          border-bottom-color colorSecondary !important

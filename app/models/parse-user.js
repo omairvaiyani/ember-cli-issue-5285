@@ -47,7 +47,7 @@ var ParseUser = ParseUserModel.extend(ParseMixin, {
             return this.get('profilePicture.secureUrl') ? this.get('profilePicture.secureUrl') :
                 this.get('profilePicture.url');
         } else if (this.get('fbid')) {
-            return "https://graph.facebook.com/"+this.get('fbid')+"/picture?height=250&type=square";
+            return "https://graph.facebook.com/" + this.get('fbid') + "/picture?height=250&type=square";
         } else {
             return "https://d3uzzgmigql815.cloudfront.net/img/synap-silhouette.png";
         }
@@ -159,9 +159,9 @@ var ParseUser = ParseUserModel.extend(ParseMixin, {
     myTests: function () {
         var myTests = new Ember.A();
 
-        if(this.get('createdTests'))
+        if (this.get('createdTests'))
             myTests.pushObjects(this.get('createdTests'));
-        if(this.get('savedTests'))
+        if (this.get('savedTests'))
             myTests.pushObjects(this.get('savedTests'));
 
         return myTests.sortBy('title');
@@ -183,23 +183,23 @@ ParseUserModel.reopenClass({
     },
 
     /*loginDeprecated: function (store, data) {
-        if (Ember.isEmpty(this.typeKey)) {
-            throw new Error('Parse login must be called on a model fetched via store.modelFor');
-        }
-        var model = this;
-        var adapter = store.adapterFor(model);
-        var serializer = store.serializerFor(model);
-        return adapter.ajax(adapter.buildURL("login"), "GET", {data: data}).then(
-            function (response) {
-                serializer.normalize(model, response);
-                var record = store.push(model, response);
-                return record;
-            },
-            function (response) {
-                return Ember.RSVP.reject(response.responseJSON);
-            }
-        );
-    },*/
+     if (Ember.isEmpty(this.typeKey)) {
+     throw new Error('Parse login must be called on a model fetched via store.modelFor');
+     }
+     var model = this;
+     var adapter = store.adapterFor(model);
+     var serializer = store.serializerFor(model);
+     return adapter.ajax(adapter.buildURL("login"), "GET", {data: data}).then(
+     function (response) {
+     serializer.normalize(model, response);
+     var record = store.push(model, response);
+     return record;
+     },
+     function (response) {
+     return Ember.RSVP.reject(response.responseJSON);
+     }
+     );
+     },*/
 
     /*
      * Modified by Omair:
