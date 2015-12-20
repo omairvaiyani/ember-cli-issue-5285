@@ -11,8 +11,6 @@ export default Ember.Controller.extend(CurrentUser, ProgressCharts, {
      */
     fetchRecentAttempts: function () {
         var user = this.get('currentUser');
-        if (user.get('testAttempts.length'))
-            return console.log("Test attempts already fetched for user.");
 
         ParseHelper.cloudFunction(this, 'loadRecentAttemptsForUser', {}).then(function (result) {
             // Load minified author data before attempts
@@ -22,7 +20,9 @@ export default Ember.Controller.extend(CurrentUser, ProgressCharts, {
             user.get('testAttempts').addObjects(recentAttempts);
         }.bind(this), function (error) {
             console.dir(error);
-        });
+        }).then(function () {
+            this.set('alreadyFetchRecentAttempts', true);
+        }.bind(this));
     }.on('init'),
 
     /**
@@ -32,8 +32,6 @@ export default Ember.Controller.extend(CurrentUser, ProgressCharts, {
      */
     fetchRecentSrAttempts: function () {
         var user = this.get('currentUser');
-        if (user.get('srCompletedAttempts.length'))
-            return console.log("Test attempts already fetched for user.");
 
         ParseHelper.cloudFunction(this, 'loadRecentSrAttemptsForUser', {}).then(function (result) {
             // Attempts include test

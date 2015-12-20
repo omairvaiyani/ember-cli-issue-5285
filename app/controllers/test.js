@@ -282,7 +282,12 @@ export default Ember.Controller.extend(CurrentUser, {
             }.bind(this)).then(function (result) {
                 // Update local attempt record
                 var attempt = ParseHelper.extractRawPayload(this.store, 'attempt', result.attempt);
-                this.get('currentUser.testAttempts').pushObject(attempt);
+
+                if (attempt.get('isSpacedRepetition'))
+                    this.get('currentUser.srCompletedAttempts').insertAt(0, attempt);
+                else
+                    this.get('currentUser.testAttempts').pushObject(attempt);
+
                 // Update current-user record
                 ParseHelper.extractRawPayload(this.store, 'parse-user', result.user);
             }.bind(this), function (error) {
