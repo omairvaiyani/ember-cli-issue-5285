@@ -61,6 +61,7 @@ export default Ember.Route.extend(RouteHistory, {
             }
             transition.send('addRouteToHistory', routePath, routeLabel, transition, 'user_slug');
         }
+        window.scrollTo(0,0);
     },
 
 
