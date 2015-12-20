@@ -170,6 +170,7 @@ export default Ember.Component.extend({
         },
 
         fetchMemoryStrengthData: function () {
+            return;
             this.get('parentController').send('fetchMemoryStrengthDataForTest', this.get('test'));
         },
 
