@@ -3435,13 +3435,12 @@ Parse.Cloud.define('loadFollowersAndFollowing', function (request, response) {
  */
 Parse.Cloud.define('loadRecentAttemptsForUser', function (request, response) {
     Parse.Cloud.useMasterKey();
-    var user = request.user,
-        promises = [];
+    var user = request.user;
 
     if (!user)
         return response.error("You must be logged in.");
 
-    var recentTestAttemptsQuery = user.latestTestAttempts().query();
+    var recentTestAttemptsQuery = user.testAttempts().query();
     recentTestAttemptsQuery.include('test.author');
     recentTestAttemptsQuery.limit(20);
     recentTestAttemptsQuery.descending("createdAt");
@@ -3464,6 +3463,44 @@ Parse.Cloud.define('loadRecentAttemptsForUser', function (request, response) {
         var result = {
             recentAttempts: attemptsToInclude,
             authors: minifiedAuthors
+        };
+        response.success(result);
+    }, function (error) {
+        response.error(error);
+    });
+
+});
+
+/**
+ * @CloudFunction Load Recent Sr Attempts for User
+ *
+ * Used for Progress page
+ * - Recent srCompletedAttempts attempts
+ */
+Parse.Cloud.define('loadRecentSrAttemptsForUser', function (request, response) {
+    Parse.Cloud.useMasterKey();
+    var user = request.user;
+
+    if (!user)
+        return response.error("You must be logged in.");
+
+    var srAttemptsQuery = user.srCompletedAttempts().query();
+    srAttemptsQuery.include('test');
+    srAttemptsQuery.limit(20);
+    srAttemptsQuery.descending("createdAt");
+
+    srAttemptsQuery.find().then(function (srCompletedAttempts) {
+        var attemptsToInclude = [];
+
+        _.each(srCompletedAttempts, function (attempt) {
+            // Only include attempts where test AND author exist
+            if (attempt.test()) {
+                attemptsToInclude.push(attempt);
+            }
+        });
+
+        var result = {
+            srCompletedAttempts: srCompletedAttempts
         };
         response.success(result);
     }, function (error) {

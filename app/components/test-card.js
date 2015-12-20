@@ -123,6 +123,21 @@ export default Ember.Component.extend({
         return "background-image:url(" + this.get('test.author.profileImageURL') + ");";
     }.property('test.author.profileImageURL.length'),
 
+    testActionLabel: function () {
+        if(this.get('latestAttempt'))
+            return "Retry Quiz";
+        else
+            return "Take Quiz";
+    }.property('latestAttempt'),
+
+    latestAttempt: function () {
+        if(this.get('currentUser.testAttempts')) {
+            var attempts = this.get('currentUser.testAttempts').filterBy("test", this.get('test'));
+            if(attempts)
+                return attempts.objectAt(0);
+        }
+    }.property('currentUser.testAttempts.length'),
+
     actions: {
         deleteTest: function () {
             this.get('parentController').send('deleteTest', this.get('test'));

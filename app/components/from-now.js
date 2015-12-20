@@ -1,6 +1,12 @@
 import Ember from 'ember';
 
 export default Ember.Component.extend({
+    classNames: ['inline-block', 'time-ago'],
+
+    simpleDate: function () {
+        return moment(this.get('time')).format("MMM Do [at] h:mm a");
+    }.property('time'),
+
     output: function() {
         var output = "";
         if(this.get('prefix'))
@@ -13,6 +19,22 @@ export default Ember.Component.extend({
 
         if(this.get('suffix'))
             output += this.get('suffix');
+
+        if(this.get('mini')) {
+            output = output.replace("a few seconds ago", "now");
+            output = output.replace("a minute ago", "1m");
+            output = output.replace(" minutes ago", "m");
+            output = output.replace("an hour ago", "1h");
+            output = output.replace(" hours ago", "h");
+            output = output.replace("a day ago", "1d");
+            output = output.replace(" days ago", "d");
+            output = output.replace("a week ago", "1w");
+            output = output.replace(" weeks ago", "w");
+            output = output.replace("a month ago", "1mo");
+            output = output.replace(" months ago", "mo");
+            output = output.replace("a year ago", "1y");
+            output = output.replace(" years ago", "y");
+        }
 
         return output;
     }.property('time'),

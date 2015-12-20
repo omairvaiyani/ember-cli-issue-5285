@@ -25,6 +25,25 @@ export default Ember.Controller.extend(CurrentUser, ProgressCharts, {
         });
     }.on('init'),
 
+    /**
+     * @Function Fetch Recent SR Attempts
+     *
+     * Only called on init, the first time.
+     */
+    fetchRecentSrAttempts: function () {
+        var user = this.get('currentUser');
+        if (user.get('srCompletedAttempts.length'))
+            return console.log("Test attempts already fetched for user.");
+
+        ParseHelper.cloudFunction(this, 'loadRecentSrAttemptsForUser', {}).then(function (result) {
+            // Attempts include test
+            var srCompletedAttempts = ParseHelper.extractRawPayload(this.store, 'attempt', result.srCompletedAttempts);
+            user.get('srCompletedAttempts').addObjects(srCompletedAttempts);
+        }.bind(this), function (error) {
+            console.dir(error);
+        });
+    }.on('init'),
+
     checkToCreateOrDestroyProgressChart: function () {
         // TODO replace this observer with index.progress route willDestroy hook
         var onProgressTab = this.get('applicationController.currentPath') === "index.progress";

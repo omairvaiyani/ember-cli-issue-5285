@@ -2,6 +2,26 @@
 .action-button
   margin-bottom 0
 
+.attempt-card
+  position relative
+  margin-top 40px
+  .attempt-info
+    background: white;
+    border: 1px solid colorBorder;
+    position: absolute;
+    right: marginSecondary
+    top: -23px;
+    min-width: 200px;
+    min-height: 40px;
+    padding: 4px 8px;
+    line-height: normal;
+    border-radius: 4px 4px 0 0;
+    color colorText
+    .time-ago
+      position: absolute;
+      right: 8px;
+      top: 6px;
+
 .badge-container
   display inline-block
   height 120px
@@ -895,7 +915,9 @@ input[type="range"]::-webkit-slider-thumb {
       background darken(colorSecondary, 10)
       &::before
         background darken(colorSecondary, 10)
-
+.tooltipstered
+  cursor default
+  
 .tooltipster-default
   border-color colorPrimary-800
   background colorPrimary

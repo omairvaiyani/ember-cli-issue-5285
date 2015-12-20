@@ -1,4 +1,4 @@
-<section class="row margin-top-16 text-center">
+<section class="row text-center">
     <article class="col-xs-6 col-sm-3">
         <div class="card panel panel-primary">
             <div class="panel-body">
@@ -77,7 +77,7 @@
         </article>
         <article class="col-md-9 col-fix-right">
             {{#each myProgressList as |attempt|}}
-                {{test-card test=attempt.test parentController=this}}
+                {{attempt-card attempt=attempt parentController=this}}
             {{/each}}
         </article>
     {{else}}
