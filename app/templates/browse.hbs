@@ -1,8 +1,8 @@
-<div class="page-header with-action-container margin-bottom-0">
+<div class="page-header with-action-container">
     <div class="dark-overlay"></div>
     <div class="content-body">
         <h1 class="title">Browse</h1>
-        <h4 class="subtitle">Search quizzes from hundreds of subjects!</h4>
+        <p class="subtitle">Search quizzes from hundreds of subjects!</p>
     </div>
     <div class="page-header-action-container">
         <div class="input-group">
@@ -18,27 +18,43 @@
         </div>
     </div>
 </div>
-<div class="container-fluid margin-bottom-16 card browse-card">
 
-    {{!-- Hot Tests --}}
-    <h3 class="hot-tests-title text-center">
-        <i class="fa fa-fw fa-fire icon"></i>
-        Hot Tests
-    </h3>
+<div class="container margin-top-16 margin-bottom-16">
 
-    <section class="row">
-        <article class="col-xs-12 col-md-8 col-md-push-2">
-            <div class="hot-tests-container text-center">
-                {{#each hotTests as |test|}}
-                    {{test-card test=test parentController=this cardType="hotTest" class="inline-block"}}
-                {{/each}}
-            </div>
+    <section class="row margin-top-16">
+
+        <article class="col-sm-3">
+            {{partial "browse/category-list"}}
         </article>
+
+        <article class="col-sm-9 col-fix-right">
+            {{!-- Hot Tests --}}
+            <h3 class="hot-tests-title text-center margin-top-0">
+                <i class="fa fa-fw fa-fire icon"></i>
+                Hot Tests
+            </h3>
+            <hr class="full-hr"/>
+
+            <section class="row">
+                <article class="col-xs-12">
+                    <div class="hot-tests-container text-center">
+                        {{#each hotTests as |test|}}
+                            {{test-card test=test parentController=this cardType="hotTest" class="inline-block"}}
+                        {{/each}}
+                    </div>
+                </article>
+            </section>
+
+        </article>
+
+
     </section>
 
-    <hr class="full-hr"/>
+
+
 
     {{!-- Subjects --}}
+    {{!--
     <h3 class="text-center">
         All Subjects
     </h3>
@@ -64,5 +80,6 @@
             </div>
         </article>
     </section>
+    --}}
 
 </div>

@@ -4,10 +4,10 @@
         {{#if model.browseAll}}
             <h1 class="title">{{seoPageHeader}}</h1>
 
-            <h4 class="subtitle">Search from thousands of MCQ Quizzes in Synap.</h4>
+            <p class="subtitle">Search from thousands of MCQ Quizzes in Synap.</p>
         {{else}}
             <h1 class="title">{{seoPageHeader}}</h1>
-            <h4 class="subtitle">{{text-preview seoPageDescription 140}}</h4>
+            <p class="subtitle">{{text-preview seoPageDescription 140}}</p>
         {{/if}}
     </div>
 </div>
@@ -34,64 +34,9 @@
     </ol>
     <div class="row" id="top-of-results">
         <div class="col-md-3">
-            <div class="card">
-
-                {{!-- FILTERS NOT IN USE AT THE MOMENT
-                {{#if filterActive}}
-                    <h5>FILTERS</h5>
-                {{/if}}
-                {{#if activeCategories.length}}
-                    <ul class="tags">
-                        <div class="margin-top-8">
-                            <h5 class="small">CATEGORY</h5>
-                        </div>
-                        {{#each activeCategories as |category|}}
-                            <li class="tag category" {{action 'toggleCategoryFilter' category}}>{{category.name}}</li>
-                        {{/each}}
-                    </ul>
-                {{/if}}
-                {{#if activeTags.length}}
-                    <ul class="tags">
-
-                        <div class="margin-top-8">
-                            <h5 class="small">TAGS</h5>
-                        </div>
-                        {{#each activeTags as |tag|}}
-                            <li class="tag" {{action 'toggleTagFilter' tag}}>{{tag}}</li>
-                        {{/each}}
-                    </ul>
-                {{/if}}
-                --}}
-                <h5>ALL CATEGORIES</h5>
-
-                <ul class="nav nav-pills nav-stacked category-list">
-                    {{#each topLevelCategories itemController='category.item.parentCategory' as |parentCategory|}}
-                        {{#link-to 'category' parentCategory.model.slug tagName='li'
-                        classNameBindings="parentCategory.isSemiActive:semi-active"}}
-                            {{#link-to 'category' parentCategory.model.slug tagName='a'
-                            classNameBindings="parentCategory.isSemiActive:semi-active"}}
-                                {{parentCategory.model.name}}
-                            {{/link-to}}
-                            {{#if parentCategory.isActive}}
-                                {{#if childCategories.length}}
-                                    <ul class="inner-list nav nav-pills nav-stacked margin-left-16">
-                                        {{#each childCategories itemController='category.item.childCategory' as |category|}}
-                                            {{#link-to 'subcategory' parentCategory.model.slug
-                                            category.model.slug tagName='li'}}
-                                                {{#link-to 'subcategory' parentCategory.model.slug
-                                                category.model.slug tagName='a'}}
-                                                    {{category.model.name}}
-                                                {{/link-to}}
-                                            {{/link-to}}
-                                        {{/each}}
-                                    </ul>
-                                {{/if}}
-                            {{/if}}
-                        {{/link-to}}
-                    {{/each}}
-                </ul>
-            </div>
+            {{partial "browse/category-list"}}
         </div>
+
         <div class="col-md-9 col-fix-right">
             <section class="row">
                 <article class="col-xs-12 col-sm-4">

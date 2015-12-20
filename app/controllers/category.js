@@ -99,7 +99,14 @@ export default Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, Estimat
 
         if (fetchMore)
             page = this.get('currentResultsPage') + 1;
-
+        else {
+            /* var topOfResultsFlag = $("#top-of-results");
+             $('html, body').animate({
+             scrollTop: topOfResultsFlag.offset().top - 16
+             }, 500);*/
+            window.scrollTo(0, 0);
+        }
+        this.send('incrementLoadingItems');
         return ParseHelper.cloudFunction(this, 'performSearch',
             {
                 indexName: this.get('testIndexName'),
@@ -112,33 +119,30 @@ export default Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, Estimat
                     page: page
                 }
             }).then(function (response) {
-                if (response.query !== this.get('searchTerm'))
-                    return;
-                this.set('currentResultsPage', response.page);
-                if (response.page < (response.nbPages - 1))
-                    this.set('moreResultsToFetch', true);
-                else
-                    this.set('moreResultsToFetch', false);
-                this.set('totalResults', response.nbHits);
-                var tests = ParseHelper.extractRawPayload(this.store, 'test', response.hits);
-
-                if (!fetchMore) {
-                    this.get('tests').clear();
-                    this.get('tests').pushObjects(tests);
-                    var topOfResultsFlag = $("#top-of-results");
-                    if (!topOfResultsFlag)
-                        return;
-                    $('html, body').animate({
-                        scrollTop: topOfResultsFlag.offset().top - 16
-                    }, 500);
-                } else {
-                    // New page will be appended by components/infinite-scroll
-                    // Check actions.fetchMore
-                    return tests;
-                }
-            }.bind(this), function (error) {
-                console.dir(error);
-            });
+            if (response.query !== this.get('searchTerm'))
+                return;
+            this.set('currentResultsPage', response.page);
+            if (response.page < (response.nbPages - 1))
+                this.set('moreResultsToFetch', true);
+            else
+                this.set('moreResultsToFetch', false);
+            this.set('totalResults', response.nbHits);
+            var tests = ParseHelper.extractRawPayload(this.store, 'test', response.hits);
+            if (!fetchMore) {
+                this.get('tests').clear();
+                this.get('tests').pushObjects(tests);
+            } else {
+                // New page will be appended by components/infinite-scroll
+                // Check actions.fetchMore
+                return tests;
+            }
+        }.bind(this), function (error) {
+            console.dir(error);
+        }).then(function (tests) {
+            this.send('decrementLoadingItems');
+            if (tests)
+                return tests;
+        }.bind(this));
     },
 
     throttleGetTests: function () {

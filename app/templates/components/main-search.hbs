@@ -32,7 +32,7 @@ placeholder=searchPlaceholder}}
             {{/unless}}
 
             {{#if navbarSearchTotalResults}}
-                <section {{bind-attr class=":row inlineResults::margin-top-8 margin-bottom-16"}}>
+                <section {{bind-attr class=":row inlineResults::margin-top-8 :margin-bottom-16"}}>
                     {{#if navbarSearchResults.tests.length}}
 
                         <article {{bind-attr class="navbarSearchResults.users.length:col-xs-6:col-xs-12"}}>
@@ -67,7 +67,7 @@ placeholder=searchPlaceholder}}
                 <section class="row">
                     {{#if navbarSearchMoreTestsToShow}}
                         <article {{bind-attr class="navbarSearchResults.users.length:col-xs-6:col-xs-12"}}>
-                            <p class="linkify text-center" {{action 'navbarSearchTakeToBrowseForResults'}}>
+                            <p class="linkify small text-center" {{action 'navbarSearchTakeToBrowseForResults'}}>
                                 Show all {{navbarSearchTotalTestResults}} quizzes
                             </p>
                         </article>

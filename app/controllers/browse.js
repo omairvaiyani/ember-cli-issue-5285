@@ -12,5 +12,9 @@ export default Ember.Controller.extend({
         }.bind(this), function (error) {
             console.dir(error);
         });
-    }.on('init')
+    }.on('init'),
+
+    topLevelCategories: function () {
+        return this.get('content');
+    }.property('content')
 });

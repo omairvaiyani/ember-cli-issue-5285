@@ -155,11 +155,11 @@
 
 {{#if miniListCard}}
     <div class="card list-card margin-top-16 mini user-card">
-        <div class="inline-block">
+        <div class="inline-top margin-top-4">
             {{profile-picture user=user}}
         </div>
-        <div class="right-mini inline-block">
-            <h4 class="title margin-bottom-0">{{user.name}}</h4>
+        <div class="right-mini inline-top">
+            <h4 class="title no-margin">{{user.name}}</h4>
             {{#if user.educationCohort.currentYear}}
                 <div class="no-margin small subtitle inline-block">
                     <i class="fa fa-group fa-fw"></i>&nbsp; {{user.educationCohort.currentYear}}
