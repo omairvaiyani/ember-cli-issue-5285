@@ -7,23 +7,32 @@
     </div>
 {{/tool-tipster}}
 
-<div class="vertical-separator"></div>
+{{#if showNumberOfAttempts}}
 
-{{#tool-tipster title="Number of Attempts by Community" class="inline-block" delay=25}}
-    <div class="stat-container">
-        <div class="stat-icon-container inline-block">
-            <i class="fa fa-fw fa-pencil stat-icon"></i>
-        </div>
-        <span class="inline-block">{{test.numberOfAttempts}}</span>
-    </div>
-{{/tool-tipster}}
-<div class="vertical-separator"></div>
+    <div class="vertical-separator"></div>
 
-{{#tool-tipster title="Average Score by Community" class="inline-block" delay=25}}
-    <div class="stat-container">
-        <div class="stat-icon-container inline-block">
-            <i class="fa fa-fw fa-flag-checkered stat-icon"></i>
+    {{#tool-tipster title="Number of Attempts by Community" class="inline-block" delay=25}}
+        <div class="stat-container">
+            <div class="stat-icon-container inline-block">
+                <i class="fa fa-fw fa-pencil stat-icon"></i>
+            </div>
+            <span class="inline-block">{{test.numberOfAttempts}}</span>
         </div>
-        <span class="inline-block">{{test.averageScore}}%</span>
-    </div>
-{{/tool-tipster}}
+    {{/tool-tipster}}
+
+{{/if}}
+
+{{#if showAverageScoreByCommunity}}
+
+    <div class="vertical-separator"></div>
+
+    {{#tool-tipster title="Average Score by Community" class="inline-block" delay=25}}
+        <div class="stat-container">
+            <div class="stat-icon-container inline-block">
+                <i class="fa fa-fw fa-flag-checkered stat-icon"></i>
+            </div>
+            <span class="inline-block">{{test.averageScore}}%</span>
+        </div>
+    {{/tool-tipster}}
+
+{{/if}}

@@ -86,6 +86,28 @@ export default Ember.Component.extend({
     }.property('isCurrentUserTheAuthor', 'isTestSaved', 'test.isGenerated'),
 
     /**
+     * @Property Show Number of Attempts
+     * True if:
+     * - Not generated
+     *
+     * @returns {boolean}
+     */
+    showNumberOfAttempts: function () {
+        return !this.get('test.isGenerated');
+    }.property('test.isGenerated'),
+
+    /**
+     * @Property Show Average Score by Community
+     * True if:
+     * - Not generated
+     *
+     * @returns {boolean}
+     */
+    showAverageScoreByCommunity: function () {
+        return !this.get('test.isGenerated');
+    }.property('test.isGenerated'),
+
+    /**
      * @Property Show Dismiss
      * True if:
      * - Explicitly told (isLatestSRTest)
