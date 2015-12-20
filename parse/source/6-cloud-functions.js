@@ -780,6 +780,11 @@ Parse.Cloud.define('finaliseNewAttempt', function (request, status) {
         // Basic Stat Update, user will be saved in .addUniqueResponses function
         // (unique stats done on TaskWorker)
         user.increment('numberOfAttempts');
+        if (user.get('averageScore') > 0 || attempt.score() > 0) {
+            var newAverage = Math.round((user.get('averageScore') + attempt.score()) /
+                user.get('numberOfAttempts'));
+            user.set('averageScore', newAverage);
+        }
 
         // Create or update uniqueResponses, user saved in here
         promises.push(user.addUniqueResponses(attempt.responses()));
@@ -791,7 +796,8 @@ Parse.Cloud.define('finaliseNewAttempt', function (request, status) {
         status.success({
             attempt: attempt,
             uniqueResponses: uniqueResponses,
-            userEvent: userEvent
+            userEvent: userEvent,
+            user: user
         });
     }, function (error) {
         status.error(error);

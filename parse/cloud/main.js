@@ -3939,6 +3939,15 @@ Parse.Cloud.define('finaliseNewAttempt', function (request, status) {
         // Basic Stat Update, user will be saved in .addUniqueResponses function
         // (unique stats done on TaskWorker)
         user.increment('numberOfAttempts');
+        logger.log("numb-attempts", user.get('numberOfAttempts'));
+        logger.log("previous-avg", user.get('averageScore'));
+        logger.log("attempt-score", attempt.score());
+        if (user.get('averageScore') > 0 || attempt.score() > 0) {
+            var newAverage = Math.round((user.get('averageScore') + attempt.score()) /
+                user.get('numberOfAttempts'));
+            logger.log("new-average", newAverage);
+            user.set('averageScore', newAverage);
+        }
 
         // Create or update uniqueResponses, user saved in here
         promises.push(user.addUniqueResponses(attempt.responses()));
@@ -3950,7 +3959,8 @@ Parse.Cloud.define('finaliseNewAttempt', function (request, status) {
         status.success({
             attempt: attempt,
             uniqueResponses: uniqueResponses,
-            userEvent: userEvent
+            userEvent: userEvent,
+            user: user
         });
     }, function (error) {
         status.error(error);
@@ -5331,10 +5341,6 @@ function updateTestStatsAfterAttemptTask(task, params, objects) {
             if (author.id !== user.id)
                 author.increment('numberOfUniqueAttemptsByCommunity');
             user.increment('numberOfUniqueAttempts');
-        }
-        if (user.get('averageScore') > 0 || attempt.score() > 0) {
-            user.set('averageScore', Math.round((user.get('averageScore') + attempt.score()) /
-                user.get('numberOfAttempts')));
         }
 
         return Parse.Promise.when(author.save(null, {useMasterKey: true}), user.save(null, {useMasterKey: true}));

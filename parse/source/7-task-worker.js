@@ -302,10 +302,6 @@ function updateTestStatsAfterAttemptTask(task, params, objects) {
                 author.increment('numberOfUniqueAttemptsByCommunity');
             user.increment('numberOfUniqueAttempts');
         }
-        if (user.get('averageScore') > 0 || attempt.score() > 0) {
-            user.set('averageScore', Math.round((user.get('averageScore') + attempt.score()) /
-                user.get('numberOfAttempts')));
-        }
 
         return Parse.Promise.when(author.save(null, {useMasterKey: true}), user.save(null, {useMasterKey: true}));
     }).then(function () {
