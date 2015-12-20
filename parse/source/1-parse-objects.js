@@ -232,6 +232,9 @@ Parse.User.prototype.setDefaults = function () {
         this.set(prop, []);
     }.bind(this));
 
+    this.get('emailNotifications').push("receivePromotionalEmails");
+    this.set('receivePromotionalEmails', true);
+
     this.set('isPremium', false);
     this.set('firstTimeLogin', true);
     this.set('level', Level.getFirstLevel());
