@@ -275,6 +275,7 @@ Parse.Cloud.define('loadFollowersAndFollowing', function (request, response) {
  * - Recent Test attempts
  */
 Parse.Cloud.define('loadRecentAttemptsForUser', function (request, response) {
+    Parse.Cloud.useMasterKey();
     var user = request.user,
         promises = [];
 
@@ -282,14 +283,28 @@ Parse.Cloud.define('loadRecentAttemptsForUser', function (request, response) {
         return response.error("You must be logged in.");
 
     var recentTestAttemptsQuery = user.latestTestAttempts().query();
-
+    recentTestAttemptsQuery.include('test.author');
     recentTestAttemptsQuery.limit(20);
     recentTestAttemptsQuery.descending("createdAt");
-    promises.push(recentTestAttemptsQuery.find());
 
-    Parse.Promise.when(promises).then(function (recentAttempts) {
+    recentTestAttemptsQuery.find().then(function (recentAttempts) {
+        var attemptsToInclude = [],
+            minifiedAuthors = [];
+        _.each(recentAttempts, function (attempt) {
+            // Only include attempts where test AND author exist
+            if (attempt.test() && attempt.test().author()) {
+                attemptsToInclude.push(attempt);
+                // Only minify unique authors
+                if (!_.find(minifiedAuthors, function (author) {
+                        return author.objectId === attempt.test().author().id;
+                    }))
+                    minifiedAuthors.push(_.clone(attempt.test().author()).minimalProfile());
+            }
+        });
+
         var result = {
-            recentAttempts: recentAttempts
+            recentAttempts: attemptsToInclude,
+            authors: minifiedAuthors
         };
         response.success(result);
     }, function (error) {
@@ -1859,9 +1874,9 @@ Parse.Cloud.define('fetchUrlMetaData', function (request, response) {
             description = $("meta[name='description']").attr("content"),
             image = $("meta[property='og:image']").attr("content");
 
-        if(!title)
+        if (!title)
             title = $('head > title').text();
-        var metaData =  {
+        var metaData = {
             title: title,
             description: description,
             image: image,

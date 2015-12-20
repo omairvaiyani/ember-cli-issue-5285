@@ -15,6 +15,9 @@ export default Ember.Controller.extend(CurrentUser, ProgressCharts, {
             return console.log("Test attempts already fetched for user.");
 
         ParseHelper.cloudFunction(this, 'loadRecentAttemptsForUser', {}).then(function (result) {
+            // Load minified author data before attempts
+            ParseHelper.extractRawPayload(this.store, 'parse-user', result.authors);
+            // Attempts include test
             var recentAttempts = ParseHelper.extractRawPayload(this.store, 'attempt', result.recentAttempts);
             user.get('testAttempts').addObjects(recentAttempts);
         }.bind(this), function (error) {

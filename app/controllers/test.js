@@ -281,7 +281,8 @@ export default Ember.Controller.extend(CurrentUser, {
                 });
             }.bind(this)).then(function (result) {
                 // Update local attempt record
-                ParseHelper.extractRawPayload(this.store, 'attempt', result.attempt);
+                var attempt = ParseHelper.extractRawPayload(this.store, 'attempt', result.attempt);
+                this.get('currentUser.testAttempts').pushObject(attempt);
                 // Update current-user record
                 ParseHelper.extractRawPayload(this.store, 'parse-user', result.user);
             }.bind(this), function (error) {
