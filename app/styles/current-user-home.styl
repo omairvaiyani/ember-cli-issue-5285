@@ -24,10 +24,12 @@
   > div
     display inline-block
     vertical-align top
-    width calc(50% - 10px)
+    width calc(50% - 9px)
     margin-bottom marginPrimary
     &:nth-child(odd)
       margin-right marginPrimary
+    &:nth-child(even)
+      margin-left -2px
   .tile
     width 100%
     min-width 200px
