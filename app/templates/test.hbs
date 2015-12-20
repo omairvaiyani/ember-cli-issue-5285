@@ -99,7 +99,7 @@
                             {{#if currentQuestion.image.url.length}}
                                 <div class="image-container inline-top">
                                     <img class="image" {{bind-attr src=currentQuestion.image.secureUrl}}
-                                    {{action 'openModal' 'application/modal/image' true currentQuestion.image.secureUrl}}/>
+                                        {{action 'openModal' 'application/modal/image' true currentQuestion.image.secureUrl}}/>
                                 </div>
                             {{/if}}
 
@@ -146,11 +146,12 @@
 
         <article class="col-md-3 col-fix-right">
             <section class="row">
-                {{#unless isGeneratedAttempt}}
-                    <article class="col-md-12 col-sm-6 col-xs-12 margin-bottom-16">
+                <article class="col-md-12 col-sm-6 col-xs-12 margin-bottom-16">
+                    {{test-card test=model cardType="testInfo" parentController=this}}
+                    {{#unless isGeneratedAttempt}}
                         {{user-card user=model.author}}
-                    </article>
-                {{/unless}}
+                    {{/unless}}
+                </article>
             </section>
         </article>
     </section>

@@ -209,3 +209,22 @@
         </div>
     </div>
 {{/if}}
+
+{{#if testInfoCard}}
+    <div {{bind-attr class=":panel :panel-default :card :list-card :margin-bottom-16"}}>
+        <div class="panel-heading">
+            <h4 class="no-margin">Quiz Info</h4>
+        </div>
+        <div class="panel-body text-center">
+
+            <p>
+                {{test.description}}
+            </p>
+
+            <hr class="full-hr"/>
+
+            {{partial 'components/test-card/stats-box'}}
+
+        </div>
+    </div>
+{{/if}}

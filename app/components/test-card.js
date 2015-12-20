@@ -13,6 +13,10 @@ export default Ember.Component.extend({
         return this.get('cardType') === "hotTest";
     }.property('cardType'),
 
+    testInfoCard: function () {
+        return this.get('cardType') === "testInfo";
+    }.property('cardType'),
+
     currentUser: function () {
         return this.get('parentController.currentUser');
     }.property('parentController.currentUser'),
