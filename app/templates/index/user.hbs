@@ -3,29 +3,11 @@
         {{#if model}}
             <div class="card">
                 <section class="row">
-                    <article class="col-xs-5">
-                        {{!--
-                        <div class="main-profile-picture-container inline-block">
-                            {{#if isCurrentUser}}
-                                {{editable-image imageUrl=model.profileImageURL parentController=this
-                                previewClass="profile-picture" image=model.profilePicture
-                                saveAfterEdit=true}}
-                            {{else}}
-                                {{profile-picture user=model height=120 width=120 class="inline-top margin-right-8"}}
-                            {{/if}}
-
-                            <div class="inline-top">
-                                <h3 class="no-margin">{{model.name}}</h3>
-
-                                <p>{{model.level.title}}</p>
-                                {{level-progress points=model.points level=model.level}}
-                            </div>
-                        </div>
-                        --}}
+                    <article class="col-sm-5">
                         {{user-card user=model parentController=this cardType='mainProfile'}}
                     </article>
 
-                    <article class="col-xs-7">
+                    <article class="col-sm-7 text-center">
                         <div class="overview-stat-container inline-block">
                             <h4 class="stat">
                                 {{model.numberOfTestsCreated}}
@@ -71,12 +53,9 @@
                 </section>
             </div>
         {{else}}
-            <br>
-            <br>
-            <br>
-            <p class="text-center">
+            <h4 class="text-center margin-top-16">
                 Hmm... we don't have a user with that name. Please check your link and try again!
-            </p>
+            </h4>
         {{/if}}
     </article>
 </section>
@@ -89,6 +68,37 @@
         </article>
 
         <article class="col-xs-12 col-sm-4 col-fix-right">
+
+            {{#if model.educationCohort}}
+
+                <div class="panel panel-default card">
+
+                    <div class="panel-heading">
+                        <h4 class="no-margin">
+                            Education
+                        </h4>
+                    </div>
+                    <div class="panel-body">
+                        {{#if model.educationCohort.currentYear}}
+                            <div class="no-margin subtitle">
+                                <i class="fa fa-group fa-fw"></i>&nbsp; {{model.educationCohort.currentYear}}
+                            </div>
+                        {{/if}}
+                        {{#if model.educationCohort.studyField}}
+                            <div class="no-margin subtitle">
+                                <i class="fa fa-book fa-fw"></i>&nbsp; {{model.educationCohort.studyField.name}}
+                            </div>
+                        {{/if}}
+                        {{#if model.educationCohort.institution}}
+                            <div class="no-margin subtitle">
+                                <i class="fa fa-university fa-fw"></i>&nbsp; {{model.educationCohort.institution.name}}
+                            </div>
+                        {{/if}}
+                    </div>
+                </div>
+
+            {{/if}}
+
             <div class="panel panel-default card">
 
                 <div class="panel-heading">
