@@ -20,13 +20,13 @@ placeholder=searchPlaceholder}}
     <div {{bind-attr class=":search-popdown navbarSearchDual:dual inlineResults"}}>
         <div {{bind-attr class="inlineResults::container-fluid"}}>
             {{#unless searchTerm.length}}
-                <p class="margin-top-8">Type to search...</p>
+                <p class="prompt-text margin-top-8">Type to search...</p>
             {{else}}
                 {{#if navbarSearchFetching}}
                     <div class="icon-only-loader margin-top-8 margin-bottom-8"></div>
                 {{else}}
                     {{#unless navbarSearchTotalResults}}
-                        <p class="margin-top-8">No results found.</p>
+                        <p class="prompt-text margin-top-8">No results found.</p>
                     {{/unless}}
                 {{/if}}
             {{/unless}}
@@ -67,7 +67,8 @@ placeholder=searchPlaceholder}}
                 <section class="row">
                     {{#if navbarSearchMoreTestsToShow}}
                         <article {{bind-attr class="navbarSearchResults.users.length:col-xs-6:col-xs-12"}}>
-                            <p class="linkify small text-center" {{action 'navbarSearchTakeToBrowseForResults'}}>
+                            <p class="prompt-text linkify small text-center"
+                                {{action 'navbarSearchTakeToBrowseForResults'}}>
                                 Show all {{navbarSearchTotalTestResults}} quizzes
                             </p>
                         </article>
