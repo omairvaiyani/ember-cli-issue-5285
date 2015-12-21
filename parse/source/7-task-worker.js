@@ -57,8 +57,6 @@ var WorkActions = {
  * @returns {WorkTask}
  */
 function srCycleTask(task) {
-    logger.log("Spaced Repetition Cycle", "SR Cycle Begun");
-
     Parse.Cloud.useMasterKey();
     var initialPromises = [],
         testsGenerated = 0;
@@ -204,7 +202,6 @@ function srCycleTask(task) {
             taskClaimed: 0, // repetitive task, do not destroy
             scheduledTime: moment().add(5, 'minutes').toDate()
         };
-        logger.log("Spaced Repetition Cycle", "SR Cycle Completed", changes);
         return task.save(changes, {useMasterKey: true});
     }, function (error) {
         console.error(JSON.stringify(error));

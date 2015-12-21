@@ -2890,7 +2890,7 @@ Parse.Cloud.beforeSave(Parse.User, function (request, response) {
         promises.push(user.generateSlug());
     } else {
         logger.log("user-dirty", user.dirtyKeys());
-        if(user.dirtyKeys() && _.contains(user.dirtyKeys(), "email")) {
+        if (user.dirtyKeys() && _.contains(user.dirtyKeys(), "email")) {
             user.username = user.get('email');
         }
     }
@@ -2934,6 +2934,14 @@ Parse.Cloud.afterSave(Parse.User, function (request) {
     // Add/Update search index (async)
     promises.push(user.indexObject());
     return Parse.Promise.when(promises);
+});
+/**
+ * @afterDelete User
+ * Removes from search index.
+ */
+Parse.Cloud.afterDelete(Parse.User, function (request) {
+    var object = request.object;
+    return userIndex.deleteObject(object.id);
 });
 
 /**
@@ -3005,6 +3013,15 @@ Parse.Cloud.afterSave(Test, function (request) {
 });
 
 /**
+ * @afterDelete Test
+ * Removes from search index.
+ */
+Parse.Cloud.afterDelete(Test, function (request) {
+    var object = request.object;
+    return testIndex.deleteObject(object.id);
+});
+
+/**
  * @beforeSave Question
  *
  * New Question:
@@ -3046,7 +3063,7 @@ Parse.Cloud.beforeSave(Attempt, function (request, response) {
         promises.push(attempt.setDefaults());
     }
 
-    if(!attempt.isFinalised() && attempt.responses().length) {
+    if (!attempt.isFinalised() && attempt.responses().length) {
         var ACL = attempt.getACL();
         ACL.setWriteAccess(attempt.user(), false);
         attempt.setACL(ACL);
@@ -3548,7 +3565,7 @@ Parse.Cloud.define('refreshTilesForUser', function (request, response) {
     _.each(tilesToFetch, function (tileToFetch) {
         switch (tileToFetch) {
             case "spacedRepetition":
-                if(!user.srLatestTestDismissed() && !user.srLatestTestIsTaken())
+                if (!user.srLatestTestDismissed() && !user.srLatestTestIsTaken())
                     promises.push(srLatestTest = user.fetchSrLatestAttempt());
                 break;
             case "recommendedTest":
@@ -4736,7 +4753,7 @@ Parse.Cloud.define("sendBetaInvite", function (request, response) {
         _.each(betaInvitesToSend, function (betaInvite) {
             var firstName = betaInvite.get('firstName');
             if (!firstName)
-                firstName = "You";
+                firstName = "there";
 
             var invitationLink = "https://synap.ac/activate-beta/" + betaInvite.id;
 
@@ -4901,7 +4918,7 @@ Parse.Cloud.define('getUserProfile', function (request, response) {
             createdTestsQuery.notEqualTo('isGenerated', true);
             promises.push(createdTests = createdTestsQuery.find());
         }
-        if(includeFollow) {
+        if (includeFollow) {
             var followingQuery = user.following().query();
             followingQuery.limit(10);
             promises.push(following = followingQuery.find());
@@ -5135,6 +5152,75 @@ Parse.Cloud.define('fetchUrlMetaData', function (request, response) {
     });
 });
 
+/**
+ * No Longer Needed, Delete if it annoys you
+ * The search index is properly synced now
+ */
+Parse.Cloud.define('cleanSearchIndices', function (request, response) {
+    var testIndex = algoliaClient.initIndex("Test"),
+        userIndex = algoliaClient.initIndex("User");
+
+    var testObjectIds = [],
+        userObjectIds = [],
+        testsRemoved,
+        usersRemoved;
+
+    testIndex.search("", {hitsPerPage: 1000, attributesToRetrieve: "objectId"}).then(function (result) {
+
+        _.each(result.hits, function (hit) {
+            testObjectIds.push(hit.objectId);
+        });
+
+        var testQuery = new Parse.Query(Test);
+        testQuery.containedIn("objectId", testObjectIds);
+        testQuery.limit(1000);
+        return testQuery.find();
+
+    }).then(function (tests) {
+        var testObjectIdsToRemove = _.clone(testObjectIds);
+
+        _.each(tests, function (test) {
+            testObjectIdsToRemove = _.without(testObjectIdsToRemove, test.id);
+        });
+        testsRemoved = testObjectIdsToRemove.length;
+
+        var promises = [];
+        _.each(testObjectIdsToRemove, function (objectId) {
+            promises.push(testIndex.deleteObject(objectId));
+        });
+        return Parse.Promise.when(promises);
+    }).then(function () {
+        return userIndex.search("", {hitsPerPage: 1000, attributesToRetrieve: "objectId"});
+    }).then(function (result) {
+
+        _.each(result.hits, function (hit) {
+            userObjectIds.push(hit.objectId);
+        });
+
+        var userQuery = new Parse.Query(Parse.User);
+        userQuery.containedIn("objectId", userObjectIds);
+        userQuery.limit(1000);
+        Parse.Cloud.useMasterKey(); // Do not place earlier
+        return userQuery.find();
+    }).then(function (users) {
+        var userObjectIdsToRemove = _.clone(userObjectIds);
+
+        _.each(users, function (user) {
+            userObjectIdsToRemove = _.without(userObjectIdsToRemove, user.id);
+        });
+        usersRemoved = userObjectIdsToRemove.length;
+
+        var promises = [];
+        _.each(userObjectIdsToRemove, function (objectId) {
+            promises.push(userIndex.deleteObject(objectId));
+        });
+        return Parse.Promise.when(promises);
+    }).then(function () {
+        response.success("Tests removed " + testsRemoved + " and Users removed " + usersRemoved);
+    }, function (error) {
+        response.error(error);
+    });
+});
 
 /*
  * TASK WORKER
@@ -5195,8 +5281,6 @@ var WorkActions = {
  * @returns {WorkTask}
  */
 function srCycleTask(task) {
-    logger.log("Spaced Repetition Cycle", "SR Cycle Begun");
-
     Parse.Cloud.useMasterKey();
     var initialPromises = [],
         testsGenerated = 0;
@@ -5342,7 +5426,6 @@ function srCycleTask(task) {
             taskClaimed: 0, // repetitive task, do not destroy
             scheduledTime: moment().add(5, 'minutes').toDate()
         };
-        logger.log("Spaced Repetition Cycle", "SR Cycle Completed", changes);
         return task.save(changes, {useMasterKey: true});
     }, function (error) {
         console.error(JSON.stringify(error));

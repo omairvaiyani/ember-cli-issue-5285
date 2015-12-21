@@ -20,7 +20,7 @@ Parse.Cloud.beforeSave(Parse.User, function (request, response) {
         promises.push(user.generateSlug());
     } else {
         logger.log("user-dirty", user.dirtyKeys());
-        if(user.dirtyKeys() && _.contains(user.dirtyKeys(), "email")) {
+        if (user.dirtyKeys() && _.contains(user.dirtyKeys(), "email")) {
             user.username = user.get('email');
         }
     }
@@ -64,6 +64,14 @@ Parse.Cloud.afterSave(Parse.User, function (request) {
     // Add/Update search index (async)
     promises.push(user.indexObject());
     return Parse.Promise.when(promises);
+});
+/**
+ * @afterDelete User
+ * Removes from search index.
+ */
+Parse.Cloud.afterDelete(Parse.User, function (request) {
+    var object = request.object;
+    return userIndex.deleteObject(object.id);
 });
 
 /**
@@ -135,6 +143,15 @@ Parse.Cloud.afterSave(Test, function (request) {
 });
 
 /**
+ * @afterDelete Test
+ * Removes from search index.
+ */
+Parse.Cloud.afterDelete(Test, function (request) {
+    var object = request.object;
+    return testIndex.deleteObject(object.id);
+});
+
+/**
  * @beforeSave Question
  *
  * New Question:
@@ -176,7 +193,7 @@ Parse.Cloud.beforeSave(Attempt, function (request, response) {
         promises.push(attempt.setDefaults());
     }
 
-    if(!attempt.isFinalised() && attempt.responses().length) {
+    if (!attempt.isFinalised() && attempt.responses().length) {
         var ACL = attempt.getACL();
         ACL.setWriteAccess(attempt.user(), false);
         attempt.setACL(ACL);
