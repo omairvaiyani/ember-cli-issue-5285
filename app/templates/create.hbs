@@ -9,17 +9,18 @@
     <section class="row">
         <article class="col-xs-12 col-md-8 col-md-offset-2">
             <div class="card">
-               {{partial 'edit/test-detail'}}
+                {{partial 'edit/test-detail'}}
 
                 {{!-- Save/Add Questions row --}}
                 <section class="row">
                     <article class="col-xs-12 col-sm-6">
-                        <button class="btn btn-info btn-with-icon action-button" {{action "checkTest"}} id="add-questions">
-                            <span class="inline-block">Add Questions</span>
-                            <span class="right-section inline-block">
-                                <i class="fa fa-arrow-circle-right"></i>
-                            </span>
-                        </button>
+                        {{async-button action='checkTest' class='btn btn-info action-button'
+                        default="Add Questions"
+                        fulfilled="Quiz Created"
+                        rejected="Error!"
+                        pending="Preparing Quiz..."
+                        reset=true
+                        id="add-questions"}}
                     </article>
                 </section>
             </div>

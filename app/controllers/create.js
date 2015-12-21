@@ -100,7 +100,7 @@ export default Ember.Controller.extend(CurrentUser, DeleteWithUndo, TagsAndCats,
             }
             this.set('checkTestError', error);
             if (error)
-                return;
+                return callback(new Parse.Promise().reject());
 
             this.set('model.author', this.get('currentUser'));
             if (this.get('selectedGroup.id')) {
@@ -127,6 +127,9 @@ export default Ember.Controller.extend(CurrentUser, DeleteWithUndo, TagsAndCats,
                     this.send('decrementLoadingItems');
                     console.dir(error);
                 }.bind(this));
+
+            if(callback)
+                callback(promise);
         },
 
         saveTest: function (callback) {
