@@ -19,6 +19,10 @@ export default Ember.Component.extend({
         return this.get('cardType') === "modal";
     }.property('cardType'),
 
+    mainProfileCard: function () {
+        return this.get('cardType') === "mainProfile";
+    }.property('cardType'),
+
     currentUser: function () {
         return this.get('parentController.currentUser');
     }.property('parentController.currentUser'),

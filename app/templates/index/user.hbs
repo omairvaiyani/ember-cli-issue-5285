@@ -4,6 +4,7 @@
             <div class="card">
                 <section class="row">
                     <article class="col-xs-5">
+                        {{!--
                         <div class="main-profile-picture-container inline-block">
                             {{#if isCurrentUser}}
                                 {{editable-image imageUrl=model.profileImageURL parentController=this
@@ -20,6 +21,8 @@
                                 {{level-progress points=model.points level=model.level}}
                             </div>
                         </div>
+                        --}}
+                        {{user-card user=model parentController=this cardType='mainProfile'}}
                     </article>
 
                     <article class="col-xs-7">

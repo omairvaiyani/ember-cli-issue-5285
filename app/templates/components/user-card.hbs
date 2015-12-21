@@ -67,18 +67,7 @@
         <span class="small margin-bottom-0 margin-right-8 inline-block">
             {{user.numberOfFollowers}} {{pluralize-word 'follower' user.numberOfFollowers}}
         </span>
-        {{#if showFollow}}
-            <button class="btn btn-default btn-sm follow-button mini margin-top-0 margin-bottom-0"
-                {{action 'followUser' user}}>
-                <i class="fa fa-fw fa-user-plus"></i>
-            </button>
-        {{/if}}
-        {{#if showUnfollow}}
-            <button class="btn btn-default btn-sm follow-button mini unfollow  margin-top-0 margin-bottom-0"
-                {{action 'unfollowUser' user}}>
-                <i class="fa fa-fw fa-user-times"></i>
-            </button>
-        {{/if}}
+        {{follow-button user=user parentController=this buttonType="mini"}}
     </div>
 {{/if}}
 
@@ -176,19 +165,30 @@
                 </div>
             {{/if}}
 
-            {{#if showFollow}}
-                <button class="btn btn-default btn-sm follow-button mini margin-top-0 margin-bottom-0"
-                    {{action 'followUser' user}}>
-                    <i class="fa fa-fw fa-user-plus"></i>
-                </button>
-            {{/if}}
+            {{follow-button user=user parentController=this buttonType="mini" class="margin-top-8 pull-right"}}
+        </div>
+    </div>
+{{/if}}
 
-            {{#if showUnfollow}}
-                <button class="btn btn-default btn-sm follow-button mini unfollow  margin-top-0 margin-bottom-0"
-                    {{action 'unfollowUser' user}}>
-                    <i class="fa fa-fw fa-user-times"></i>
-                </button>
-            {{/if}}
+{{#if mainProfileCard}}
+    <div class="main-profile-picture-container inline-block">
+        {{#if isThisTheCurrentUser}}
+            {{editable-image imageUrl=user.profileImageURL parentController=parentController
+            previewClass="profile-picture" image=user.profilePicture
+            saveAfterEdit=true}}
+        {{else}}
+            {{profile-picture user=user height=120 width=120 class="inline-top margin-right-8"}}
+        {{/if}}
+
+        <div class="inline-top">
+            <h3 class="no-margin">
+                {{user.name}}
+            </h3>
+
+            <p class="margin-top-8 margin-bottom-0">{{user.level.title}}</p>
+            {{level-progress points=user.points level=user.level}}
+
+            {{follow-button user=user parentController=this class="margin-top-8"}}
         </div>
     </div>
 {{/if}}
