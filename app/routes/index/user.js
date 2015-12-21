@@ -15,17 +15,21 @@ export default Ember.Route.extend(RouteHistory, {
         // Annoyingly, ember-data is screwing up stored records,
         // it's adding createdTests to the wrong users. Here's a workaround.
         if (user && user.get('createdTests.length')
-            && user.get('createdTests').objectAt(0).get('author.id') === user.get('id')) {
+            && user.get('createdTests').objectAt(0).get('author.id') === user.get('id')
+            && user.get('followerAndFollowingFetched')) {
             return user;
         }
 
         return ParseHelper.cloudFunction(this, 'getUserProfile', {
                 slug: params.user_slug,
-                includeTests: true
+                includeTests: true,
+                includeFollow: true
             })
             .then(function (response) {
                 var createdTests = new Ember.A(),
-                    savedTests = new Ember.A();
+                    savedTests = new Ember.A(),
+                    following = new Ember.A(),
+                    followers = new Ember.A();
 
                 if (response.createdTests)
                     createdTests.addObjects(ParseHelper.extractRawPayload(
@@ -35,10 +39,22 @@ export default Ember.Route.extend(RouteHistory, {
                     savedTests.addObjects(ParseHelper.extractRawPayload(
                         this.store, 'test', _.clone(response.savedTests)));
 
+                if (response.following)
+                    following.addObjects(ParseHelper.extractRawPayload(
+                        this.store, 'parse-user', _.clone(response.following)));
+
+                if (response.followers)
+                    followers.addObjects(ParseHelper.extractRawPayload(
+                        this.store, 'parse-user', _.clone(response.followers)));
+
                 var user = ParseHelper.extractRawPayload(this.store, 'parse-user', response);
 
                 user.set('createdTests', createdTests);
                 user.set('savedTests', savedTests);
+                user.set('following', following);
+                user.set('followers', followers);
+
+                user.set('followerAndFollowingFetched', true);
 
                 return user;
             }.bind(this), function (error) {
@@ -62,6 +78,7 @@ export default Ember.Route.extend(RouteHistory, {
             transition.send('addRouteToHistory', routePath, routeLabel, transition, 'user_slug');
         }
         window.scrollTo(0,0);
+        controller.send('switchTabInFriendsList', 'followers');
     },
 
 

@@ -1699,9 +1699,14 @@ Parse.Cloud.define('getUserProfile', function (request, response) {
     var slug = request.params.slug,
         objectId = request.params.objectId,
         includeTests = request.params.includeTests,
+        createdTests,
+        includeFollow = request.params.includeFollow,
+        followers,
+        following,
         user;
 
     var userQuery = new Parse.Query(Parse.User);
+
     if (slug)
         userQuery.equalTo('slug', slug);
     if (objectId)
@@ -1712,6 +1717,8 @@ Parse.Cloud.define('getUserProfile', function (request, response) {
         if (!user)
             return response.error("User with this slug or id not found.");
 
+        var promises = [];
+
         if (includeTests) {
             var createdTestsQuery = user.createdTests().query();
             createdTestsQuery.limit(1000);
@@ -1719,12 +1726,40 @@ Parse.Cloud.define('getUserProfile', function (request, response) {
             createdTestsQuery.notEqualTo('isObjectDeleted', true);
             createdTestsQuery.equalTo('isPublic', true);
             createdTestsQuery.notEqualTo('isGenerated', true);
-            return createdTestsQuery.find();
+            promises.push(createdTests = createdTestsQuery.find());
         }
-    }).then(function (createdTests) {
+        if(includeFollow) {
+            var followingQuery = user.following().query();
+            followingQuery.limit(10);
+            promises.push(following = followingQuery.find());
+
+            var followersQuery = user.followers().query();
+            followersQuery.limit(10);
+            promises.push(followers = followersQuery.find());
+        }
+        return Parse.Promise.when(promises);
+    }).then(function () {
         var userMiniProfile = user.minimalProfile();
-        if (createdTests)
+
+        if (createdTests && (createdTests = createdTests["_result"][0]))
             userMiniProfile.createdTests = createdTests;
+
+        if (following && (following = following["_result"][0])) {
+            var followingMinimalProfiles = [];
+            _.each(following, function (followee) {
+                followingMinimalProfiles.push(followee.minimalProfile());
+            });
+            userMiniProfile.following = followingMinimalProfiles;
+        }
+
+        if (followers && (followers = followers["_result"][0])) {
+            var followersMinimalProfiles = [];
+            _.each(followers, function (follower) {
+                followersMinimalProfiles.push(follower.minimalProfile());
+            });
+            userMiniProfile.followers = followersMinimalProfiles;
+        }
+
         response.success(userMiniProfile);
     }, function (error) {
         response.error(error);

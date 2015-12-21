@@ -209,6 +209,7 @@ export default Ember.Controller.extend({
                 this.get('controllers.index/user').myTestsListUpdate();
                 return ParseHelper.cloudFunction(this, 'loadFollowersAndFollowing', {});
             }.bind(this)).then(function (response) {
+                currentUser.set('followerAndFollowingFetched', true);
                 ParseHelper.handleRelationalDataResponseForUser(this.store, currentUser, response);
             }.bind(this), function (error) {
                 console.dir(error);
