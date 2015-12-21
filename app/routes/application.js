@@ -308,6 +308,10 @@ export default Ember.Route.extend({
                 id: localStorage.getItem("betaActivationId"),
                 email: data.email
             }).then(function () {
+                // This will authorize migrated facebook users
+                if (data.authData)
+                    return ParseHelper.cloudFunction(this, 'preFacebookSignUp', {data: data});
+            }.bind(this)).then(function () {
                 return ParseUser.signup(this.store, data);
             }.bind(this)).then(function (user) {
                 this.get('applicationController').set('currentUser', user);

@@ -19,7 +19,6 @@ Parse.Cloud.beforeSave(Parse.User, function (request, response) {
         promises.push(user.assignBadgeProgressions());
         promises.push(user.generateSlug());
     } else {
-        logger.log("user-dirty", user.dirtyKeys());
         if (user.dirtyKeys() && _.contains(user.dirtyKeys(), "email")) {
             user.username = user.get('email');
         }
@@ -48,6 +47,8 @@ Parse.Cloud.afterSave(Parse.User, function (request) {
         // Hashes for Intercom can be created here
         var userACL = new Parse.ACL(user);
         userACL.setPublicReadAccess(false);
+        userACL.setRoleReadAccess("admin", true);
+        userACL.setRoleWriteAccess("admin", true);
         user.setACL(userACL);
         // Need a hash for secure client-intercom messaging
         // NOTE: storing as string might not work?
@@ -114,6 +115,9 @@ Parse.Cloud.beforeSave(Test, function (request, response) {
             if (!test.isPublic()) {
                 promises.push(test.deleteIndexObject());
             }
+            var ACL = test.getACL();
+            ACL.setPublicReadAccess(test.isPublic());
+            test.setACL(ACL);
         }
     }
 

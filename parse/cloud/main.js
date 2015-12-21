@@ -1252,6 +1252,7 @@ var Test = Parse.Object.extend("Test", {
         if (this.author()) {
             var ACL = new Parse.ACL(this.author());
             ACL.setPublicReadAccess(this.isPublic());
+            ACL.setRoleWriteAccess("admin", true);
             this.setACL(ACL);
         }
 
@@ -2889,7 +2890,6 @@ Parse.Cloud.beforeSave(Parse.User, function (request, response) {
         promises.push(user.assignBadgeProgressions());
         promises.push(user.generateSlug());
     } else {
-        logger.log("user-dirty", user.dirtyKeys());
         if (user.dirtyKeys() && _.contains(user.dirtyKeys(), "email")) {
             user.username = user.get('email');
         }
@@ -2918,6 +2918,8 @@ Parse.Cloud.afterSave(Parse.User, function (request) {
         // Hashes for Intercom can be created here
         var userACL = new Parse.ACL(user);
         userACL.setPublicReadAccess(false);
+        userACL.setRoleReadAccess("admin", true);
+        userACL.setRoleWriteAccess("admin", true);
         user.setACL(userACL);
         // Need a hash for secure client-intercom messaging
         // NOTE: storing as string might not work?
@@ -2984,6 +2986,9 @@ Parse.Cloud.beforeSave(Test, function (request, response) {
             if (!test.isPublic()) {
                 promises.push(test.deleteIndexObject());
             }
+            var ACL = test.getACL();
+            ACL.setPublicReadAccess(test.isPublic());
+            test.setACL(ACL);
         }
     }
 
@@ -5089,6 +5094,16 @@ Parse.Cloud.define("unfollowUser", function (request, response) {
     });
 });
 
+/**
+ * @CloudFunction Perform Search
+ * Manipulates search results to fetch latest
+ * author data.
+ * {String} indexName
+ * {string} searchTerm
+ * {Object} options
+ * {Object} multipleQueries
+ * @return {Object} searchResults
+ */
 Parse.Cloud.define('performSearch', function (request, response) {
     Parse.Cloud.useMasterKey();
     var indexName = request.params.indexName,
@@ -5127,6 +5142,12 @@ Parse.Cloud.define('performSearch', function (request, response) {
     });
 });
 
+/**
+ * @CloudFunction Fetch Url Meta Data
+ * Used for further reading feature on quiz questions
+ * @param {String} url
+ * @return {Object} metaData
+ */
 Parse.Cloud.define('fetchUrlMetaData', function (request, response) {
     var url = request.params.url;
 
@@ -5151,6 +5172,31 @@ Parse.Cloud.define('fetchUrlMetaData', function (request, response) {
         response.error(error);
     });
 });
+
+Parse.Cloud.define('preFacebookSignUp', function (request, response) {
+    Parse.Cloud.useMasterKey();
+
+    var data = request.params.data,
+        promise;
+
+    var userQuery = new Parse.Query(Parse.User);
+    userQuery.equalTo('username', data.email);
+    userQuery.doesNotExist('authData');
+    promise = userQuery.find().then(function (result) {
+        var user = result[0];
+        if (user) {
+            user.set('authData', data.authData);
+            return user.save();
+        }
+    });
+
+    promise.then(function () {
+        response.success();
+    }, function (error) {
+        response.error(error);
+    });
+});
+
 
 /**
  * No Longer Needed, Delete if it annoys you

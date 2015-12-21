@@ -1899,6 +1899,16 @@ Parse.Cloud.define("unfollowUser", function (request, response) {
     });
 });
 
+/**
+ * @CloudFunction Perform Search
+ * Manipulates search results to fetch latest
+ * author data.
+ * {String} indexName
+ * {string} searchTerm
+ * {Object} options
+ * {Object} multipleQueries
+ * @return {Object} searchResults
+ */
 Parse.Cloud.define('performSearch', function (request, response) {
     Parse.Cloud.useMasterKey();
     var indexName = request.params.indexName,
@@ -1937,6 +1947,12 @@ Parse.Cloud.define('performSearch', function (request, response) {
     });
 });
 
+/**
+ * @CloudFunction Fetch Url Meta Data
+ * Used for further reading feature on quiz questions
+ * @param {String} url
+ * @return {Object} metaData
+ */
 Parse.Cloud.define('fetchUrlMetaData', function (request, response) {
     var url = request.params.url;
 
@@ -1961,6 +1977,31 @@ Parse.Cloud.define('fetchUrlMetaData', function (request, response) {
         response.error(error);
     });
 });
+
+Parse.Cloud.define('preFacebookSignUp', function (request, response) {
+    Parse.Cloud.useMasterKey();
+
+    var data = request.params.data,
+        promise;
+
+    var userQuery = new Parse.Query(Parse.User);
+    userQuery.equalTo('username', data.email);
+    userQuery.doesNotExist('authData');
+    promise = userQuery.find().then(function (result) {
+        var user = result[0];
+        if (user) {
+            user.set('authData', data.authData);
+            return user.save();
+        }
+    });
+
+    promise.then(function () {
+        response.success();
+    }, function (error) {
+        response.error(error);
+    });
+});
+
 
 /**
  * No Longer Needed, Delete if it annoys you

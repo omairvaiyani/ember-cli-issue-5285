@@ -357,12 +357,19 @@ export default Ember.Controller.extend(CurrentUser, SortBy, DeleteWithUndo, {
             this.set('friendsListTab', tab);
         },
 
-        // Check for deprecation
         deleteTest: function (test) {
-            this.send('deleteObject', {
-                array: this.get('currentUser.createdTests'), object: test,
-                title: "Test deleted!", message: test.get('title')
-            });
+            if (test.get('author.id') === this.get('currentUser.id')) {
+                this.send('deleteObject', {
+                    array: this.get('currentUser.createdTests'), object: test,
+                    title: "Quiz deleted!", message: test.get('title')
+                });
+            } else {
+                // Called by Admin
+                this.send('deleteObject', {
+                    array: test.get('author.createdTests'), object: test,
+                    title: "[ADMIN] Quiz deleted!", message: test.get('title')
+                });
+            }
         },
 
         // Callback from DeleteWithUndoMixin

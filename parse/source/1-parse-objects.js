@@ -1252,6 +1252,7 @@ var Test = Parse.Object.extend("Test", {
         if (this.author()) {
             var ACL = new Parse.ACL(this.author());
             ACL.setPublicReadAccess(this.isPublic());
+            ACL.setRoleWriteAccess("admin", true);
             this.setACL(ACL);
         }
 

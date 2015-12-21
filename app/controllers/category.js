@@ -4,8 +4,11 @@ import CurrentUser from '../mixins/current-user';
 import TagsAndCats from '../mixins/tags-and-cats';
 import SortBy from '../mixins/sort-by';
 import EstimateMemoryStrength from '../mixins/estimate-memory-strength';
+import DeleteWithUndo from '../mixins/delete-with-undo';
 
-export default Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, EstimateMemoryStrength, {
+export default Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, EstimateMemoryStrength,
+    DeleteWithUndo, {
+
     needs: 'application',
 
     applicationController: function () {
@@ -272,6 +275,45 @@ export default Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, Estimat
         fetchMore: function (callback) {
             var promise = this.getTests(true);
             callback(promise);
+        },
+
+        /**
+         * @Action Delete Test
+         *
+         * Called by TestCardComponent
+         * For now, this will only be
+         * done by Admins - we have
+         * disabled the delete test
+         * option on Browse for other
+         * users.
+         *
+         * @param test
+         */
+        deleteTest: function (test) {
+            if (test.get('author.id') === this.get('currentUser.id')) {
+                this.send('deleteObject', {
+                    array: this.get('currentUser.createdTests'), object: test,
+                    title: "Quiz deleted!", message: test.get('title')
+                });
+            } else {
+                // Called by Admin
+                this.send('deleteObject', {
+                    array: this.get('tests'), object: test,
+                    title: "[ADMIN] Quiz deleted!", message: test.get('title')
+                });
+            }
+        },
+
+        // Callback from DeleteWithUndoMixin
+        preObjectDelete: function (returnItem) {
+            if (returnItem.type === "test") {
+
+            }
+        },
+
+        undoObjectDelete: function (returnItem, error) {
+            // Called if object delete is undo'd,
+            // TODO see if scrolling to test helps
         }
 
     }

@@ -48,13 +48,15 @@ export default Ember.Component.extend({
      * - Test author is currentUser AND,
      * - Test is not generated AND,
      * - Parent Controller is not browseTests
-     *
+     * OR if
+     * - User is an Admin
      * @returns {boolean}
      */
     showDelete: function () {
-        return this.get('isCurrentUserTheAuthor') && !this.get('test.isGenerated') &&
-            this.get('parentController.controllerId') !== "browseTests";
-    }.property('isCurrentUserTheAuthor', 'test.isGenerated'),
+        return (this.get('isCurrentUserTheAuthor') && !this.get('test.isGenerated') &&
+            this.get('parentController.controllerId') !== "browseTests") ||
+            this.get('currentUser.isAdmin');
+    }.property('isCurrentUserTheAuthor', 'test.isGenerated', 'currentUser.isAdmin'),
 
     showEdit: function () {
         return this.get('isCurrentUserTheAuthor') && !this.get('test.isGenerated');
@@ -146,16 +148,16 @@ export default Ember.Component.extend({
     }.property('test.author.profileImageURL.length'),
 
     testActionLabel: function () {
-        if(this.get('latestAttempt'))
+        if (this.get('latestAttempt'))
             return "Retry Quiz";
         else
             return "Take Quiz";
     }.property('latestAttempt'),
 
     latestAttempt: function () {
-        if(this.get('currentUser.testAttempts')) {
+        if (this.get('currentUser.testAttempts')) {
             var attempts = this.get('currentUser.testAttempts').filterBy("test", this.get('test'));
-            if(attempts)
+            if (attempts)
                 return attempts.objectAt(0);
         }
     }.property('currentUser.testAttempts.length'),

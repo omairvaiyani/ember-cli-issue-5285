@@ -180,6 +180,9 @@ export default Ember.Controller.extend({
             // Set Up Current User Tiles
             this.get('controllers.index').getAndSetCurrentUserTiles();
 
+            if(_.contains(this.get('parseConfig').adminIds, this.get('currentUser.id')))
+                this.set('currentUser.isAdmin', true);
+
             // If the user was previously logged in, sessionToken is validated
             // in the SessionInitializer along with the initialiseApp Cloud function
             // - else, we need the cloud function part here
