@@ -279,7 +279,7 @@ export default {
         if(earnedBadges)
             user.set('earnedBadges', earnedBadges);
         if(badgeProgressions)
-            user.set('badgeProgression', badgeProgressions);
+            user.set('badgeProgressions', badgeProgressions);
         if(level)
             user.set('level', level);
 

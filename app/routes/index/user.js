@@ -51,7 +51,7 @@ export default Ember.Route.extend(RouteHistory, {
                     followers.addObjects(ParseHelper.extractRawPayload(
                         this.store, 'parse-user', _.clone(response.followers)));
 
-                var user = ParseHelper.extractRawPayload(this.store, 'parse-user', response);
+                var user = ParseHelper.handleUserWithIncludedData(this.store, response);
 
                 user.set('createdTests', createdTests);
                 user.set('savedTests', savedTests);
