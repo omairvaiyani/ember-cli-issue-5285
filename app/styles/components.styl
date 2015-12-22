@@ -165,15 +165,35 @@
   width 106px
   line-height: normal
   font-size 12px
-  background-color colorGreen !important
-  border 1px solid alpha(black, 0.4)
-  color white !important
+  border 1px solid colorBorder
+  background-color colorBackground !important
+  color colorInfo !important
+  &::after
+    content 'Follow'
   &.unfollow
-    background-color colorRed !important
+    background-color colorInfo !important
+    color white !important
+    &::after
+      content 'Following'
+    &:hover
+      background-color colorRed !important
+      &::after
+        content 'Unfollow'
   &.mini
     width 34px
     font-size 14px
     padding: 0 4px !important
+    &::after
+      content ''
+    &.unfollow
+      &::after
+        content ''
+      &:hover
+        .icon
+          &::before
+            content '\f235' /* Change fa-user to fa-user-times */
+        &::after
+          content ''
 
 .form-horizontal
   .control-label
