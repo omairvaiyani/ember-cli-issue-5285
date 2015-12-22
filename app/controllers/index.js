@@ -45,6 +45,19 @@ Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, EstimateMemoryStrength
 
     }.property('currentUser', 'applicationController.currentPath.length'),
 
+    /**
+     * @Property Show User Home Navigation
+     * Hide if
+     * - Index/UserRoute AND !isCurrentUser
+     * else show.
+     */
+    showUserHomeNavigation: function () {
+        if (this.get('applicationController.currentPath') === "index.user")
+            return this.get('isCurrentUser');
+        else
+            return true;
+    }.property('isCurrentUser', 'applicationController.currentPath.length'),
+
     isCurrentUser: function () {
         return this.get('controllers.index/user.isCurrentUser');
     }.property('controllers.index/user.isCurrentUser'),
@@ -76,9 +89,9 @@ Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, EstimateMemoryStrength
 
         ParseHelper.cloudFunction(this, 'refreshTilesForUser', {}).then(function (result) {
             _.each(result.tiles, function (tile) {
-                if(tile.type)
+                if (tile.type)
                     tile[tile.type] = true;
-                if(tile.test && !this.store.all('parse-user').filterBy('id', tile.test.id).objectAt(0))
+                if (tile.test && !this.store.all('parse-user').filterBy('id', tile.test.id).objectAt(0))
                     ParseHelper.extractRawPayload(this.store, 'test', tile.test);
                 tiles.push(Ember.Object.create(tile));
             }.bind(this));
@@ -92,7 +105,7 @@ Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, EstimateMemoryStrength
 
         // Refresh tiles after 5 minutes
         setTimeout(function () {
-          this.getAndSetCurrentUserTiles();
+            this.getAndSetCurrentUserTiles();
         }.bind(this), 300000);
     }.observes('showUserPage', 'currentUser.initialisedFor'),
 
@@ -166,7 +179,7 @@ Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, EstimateMemoryStrength
             var height = $(window).outerHeight() - 136,
                 width = $(window).outerWidth();
             // Need more space at the bottom on mobile screens
-            if(width < 768)
+            if (width < 768)
                 height = height - 60;
 
             if (height < 400)
