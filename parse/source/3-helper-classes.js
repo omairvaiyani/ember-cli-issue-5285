@@ -84,6 +84,25 @@ String.prototype.startsWith = function (prefix) {
 };
 
 /**
+ * @Function Humanize
+ * Converts string array
+ * to readble english.
+ * i.e. ["GOSH", "PAEDs", "ACC"] > "GOSH, PAEDs and ACC"
+ * @return {String}
+ */
+Array.prototype.humanize = function () {
+    if (this.length < 2)
+        return this[0];
+    else if (this.length === 2)
+        return this[0] + " and " + this[1];
+    else {
+        var last = _.clone(this).pop();
+        this.pop();
+        return this.join(", ") + " and " + last;
+    }
+};
+
+/**
  * @Function Percentage
  * @param {integer} number1
  * @param {integer} number2
@@ -136,8 +155,8 @@ var findNextAvailableSlotForSR = function (now, slots, dndTimes) {
         return now.hour() >= slot.start && now.hour() < slot.finish;
     });
     var slotIsToday = true;
-    for (var i = 0; i < 6; i++) {
-        var dndSlotsForToday = dndTimes[todayIndex];
+
+    _.each(dndTimes, function (dndSlotsForToday) {
         // Check if it's currently sleeping time (scheduleSlot was null) or
         // scheduleSlot is DND for user.
         if (!scheduleForSR.slot || (slotIsToday &&
@@ -159,10 +178,8 @@ var findNextAvailableSlotForSR = function (now, slots, dndTimes) {
             else
                 todayIndex++;
             slotIsToday = false;
-        } else
-            break;
-    }
-
+        }
+    });
     return scheduleForSR;
 };
 /**
@@ -197,6 +214,7 @@ var sendEmail = function (templateName, email, user, data) {
     globalData.push({"name": "CURRENT_YEAR", "content": moment().format("YYYY")});
     globalData.push({"name": "COMPANY", "content": "Synap"});
     globalData.push({"name": "ADDRESS", "content": "Leeds Innovation Center, UK"});
+    globalData.push({"name": "UPDATE_PROFILE", "content": APP.baseUrl + APP.userSettings});
 
     var subject;
     switch (templateName) {
@@ -209,9 +227,13 @@ var sendEmail = function (templateName, email, user, data) {
         case 'beta-invitation':
             subject = "You've been invited to Synap!";
             break;
+        case 'spaced-repetition':
+            subject = "Synap Quiz Ready";
+            break;
     }
 
-    console.log("About to send email to " + email);
+    logger.log("send-email", "About to send " + templateName + "  email to " + email,
+        globalData);
     return Mandrill.sendTemplate({
         template_name: templateName,
         template_content: [],

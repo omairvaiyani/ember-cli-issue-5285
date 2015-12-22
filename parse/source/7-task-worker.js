@@ -57,6 +57,7 @@ var WorkActions = {
  * @returns {WorkTask}
  */
 function srCycleTask(task) {
+    logger.log("spaced-repetition", "task started at " + moment().tz("Europe/London").format("h:mm a, Do MMM YYYY"));
     Parse.Cloud.useMasterKey();
     var initialPromises = [],
         testsGenerated = 0;
@@ -68,13 +69,13 @@ function srCycleTask(task) {
     queryForUsers.equalTo('srActivated', true);
     queryForUsers.lessThanOrEqualTo('srNextDue', new Date());
     // Don't want to generate more until last test is taken or dismissed
-    queryForUsers.equalTo("srLatestTestIsTaken", true);
+    queryForUsers.notEqualTo("srLatestTestIsTaken", false);
 
     var queryForUsersTwo = new Parse.Query(Parse.User);
     queryForUsers.equalTo('srActivated', true);
     queryForUsers.lessThanOrEqualTo('srNextDue', new Date());
     // Don't want to generate more until last test is taken or dismissed
-    queryForUsersTwo.equalTo("srLatestTestDismissed", true);
+    queryForUsersTwo.notEqualTo("srLatestTestDismissed", false);
 
     var mainQueryForUsers = Parse.Query.or(queryForUsers, queryForUsersTwo);
     mainQueryForUsers.include('educationCohort');
@@ -84,6 +85,7 @@ function srCycleTask(task) {
 
     // Loop through users with SR activated and SR due time in the past
     return Parse.Promise.when(initialPromises).then(function (config, users) {
+        logger.log("spaced-repetition", "number of users for this task: " + users.length);
         // Spaced Repetition Category for all SR tests
         var spacedRepetitionCategory = new Category();
         spacedRepetitionCategory.id = config.get('srCategoryId');
@@ -91,25 +93,21 @@ function srCycleTask(task) {
         // setting this task as complete.
         var perUserPromises = [];
         _.each(users, function (user) {
-
+            logger.log("spaced-repetition", "current loop for: " + user.name() + " (" + user.id + ")");
             // SR Intensity Level for User
             var srIntensityLevel = _.where(config.get('srIntensityLevels'), {level: user.get('srIntensityLevel')})[0],
                 urRelation = user.uniqueResponses(),
                 urQuery = urRelation.query();
             // Find URs below the user's SR intensity threshold
+            logger.log("spaced-repetition", "srIntensity upper limit: " + srIntensityLevel.upperLimit,
+                srIntensityLevel);
+
             urQuery.lessThanOrEqualTo('memoryStrength', srIntensityLevel.upperLimit);
             urQuery.ascending('memoryStrength');
             // Max 30 questions per test (intensity level based)
             // But we shuffle the lowest 60 to be unpredictable
-            urQuery.limit(60);
+            urQuery.limit(1000);
             urQuery.include('question');
-
-            // innerQuery to match uniqueResponse's question.tags with moduleTags
-            if (user.get('educationCohort')) {
-                var questionsInnerQuery = new Parse.Query(Question);
-                questionsInnerQuery.containedIn('tags', user.get('educationCohort').get('moduleTags'));
-                urQuery.matchesQuery("question", questionsInnerQuery);
-            }
 
 
             // Get current time based on User's timeZone
@@ -120,7 +118,6 @@ function srCycleTask(task) {
             // at which this test will be sent to the user.
             var scheduleForSR = findNextAvailableSlotForSR(now, config.get('srDailySlots'),
                 user.get('srDoNotDisturbTimes'));
-
             // Don't cycle through this user again
             // until two hours after the scheduled time for this test.
             // Even if a test is not generated (due to lack of URs for e.g.),
@@ -134,6 +131,7 @@ function srCycleTask(task) {
                     if (!uniqueResponses.length) {
                         return null;
                     }
+                    logger.log("spaced-repetition", "number of URs found: " + uniqueResponses.length, user.name());
                     // Generate the SR test
                     var test = new Test();
                     test.set('isGenerated', true);
@@ -143,9 +141,9 @@ function srCycleTask(task) {
                     test.set('category', spacedRepetitionCategory);
                     var daysOfTheWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
                         title = daysOfTheWeek[scheduleForSR.time.day()];
-                    title += " " + scheduleForSR.slot.label.camelCaseToNormal() + " test";
+                    title += " " + scheduleForSR.slot.label.camelCaseToNormal() + " Quiz";
                     var humanDate = scheduleForSR.time.format("Do of MMMM, YYYY");
-                    test.set('description', "This test was created and sent to you on " + humanDate);
+                    test.set('description', "This quiz was generated and sent to you on " + humanDate);
                     test.set('title', title);
                     test.set('slug', user.get('slug') +
                         "-" + scheduleForSR.time.daysInMonth() + "-" + scheduleForSR.time.month() + "-" +
@@ -154,23 +152,58 @@ function srCycleTask(task) {
                     var questions = [],
                         testTags = [],
                         totalDifficulty = 0;
+
                     // Though we want mostly questions with the user's lowest memoryStrengths,
                     // we don't want to be completely linear and predictable.
                     // By shuffling the lowest ~60, and then taking the first [maxQuestions],
                     // we have a good mix of UR memoryStrengths.
-                    _.each(_.shuffle(uniqueResponses), function (uniqueResponse, index) {
-                        if (index < srIntensityLevel.maxQuestions) {
-                            questions.push(uniqueResponse.get('question'));
+                    var shuffledURs = _.shuffle(uniqueResponses);
+
+                    // Get Module tags (either from user or their education cohort)
+                    var moduleTags = []; // empty array to avoid breaking first loop
+                    if (user.moduleTags())
+                        moduleTags = user.moduleTags();
+                    else if (user.educationCohort() && user.educationCohort().moduleTags())
+                        moduleTags = user.educationCohort().moduleTags();
+
+                    // First loop, only add questions that match moduleTags
+                    _.each(shuffledURs, function (uniqueResponse) {
+                        if (questions.length < srIntensityLevel.maxQuestions) {
+
+                            var question = uniqueResponse.question();
+
+                            if (_.contains(moduleTags, question.tags())) {
+                                questions.push(uniqueResponse.get('question'));
+                                totalDifficulty += uniqueResponse.question().difficulty();
+
+                                _.each(question.get('tags'), function (tag) {
+                                    if (!_.contains(testTags, tag))
+                                        testTags.push(tag);
+                                });
+                            }
+                        }
+                    });
+
+                    // Second loop, add other URs if space
+                    _.each(shuffledURs, function (uniqueResponse) {
+                        if (questions.length < srIntensityLevel.maxQuestions) {
+
+                            var question = uniqueResponse.question();
+                            questions.push(question);
+
                             totalDifficulty += uniqueResponse.question().difficulty();
-                            _.each(uniqueResponse.get('question').get('tags'), function (tag) {
+
+                            _.each(question.tags(), function (tag) {
                                 if (!_.contains(testTags, tag))
                                     testTags.push(tag);
                             });
                         }
                     });
+
                     test.set('questions', questions);
                     test.set('totalQuestions', questions.length);
                     test.set('difficulty', Math.round(totalDifficulty / test.totalQuestions()));
+                    logger.log("spaced-repetition", "number of questions: " + questions.length);
                     test.set('tags', testTags);
                     return test.save();
                 }).then(function (test) {
@@ -179,6 +212,7 @@ function srCycleTask(task) {
                     user.set('srLatestTest', test);
                     user.set('srLatestTestDismissed', false);
                     user.set('srLatestTestIsTaken', false);
+                    logger.log("spaced-repetition", "test successfully generated: " + test.id);
                     user.srAllTests().add(test);
                     testsGenerated++;
 
@@ -186,9 +220,18 @@ function srCycleTask(task) {
                     // upon schedule.
                     var innerPromises = [];
                     innerPromises.push(user.save());
-                    // TODO uncomment the notifyUser taskCreator and actually write code for notifications.
-                    //innerPromises.push(taskCreator('SpacedRepetition', 'notifyUserForSR',
-                    //    {scheduledTime: scheduleForSR.time.toDate()}, [test]));
+
+                    logger.log("spaced-repetition", user.name() + " wants an email? " + user.srNotifyByEmail());
+                    if (user.srNotifyByEmail()) {
+                        innerPromises.push(sendEmail("spaced-repetition",
+                            user.email(), user, [
+                                {"name": "TEST_TITLE", content: test.title()},
+                                {name: "TEST_LINK", content: APP.baseUrl + APP.testInfo + test.slug()},
+                                {name: "NUM_QUESTIONS", content: test.totalQuestions()},
+                                {name: "TAGS", content: test.tags().length ? test.tags().humanize() : "a range of areas"}
+                            ]));
+                    }
+
                     return Parse.Promise.when(innerPromises);
                 });
             perUserPromises.push(perUserPromise);

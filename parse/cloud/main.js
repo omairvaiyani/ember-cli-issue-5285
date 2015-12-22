@@ -674,39 +674,18 @@ Parse.User.prototype.createdTests = function () {
     return this.relation('createdTests');
 };
 /**
- * @Property savedTests
- * @returns {Parse.Relation<Test>}
- */
-Parse.User.prototype.savedTests = function () {
-    return this.relation('savedTests');
-};
-/**
- * @Property userEvents
- * @returns {Parse.Relation}
- */
-Parse.User.prototype.userEvents = function () {
-    return this.relation('userEvents');
-};
-/**
- * @Property level
- * @returns {Level}
- */
-Parse.User.prototype.level = function () {
-    return this.get('level');
-};
-/**
- * @Property points
- * @returns {integer}
- */
-Parse.User.prototype.points = function () {
-    return this.get('points');
-};
-/**
  * @Property earnedBadges
  * @returns {Array<Parse.Pointer<Badge>>}
  */
 Parse.User.prototype.earnedBadges = function () {
     return this.get('earnedBadges');
+};
+/**
+ * @Property email
+ * @returns {String}
+ */
+Parse.User.prototype.email = function () {
+    return this.get('email');
 };
 /**
  * @Property badgeProgressions
@@ -716,13 +695,6 @@ Parse.User.prototype.badgeProgressions = function () {
     return this.get('badgeProgressions');
 };
 /**
- * @Property uniqueResponses
- * @returns {Parse.Relation<UniqueResponse>}
- */
-Parse.User.prototype.uniqueResponses = function () {
-    return this.relation('uniqueResponses');
-};
-/**
  * @Property educationCohort
  * @returns {EducationCohort}
  */
@@ -730,11 +702,18 @@ Parse.User.prototype.educationCohort = function () {
     return this.get('educationCohort');
 };
 /**
- * @Property testAttempts
- * @returns {Parse.Relation<Attempt>}
+ * @Property followers
+ * @returns {Parse.Relation<Parse.User>}
  */
-Parse.User.prototype.testAttempts = function () {
-    return this.relation('testAttempts');
+Parse.User.prototype.followers = function () {
+    return this.relation('followers');
+};
+/**
+ * @Property following
+ * @returns {Parse.Relation<Parse.User>}
+ */
+Parse.User.prototype.following = function () {
+    return this.relation('following');
 };
 /**
  * @Property latestTestAttempts
@@ -742,6 +721,34 @@ Parse.User.prototype.testAttempts = function () {
  */
 Parse.User.prototype.latestTestAttempts = function () {
     return this.relation('latestTestAttempts');
+};
+/**
+ * @Property level
+ * @returns {Level}
+ */
+Parse.User.prototype.level = function () {
+    return this.get('level');
+};
+/**
+ * @Property moduleTags
+ * @returns {Array<String>}
+ */
+Parse.User.prototype.moduleTags = function () {
+    return this.get('moduleTags');
+};
+/**
+ * @Property points
+ * @returns {integer}
+ */
+Parse.User.prototype.points = function () {
+    return this.get('points');
+};
+/**
+ * @Property savedTests
+ * @returns {Parse.Relation<Test>}
+ */
+Parse.User.prototype.savedTests = function () {
+    return this.relation('savedTests');
 };
 /**
  * @Property srLatestTest
@@ -779,25 +786,39 @@ Parse.User.prototype.srCompletedAttempts = function () {
     return this.relation('srCompletedAttempts');
 };
 /**
- * @Property followers
- * @returns {Parse.Relation<Parse.User>}
+ * @Property srNotifyByEmail
+ * @returns {boolean}
  */
-Parse.User.prototype.followers = function () {
-    return this.relation('followers');
+Parse.User.prototype.srNotifyByEmail = function () {
+    return this.get('srNotifyByEmail');
 };
 /**
- * @Property following
- * @returns {Parse.Relation<Parse.User>}
+ * @Property srNotifyByPush
+ * @returns {boolean}
  */
-Parse.User.prototype.following = function () {
-    return this.relation('following');
+Parse.User.prototype.srNotifyByPush = function () {
+    return this.get('srNotifyByPush');
 };
 /**
- * @Property moduleTags
- * @returns {Array<String>}
+ * @Property testAttempts
+ * @returns {Parse.Relation<Attempt>}
  */
-Parse.User.prototype.moduleTags = function () {
-    return this.get('moduleTags');
+Parse.User.prototype.testAttempts = function () {
+    return this.relation('testAttempts');
+};
+/**
+ * @Property uniqueResponses
+ * @returns {Parse.Relation<UniqueResponse>}
+ */
+Parse.User.prototype.uniqueResponses = function () {
+    return this.relation('uniqueResponses');
+};
+/**
+ * @Property userEvents
+ * @returns {Parse.Relation}
+ */
+Parse.User.prototype.userEvents = function () {
+    return this.relation('userEvents');
 };
 /****
  * ---------
@@ -1455,6 +1476,14 @@ var Question = Parse.Object.extend("Question", {
      */
     difficulty: function () {
         return this.get('difficulty') ? this.get('difficulty') : 50;
+    },
+
+    /**
+     * @Property tags
+     * @returns {Array<String>}
+     */
+    tags: function () {
+        return this.get('tags');
     },
 
     /**
@@ -2337,6 +2366,14 @@ var EducationCohort = Parse.Object.extend("EducationCohort", {
      */
     studyField: function () {
         return this.get('studyField');
+    },
+
+    /**
+     * @Property moduleTags
+     * @returns {Array<String>}
+     */
+    moduleTags: function () {
+        return this.get('moduleTags');
     }
 }, {});
 /****
@@ -2601,7 +2638,11 @@ Stripe.initialize('sk_test_AfBhaEg8Yojoc1hylUI0pdtc'); // testing key
 
 var APP = {
     baseUrl: 'https://synap.ac/',
-    baseCDN: 'https://s3-eu-west-1.amazonaws.com/synap-dev-assets/'
+    baseCDN: 'https://s3-eu-west-1.amazonaws.com/synap-dev-assets/',
+    takeTest: 'mcq/',
+    testInfo: 'test/',
+    userSettings: 'settings/',
+    userStudySettings: 'settings/study/',
 };/*
  * HELPER CLASSES
  */
@@ -2688,6 +2729,25 @@ String.prototype.startsWith = function (prefix) {
 };
 
 /**
+ * @Function Humanize
+ * Converts string array
+ * to readble english.
+ * i.e. ["GOSH", "PAEDs", "ACC"] > "GOSH, PAEDs and ACC"
+ * @return {String}
+ */
+Array.prototype.humanize = function () {
+    if (this.length < 2)
+        return this[0];
+    else if (this.length === 2)
+        return this[0] + " and " + this[1];
+    else {
+        var last = _.clone(this).pop();
+        this.pop();
+        return this.join(", ") + " and " + last;
+    }
+};
+
+/**
  * @Function Percentage
  * @param {integer} number1
  * @param {integer} number2
@@ -2740,8 +2800,8 @@ var findNextAvailableSlotForSR = function (now, slots, dndTimes) {
         return now.hour() >= slot.start && now.hour() < slot.finish;
     });
     var slotIsToday = true;
-    for (var i = 0; i < 6; i++) {
-        var dndSlotsForToday = dndTimes[todayIndex];
+
+    _.each(dndTimes, function (dndSlotsForToday) {
         // Check if it's currently sleeping time (scheduleSlot was null) or
         // scheduleSlot is DND for user.
         if (!scheduleForSR.slot || (slotIsToday &&
@@ -2763,10 +2823,8 @@ var findNextAvailableSlotForSR = function (now, slots, dndTimes) {
             else
                 todayIndex++;
             slotIsToday = false;
-        } else
-            break;
-    }
-
+        }
+    });
     return scheduleForSR;
 };
 /**
@@ -2801,6 +2859,7 @@ var sendEmail = function (templateName, email, user, data) {
     globalData.push({"name": "CURRENT_YEAR", "content": moment().format("YYYY")});
     globalData.push({"name": "COMPANY", "content": "Synap"});
     globalData.push({"name": "ADDRESS", "content": "Leeds Innovation Center, UK"});
+    globalData.push({"name": "UPDATE_PROFILE", "content": APP.baseUrl + APP.userSettings});
 
     var subject;
     switch (templateName) {
@@ -2813,9 +2872,13 @@ var sendEmail = function (templateName, email, user, data) {
         case 'beta-invitation':
             subject = "You've been invited to Synap!";
             break;
+        case 'spaced-repetition':
+            subject = "Synap Quiz Ready";
+            break;
     }
 
-    console.log("About to send email to " + email);
+    logger.log("send-email", "About to send " + templateName + "  email to " + email,
+        globalData);
     return Mandrill.sendTemplate({
         template_name: templateName,
         template_content: [],
@@ -5327,6 +5390,7 @@ var WorkActions = {
  * @returns {WorkTask}
  */
 function srCycleTask(task) {
+    logger.log("spaced-repetition", "task started at " + moment().tz("Europe/London").format("h:mm a, Do MMM YYYY"));
     Parse.Cloud.useMasterKey();
     var initialPromises = [],
         testsGenerated = 0;
@@ -5338,13 +5402,13 @@ function srCycleTask(task) {
     queryForUsers.equalTo('srActivated', true);
     queryForUsers.lessThanOrEqualTo('srNextDue', new Date());
     // Don't want to generate more until last test is taken or dismissed
-    queryForUsers.equalTo("srLatestTestIsTaken", true);
+    queryForUsers.notEqualTo("srLatestTestIsTaken", false);
 
     var queryForUsersTwo = new Parse.Query(Parse.User);
     queryForUsers.equalTo('srActivated', true);
     queryForUsers.lessThanOrEqualTo('srNextDue', new Date());
     // Don't want to generate more until last test is taken or dismissed
-    queryForUsersTwo.equalTo("srLatestTestDismissed", true);
+    queryForUsersTwo.notEqualTo("srLatestTestDismissed", false);
 
     var mainQueryForUsers = Parse.Query.or(queryForUsers, queryForUsersTwo);
     mainQueryForUsers.include('educationCohort');
@@ -5354,6 +5418,7 @@ function srCycleTask(task) {
 
     // Loop through users with SR activated and SR due time in the past
     return Parse.Promise.when(initialPromises).then(function (config, users) {
+        logger.log("spaced-repetition", "number of users for this task: " + users.length);
         // Spaced Repetition Category for all SR tests
         var spacedRepetitionCategory = new Category();
         spacedRepetitionCategory.id = config.get('srCategoryId');
@@ -5361,25 +5426,21 @@ function srCycleTask(task) {
         // setting this task as complete.
         var perUserPromises = [];
         _.each(users, function (user) {
-
+            logger.log("spaced-repetition", "current loop for: " + user.name() + " (" + user.id + ")");
             // SR Intensity Level for User
             var srIntensityLevel = _.where(config.get('srIntensityLevels'), {level: user.get('srIntensityLevel')})[0],
                 urRelation = user.uniqueResponses(),
                 urQuery = urRelation.query();
             // Find URs below the user's SR intensity threshold
+            logger.log("spaced-repetition", "srIntensity upper limit: " + srIntensityLevel.upperLimit,
+                srIntensityLevel);
+
             urQuery.lessThanOrEqualTo('memoryStrength', srIntensityLevel.upperLimit);
             urQuery.ascending('memoryStrength');
             // Max 30 questions per test (intensity level based)
             // But we shuffle the lowest 60 to be unpredictable
-            urQuery.limit(60);
+            urQuery.limit(1000);
             urQuery.include('question');
-
-            // innerQuery to match uniqueResponse's question.tags with moduleTags
-            if (user.get('educationCohort')) {
-                var questionsInnerQuery = new Parse.Query(Question);
-                questionsInnerQuery.containedIn('tags', user.get('educationCohort').get('moduleTags'));
-                urQuery.matchesQuery("question", questionsInnerQuery);
-            }
 
 
             // Get current time based on User's timeZone
@@ -5390,7 +5451,6 @@ function srCycleTask(task) {
             // at which this test will be sent to the user.
             var scheduleForSR = findNextAvailableSlotForSR(now, config.get('srDailySlots'),
                 user.get('srDoNotDisturbTimes'));
-
             // Don't cycle through this user again
             // until two hours after the scheduled time for this test.
             // Even if a test is not generated (due to lack of URs for e.g.),
@@ -5404,6 +5464,7 @@ function srCycleTask(task) {
                     if (!uniqueResponses.length) {
                         return null;
                     }
+                    logger.log("spaced-repetition", "number of URs found: " + uniqueResponses.length, user.name());
                     // Generate the SR test
                     var test = new Test();
                     test.set('isGenerated', true);
@@ -5413,9 +5474,9 @@ function srCycleTask(task) {
                     test.set('category', spacedRepetitionCategory);
                     var daysOfTheWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
                         title = daysOfTheWeek[scheduleForSR.time.day()];
-                    title += " " + scheduleForSR.slot.label.camelCaseToNormal() + " test";
+                    title += " " + scheduleForSR.slot.label.camelCaseToNormal() + " Quiz";
                     var humanDate = scheduleForSR.time.format("Do of MMMM, YYYY");
-                    test.set('description', "This test was created and sent to you on " + humanDate);
+                    test.set('description', "This quiz was generated and sent to you on " + humanDate);
                     test.set('title', title);
                     test.set('slug', user.get('slug') +
                         "-" + scheduleForSR.time.daysInMonth() + "-" + scheduleForSR.time.month() + "-" +
@@ -5424,23 +5485,58 @@ function srCycleTask(task) {
                     var questions = [],
                         testTags = [],
                         totalDifficulty = 0;
+
                     // Though we want mostly questions with the user's lowest memoryStrengths,
                     // we don't want to be completely linear and predictable.
                     // By shuffling the lowest ~60, and then taking the first [maxQuestions],
                     // we have a good mix of UR memoryStrengths.
-                    _.each(_.shuffle(uniqueResponses), function (uniqueResponse, index) {
-                        if (index < srIntensityLevel.maxQuestions) {
-                            questions.push(uniqueResponse.get('question'));
+                    var shuffledURs = _.shuffle(uniqueResponses);
+
+                    // Get Module tags (either from user or their education cohort)
+                    var moduleTags = []; // empty array to avoid breaking first loop
+                    if (user.moduleTags())
+                        moduleTags = user.moduleTags();
+                    else if (user.educationCohort() && user.educationCohort().moduleTags())
+                        moduleTags = user.educationCohort().moduleTags();
+
+                    // First loop, only add questions that match moduleTags
+                    _.each(shuffledURs, function (uniqueResponse) {
+                        if (questions.length < srIntensityLevel.maxQuestions) {
+
+                            var question = uniqueResponse.question();
+
+                            if (_.contains(moduleTags, question.tags())) {
+                                questions.push(uniqueResponse.get('question'));
+                                totalDifficulty += uniqueResponse.question().difficulty();
+
+                                _.each(question.get('tags'), function (tag) {
+                                    if (!_.contains(testTags, tag))
+                                        testTags.push(tag);
+                                });
+                            }
+                        }
+                    });
+
+                    // Second loop, add other URs if space
+                    _.each(shuffledURs, function (uniqueResponse) {
+                        if (questions.length < srIntensityLevel.maxQuestions) {
+
+                            var question = uniqueResponse.question();
+                            questions.push(question);
+
                             totalDifficulty += uniqueResponse.question().difficulty();
-                            _.each(uniqueResponse.get('question').get('tags'), function (tag) {
+
+                            _.each(question.tags(), function (tag) {
                                 if (!_.contains(testTags, tag))
                                     testTags.push(tag);
                             });
                         }
                     });
+
                     test.set('questions', questions);
                     test.set('totalQuestions', questions.length);
                     test.set('difficulty', Math.round(totalDifficulty / test.totalQuestions()));
+                    logger.log("spaced-repetition", "number of questions: " + questions.length);
                     test.set('tags', testTags);
                     return test.save();
                 }).then(function (test) {
@@ -5449,6 +5545,7 @@ function srCycleTask(task) {
                     user.set('srLatestTest', test);
                     user.set('srLatestTestDismissed', false);
                     user.set('srLatestTestIsTaken', false);
+                    logger.log("spaced-repetition", "test successfully generated: " + test.id);
                     user.srAllTests().add(test);
                     testsGenerated++;
 
@@ -5456,9 +5553,18 @@ function srCycleTask(task) {
                     // upon schedule.
                     var innerPromises = [];
                     innerPromises.push(user.save());
-                    // TODO uncomment the notifyUser taskCreator and actually write code for notifications.
-                    //innerPromises.push(taskCreator('SpacedRepetition', 'notifyUserForSR',
-                    //    {scheduledTime: scheduleForSR.time.toDate()}, [test]));
+
+                    logger.log("spaced-repetition", user.name() + " wants an email? " + user.srNotifyByEmail());
+                    if (user.srNotifyByEmail()) {
+                        innerPromises.push(sendEmail("spaced-repetition",
+                            user.email(), user, [
+                                {"name": "TEST_TITLE", content: test.title()},
+                                {name: "TEST_LINK", content: APP.baseUrl + APP.testInfo + test.slug()},
+                                {name: "NUM_QUESTIONS", content: test.totalQuestions()},
+                                {name: "TAGS", content: test.tags().length ? test.tags().humanize() : "a range of areas"}
+                            ]));
+                    }
+
                     return Parse.Promise.when(innerPromises);
                 });
             perUserPromises.push(perUserPromise);

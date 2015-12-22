@@ -674,39 +674,18 @@ Parse.User.prototype.createdTests = function () {
     return this.relation('createdTests');
 };
 /**
- * @Property savedTests
- * @returns {Parse.Relation<Test>}
- */
-Parse.User.prototype.savedTests = function () {
-    return this.relation('savedTests');
-};
-/**
- * @Property userEvents
- * @returns {Parse.Relation}
- */
-Parse.User.prototype.userEvents = function () {
-    return this.relation('userEvents');
-};
-/**
- * @Property level
- * @returns {Level}
- */
-Parse.User.prototype.level = function () {
-    return this.get('level');
-};
-/**
- * @Property points
- * @returns {integer}
- */
-Parse.User.prototype.points = function () {
-    return this.get('points');
-};
-/**
  * @Property earnedBadges
  * @returns {Array<Parse.Pointer<Badge>>}
  */
 Parse.User.prototype.earnedBadges = function () {
     return this.get('earnedBadges');
+};
+/**
+ * @Property email
+ * @returns {String}
+ */
+Parse.User.prototype.email = function () {
+    return this.get('email');
 };
 /**
  * @Property badgeProgressions
@@ -716,13 +695,6 @@ Parse.User.prototype.badgeProgressions = function () {
     return this.get('badgeProgressions');
 };
 /**
- * @Property uniqueResponses
- * @returns {Parse.Relation<UniqueResponse>}
- */
-Parse.User.prototype.uniqueResponses = function () {
-    return this.relation('uniqueResponses');
-};
-/**
  * @Property educationCohort
  * @returns {EducationCohort}
  */
@@ -730,11 +702,18 @@ Parse.User.prototype.educationCohort = function () {
     return this.get('educationCohort');
 };
 /**
- * @Property testAttempts
- * @returns {Parse.Relation<Attempt>}
+ * @Property followers
+ * @returns {Parse.Relation<Parse.User>}
  */
-Parse.User.prototype.testAttempts = function () {
-    return this.relation('testAttempts');
+Parse.User.prototype.followers = function () {
+    return this.relation('followers');
+};
+/**
+ * @Property following
+ * @returns {Parse.Relation<Parse.User>}
+ */
+Parse.User.prototype.following = function () {
+    return this.relation('following');
 };
 /**
  * @Property latestTestAttempts
@@ -742,6 +721,34 @@ Parse.User.prototype.testAttempts = function () {
  */
 Parse.User.prototype.latestTestAttempts = function () {
     return this.relation('latestTestAttempts');
+};
+/**
+ * @Property level
+ * @returns {Level}
+ */
+Parse.User.prototype.level = function () {
+    return this.get('level');
+};
+/**
+ * @Property moduleTags
+ * @returns {Array<String>}
+ */
+Parse.User.prototype.moduleTags = function () {
+    return this.get('moduleTags');
+};
+/**
+ * @Property points
+ * @returns {integer}
+ */
+Parse.User.prototype.points = function () {
+    return this.get('points');
+};
+/**
+ * @Property savedTests
+ * @returns {Parse.Relation<Test>}
+ */
+Parse.User.prototype.savedTests = function () {
+    return this.relation('savedTests');
 };
 /**
  * @Property srLatestTest
@@ -779,25 +786,39 @@ Parse.User.prototype.srCompletedAttempts = function () {
     return this.relation('srCompletedAttempts');
 };
 /**
- * @Property followers
- * @returns {Parse.Relation<Parse.User>}
+ * @Property srNotifyByEmail
+ * @returns {boolean}
  */
-Parse.User.prototype.followers = function () {
-    return this.relation('followers');
+Parse.User.prototype.srNotifyByEmail = function () {
+    return this.get('srNotifyByEmail');
 };
 /**
- * @Property following
- * @returns {Parse.Relation<Parse.User>}
+ * @Property srNotifyByPush
+ * @returns {boolean}
  */
-Parse.User.prototype.following = function () {
-    return this.relation('following');
+Parse.User.prototype.srNotifyByPush = function () {
+    return this.get('srNotifyByPush');
 };
 /**
- * @Property moduleTags
- * @returns {Array<String>}
+ * @Property testAttempts
+ * @returns {Parse.Relation<Attempt>}
  */
-Parse.User.prototype.moduleTags = function () {
-    return this.get('moduleTags');
+Parse.User.prototype.testAttempts = function () {
+    return this.relation('testAttempts');
+};
+/**
+ * @Property uniqueResponses
+ * @returns {Parse.Relation<UniqueResponse>}
+ */
+Parse.User.prototype.uniqueResponses = function () {
+    return this.relation('uniqueResponses');
+};
+/**
+ * @Property userEvents
+ * @returns {Parse.Relation}
+ */
+Parse.User.prototype.userEvents = function () {
+    return this.relation('userEvents');
 };
 /****
  * ---------
@@ -1455,6 +1476,14 @@ var Question = Parse.Object.extend("Question", {
      */
     difficulty: function () {
         return this.get('difficulty') ? this.get('difficulty') : 50;
+    },
+
+    /**
+     * @Property tags
+     * @returns {Array<String>}
+     */
+    tags: function () {
+        return this.get('tags');
     },
 
     /**
@@ -2337,6 +2366,14 @@ var EducationCohort = Parse.Object.extend("EducationCohort", {
      */
     studyField: function () {
         return this.get('studyField');
+    },
+
+    /**
+     * @Property moduleTags
+     * @returns {Array<String>}
+     */
+    moduleTags: function () {
+        return this.get('moduleTags');
     }
 }, {});
 /****

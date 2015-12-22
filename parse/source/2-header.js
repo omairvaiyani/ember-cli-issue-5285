@@ -23,5 +23,9 @@ Stripe.initialize('sk_test_AfBhaEg8Yojoc1hylUI0pdtc'); // testing key
 
 var APP = {
     baseUrl: 'https://synap.ac/',
-    baseCDN: 'https://s3-eu-west-1.amazonaws.com/synap-dev-assets/'
+    baseCDN: 'https://s3-eu-west-1.amazonaws.com/synap-dev-assets/',
+    takeTest: 'mcq/',
+    testInfo: 'test/',
+    userSettings: 'settings/',
+    userStudySettings: 'settings/study/',
 };
