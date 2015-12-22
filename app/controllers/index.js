@@ -9,7 +9,7 @@ import ParseHelper from '../utils/parse-helper';
 // TODO check for unused mixins
 export default
 Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, EstimateMemoryStrength, DeleteWithUndo, {
-    needs: ['application'],
+    needs: ['application', 'index/user'],
 
     applicationController: function () {
         return this.get('controllers.application');
@@ -44,6 +44,10 @@ Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, EstimateMemoryStrength
             return true;
 
     }.property('currentUser', 'applicationController.currentPath.length'),
+
+    isCurrentUser: function () {
+        return this.get('controllers.index/user.isCurrentUser');
+    }.property('controllers.index/user.isCurrentUser'),
 
     /***
      * CURRENT USER MODE

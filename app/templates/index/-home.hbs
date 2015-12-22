@@ -1,5 +1,5 @@
 <section class="row margin-bottom-16">
-    {{#if currentUser}}
+    {{#if isCurrentUser}}
         <article class="col-xs-12 col-sm-2">
             <div class="panel panel-primary card">
                 <div class="panel-heading">
@@ -27,7 +27,7 @@
     {{/if}}
 
 
-    <article class="col-xs-12 col-sm-10 col-fix-right">
+    <article {{bind-attr class=":col-xs-12 isCurrentUser:col-sm-10 isCurrentUser:col-fix-right"}}>
         {{outlet}}
     </article>
 </section>
