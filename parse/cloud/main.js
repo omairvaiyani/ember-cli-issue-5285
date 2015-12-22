@@ -773,6 +773,13 @@ Parse.User.prototype.srActivated = function () {
     return this.get('srActivated');
 };
 /**
+ * @Property srDoNotDisturbTimes
+ * @returns {Array}
+ */
+Parse.User.prototype.srDoNotDisturbTimes = function () {
+    return this.get('srDoNotDisturbTimes');
+};
+/**
  * @Property srLatestTest
  * @returns {Test}
  */
@@ -2814,6 +2821,7 @@ var findNextAvailableSlotForSR = function (now, slots, dndTimes) {
     // Schedule a task for the test to be sent to the user
     // at the next available slot (not night time, not in DND time)
     var todayIndex = now.day() - 1;
+    var daysAhead = 0;
     // Moment week starts on Sunday, clearly they're stupid and it should be Monday.
     if (todayIndex < 0)
         todayIndex = 6;
@@ -2821,20 +2829,28 @@ var findNextAvailableSlotForSR = function (now, slots, dndTimes) {
     scheduleForSR.slot = _.find(slots, function (slot) {
         return now.hour() >= slot.start && now.hour() < slot.finish;
     });
+
+    // Even if slot was found, run the loop from today
+    // to see if they have set a DND slot.
     var slotIsToday = true;
 
-    _.each(dndTimes, function (dndSlotsForToday) {
+    for (var i = 0; i < 6; i++) {
+        var dndSlotsForToday = dndTimes[todayIndex];
+
         // Check if it's currently sleeping time (scheduleSlot was null) or
         // scheduleSlot is DND for user.
+
         if (!scheduleForSR.slot || (slotIsToday &&
             _.where(dndSlotsForToday.slots, {label: scheduleForSR.slot.label})[0].active)) {
             scheduleForSR.slot = null;
+
             // Find the next available slot
             _.each(_.where(dndSlotsForToday.slots, {active: false}), function (slot) {
-                if (!scheduleForSR.slot && (now.hour() <= slot.finish || !slotIsToday)) {
+                if (!scheduleForSR.slot && (now.hour() < slot.finish || !slotIsToday)) {
                     // Next free slot found
                     scheduleForSR.slot = slot;
-                    scheduleForSR.time = _.clone(now).set('hour', slot.start);
+                    // Add days (0 if today), set hour to start of slot
+                    scheduleForSR.time = _.clone(now).add(daysAhead, "d").set('hour', slot.start);
                 }
             });
         }
@@ -2845,8 +2861,11 @@ var findNextAvailableSlotForSR = function (now, slots, dndTimes) {
             else
                 todayIndex++;
             slotIsToday = false;
-        }
-    });
+            daysAhead++;
+        } else
+            break;
+    }
+
     return scheduleForSR;
 };
 /**
@@ -5380,18 +5399,16 @@ function srCycleTask(task) {
     initialPromises.push(Parse.Config.get());
     // Query activated users
     var queryForUsers = new Parse.Query(Parse.User);
-    queryForUsers.equalTo('srActivated', true);
-    queryForUsers.lessThanOrEqualTo('srNextDue', new Date());
     // Don't want to generate more until last test is taken or dismissed
-    queryForUsers.notEqualTo("srLatestTestIsTaken", false);
+    queryForUsers.equalTo("srLatestTestIsTaken", true);
 
     var queryForUsersTwo = new Parse.Query(Parse.User);
-    queryForUsers.equalTo('srActivated', true);
-    queryForUsers.lessThanOrEqualTo('srNextDue', new Date());
     // Don't want to generate more until last test is taken or dismissed
-    queryForUsersTwo.notEqualTo("srLatestTestDismissed", false);
+    queryForUsersTwo.equalTo("srLatestTestDismissed", true);
 
     var mainQueryForUsers = Parse.Query.or(queryForUsers, queryForUsersTwo);
+    mainQueryForUsers.equalTo('srActivated', true);
+    mainQueryForUsers.lessThanOrEqualTo('srNextDue', new Date());
     mainQueryForUsers.include('educationCohort');
     mainQueryForUsers.limit(100);
 
@@ -5431,13 +5448,24 @@ function srCycleTask(task) {
             // scheduleSlotForSR contains the *slot* and the exact *time* (Moment)
             // at which this test will be sent to the user.
             var scheduleForSR = findNextAvailableSlotForSR(now, config.get('srDailySlots'),
-                user.get('srDoNotDisturbTimes'));
-            // Don't cycle through this user again
-            // until two hours after the scheduled time for this test.
-            // Even if a test is not generated (due to lack of URs for e.g.),
-            // this will still be saved.
-            var srNextDue = _.clone(scheduleForSR.time).add(2, 'hours');
-            user.set('srNextDue', srNextDue.toDate());
+                user.srDoNotDisturbTimes());
+
+            var srNextDue;
+            if(scheduleForSR.time.diff(now, 'm') <= 5) {
+                logger.log("spaced-repetition", user.name() + " time for SR yet");
+                // It is close enough to the scheduled slot, proceed with loop
+                // But set next due a bit later for the next slot (needs recoding)
+                srNextDue= _.clone(scheduleForSR.time).add(2, 'hours');
+                user.set('srNextDue', srNextDue.toDate());
+                // will be saved in the inner promise.
+            } else {
+                logger.log("spaced-repetition", user.name() + " not schedule for SR yet");
+                // Not time for SR, schedule next loop for five mins before next slot
+                srNextDue = _.clone(scheduleForSR.time).subtract(5, 'min');
+                user.set('srNextDue', srNextDue.toDate());
+                perUserPromises.push(user.save());
+                return; // End of loop for user
+            }
 
             // Begin by getting URs and updating their memory strengths
             var perUserPromise =
@@ -5542,7 +5570,10 @@ function srCycleTask(task) {
                                 {"name": "TEST_TITLE", content: test.title()},
                                 {name: "TEST_LINK", content: APP.baseUrl + APP.testInfo + test.slug()},
                                 {name: "NUM_QUESTIONS", content: test.totalQuestions()},
-                                {name: "TAGS", content: test.tags().length ? test.tags().humanize() : "a range of areas"}
+                                {
+                                    name: "TAGS",
+                                    content: test.tags().length ? test.tags().humanize() : "a range of areas"
+                                }
                             ]));
                     }
 

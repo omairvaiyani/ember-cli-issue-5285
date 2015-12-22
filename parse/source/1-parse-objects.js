@@ -773,6 +773,13 @@ Parse.User.prototype.srActivated = function () {
     return this.get('srActivated');
 };
 /**
+ * @Property srDoNotDisturbTimes
+ * @returns {Array}
+ */
+Parse.User.prototype.srDoNotDisturbTimes = function () {
+    return this.get('srDoNotDisturbTimes');
+};
+/**
  * @Property srLatestTest
  * @returns {Test}
  */

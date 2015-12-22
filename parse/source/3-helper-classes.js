@@ -147,6 +147,7 @@ var findNextAvailableSlotForSR = function (now, slots, dndTimes) {
     // Schedule a task for the test to be sent to the user
     // at the next available slot (not night time, not in DND time)
     var todayIndex = now.day() - 1;
+    var daysAhead = 0;
     // Moment week starts on Sunday, clearly they're stupid and it should be Monday.
     if (todayIndex < 0)
         todayIndex = 6;
@@ -154,20 +155,28 @@ var findNextAvailableSlotForSR = function (now, slots, dndTimes) {
     scheduleForSR.slot = _.find(slots, function (slot) {
         return now.hour() >= slot.start && now.hour() < slot.finish;
     });
+
+    // Even if slot was found, run the loop from today
+    // to see if they have set a DND slot.
     var slotIsToday = true;
 
-    _.each(dndTimes, function (dndSlotsForToday) {
+    for (var i = 0; i < 6; i++) {
+        var dndSlotsForToday = dndTimes[todayIndex];
+
         // Check if it's currently sleeping time (scheduleSlot was null) or
         // scheduleSlot is DND for user.
+
         if (!scheduleForSR.slot || (slotIsToday &&
             _.where(dndSlotsForToday.slots, {label: scheduleForSR.slot.label})[0].active)) {
             scheduleForSR.slot = null;
+
             // Find the next available slot
             _.each(_.where(dndSlotsForToday.slots, {active: false}), function (slot) {
-                if (!scheduleForSR.slot && (now.hour() <= slot.finish || !slotIsToday)) {
+                if (!scheduleForSR.slot && (now.hour() < slot.finish || !slotIsToday)) {
                     // Next free slot found
                     scheduleForSR.slot = slot;
-                    scheduleForSR.time = _.clone(now).set('hour', slot.start);
+                    // Add days (0 if today), set hour to start of slot
+                    scheduleForSR.time = _.clone(now).add(daysAhead, "d").set('hour', slot.start);
                 }
             });
         }
@@ -178,8 +187,11 @@ var findNextAvailableSlotForSR = function (now, slots, dndTimes) {
             else
                 todayIndex++;
             slotIsToday = false;
-        }
-    });
+            daysAhead++;
+        } else
+            break;
+    }
+
     return scheduleForSR;
 };
 /**
