@@ -1,6 +1,7 @@
 import Ember from 'ember';
 import ParseHelper from '../../utils/parse-helper';
 import RouteHistory from '../../mixins/route-history';
+import EventTracker from '../../utils/event-tracker';
 
 export default Ember.Route.extend(RouteHistory, {
 
@@ -14,9 +15,12 @@ export default Ember.Route.extend(RouteHistory, {
         // Only use local record if user's tests have been fetched.
         // Annoyingly, ember-data is screwing up stored records,
         // it's adding createdTests to the wrong users. Here's a workaround.
-        if (user && user.get('createdTests.length')
-            && user.get('createdTests').objectAt(0).get('author.id') === user.get('id')
-            && user.get('followerAndFollowingFetched')) {
+        if (user
+            && ((user.get('createdTests.length')
+                && user.get('createdTests').objectAt(0).get('author.id') === user.get('id')
+                && user.get('followerAndFollowingFetched'))
+                || user.get('initialisedFor'))
+            ) {
             return user;
         }
 
@@ -70,14 +74,22 @@ export default Ember.Route.extend(RouteHistory, {
         if (model) {
             var routePath = "index.user",
                 routeLabel;
-            if(controller.get('isCurrentUser')) {
+            if (controller.get('isCurrentUser')) {
                 routeLabel = "My Study";
-            } else  {
+            } else {
                 routeLabel = model.get('firstName') + "'s Quizzes";
             }
             transition.send('addRouteToHistory', routePath, routeLabel, transition, 'user_slug');
+
+            // Record profile viewed event if not own
+            if (!controller.get('isCurrentUser'))
+                EventTracker.recordEvent(EventTracker.VIEWED_PROFILE, {
+                    "Profile Viewed(ID)": model.get('id'),
+                    "Profile Viewed(Name)": model.get('name')
+                });
+
         }
-        window.scrollTo(0,0);
+        window.scrollTo(0, 0);
         controller.send('switchTabInFriendsList', 'followers');
     },
 

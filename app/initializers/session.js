@@ -64,14 +64,8 @@ export default {
 
             // User
             if (response.user) {
-                var earnedBadges = ParseHelper.extractRawPayload(store, 'badge', _.clone(response.user.earnedBadges)),
-                    badgeProgressions = ParseHelper.extractRawPayload(store, 'badge-progress',
-                        _.clone(response.user.badgeProgressions)),
-                    currentUser = ParseHelper.extractRawPayload(store, 'parse-user', response.user);
+                var currentUser = ParseHelper.handleUserWithIncludedData(store, response.user);
 
-                currentUser.set('earnedBadges', earnedBadges);
-                currentUser.set('badgeProgressions', badgeProgressions);
-                currentUser.set('initialisedFor', true);
                 application.register('user:current', currentUser, {instantiate: false, singleton: true});
                 application.inject('controller:application', 'currentUser', 'user:current');
             }

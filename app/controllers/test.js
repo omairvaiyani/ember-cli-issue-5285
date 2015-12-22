@@ -6,12 +6,19 @@ import EventTracker from '../utils/event-tracker';
 export default Ember.Controller.extend(CurrentUser, {
     loading: 'Preparing test...',
 
+    // Called from TestRoute.setupController
     setTimeStarted: function () {
         this.set('timeStarted', new Date());
+        EventTracker.recordEvent(EventTracker.BEGAN_TEST, {
+            "Test(ID)":this.get('model.id'),
+            "Test(Title)":this.get('model.title'),
+            "Test Category(ID)":this.get('model.category.id'),
+            "Test Category(Name)":this.get('model.category.name')
+        });
         setTimeout(function () {
             this.send('prerenderReady');
         }.bind(this), 4000);
-    }.on('init'),
+    },
 
     shuffledQuestions: new Ember.A(),
 
@@ -256,6 +263,16 @@ export default Ember.Controller.extend(CurrentUser, {
             }.bind(this), function (error) {
                 console.dir(error);
             });
+
+            EventTracker.recordEvent(EventTracker.COMPLETED_TEST, {
+                "Test(ID)":this.get('model.id'),
+                "Test(Title)":this.get('model.title'),
+                "Test Category(ID)":this.get('model.category.id'),
+                "Test Category(Name)":this.get('model.category.name'),
+                "Score": score,
+                "Questions Answered": responsesArray.get('length'),
+                "Time Taken": moment(attempt.get('timeCompleted')).diff(moment(attempt.get('timeStarted')), "s")
+            });
         },
 
         /**
@@ -338,5 +355,4 @@ export default Ember.Controller.extend(CurrentUser, {
         }
     }
 
-})
-;
+});

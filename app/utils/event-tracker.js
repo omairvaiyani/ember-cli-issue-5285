@@ -1,43 +1,35 @@
 export default
 {
-    WEBSITE_OPENED: "Website Opened",
-    REGISTERED_WITH_EMAIL: "Did register with email",
-    REGISTERED_WITH_FACEBOOK: "Did register with facebook",
-    LOGGED_IN: "Logged in",
+    USER_REGISTERED: "User Registered",
 
-    /**
-     * On-boarding
-     * Not used yet
-     */
-    ONBOARDING_CREATE_TEST: "Onboarding: Create Test",
-    ONBOARDING_JOIN: "Onboarding: Join",
-    ONBOARDING_FACEBOOK: "Onboarding: Facebook",
-    ONBOARDING_WITH_EMAIL: "Onboarding: Email",
-    ONBOARDING_PERSONALISE: "Onboarding: Personalise",
-    ONBOARDING_PERSONALISE_SET_PROFILE_PICTURE: "Onboarding: Set Profile Picture",
-    ONBOARDING_PERSONALISE_PROFILE_PICTURE_SKIPPED: "Onboarding: Profile Picture Skipped",
-    ONBOARDING_PERSONALISE_SET_EDUCATION: "Onboarding: Set Education",
-    ONBOARDING_PERSONALISE_EDUCATION_SKIPPED: "Onboarding: Education Skipped",
-    ONBOARDING_PERSONALISE_SET_FOLLOWING: "Onboarding: Set Following",
-    ONBOARDING_PERSONALISE_FOLLOWING_SKIPPED: "Onboarding: Following Skipped",
-    ONBOARDING_SELECT_PACKAGE: "Onboarding: Select Package",
-    ONBOARDING_SELECTED_BASIC_PACKAGE: "Onboarding: Selected Basic Package",
-    ONBOARDING_SELECTED_PREMIUM_PACKAGE: "Onboarding: Selected Premium Package",
-    ONBOARDING_COMPLETED: "Onboarding: Completed",
-    ONBOARDING_CANCELLED: "Onboarding: Cancelled",
+    USER_LOGGED_IN: "User Logged In",
 
-    VIEWED_RESULTS_PAGE: "Viewed Results Page",
-    VIEWED_RESPONSE_STATISTICS: "Viewed Response Statistics",
-    JOIN_TO_VIEW_ALL_RESPONSE_STATISTICS: "Join to View All Response Statistics",
+    VIEWED_CREATE_PAGE: "Viewed Create Page",
+    CREATED_A_TEST: "Created A Test",
+    WRITTEN_A_QUESTION: "Written A Question",
 
-    CREATED_TEST: "Created Test",
-    STARTED_TEST: "Started Test",
+    VIEWED_TEST_INFO: "Viewed Test Info",
+    BEGAN_TEST: "Began Test",
     COMPLETED_TEST: "Completed Test",
+    CLICKED_RETRY_RESULT: "Clicked Retry In Result",
 
-    GENERATED_MEDICAL_TEST: "Generated Medical Test",
+    VIEWED_BROWSE_HOME: "Viewed Browse Home",
+    SEARCHED_BROWSE_HOME: "Searched On Browse Home",
+    CLICKED_SEARCH_RESULT_BROWSE_HOME: "Clicked Search Result On Browse Home",
+    CLICKED_CATEGORY_BROWSE_HOME: "Clicked Category On Browse Home",
 
-    JOINED_GROUP: "Joined Group",
+    VIEWED_CATEGORY: "Viewed Category",
+    VIEWED_SUBCATEGORY: "Viewed Subcategory",
+    SEARCHED_CATEGORY: "Searched Category",
+    SEARCHED_SUBCATEGORY: "Searched Subcategory",
 
+    VIEWED_PROFILE: "Viewed Profile",
+    FOLLOWED_USER: "Followed User",
+    UNFOLLOWED_USER: "Unfollowed User",
+
+    VIEWED_PROGRESS: "Viewed Progress",
+
+    SHARED_TEST_SOCIAL: "Shared Test On Social Media",
 
     /**
      * Track Flow
@@ -50,8 +42,9 @@ export default
          * Mixpanel
          */
         mixpanel.track_links("a", "Navigated", {
-            "referrer": document.referrer
+            referrer: document.referrer
         });
+
     },
 
     /**
@@ -59,113 +52,52 @@ export default
      * @param currentUser
      */
     profileUser: function (currentUser) {
+        var userProperties = {
+            "Picture": currentUser.get('profileImageURL'),
+            "Facebook Profile": "https://facebook.com/" + currentUser.get('fbid'),
+            "University": currentUser.get('educationCohort.institution.name'),
+            "Course": currentUser.get('educationCohort.studyField.name'),
+            "Year": currentUser.get('educationCohort.currentYear'),
+            "Source": currentUser.get('signUpSource'),
+            "Study Intensity": currentUser.get('srIntensityLevel')
+        };
         /*
          * Mixpanel
          */
-        mixpanel.identify(currentUser.id);
-        mixpanel.people.set({
-            "$first_name": currentUser.firstName,
-            "$last_name": currentUser.lastName,
-            "$created": currentUser.createdAt,
-            "$email": currentUser.get('privateData.email'),
-            "profilePicture": currentUser.get('profileImageURL'),
-            "facebookId": currentUser.get('fbid'),
-            "course": currentUser.get('course.name'),
-            "year": currentUser.get('yearNumber')
-        });
+        mixpanel.identify(currentUser.get('id'));
+        mixpanel.people.set(_.extend(userProperties, {
+            "$first_name": currentUser.get('firstName'),
+            "$last_name": currentUser.get('lastName'),
+            "$created": currentUser.get('createdAt'),
+            "$email": currentUser.get('email')
+        }));
         /*
-         * Zzish
+         * Amplitude
          */
-        Zzish.getUser(currentUser.id, currentUser.get('name'));
+        amplitude.setUserId(currentUser.id);
+        amplitude.setUserProperties(_.extend(userProperties, {
+            "First Name": currentUser.get('firstName'),
+            "Last Name": currentUser.get('lastName'),
+            "Joined": currentUser.get('createdAt'),
+            "Email": currentUser.get('email')
+        }));
+        /*
+         * Google analytics
+         */
+        ga('set', '&uid', currentUser.get('id'));
+
+        this.recordEvent(this.USER_LOGGED_IN);
     },
 
     /**
      * Analytics action for events
-     * @param event {String} e.g. Test created
-     * @param object {Object} (optional) e.g. Test
-     * @param currentUser (optional)
+     * @param {String} event
+     * @param {Object} extraProperties
      */
-    recordEvent: function (event, object, currentUser) {
-        return; // Disabled for now
-        var eventProperties = {source: "Web"};
-        if (object) {
-            switch (event) {
-                case this.CREATED_TEST:
-                    // object is Test
-                    eventProperties = {
-                        title: object.get('title'),
-                        category: object.get('category.name'),
-                        author: object.get('author.name'),
-                        group: object.get('group.name')
-                    };
-                    break;
-                case this.STARTED_TEST:
-                    // object is Test (Can be Attempt, must avoid)
-                    if (object.constructor.typekey === "test") {
-                        eventProperties = {
-                            title: object.get('title'),
-                            category: object.get('category.name'),
-                            author: object.get('author.name')
-                        };
-                        if(currentUser.get('zzishClasses.length')) {
-                            var activityId = Zzish.startActivity(currentUser.id, "Taking a test",
-                                currentUser.get('zzishClasses')[0], function (response) {
-                                    console.dir(response);
-                                });
-                            // For local use to stop activity
-                            currentUser.set('zzishActivityId:'+this.STARTED_TEST, activityId);
-                        }
-                    }
-                    break;
-                case this.COMPLETED_TEST:
-                    // object is Test (Can be Attempt, must avoid)
-                    eventProperties = {
-                        title: object.get('test.title'),
-                        category: object.get('testCategoryName'),
-                        author: object.get('testAuthorName'),
-                        score: object.get('score')
-                    };
-                    if(currentUser.get('zzishClasses.length')) {
-                        Zzish.stopActivity(currentUser.get('zzishActivityId:'+this.STARTED_TEST), {
-                            score: object.get('score')
-                        });
-                    }
-                    break;
-                case this.VIEWED_RESULTS_PAGE:
-                    // object is Attempt
-                    eventProperties = {
-                        title: object.get('test.title'),
-                        category: object.get('testCategoryName'),
-                        author: object.get('test.author.name'),
-                        score: object.get('score'),
-                        user: object.get('user.name')
-                    };
-                    break;
-                case this.VIEWED_RESPONSE_STATISTICS:
-                    // object is Attempt
-                    eventProperties = {
-                        title: object.get('test.title'),
-                        category: object.get('testCategoryName'),
-                        author: object.get('test.author.name'),
-                        score: object.get('score'),
-                        user: object.get('user.name')
-                    };
-                    break;
-                case this.JOIN_TO_VIEW_ALL_RESPONSE_STATISTICS:
-                    // object is Attempt
-                    eventProperties = {
-                        title: object.get('test.title'),
-                        category: object.get('testCategoryName'),
-                        author: object.get('test.author.name'),
-                        score: object.get('score')
-                    };
-                    break;
-                case this.GENERATED_MEDICAL_TEST:
-                    // object is basic javascript event params
-                    eventProperties = object;
-                    break;
-            }
-        }
+    recordEvent: function (event, extraProperties) {
+        var eventProperties = {Source: "Web"};
+        if(extraProperties)
+            eventProperties = _.extend(eventProperties, extraProperties);
         /*
          * Amplitude
          */

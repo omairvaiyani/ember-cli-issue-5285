@@ -47,30 +47,19 @@ export default Ember.Controller.extend({
                     this.get('controllers.index').shouldShowStats();
                 }
                 break;
-            case "user.index":
-                user = this.get('controllers.user');
-                title += user.get('name');
-                break;
-            case "user.tests":
-                user = this.get('controllers.user');
-                title += user.get('name') + "'s tests";
-                break;
-            case "user.followers":
-                user = this.get('controllers.user');
-                title += user.get('name') + "'s followers";
-                break;
-            case "user.following":
-                user = this.get('controllers.user');
-                title += user.get('name') + "'s following";
+            case "index.user":
+                // Dynamic route, handle within route
                 break;
             case "create.index":
                 title += "Create - Make MCQ Tests and Quizzes";
+                EventTracker.recordEvent(EventTracker.VIEWED_CREATE_PAGE);
                 break;
             case "edit":
-                title += "Test editor";
+                title += "Quiz Editor";
                 break;
             case "browse":
-                title += "Browse - Find tests and quizzes";
+                title += "Browse - Find Quizzes";
+                EventTracker.recordEvent(EventTracker.VIEWED_BROWSE_HOME);
                 break;
             case "category":
                 var category = this.get('controllers.category');
@@ -98,16 +87,9 @@ export default Ember.Controller.extend({
             case "presskit":
                 title += "Press Information";
                 break;
-            case "groups":
-                title += "Groups - MCQ Tests for Classes";
+            case "index.progress":
+                EventTracker.recordEvent(EventTracker.VIEWED_PROGRESS);
                 break;
-            case "group":
-            case "group.index":
-                /*
-                 * Handled in GroupRoute.
-                 */
-                window.scrollTo(0, 0);
-                return;
             case "join.index":
                 title += "Join - Create an Account";
                 break;
@@ -167,7 +149,6 @@ export default Ember.Controller.extend({
 
         if (currentUser) {
             this.send('bootIntercomCommunications', currentUser);
-            // EventTracker.profileUser(this.get('currentUser'));
 
             // Session Token Handling
             // May no longer have it due to object manipulation after 'intialiseApp' below
@@ -180,7 +161,7 @@ export default Ember.Controller.extend({
             // Set Up Current User Tiles
             this.get('controllers.index').getAndSetCurrentUserTiles();
 
-            if(_.contains(this.get('parseConfig').adminIds, this.get('currentUser.id')))
+            if (_.contains(this.get('parseConfig').adminIds, this.get('currentUser.id')))
                 this.set('currentUser.isAdmin', true);
 
             // If the user was previously logged in, sessionToken is validated
@@ -189,21 +170,16 @@ export default Ember.Controller.extend({
             if (!currentUser.get('initialisedFor')) {
                 promise = ParseHelper.cloudFunction(this, 'initialiseApp', {}).then(function (response) {
                     // Returned user object has all pointer fields included
-                    var earnedBadges = ParseHelper.extractRawPayload(this.store, 'badge',
-                            _.clone(response.user.earnedBadges)),
-                        badgeProgressions = ParseHelper.extractRawPayload(this.store, 'badge-progress',
-                            _.clone(response.user.badgeProgressions)),
-                        level = ParseHelper.extractRawPayload(this.store, 'level', _.clone(response.user.level));
+                    ParseHelper.handleUserWithIncludedData(this.store, response.user);
 
-                    this.set('currentUser.earnedBadges', earnedBadges);
-                    this.set('currentUser.badgeProgressions', badgeProgressions);
-                    this.set('currentUser.level', level);
-                    this.set('currentUser.initialisedFor', true);
+                    EventTracker.profileUser(this.get('currentUser'));
                 }.bind(this), function (error) {
                     console.dir(error);
                 });
-            } else
+            } else {
                 promise.resolve();
+                EventTracker.profileUser(this.get('currentUser'));
+            }
 
             promise.then(function () {
                 return ParseHelper.cloudFunction(this, 'loadMyTestsList', {});
@@ -212,7 +188,6 @@ export default Ember.Controller.extend({
                 this.get('controllers.index/user').myTestsListUpdate();
                 return ParseHelper.cloudFunction(this, 'loadFollowersAndFollowing', {});
             }.bind(this)).then(function (response) {
-                currentUser.set('followerAndFollowingFetched', true);
                 ParseHelper.handleRelationalDataResponseForUser(this.store, currentUser, response);
             }.bind(this), function (error) {
                 console.dir(error);

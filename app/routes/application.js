@@ -85,13 +85,6 @@ export default Ember.Route.extend({
          */
         prerenderReady: function () {
             window.prerenderReady = true;
-            setTimeout(function () {
-                // This avoids recording this event when being crawled by FB.
-                if (!this.get('hasRecordedEventWebsiteOpened')) {
-                    EventTracker.recordEvent(EventTracker.WEBSITE_OPENED);
-                    this.set('hasRecordedEventWebsiteOpened', true);
-                }
-            }.bind(this), 1500);
         },
 
         /*
@@ -150,7 +143,6 @@ export default Ember.Route.extend({
                 email = applicationController.get('newUser.email'),
                 password = applicationController.get('newUser.password');
 
-            console.log("before " + applicationController.get('signUpValidationHasErrors'));
             applicationController.set('signUpValidationErrors.name', FormValidation.name(name.trim()));
             applicationController.set('signUpValidationErrors.email', FormValidation.email(email.trim()));
             applicationController.set('signUpValidationErrors.password', FormValidation.password(password.trim()));
@@ -162,11 +154,8 @@ export default Ember.Route.extend({
                     signUpSource: 'Web',
                     password: password
                 };
-                console.log(1);
                 this.send('registerUser', data, callback);
             } else if (callback) {
-                console.log(2);
-                console.log("after " + applicationController.get('signUpValidationHasErrors'));
                 callback(new Parse.Promise().resolve());
             }
         },
@@ -320,8 +309,13 @@ export default Ember.Route.extend({
                 var adapter = this.store.adapterFor("parse-user");
                 Ember.set(adapter, 'headers.X-Parse-Session-Token', user.get('sessionToken'));
                 return user.reload();
-            }.bind(this)).then(function () {
+            }.bind(this)).then(function (user) {
                     if (this.get('applicationController.currentUser.firstTimeLogin')) {
+                        var type = "email";
+                        if(user.get('fbid'))
+                            type = "facebook";
+                        EventTracker.recordEvent(EventTracker.USER_REGISTERED, {type: type});
+
                         this.set('applicationController.currentUser.firstTimeLogin', false);
                         // If .redirect is set, this is called from new onboarding process
                         if (!this.get('applicationController.redirect')) {
@@ -548,7 +542,10 @@ export default Ember.Route.extend({
                 user.get('followers').pushObject(currentUser);
 
             ParseHelper.cloudFunction(this, 'followUser', {userIdToFollow: user.get('id')}).then(function () {
-
+                EventTracker.recordEvent(EventTracker.FOLLOWED_USER, {
+                    "Followed User(ID)":user.get('id'),
+                    "Followed User(Name)":user.get('name')
+                });
             }, function (error) {
                 console.dir(error);
                 currentUser.decrementProperty('numberFollowing');
@@ -574,7 +571,10 @@ export default Ember.Route.extend({
             }
 
             ParseHelper.cloudFunction(this, 'unfollowUser', {userIdToUnfollow: user.get('id')}).then(function () {
-
+                EventTracker.recordEvent(EventTracker.UNFOLLOWED_USER, {
+                    "Unfollowed User(ID)":user.get('id'),
+                    "Unfollowed User(Name)":user.get('name')
+                });
             }, function (error) {
                 console.dir(error);
                 currentUser.incrementProperty('numberFollowing');

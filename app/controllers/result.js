@@ -174,6 +174,13 @@ export default Ember.Controller.extend(CurrentUser, RouteHistory, {
                     this.send('addNotification', 'error', 'There was an error!', 'We could not remove questions' +
                         ' to your spaced repetition at this time.');
                 }.bind(this));
+        },
+
+        clickedRetryQuiz: function () {
+            EventTracker.recordEvent(EventTracker.CLICKED_RETRY_RESULT, {
+                "Score": this.get('model.score'),
+                "Attempt (ID)": this.get('model.id')
+            });
         }
     }
 

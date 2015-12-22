@@ -121,6 +121,9 @@ export default Ember.Route.extend(RouteHistory, {
              */
             controller.set('currentQuestionIndex', 0);
             controller.set('loading', null);
+
+            controller.setTimeStarted();
+
             this.send('decrementLoadingItems');
         }.bind(this), function (error) {
             console.log(error);

@@ -56,7 +56,7 @@ export default Ember.Controller.extend(CurrentUser, DeleteWithUndo, TagsAndCats,
 
     currentQuestionNumber: function () {
         var currentQuestion = this.get('currentQuestion');
-        if(currentQuestion && this.get('model.questions').contains(currentQuestion))
+        if (currentQuestion && this.get('model.questions').contains(currentQuestion))
             return this.get('model.questions').indexOf(currentQuestion) + 1;
         else
             return this.get('model.questions.length') + 1;
@@ -122,13 +122,24 @@ export default Ember.Controller.extend(CurrentUser, DeleteWithUndo, TagsAndCats,
                     this.send('decrementLoadingItems');
                     if (this.get('currentUser.createdTests'))
                         this.get('currentUser.createdTests').pushObject(this.get('model'));
+
+                EventTracker.recordEvent(EventTracker.CREATED_A_TEST, {
+                    "Test Category(ID)":test.get('category.id'),
+                    "Test Category(NAME)":test.get('category.name'),
+                    "Test(Title)":test.get('title'),
+                    "Test(ID)":test.get('id'),
+                    "Is Public": test.get('isPublic'),
+                    "Number Of Tags": test.get('tags.length'),
+                    "Added Description": test.get('description.length') > 0
+                });
+
                 }.bind(this),
                 function (error) {
                     this.send('decrementLoadingItems');
                     console.dir(error);
                 }.bind(this));
 
-            if(callback)
+            if (callback)
                 callback(promise);
         },
 

@@ -4,6 +4,7 @@ import ParseHelper from '../utils/parse-helper';
 import CurrentUser from '../mixins/current-user';
 import ImageUpload from '../mixins/image-upload';
 import ParseFile from 'ember-parse-adapter/file';
+import EventTracker from '../utils/event-tracker';
 
 /*
  * EditQuestionController for the following routes:
@@ -129,6 +130,8 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
         }
     }.observes('stem'),
 
+    uploadingImage: false,
+
     imageUploadedAndQuestionSaved: function () {
         if (this.get('uploadedImage') && this.get('savedQuestion')) {
             var question = this.get('savedQuestion');
@@ -247,6 +250,18 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
                 this.get('questions').removeObject(question);
                 question = ParseHelper.extractRawPayload(this.store, 'question', response.question);
                 this.get('questions').pushObject(question);
+
+                EventTracker.recordEvent(EventTracker.WRITTEN_A_QUESTION, {
+                    "Test(Title)":this.get('test.title'),
+                    "Test(ID)":this.get('test.id'),
+                    "Question(STEM)":question.get('stem'),
+                    "Question(ID)":question.get('id'),
+                    "Number Of Options": question.get('numberOfUsedOptions'),
+                    "Is True And False": question.get('isTrueFalse'),
+                    "With Image": this.get('uploadingImage'),
+                    "With Feedback": !!question.get('feedback'),
+                    "With Further Reading": !!question.get('furtherReadingMetaData')
+                });
 
                 if (this.get('uploadingImage')) {
                     // See this.imageUploadedAndQuestionSaved

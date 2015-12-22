@@ -248,9 +248,46 @@ export default {
     },
 
     /**
+     * @Function Handle User With Included Data
+     *
+     * @param store
+     * @param {object} jsonUser
+     */
+    handleUserWithIncludedData: function (store, jsonUser) {
+        var educationCohort;
+
+        // Education Cohort
+        if (jsonUser.educationCohort) {
+            educationCohort = this.extractRawPayload(store, 'education-cohort',
+                _.clone(jsonUser.educationCohort));
+        }
+
+        // Badges
+        var earnedBadges = this.extractRawPayload(store, 'badge', _.clone(jsonUser.earnedBadges)),
+            badgeProgressions = this.extractRawPayload(store, 'badge-progress',
+                _.clone(jsonUser.badgeProgressions));
+
+        // Level
+        var level = this.extractRawPayload(store, 'level', _.clone(jsonUser.level));
+
+        // User Object
+        var user = this.extractRawPayload(store, 'parse-user', jsonUser);
+        user.set('initialisedFor', true);
+
+        if(educationCohort)
+            user.set('educationCohort', educationCohort);
+        if(earnedBadges)
+            user.set('earnedBadges', earnedBadges);
+        if(badgeProgressions)
+            user.set('badgeProgression', badgeProgressions);
+        if(level)
+            user.set('level', level);
+
+        return user;
+    },
+
+    /**
      * @Function Handle Relational Data Response for User
-     *
-     *
      *
      * @param store
      * @param currentUser
@@ -269,27 +306,6 @@ export default {
             currentUser.get('savedTests').clear();
             currentUser.get('savedTests').addObjects(savedTests);
         }
-        // Latest Test Attempts
-        if (response.latestTestAttempts) {
-            var latestTestAttempts = this.extractRawPayload(store, 'attempt',
-                response.latestTestAttempts);
-            currentUser.set('latestTestAttempts', latestTestAttempts);
-        }
-        // URs
-        if (response.uniqueResponses) {
-            var uniqueResponses = this.extractRawPayload(store, 'unique-response',
-                response.uniqueResponses);
-            currentUser.get('uniqueResponses').clear();
-            currentUser.get('uniqueResponses').addObjects(uniqueResponses);
-        }
-        // @deprecated Education Cohort
-        if (response.educationCohort && response.educationCohort.length) {
-            var educationCohort = this.extractRawPayload(store, 'education-cohort',
-                response.educationCohort);
-            if(educationCohort)
-                currentUser.set('educationCohort', educationCohort);
-        }
-
         // Followers
         if (response.followers) {
             var followers = this.extractRawPayload(store, 'parse-user',
@@ -304,19 +320,12 @@ export default {
             currentUser.set('following', new Ember.A());
             currentUser.get('following').addObjects(following);
         }
-
-        // @deprecated SR Latest Test
-        if (response.srLatestTest) {
-            var srLatestTest = this.extractRawPayload(store, 'test',
-                response.srLatestTest);
-            currentUser.set('srLatestTest', srLatestTest);
-        }
-
-        // SR All Tests
-        if (response.srAllTests) {
-            var srAllTests = this.extractRawPayload(store, 'test',
-                response.srAllTests);
-            currentUser.set('srAllTests', srAllTests);
+        // Education Cohort
+        if (response.educationCohort) {
+            var educationCohort = this.extractRawPayload(store, 'education-cohort',
+                _.clone(response.educationCohort));
+            if(educationCohort)
+                currentUser.set('educationCohort', educationCohort);
         }
     }
 

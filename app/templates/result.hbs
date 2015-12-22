@@ -98,7 +98,7 @@
                     <div class="action-link margin-bottom-8">
                         <i class="fa fa-fw fa-undo margin-right-8"></i>
                         {{#link-to 'test' model.test.slug class="action-item margin-bottom-8"}}
-                            <span>Retry Quiz</span>
+                            <span {{action 'clickedRetryQuiz'}}>Retry Quiz</span>
                         {{/link-to}}
                     </div>
 
