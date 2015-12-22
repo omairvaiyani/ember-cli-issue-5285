@@ -18,14 +18,14 @@
 {{#if miniButton}}
     {{#if showFollow}}
         <button class="btn btn-default btn-xs follow-button mini margin-top-0 margin-bottom-0"
-            {{action 'followUser' user}}>
+            {{action 'followUser' user bubbles=false}}>
             <i class="fa fa-fw fa-user-plus icon"></i>
         </button>
     {{/if}}
 
     {{#if showUnfollow}}
         <button class="btn btn-default btn-xs follow-button mini unfollow  margin-top-0 margin-bottom-0"
-            {{action 'unfollowUser' user}}>
+            {{action 'unfollowUser' user bubbles=false}}>
             <i class="fa fa-fw fa-user icon"></i>
         </button>
     {{/if}}

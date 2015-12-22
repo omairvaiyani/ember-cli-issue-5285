@@ -52,8 +52,7 @@ export default Ember.Component.extend({
     showFollow: function () {
         return this.get('currentUser') && !this.get('isThisTheCurrentUser') &&
             (this.get('currentUser.following') &&
-            (!this.get('currentUser.following').contains(this.get('user')) &&
-                !this.get('currentUser.following').contains(this.get('user.content')))
+                (!this.get('currentUser.following').contains(this.get('user')) && !this.get('currentUser.following').contains(this.get('user.content')))
             );
     }.property('currentUser', 'isThisTheCurrentUser', 'user', 'currentUser.following.length'),
     /**
@@ -68,11 +67,15 @@ export default Ember.Component.extend({
      */
     showUnfollow: function () {
         return this.get('currentUser') && !this.get('isThisTheCurrentUser') &&
-           this.get('currentUser.following') && !this.get('showFollow');
+            this.get('currentUser.following') && !this.get('showFollow');
     }.property('currentUser', 'isThisTheCurrentUser', 'showFollow'),
 
     actions: {
         openModal: function () {
+        },
+
+        goToUserProfile: function () {
+            this.get('parentController').transitionTo('index.user', this.get('user.slug'));
         },
 
         followUser: function (user) {

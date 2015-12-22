@@ -114,6 +114,22 @@
 
             </div>
 
+            {{#if isCurrentUser}}
+                <div class="panel panel-default card">
+
+                    <div class="panel-heading">
+                        <h4 class="no-margin">
+                            Find
+                        </h4>
+                    </div>
+
+                    <div class="panel-body friends-list">
+                        {{main-search usersOnly=true parentController=this inlineResults=true
+                        searchPlaceholder="Search for Friends..."}}
+                    </div>
+                </div>
+            {{/if}}
+
             <div class="panel panel-default card">
 
                 <div class="panel-heading">
@@ -139,16 +155,6 @@
                                 Following ({{model.numberFollowing}})
                             </a>
                         </li>
-
-                        {{#if isCurrentUser}}
-                            <li {{bind-attr class="friendsShouldShowSearch:active"}}
-                                {{action "switchTabInFriendsList" "search"}}>
-                                <a href="javascript:void(0)"
-                                    {{bind-attr class="friendsShouldShowSearch:active"}}>
-                                    Find
-                                </a>
-                            </li>
-                        {{/if}}
                     </ul>
 
                     {{#if friendsShouldShowFollowers}}
@@ -166,13 +172,6 @@
                             {{profile-picture user=following height=50 width=50 border=0
                             class="inline-top margin-right-8 margin-bottom-12"}}
                         {{/each}}
-
-                    {{/if}}
-
-                    {{#if friendsShouldShowSearch}}
-
-                        {{main-search usersOnly=true parentController=this inlineResults=true
-                        searchPlaceholder="Search for Friends..."}}
 
                     {{/if}}
                 </div>

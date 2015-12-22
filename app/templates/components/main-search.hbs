@@ -55,9 +55,7 @@ placeholder=searchPlaceholder}}
                             {{/unless}}
 
                             {{#each navbarSearchResults.users as |user|}}
-                                {{#link-to 'index.user' user.slug tagName="div"}}
-                                    {{user-card user=user parentController=parentController cardType="miniList"}}
-                                {{/link-to}}
+                                {{user-card user=user parentController=parentController cardType="miniList"}}
                             {{/each}}
                         </article>
 
