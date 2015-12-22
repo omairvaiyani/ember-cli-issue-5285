@@ -369,17 +369,34 @@ Parse.Cloud.define('refreshTilesForUser', function (request, response) {
     if (!user)
         return response.error("You must be logged in.");
 
-    var typesOfTiles = ["spacedRepetition", "recommendedTest"],
-        tilesToFetch = ["spacedRepetition", "recommendedTest"];
+    // Will use this eventually to shuffle and select random tiles
+    var typesOfTiles = ["spacedRepetition", "recommendedTest", "promptToActivateSR"];
+
+    var tilesToFetch = ["recommendedTest"];
+    if (user.srActivated() && !user.srLatestTestDismissed() && !user.srLatestTestIsTaken())
+        tilesToFetch.push("spacedRepetition");
+
+    if (!user.srActivated())
+        tilesToFetch.push("promptToActivateSR");
 
     _.each(tilesToFetch, function (tileToFetch) {
         switch (tileToFetch) {
             case "spacedRepetition":
-                if (!user.srLatestTestDismissed() && !user.srLatestTestIsTaken())
-                    promises.push(srLatestTest = user.fetchSrLatestAttempt());
+                promises.push(srLatestTest = user.fetchSrLatestAttempt());
                 break;
             case "recommendedTest":
                 promises.push(recommendTest = user.getRecommendedTest());
+                break;
+            case "promptToActivateSR":
+                tiles.push({
+                    type: "default",
+                    label: "Activate Spaced Repetition",
+                    title: "Optimise Your Study",
+                    iconUrl: APP.baseCDN + 'img/features/srs-icon.png',
+                    actionName: 'goToRoute',
+                    actionLabel: 'Study Settings',
+                    routePath: 'settings.study'
+                });
                 break;
         }
     });
@@ -1712,6 +1729,9 @@ Parse.Cloud.define('getUserProfile', function (request, response) {
     if (objectId)
         userQuery.equalTo('objectId', objectId);
 
+    userQuery.include('educationCohort.studyField', 'educationCohort.institution');
+    userQuery.include('badgeProgressions.badge');
+
     userQuery.find().then(function (results) {
         user = results[0];
         if (!user)
@@ -2004,72 +2024,11 @@ Parse.Cloud.define('preFacebookSignUp', function (request, response) {
 
 
 /**
- * No Longer Needed, Delete if it annoys you
- * The search index is properly synced now
+ * @CloudFunction Create a New Badge
  */
-Parse.Cloud.define('cleanSearchIndices', function (request, response) {
-    var testIndex = algoliaClient.initIndex("Test"),
-        userIndex = algoliaClient.initIndex("User");
+Parse.Cloud.define('createNewBadge', function (request, response) {
+    Parse.Cloud.useMasterKey();
 
-    var testObjectIds = [],
-        userObjectIds = [],
-        testsRemoved,
-        usersRemoved;
-
-    testIndex.search("", {hitsPerPage: 1000, attributesToRetrieve: "objectId"}).then(function (result) {
-
-        _.each(result.hits, function (hit) {
-            testObjectIds.push(hit.objectId);
-        });
-
-        var testQuery = new Parse.Query(Test);
-        testQuery.containedIn("objectId", testObjectIds);
-        testQuery.limit(1000);
-        return testQuery.find();
-
-    }).then(function (tests) {
-        var testObjectIdsToRemove = _.clone(testObjectIds);
-
-        _.each(tests, function (test) {
-            testObjectIdsToRemove = _.without(testObjectIdsToRemove, test.id);
-        });
-        testsRemoved = testObjectIdsToRemove.length;
-
-        var promises = [];
-        _.each(testObjectIdsToRemove, function (objectId) {
-            promises.push(testIndex.deleteObject(objectId));
-        });
-        return Parse.Promise.when(promises);
-    }).then(function () {
-        return userIndex.search("", {hitsPerPage: 1000, attributesToRetrieve: "objectId"});
-    }).then(function (result) {
-
-        _.each(result.hits, function (hit) {
-            userObjectIds.push(hit.objectId);
-        });
-
-        var userQuery = new Parse.Query(Parse.User);
-        userQuery.containedIn("objectId", userObjectIds);
-        userQuery.limit(1000);
-        Parse.Cloud.useMasterKey(); // Do not place earlier
-        return userQuery.find();
-    }).then(function (users) {
-        var userObjectIdsToRemove = _.clone(userObjectIds);
-
-        _.each(users, function (user) {
-            userObjectIdsToRemove = _.without(userObjectIdsToRemove, user.id);
-        });
-        usersRemoved = userObjectIdsToRemove.length;
-
-        var promises = [];
-        _.each(userObjectIdsToRemove, function (objectId) {
-            promises.push(userIndex.deleteObject(objectId));
-        });
-        return Parse.Promise.when(promises);
-    }).then(function () {
-        response.success("Tests removed " + testsRemoved + " and Users removed " + usersRemoved);
-    }, function (error) {
-        response.error(error);
-    });
+    // TODO
 });
 
