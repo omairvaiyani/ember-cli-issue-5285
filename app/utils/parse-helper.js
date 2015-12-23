@@ -269,10 +269,8 @@ export default {
             earnedBadges = this.extractRawPayload(store, 'badge', _.clone(jsonUser.earnedBadges));
         }
         if (jsonUser.badgeProgressions) {
-            console.log("Adding badge progressions for " + jsonUser.name);
             badgeProgressions = this.extractRawPayload(store, 'badge-progress',
                 _.clone(jsonUser.badgeProgressions));
-            console.dir(badgeProgressions);
         }
 
         // Level
