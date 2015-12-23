@@ -20,7 +20,12 @@ placeholder=searchPlaceholder}}
     <div {{bind-attr class=":search-popdown navbarSearchDual:dual inlineResults"}}>
         <div {{bind-attr class="inlineResults::container-fluid"}}>
             {{#unless searchTerm.length}}
-                <p class="prompt-text margin-top-8">Type to search...</p>
+                {{#if usersOnly}}
+                    <p class="prompt-text margin-top-8">Type a name to search...</p>
+                {{else}}
+                    <p class="prompt-text margin-top-8">Type to search...</p>
+                {{/if}}
+
             {{else}}
                 {{#if navbarSearchFetching}}
                     <div class="icon-only-loader margin-top-8 margin-bottom-8"></div>
