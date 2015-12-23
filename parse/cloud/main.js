@@ -167,10 +167,12 @@ Parse.User.prototype.getRecommendedTest = function () {
     testQueryFilterTags.containedIn('tags', this.moduleTags());
 
     // TODO check for previously used categories by user
-    var testQueryFilterCategories = new Parse.Query(Test);
-    testQueryFilterCategories.containedIn('tags', this.moduleTags());
+    var testQueryFilterFollowing = new Parse.Query(Test),
+        innerQueryFollowing = this.following().query();
 
-    var mainQuery = Parse.Query.or(testQueryFilterTags, testQueryFilterCategories);
+    testQueryFilterFollowing.matchesQuery('author', innerQueryFollowing);
+
+    var mainQuery = Parse.Query.or(testQueryFilterTags, testQueryFilterFollowing);
     mainQuery.include('author', 'questions');
     mainQuery.notEqualTo('author', this);
     mainQuery.greaterThan('totalQuestions', 4);
