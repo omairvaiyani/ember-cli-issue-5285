@@ -144,7 +144,7 @@
                             {{action "switchTabInFriendsList" "followers"}}>
                             <a href="javascript:void(0)"
                                 {{bind-attr class="friendsShouldShowFollowers:active"}}>
-                                Followers ({{model.numberOfFollowers}})
+                                Followers: {{model.numberOfFollowers}}
                             </a>
                         </li>
 
@@ -152,7 +152,7 @@
                             {{action "switchTabInFriendsList" "following"}}>
                             <a href="javascript:void(0)"
                                 {{bind-attr class="friendsShouldShowFollowing:active"}}>
-                                Following ({{model.numberFollowing}})
+                                Following: {{model.numberFollowing}}
                             </a>
                         </li>
                     </ul>
