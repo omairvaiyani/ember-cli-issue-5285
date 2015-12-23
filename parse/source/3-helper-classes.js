@@ -242,6 +242,9 @@ var sendEmail = function (templateName, email, user, data) {
         case 'spaced-repetition':
             subject = "Synap Quiz Ready";
             break;
+        case 'daily-recap':
+            subject = "Synap Daily Recap";
+            break;
     }
 
     logger.log("send-email", "About to send " + templateName + "  email to " + email,

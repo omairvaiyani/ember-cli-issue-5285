@@ -836,6 +836,13 @@ Parse.User.prototype.testAttempts = function () {
     return this.relation('testAttempts');
 };
 /**
+ * @Property timeZone
+ * @returns {String}
+ */
+Parse.User.prototype.timeZone = function () {
+    return this.relation('timeZone');
+};
+/**
  * @Property uniqueResponses
  * @returns {Parse.Relation<UniqueResponse>}
  */

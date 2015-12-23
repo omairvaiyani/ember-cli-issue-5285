@@ -836,6 +836,13 @@ Parse.User.prototype.testAttempts = function () {
     return this.relation('testAttempts');
 };
 /**
+ * @Property timeZone
+ * @returns {String}
+ */
+Parse.User.prototype.timeZone = function () {
+    return this.relation('timeZone');
+};
+/**
  * @Property uniqueResponses
  * @returns {Parse.Relation<UniqueResponse>}
  */
@@ -2915,6 +2922,9 @@ var sendEmail = function (templateName, email, user, data) {
             break;
         case 'spaced-repetition':
             subject = "Synap Quiz Ready";
+            break;
+        case 'daily-recap':
+            subject = "Synap Daily Recap";
             break;
     }
 
@@ -5374,7 +5384,7 @@ function taskCreator(taskType, taskAction, taskParameters, taskObjects) {
 // Available actions are defined here and link to their function.
 var WorkActions = {
     srCycle: srCycleTask,
-    notifyUserForSR: notifyUserForSRTask,
+    dailyRecap: dailyRecapTask,
     updateTestStatsAfterAttempt: updateTestStatsAfterAttemptTask
 };
 /**
@@ -5451,11 +5461,11 @@ function srCycleTask(task) {
                 user.srDoNotDisturbTimes());
 
             var srNextDue;
-            if(scheduleForSR.time.diff(now, 'm') <= 5) {
+            if (scheduleForSR.time.diff(now, 'm') <= 5) {
                 logger.log("spaced-repetition", user.name() + " time for SR yet");
                 // It is close enough to the scheduled slot, proceed with loop
                 // But set next due a bit later for the next slot (needs recoding)
-                srNextDue= _.clone(scheduleForSR.time).add(2, 'hours');
+                srNextDue = _.clone(scheduleForSR.time).add(2, 'hours');
                 user.set('srNextDue', srNextDue.toDate());
                 // will be saved in the inner promise.
             } else {
@@ -5597,13 +5607,76 @@ function srCycleTask(task) {
     });
 }
 
-function notifyUserForSRTask(task) {
-    var changes = {
-        'taskStatus': 'done',
-        'taskMessage': '',
-        'taskClaimed': 1
-    };
-    return task.save(changes, {useMasterKey: true});
+/**
+ * @Task Daily Recap
+ * Every 60 minutes, this task loops
+ * through each user, showing them
+ * what they did the day before,
+ * and stats on their tests.
+ *
+ * This task is self cycling.
+ * @param {String} task
+ * @returns {WorkTask}
+ */
+function dailyRecapTask(task) {
+    Parse.Cloud.useMasterKey();
+    var initialPromises = [],
+        recapsGenerated = 0;
+
+    // Config needed to determine memory thresholds
+    initialPromises.push(Parse.Config.get());
+
+    var mainQueryForUsers = new Parse.Query(Parse.User);
+    mainQueryForUsers.limit(1000);
+    mainQueryForUsers.equalTo("name", "Omair Vaiyani");
+
+    initialPromises.push(mainQueryForUsers.find());
+
+    // Loop through users with SR activated and SR due time in the past
+    return Parse.Promise.when(initialPromises).then(function (config, users) {
+        var perUserPromises = [];
+        _.each(users, function (user) {
+
+            var now = moment().tz(user.timeZone());
+
+            // Only send out recap at 9pm.
+            if(now.hour() !== 9)
+                return;
+
+            var createdTestsQuery = user.createdTests().query(),
+                attemptsOnCreatedTests = new Parse.Query(Attempt);
+
+            attemptsOnCreatedTests.matchesQuery('test', createdTestsQuery);
+            attemptsOnCreatedTests.notEqualTo('user', user);
+            attemptsOnCreatedTests.include('test', 'user');
+            attemptsOnCreatedTests.limit(1000);
+
+            var perUserPromise = attemptsOnCreatedTests.find().then(function (attempts) {
+
+                var totalAttemptsOnCreatedTests = attempts.length;
+
+                return sendEmail('daily-recap', user.email(), user, [
+                    {name: "TOTAL_ATTEMPTS_ON_CREATED_TESTS", content: totalAttemptsOnCreatedTests}
+                ]);
+            });
+
+            perUserPromises.push(perUserPromise);
+        });
+
+        return Parse.Promise.when(perUserPromises);
+    }).then(function () {
+        // Set next SR cycle time to 5 minutes from now.
+        var changes = {
+            taskStatus: 'done',
+            taskMessage: recapsGenerated + ' recaps(s) generated.',
+            taskClaimed: 0, // repetitive task, do not destroy
+            scheduledTime: moment().add(60, 'minutes').toDate()
+        };
+        return task.save(changes, {useMasterKey: true});
+    }, function (error) {
+        console.error(JSON.stringify(error));
+        logger.log("Daily Recap Cycle", "error", error);
+    });
 }
 
 /**
@@ -5710,10 +5783,11 @@ function updateTestStatsAfterAttemptTask(task, params, objects) {
  * @returns {boolean}
  */
 var isTaskScheduledForNow = function (task) {
-    if (!task.get('taskParameters') || !task.get('taskParameters')['scheduledTime'])
+    if (!task.get('scheduledTime'))
         return true;
+
     var now = moment(),
-        scheduledTime = moment(task.get('taskParameters')['scheduledTime']);
+        scheduledTime = moment(task.get('scheduledTime'));
 
     return now.isAfter(scheduledTime);
 };
