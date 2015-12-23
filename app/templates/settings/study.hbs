@@ -1,6 +1,6 @@
 <h3>Study settings</h3>
 
-<form class="form-horizontal">
+<div class="form-horizontal">
     {{#unless currentUser.srActivated}}
         <div class="form-group">
             <article class="col-xs-10 col-sm-6">
@@ -168,4 +168,4 @@
         {{async-button default="Save Changes" action="saveChanges" pending="Saving..."
         fulfilled="Saved!" class="btn btn-success" reset=true}}
     {{/if}}
-</form>
+</div>

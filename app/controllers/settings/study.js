@@ -87,6 +87,25 @@ export default Ember.Controller.extend(CurrentUser, TagsAndCats, {
             this.set('srDoNotDisturbTimesAltered', true);
         },
 
+        /**
+         * ADDING AND REMOVING TAGS
+         */
+        toggleAddingNewTag: function () {
+            if (this.get('newTag.length')) {
+                if (!this.get('currentUser.moduleTags')) {
+                    this.set('currentUser.moduleTags', new Ember.A());
+                }
+                this.get('currentUser.moduleTags').pushObject(this.get('newTag'));
+                this.set('newTag', "");
+            }
+
+            this.set('addingTag', !this.get('addingTag'));
+            setTimeout(function () {
+                if (this.get('addingTag'))
+                    Ember.$("#new-tag").focus();
+            }.bind(this), 150);
+        },
+
         removeTag: function (tagIndex) {
             this.get('currentUser.moduleTags').removeAt(tagIndex);
         },
