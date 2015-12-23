@@ -148,7 +148,7 @@
             <section class="row">
                 <article class="col-md-12 col-sm-6 col-xs-12 margin-bottom-16">
                     {{test-card test=model cardType="testInfo" parentController=this}}
-                    {{#unless isGeneratedAttempt}}
+                    {{#unless model.isGenerated}}
                         {{user-card user=model.author}}
                     {{/unless}}
                 </article>
