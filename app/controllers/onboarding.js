@@ -355,8 +355,8 @@ export default Ember.Controller.extend(CurrentUser, ImageUpload, {
             }
         },
 
-        removeTag: function (tag) {
-            this.get('user.moduleTags').removeObject(tag);
+        removeTag: function (tagIndex) {
+            this.get('user.moduleTags').removeAt(tagIndex);
         },
 
         selectStudyIntensity: function (intensity) {

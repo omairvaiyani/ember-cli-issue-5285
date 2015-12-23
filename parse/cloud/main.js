@@ -4875,15 +4875,17 @@ Parse.Cloud.define("sendBetaInvite", function (request, response) {
     // Find people who haven't been invite yet
     var betaInviteQuery = new Parse.Query("BetaInvite");
     betaInviteQuery.notEqualTo("inviteSent", true);
+    // // TODO Currently In Private Beta
+    betaInviteQuery.equalTo('privateBeta', true);
+
     var allowedEmails = request.params.allowedEmails;
 
+    var betaInvitesToSend = [];
     betaInviteQuery.find().then(function (betaInvites) {
-        var betaInvitesToSend = [];
+
         // Figure out who we want to invite
         _.each(betaInvites, function (betaInvite) {
-            if (betaInvite.get('email') === "um11mov@leeds.ac.uk"
-                || betaInvite.get('email') === "omair.vaiyani@live.co.uk"
-                || _.contains(allowedEmails, betaInvite.get('email')))
+            if (!allowedEmails || _.contains(allowedEmails, betaInvite.get('email')))
                 betaInvitesToSend.push(betaInvite);
 
         });
@@ -4906,7 +4908,7 @@ Parse.Cloud.define("sendBetaInvite", function (request, response) {
         });
         return Parse.Promise.when(promises);
     }).then(function () {
-        response.success("Done!")
+        response.success(betaInvitesToSend.length + " invites sent.")
     }, function (error) {
         response.error(error);
     });
