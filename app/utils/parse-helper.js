@@ -2,7 +2,7 @@ import StringHelper from '../utils/string-helper';
 
 export default {
     generatePointer: function (object, className) {
-        if(!object)
+        if (!object)
             return "";
         if (!className)
             className = object.constructor.typeKey;
@@ -69,7 +69,7 @@ export default {
             var recordJSON = record.toJSON(),
                 pointerFields = [];
             // Due to issues with pointer fields, this has to be done
-            switch(className) {
+            switch (className) {
                 case "Response":
                     pointerFields.push({key: "question", class: "Question"});
                     pointerFields.push({key: "test", class: "Test"});
@@ -81,7 +81,7 @@ export default {
             });
             batchOperations.push({
                 method: "POST",
-                path: "/1/classes/"+className,
+                path: "/1/classes/" + className,
                 body: recordJSON
             });
         });
@@ -93,10 +93,10 @@ export default {
                 function (response) {
                     var rawPayload = [];
                     _.each(response, function (payload) {
-                       rawPayload.push(payload.success);
+                        rawPayload.push(payload.success);
                     });
                     var modelType = "parse-user";
-                    if(className !== "_User")
+                    if (className !== "_User")
                         modelType = className.dasherize();
                     resolve(_this.extractRawPayload(context.store, modelType, rawPayload));
                 },
@@ -182,7 +182,7 @@ export default {
         // Ember uses 'id' as primaryKey.
         _.each(payload, function (object) {
             object.id = object.objectId ? object.objectId : object.id;
-            if(!object.id)
+            if (!object.id)
                 object.id = object.objectID;
         });
 
@@ -254,7 +254,9 @@ export default {
      * @param {object} jsonUser
      */
     handleUserWithIncludedData: function (store, jsonUser) {
-        var educationCohort;
+        var educationCohort,
+            earnedBadges,
+            badgeProgressions;
 
         // Education Cohort
         if (jsonUser.educationCohort) {
@@ -263,9 +265,15 @@ export default {
         }
 
         // Badges
-        var earnedBadges = this.extractRawPayload(store, 'badge', _.clone(jsonUser.earnedBadges)),
+        if (jsonUser.earnedBadges) {
+            earnedBadges = this.extractRawPayload(store, 'badge', _.clone(jsonUser.earnedBadges));
+        }
+        if (jsonUser.badgeProgressions) {
+            console.log("Adding badge progressions for " + jsonUser.name);
             badgeProgressions = this.extractRawPayload(store, 'badge-progress',
                 _.clone(jsonUser.badgeProgressions));
+            console.dir(badgeProgressions);
+        }
 
         // Level
         var level = this.extractRawPayload(store, 'level', _.clone(jsonUser.level));
@@ -274,13 +282,13 @@ export default {
         var user = this.extractRawPayload(store, 'parse-user', jsonUser);
         user.set('initialisedFor', true);
 
-        if(educationCohort)
+        if (educationCohort)
             user.set('educationCohort', educationCohort);
-        if(earnedBadges)
+        if (earnedBadges)
             user.set('earnedBadges', earnedBadges);
-        if(badgeProgressions)
+        if (badgeProgressions)
             user.set('badgeProgressions', badgeProgressions);
-        if(level)
+        if (level)
             user.set('level', level);
 
         return user;
@@ -324,7 +332,7 @@ export default {
         if (response.educationCohort) {
             var educationCohort = this.extractRawPayload(store, 'education-cohort',
                 _.clone(response.educationCohort));
-            if(educationCohort)
+            if (educationCohort)
                 currentUser.set('educationCohort', educationCohort);
         }
     }
