@@ -13,31 +13,6 @@ export default Ember.Route.extend({
         }
     }.property('applicationController.currentUser.id'),
 
-    /**
-     * Convenience observer as Controller loads before Route
-     * can handle actions.
-     * Sets user properties on analytics
-     */
-    initializeCurrentUserOnAnalytics: function () {
-        if (!this.get('applicationController.currentUser'))
-            return;
-        var currentUser = this.get('applicationController.currentUser');
-        //amplitude.setUserId(currentUser.get('id'));
-        var userProperties = {};
-        userProperties.name = currentUser.get('name');
-        userProperties.slug = currentUser.get('slug');
-        userProperties.university = currentUser.get('university.name');
-        userProperties.course = currentUser.get('course.name');
-        userProperties.year = currentUser.get('yearNumber');
-        userProperties.fbid = currentUser.get('fbid');
-        userProperties.numberOfTests = currentUser.get('numberOfTests');
-        userProperties.numberOfAttempts = currentUser.get('numberOfAttempts');
-        //amplitude.setUserProperties(userProperties);
-
-        // Google Analytics
-        ga('set', '&uid', currentUser.get('id'));
-    }.observes('applicationController.currentUser.id'),
-
     setupController: function (controller, model) {
         controller.set('model', model);
         this.set('applicationController', controller);
