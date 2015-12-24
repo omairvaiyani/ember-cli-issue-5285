@@ -1,0 +1,57 @@
+/* NAVBAR */
+.navbar-main
+  height 40px
+  color white !important
+  text-transform uppercase
+  font-size 12px
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.1);
+  backgroundGradient(0)
+  &.navbar-transparent
+    background-color transparent !important
+  .navbar-brand
+    height 40px
+    line-height 20px
+    &.navbar-brand-adjust
+      margin: -14px;
+    .logo-spinner
+      display: inline-block;
+      margin: 0 8px 0 0;
+      vertical-align: middle;
+  @media (max-width: 1198px)
+    .navbar-brand
+      padding 15px
+      height 40px
+  @media (max-width: 767px)
+    .navbar-brand
+      position: absolute;
+      left: calc(50% - 45px);
+  .navbar-nav
+    li
+      cursor pointer
+      a
+        padding-top 16px !important
+        padding-bottom 14px !important
+  .navbar-right
+    li > a.navbar-right-adjust
+      padding-top 11px !important
+      padding-bottom 11px !important
+    li.log-in-join
+      border: 2px solid colorPrimary-700;
+      height: 30px;
+      margin-top: 11px;
+      padding: 0;
+      background-color: rgba(0, 0, 0, 0.12);
+      &:hover
+        background-color: rgba(0, 0, 0, 0.10);
+      a
+        padding-top 4px !important
+    li:hover
+      background-color alpha(white, 0.1)
+    @media (min-width screenSmall)
+      float: right !important;
+      margin-right: -15px;
+    .account-dropdown
+      li
+        a
+          text-shadow 0 0 0
+          font-size 12px !important

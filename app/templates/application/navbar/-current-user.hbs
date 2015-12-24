@@ -1,14 +1,30 @@
+<li class="navbar-notifications-container dropdown keep-open">
+    <a data-toggle="dropdown">
+        {{#if currentUser.unreadNotificationCount}}
+            <span class="badge pull-right">{{currentUser.unreadNotificationCount}}</span>
+        {{/if}}
+        <span class="fa fa-fw fa-bell"></span>
+    </a>
+    <div class="dropdown-menu" role="menu">
+        {{#each currentUser.notifications as |notification|}}
+            {{activity-notification notification=notification parentController=this}}
+        {{/each}}
+        {{#unless currentUser.notifications.length}}
+            <p>You have no messages.</p>
+        {{/unless}}
+    </div>
+</li>
+
 {{#link-to 'index.user' currentUser.slug  tagName='li'}}
     {{#link-to 'index.user' currentUser.slug tagName='a' classNames='navbar-right-adjust'}}
-        <img class='profile-thumbnail' {{bind-attr src=currentUser.profileImageURL}} />
-
-        <div>{{currentUser.firstName}}</div>
+        {{profile-picture user=currentUser height=30 width=30 doNotLink=true}}
+        <span class="inline-block">{{currentUser.firstName}}</span>
     {{/link-to}}
 {{/link-to}}
 <li>
     <a id="accountDropdown"
        data-toggle="dropdown"><span class="caret"></span></a>
-    <ul class="dropdown-menu" role="menu" aria-labelledby="accountDropdown">
+    <ul class="account-dropdown dropdown-menu" role="menu" aria-labelledby="accountDropdown">
         <li role="presentation">
             {{#link-to 'settings.index' role="menuitem" tabindex="-1"}}
                 Settings
@@ -24,3 +40,28 @@
         </li>
     </ul>
 </li>
+<script>
+    /*
+     * This overrides bootstraps
+     * dropdown menu jQuery function.
+     * We want to avoid closing the
+     * menu when the user clicks on
+     * 'mark read' or 'mark unread'.
+     */
+    $('.dropdown.keep-open').on({
+        "shown.bs.dropdown": function () {
+            this.closable = true;
+        },
+        "click": function (e) {
+            if (e.target.parentNode.className === "read-indicator")
+                this.closable = false;
+            else
+                this.closable = true;
+        },
+        "hide.bs.dropdown": function (e) {
+            var closable = this.closable;
+            this.closable = true;
+            return closable;
+        }
+    });
+</script>

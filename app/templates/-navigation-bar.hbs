@@ -62,16 +62,9 @@
                         {{/link-to}}
                     {{/unless}}
                 </ul>
-                {{#if betaUnlocked}}
-                    {{#unless hideNavbarSearch}}
-                        {{partial 'application/navbar/search-bar'}}
-                    {{/unless}}
-                {{/if}}
+
                 <ul class="nav navbar-nav navbar-right">
                     {{#if currentUser}}
-                        {{!-- Messages / Notifications hidden until fully implemented --}}
-                        {{!-- {{partial 'application/navbar/user-messages'}} --}}
-                        <!-- account actions -->
                         {{partial 'application/navbar/current-user'}}
                     {{else}}
                         <li class="log-in-join">
