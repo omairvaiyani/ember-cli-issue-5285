@@ -23,8 +23,14 @@ module.exports = function (environment) {
             restApiId: "YWipkMx0KTb3U6DYdPHXtfGy2QRVQA6xfSY3QKTr",
             jsKey: "J4oAZA2qRHiCA324x0kQyEXiXuRXZPMA01wLN1xK"
         },
+
         googleMap: {
             key: 'AIzaSyANfra0HUx4jAl73-RKvOzJl36vWwq0T5U'
+        },
+
+        getStream: {
+            publicKey: "fcx4w2mtbg2w",
+            site: "8320"
         }
     };
 

@@ -225,7 +225,7 @@ Parse.Cloud.afterSave(Attempt, function (request) {
         promises = [];
 
     if (!attempt.existed()) {
-        // Test stats will be updated within 15 minutes
+        // Test stats will be updated within 60 seconds
         var taskCreatorPromise = taskCreator('Statistics', 'updateTestStatsAfterAttempt',
             {}, [attempt.test(), attempt.questions(), attempt, user]);
 
@@ -257,12 +257,23 @@ Parse.Cloud.afterSave(Attempt, function (request) {
             // Add this new attempt as the latest
             user.latestTestAttempts().add(attempt);
             user.save();
+            /*
+             TODO remove this once set up on afterSave.UserEvent
+             promises.push(updateActivityStream(request, {
+             actor: user,
+             object: attempt.test(),
+             feedSlug: "user",
+             feedUserId: attempt.user().id,
+             verb: "took quiz",
+             to: attempt.test().author(),
+             score: attempt.score()
+             }));*/
+
         });
 
         promises.push(taskCreatorPromise);
         promises.push(userUpdatePromise);
     }
-
     Parse.Promise.when(promises);
 });
 
@@ -322,4 +333,42 @@ Parse.Cloud.beforeSave(UniqueResponse, function (request, response) {
     }, function (error) {
         response.error(error);
     });
+});
+
+/**
+ * @AfterSave Follow
+ * Activity Stream
+ */
+Parse.Cloud.afterSave(Follow, function (request) {
+    var follow = request.object,
+        promises = [];
+    if (!follow.existed()) {
+        logger.log("activity-stream", "saving follow");
+
+        promises.push(addActivityToStream(follow.user(), "followed", follow, [follow.following()]));
+
+        var flat = GetstreamClient.feed('flat', follow.user().id);
+        promises.push(flat.follow('user', follow.following().id, GetstreamUtils.createHandler(logger)));
+    }
+
+    return Parse.Promise.when(promises); // Keep alive till done
+});
+
+/**
+ * @AfterDelete Activity
+ * Remove Activity Stream
+ */
+Parse.Cloud.afterDelete(Follow, function (request) {
+    var follow = request.object;
+
+    // trigger fanout & unfollow
+    var activity = GetstreamUtils.parseToActivity(follow),
+        feed = GetstreamClient.feed('user', follow.user().id);
+    feed.removeActivity({
+        foreignId: activity.foreign_id
+    }, GetstreamUtils.createHandler(logger));
+
+    // Remove previously followed user from user's feed
+    var flat = GetstreamClient.feed('flat', follow.user().id);
+    flat.unfollow('user', follow.following().id, GetstreamUtils.createHandler(logger));
 });

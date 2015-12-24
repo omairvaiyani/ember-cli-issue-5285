@@ -842,7 +842,7 @@ Parse.User.prototype.testAttempts = function () {
  * @returns {String}
  */
 Parse.User.prototype.timeZone = function () {
-    return this.relation('timeZone');
+    return this.get('timeZone');
 };
 /**
  * @Property uniqueResponses
@@ -865,6 +865,13 @@ Parse.User.prototype.userEvents = function () {
  *
  **/
 var UserEvent = Parse.Object.extend("UserEvent", {
+    /**
+     * @Property user
+     * @returns {Parse.User}
+     */
+    user: function () {
+        return this.get('user');
+    },
     /**
      * @Property type
      * @returns {string}
@@ -966,39 +973,6 @@ var UserEvent = Parse.Object.extend("UserEvent", {
     ADDED_QUESTION: "addedQuestion",
 
     /**
-     * @Deprecated
-     * @Function Created Test
-     * Sets the userEvent type,
-     * objects, objectTypes and
-     * finally, the pointsTransacted
-     * by calling the async method,
-     * assignPoints.
-     *
-     * @param {Test} test
-     * @param {Parse.User} user
-     * @returns {Parse.Promise<UserEvent>}
-     */
-    createdTest: function (test, user) {
-        var userEvent = new UserEvent();
-        userEvent.set('type', UserEvent.CREATED_TEST);
-        userEvent.set('objects', [test]);
-        userEvent.set('objectTypes', [test.className]);
-        userEvent.setDefaults(user);
-        return userEvent.assignPoints().then(function () {
-            return userEvent.save();
-        }).then(function () {
-            // Increment user.points
-            user.increment('points', userEvent.pointsTransacted());
-            // Add userEvent to user.userEvents relation
-            var userEvents = user.userEvents();
-            userEvents.add(userEvent);
-            return user.save();
-        }).then(function () {
-            return Parse.Promise.as(userEvent);
-        });
-    },
-
-    /**
      * @Function New Event
      *
      * Sets the event type, objects,
@@ -1025,6 +999,7 @@ var UserEvent = Parse.Object.extend("UserEvent", {
     newEvent: function (eventType, objects, user) {
         var userEvent = new UserEvent();
         userEvent.set('type', eventType);
+
         if (objects.constructor !== Array)
             objects = [objects];
         userEvent.set('objects', objects);
@@ -1042,7 +1017,10 @@ var UserEvent = Parse.Object.extend("UserEvent", {
             userEvents.add(userEvent);
             var promises = [];
             // Check and handle if User levelled up
-            promises.push(user.checkLevelUp());
+            if (userEvent.pointsTransacted())
+                promises.push(user.checkLevelUp());
+            else
+                promises.push(false);
             // Check and handle if Badge awarded
             promises.push(user.checkBadgeProgressions(userEvent));
             return Parse.Promise.when(promises);
@@ -1056,6 +1034,47 @@ var UserEvent = Parse.Object.extend("UserEvent", {
             return Parse.Promise.when([user.save(), userEvent.save()]);
         }).then(function () {
             return Parse.Promise.as(userEvent);
+        });
+    }
+});
+
+/****
+ * --------
+ * Follow
+ * --------
+ *
+ **/
+var Follow = Parse.Object.extend("Follow", {
+    /**
+     * @Property user
+     * @returns {Parse.User}
+     */
+    user: function () {
+        return this.get('user');
+    },
+
+    /**
+     * @Property following
+     * @returns {Parse.User}
+     */
+    following: function () {
+        return this.get('following');
+    }
+}, {
+    followedUser: function (user, userToFollow) {
+        var follow = new Follow();
+        follow.set('user', user);
+        follow.set('following', userToFollow);
+        follow.setACL(new Parse.ACL().setPublicReadAccess(true));
+        return follow.save();
+    },
+
+    unfollowedUser: function (user, userToUnfollow) {
+        var unfollowQuery = new Parse.Query(Follow);
+        unfollowQuery.equalTo('user', user);
+        unfollowQuery.equalTo('following', userToUnfollow);
+        return unfollowQuery.find().then(function (result) {
+            return Parse.Object.destroyAll(result);
         });
     }
 });
@@ -2663,7 +2682,9 @@ var _ = require("underscore"),
     CryptoJS = require('cloud/crypto.js'), // Needed for Intercom hashing
     intercomKey = "Xhl5IzCrI-026mCaD5gqXpoO2WURA416KtCRlWsJ",
     logger = require("cloud/logentries.js"),
-    cheerio = require('cloud/cheerio.js');
+    cheerio = require('cloud/cheerio.js'),
+    getstream = require('cloud/modules/getstream/getstream.js'),
+    GetstreamUtils = require('cloud/modules/getstream/utils.js');
 
 // Algolia Search Master-Indices
 var testIndex = algoliaClient.initIndex('Test'),
@@ -2674,13 +2695,16 @@ Mandrill.initialize(mandrillKey);
 Stripe.initialize('sk_test_AfBhaEg8Yojoc1hylUI0pdtc'); // testing key
 //Stripe.initialize('sk_live_AbPy747DUMLo8qr53u5REcaX'); // live key
 
+// Activity Stream
+var GetstreamClient = getstream.connect('fcx4w2mtbg2w', 'gcvxysm55f38rkp837572tpbppgbyhkrmwv6qvv8bq75v7m7e6g89u6jw8dwsthy', '8320');
+
 var APP = {
     baseUrl: 'https://synap.ac/',
     baseCDN: 'https://s3-eu-west-1.amazonaws.com/synap-dev-assets/',
     takeTest: 'mcq/',
     testInfo: 'test/',
     userSettings: 'settings/',
-    userStudySettings: 'settings/study/',
+    userStudySettings: 'settings/study/'
 };/*
  * HELPER CLASSES
  */
@@ -3212,7 +3236,7 @@ Parse.Cloud.afterSave(Attempt, function (request) {
         promises = [];
 
     if (!attempt.existed()) {
-        // Test stats will be updated within 15 minutes
+        // Test stats will be updated within 60 seconds
         var taskCreatorPromise = taskCreator('Statistics', 'updateTestStatsAfterAttempt',
             {}, [attempt.test(), attempt.questions(), attempt, user]);
 
@@ -3244,12 +3268,23 @@ Parse.Cloud.afterSave(Attempt, function (request) {
             // Add this new attempt as the latest
             user.latestTestAttempts().add(attempt);
             user.save();
+            /*
+             TODO remove this once set up on afterSave.UserEvent
+             promises.push(updateActivityStream(request, {
+             actor: user,
+             object: attempt.test(),
+             feedSlug: "user",
+             feedUserId: attempt.user().id,
+             verb: "took quiz",
+             to: attempt.test().author(),
+             score: attempt.score()
+             }));*/
+
         });
 
         promises.push(taskCreatorPromise);
         promises.push(userUpdatePromise);
     }
-
     Parse.Promise.when(promises);
 });
 
@@ -3309,6 +3344,44 @@ Parse.Cloud.beforeSave(UniqueResponse, function (request, response) {
     }, function (error) {
         response.error(error);
     });
+});
+
+/**
+ * @AfterSave Follow
+ * Activity Stream
+ */
+Parse.Cloud.afterSave(Follow, function (request) {
+    var follow = request.object,
+        promises = [];
+    if (!follow.existed()) {
+        logger.log("activity-stream", "saving follow");
+
+        promises.push(addActivityToStream(follow.user(), "followed", follow, [follow.following()]));
+
+        var flat = GetstreamClient.feed('flat', follow.user().id);
+        promises.push(flat.follow('user', follow.following().id, GetstreamUtils.createHandler(logger)));
+    }
+
+    return Parse.Promise.when(promises); // Keep alive till done
+});
+
+/**
+ * @AfterDelete Activity
+ * Remove Activity Stream
+ */
+Parse.Cloud.afterDelete(Follow, function (request) {
+    var follow = request.object;
+
+    // trigger fanout & unfollow
+    var activity = GetstreamUtils.parseToActivity(follow),
+        feed = GetstreamClient.feed('user', follow.user().id);
+    feed.removeActivity({
+        foreignId: activity.foreign_id
+    }, GetstreamUtils.createHandler(logger));
+
+    // Remove previously followed user from user's feed
+    var flat = GetstreamClient.feed('flat', follow.user().id);
+    flat.unfollow('user', follow.following().id, GetstreamUtils.createHandler(logger));
 });/*
  * CLOUD FUNCTIONS
  */
@@ -4154,6 +4227,10 @@ Parse.Cloud.define('finaliseNewAttempt', function (request, status) {
         attemptQuery = new Parse.Query(Attempt);
 
     attemptQuery.include('responses');
+
+    Parse.Cloud.useMasterKey(); // needed to get author
+    // need author to notify of new activity
+    attemptQuery.include('test.author');
     attemptQuery.get(attemptId).then(function (result) {
         attempt = result;
         var promises = [];
@@ -4171,6 +4248,8 @@ Parse.Cloud.define('finaliseNewAttempt', function (request, status) {
         promises.push(user.addUniqueResponses(attempt.responses()));
 
         promises.push(UserEvent.newEvent("finishedQuiz", [attempt], user));
+
+        promises.push(addActivityToStream(user, "took quiz", attempt, [attempt.test().author()]));
 
         return Parse.Promise.when(promises);
     }).then(function (uniqueResponses, userEvent) {
@@ -5133,54 +5212,35 @@ Parse.Cloud.define("followUser", function (request, response) {
         var followerCountQuery = userToFollow.followers().query(),
             followingCountQuery = currentUser.following().query();
 
-        // Notify followed user by push
-        var query = new Parse.Query(Parse.Installation);
-        query.equalTo('user', userToFollow);
+        // TODO this actually works, but need to implement on the app
+        /*
+         var pushNotification;
+         var query = new Parse.Query(Parse.Installation);
+         query.equalTo('user', userToFollow);
+         pushNotification = Parse.Push.send({
+         where: query,
+         data: {
+         alert: currentUser.get('name') + " started following you!",
+         badge: "Increment",
+         sound: "default.caf",
+         title: "You have a new Synap Follower!",
+         userId: currentUser.id,
+         userName: currentUser.get('name'),
+         pushType: "newFollower"
+         }
+         // TODO add promise to promises array when uncommented
+         });*/
 
-        var pushNotification = Parse.Push.send({
-            where: query,
-            data: {
-                alert: currentUser.get('name') + " started following you!",
-                badge: "Increment",
-                sound: "default.caf",
-                title: "You have a new Synap Follower!",
-                userId: currentUser.id,
-                userName: currentUser.get('name'),
-                pushType: "newFollower"
-            }
-        });
-
-        return Parse.Promise.when([followerCountQuery.count(), followingCountQuery.count(), pushNotification]);
+        return Parse.Promise.when([followerCountQuery.count(), followingCountQuery.count()]);
     }).then(function (followerCount, followingCount) {
         userToFollow.set('numberOfFollowers', followerCount);
         currentUser.set('numberFollowing', followingCount);
-        return Parse.Promise.when([userToFollow.save(), currentUser.save()]);
+        return Parse.Promise.when([
+            userToFollow.save(),
+            currentUser.save(),
+            Follow.followedUser(currentUser, userToFollow)
+        ])
     }).then(function () {
-
-        // TODO update facebook graph?
-        /*if (!mainUser.get('authData') || !mainUser.get('authData').facebook
-         || !mainUser.get('authData').facebook.access_token) {
-         return;
-         }
-         return Parse.Cloud.httpRequest({
-         method: 'POST',
-         url: FB.API.url + 'og.follows',
-         params: {
-         access_token: mainUser.get('authData').facebook.access_token,
-         profile: MyCQs.baseUrl + userToFollow.get('slug')
-         }
-         }).then(function (httpResponse) {
-         var graphActionId;
-         if (httpResponse && httpResponse.data)
-         graphActionId = httpResponse.data.id;
-         return response.success({
-         graphActionId: graphActionId,
-         numberFollowing: mainUser.get('numberFollowing'),
-         numberOfFollowers: userToFollow.get('numberOfFollowers')
-         });
-         })
-         */
-
         response.success();
     }, function (error) {
         response.error(error);
@@ -5224,7 +5284,11 @@ Parse.Cloud.define("unfollowUser", function (request, response) {
     }).then(function (followerCount, followingCount) {
         userToUnfollow.set('numberOfFollowers', followerCount);
         currentUser.set('numberFollowing', followingCount);
-        return Parse.Promise.when([userToUnfollow.save(), currentUser.save()]);
+
+        return Parse.Promise.when([
+            userToUnfollow.save(),
+            currentUser.save(),
+            Follow.unfollowedUser(currentUser, userToUnfollow)]);
     }).then(function () {
         response.success();
     }, function (error) {
@@ -5836,4 +5900,73 @@ Parse.Cloud.job('workQueue', function (request, status) {
         console.log(err);
         status.error('Something failed!  Check the cloud log.');
     });
+});/*
+ * ACTIVITY STREAM
+ */
+/**
+ * @Function Add Activity to Stream
+ * @param {Parse.User} actor
+ * @param {String} verb
+ * @param {Parse.Object} object
+ * @param {Array<Parse.User>} to
+ * @returns {*}
+ */
+function addActivityToStream(actor, verb, object, to) {
+    // trigger fanout
+    var activity = GetstreamUtils.parseToActivity({
+        actor: actor,
+        verb: verb,
+        object: object,
+        to: to
+    });
+
+    logger.log("activity-stream", "activity to be fed", activity);
+    console.error("activity -> " + JSON.stringify(activity));
+
+    var feed = GetstreamClient.feed(activity.feed_slug, activity.feed_user_id);
+
+    return feed.addActivity(activity, GetstreamUtils.createHandler(logger));
+}
+
+/*
+ * View to retrieve the feed, expects feed in the format user:1
+ * Accepts params
+ *
+ * feed: the feed id in the format user:1
+ * limit: how many activities to get
+ * id_lte: filter by activity id less than or equal to (for pagination)
+ *
+ */
+Parse.Cloud.define("fetchActivityFeed", function (request, response) {
+    var feedIdentifier = request.params.feed;
+    var feedParts = feedIdentifier.split(':');
+    var feedSlug = feedParts[0];
+    var userId = feedParts[1];
+    var id_lte = request.params.id_lte || undefined;
+    var limit = request.params.limit || 100;
+    var params = {
+        limit: limit
+    };
+    if (id_lte) {
+        params.id_lte = limit;
+    }
+    // initialize the feed class
+    var feed = GetstreamClient.feed(feedSlug, userId);
+    logger.log("activity-stream", "fetch feed", feed);
+    Parse.Cloud.useMasterKey();
+    feed.get(params, function (httpResponse) {
+        var activities = httpResponse.data;
+        // enrich the response with the database values where needed
+        var promise = GetstreamUtils.enrich(activities.results, logger);
+        promise.then(function (activities) {
+            response.success({
+                activities: activities,
+                feed: feedIdentifier,
+                token: feed.token
+            });
+        }, function (error) {
+            response.error(error);
+        });
+        return promise;
+    }, GetstreamUtils.createHandler(logger, response));
 });

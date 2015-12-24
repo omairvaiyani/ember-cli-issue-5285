@@ -842,7 +842,7 @@ Parse.User.prototype.testAttempts = function () {
  * @returns {String}
  */
 Parse.User.prototype.timeZone = function () {
-    return this.relation('timeZone');
+    return this.get('timeZone');
 };
 /**
  * @Property uniqueResponses
@@ -865,6 +865,13 @@ Parse.User.prototype.userEvents = function () {
  *
  **/
 var UserEvent = Parse.Object.extend("UserEvent", {
+    /**
+     * @Property user
+     * @returns {Parse.User}
+     */
+    user: function () {
+        return this.get('user');
+    },
     /**
      * @Property type
      * @returns {string}
@@ -966,39 +973,6 @@ var UserEvent = Parse.Object.extend("UserEvent", {
     ADDED_QUESTION: "addedQuestion",
 
     /**
-     * @Deprecated
-     * @Function Created Test
-     * Sets the userEvent type,
-     * objects, objectTypes and
-     * finally, the pointsTransacted
-     * by calling the async method,
-     * assignPoints.
-     *
-     * @param {Test} test
-     * @param {Parse.User} user
-     * @returns {Parse.Promise<UserEvent>}
-     */
-    createdTest: function (test, user) {
-        var userEvent = new UserEvent();
-        userEvent.set('type', UserEvent.CREATED_TEST);
-        userEvent.set('objects', [test]);
-        userEvent.set('objectTypes', [test.className]);
-        userEvent.setDefaults(user);
-        return userEvent.assignPoints().then(function () {
-            return userEvent.save();
-        }).then(function () {
-            // Increment user.points
-            user.increment('points', userEvent.pointsTransacted());
-            // Add userEvent to user.userEvents relation
-            var userEvents = user.userEvents();
-            userEvents.add(userEvent);
-            return user.save();
-        }).then(function () {
-            return Parse.Promise.as(userEvent);
-        });
-    },
-
-    /**
      * @Function New Event
      *
      * Sets the event type, objects,
@@ -1025,6 +999,7 @@ var UserEvent = Parse.Object.extend("UserEvent", {
     newEvent: function (eventType, objects, user) {
         var userEvent = new UserEvent();
         userEvent.set('type', eventType);
+
         if (objects.constructor !== Array)
             objects = [objects];
         userEvent.set('objects', objects);
@@ -1042,7 +1017,10 @@ var UserEvent = Parse.Object.extend("UserEvent", {
             userEvents.add(userEvent);
             var promises = [];
             // Check and handle if User levelled up
-            promises.push(user.checkLevelUp());
+            if (userEvent.pointsTransacted())
+                promises.push(user.checkLevelUp());
+            else
+                promises.push(false);
             // Check and handle if Badge awarded
             promises.push(user.checkBadgeProgressions(userEvent));
             return Parse.Promise.when(promises);
@@ -1056,6 +1034,47 @@ var UserEvent = Parse.Object.extend("UserEvent", {
             return Parse.Promise.when([user.save(), userEvent.save()]);
         }).then(function () {
             return Parse.Promise.as(userEvent);
+        });
+    }
+});
+
+/****
+ * --------
+ * Follow
+ * --------
+ *
+ **/
+var Follow = Parse.Object.extend("Follow", {
+    /**
+     * @Property user
+     * @returns {Parse.User}
+     */
+    user: function () {
+        return this.get('user');
+    },
+
+    /**
+     * @Property following
+     * @returns {Parse.User}
+     */
+    following: function () {
+        return this.get('following');
+    }
+}, {
+    followedUser: function (user, userToFollow) {
+        var follow = new Follow();
+        follow.set('user', user);
+        follow.set('following', userToFollow);
+        follow.setACL(new Parse.ACL().setPublicReadAccess(true));
+        return follow.save();
+    },
+
+    unfollowedUser: function (user, userToUnfollow) {
+        var unfollowQuery = new Parse.Query(Follow);
+        unfollowQuery.equalTo('user', user);
+        unfollowQuery.equalTo('following', userToUnfollow);
+        return unfollowQuery.find().then(function (result) {
+            return Parse.Object.destroyAll(result);
         });
     }
 });

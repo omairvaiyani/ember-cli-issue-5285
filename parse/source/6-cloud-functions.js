@@ -843,6 +843,10 @@ Parse.Cloud.define('finaliseNewAttempt', function (request, status) {
         attemptQuery = new Parse.Query(Attempt);
 
     attemptQuery.include('responses');
+
+    Parse.Cloud.useMasterKey(); // needed to get author
+    // need author to notify of new activity
+    attemptQuery.include('test.author');
     attemptQuery.get(attemptId).then(function (result) {
         attempt = result;
         var promises = [];
@@ -860,6 +864,8 @@ Parse.Cloud.define('finaliseNewAttempt', function (request, status) {
         promises.push(user.addUniqueResponses(attempt.responses()));
 
         promises.push(UserEvent.newEvent("finishedQuiz", [attempt], user));
+
+        promises.push(addActivityToStream(user, "took quiz", attempt, [attempt.test().author()]));
 
         return Parse.Promise.when(promises);
     }).then(function (uniqueResponses, userEvent) {
@@ -1822,54 +1828,35 @@ Parse.Cloud.define("followUser", function (request, response) {
         var followerCountQuery = userToFollow.followers().query(),
             followingCountQuery = currentUser.following().query();
 
-        // Notify followed user by push
-        var query = new Parse.Query(Parse.Installation);
-        query.equalTo('user', userToFollow);
+        // TODO this actually works, but need to implement on the app
+        /*
+         var pushNotification;
+         var query = new Parse.Query(Parse.Installation);
+         query.equalTo('user', userToFollow);
+         pushNotification = Parse.Push.send({
+         where: query,
+         data: {
+         alert: currentUser.get('name') + " started following you!",
+         badge: "Increment",
+         sound: "default.caf",
+         title: "You have a new Synap Follower!",
+         userId: currentUser.id,
+         userName: currentUser.get('name'),
+         pushType: "newFollower"
+         }
+         // TODO add promise to promises array when uncommented
+         });*/
 
-        var pushNotification = Parse.Push.send({
-            where: query,
-            data: {
-                alert: currentUser.get('name') + " started following you!",
-                badge: "Increment",
-                sound: "default.caf",
-                title: "You have a new Synap Follower!",
-                userId: currentUser.id,
-                userName: currentUser.get('name'),
-                pushType: "newFollower"
-            }
-        });
-
-        return Parse.Promise.when([followerCountQuery.count(), followingCountQuery.count(), pushNotification]);
+        return Parse.Promise.when([followerCountQuery.count(), followingCountQuery.count()]);
     }).then(function (followerCount, followingCount) {
         userToFollow.set('numberOfFollowers', followerCount);
         currentUser.set('numberFollowing', followingCount);
-        return Parse.Promise.when([userToFollow.save(), currentUser.save()]);
+        return Parse.Promise.when([
+            userToFollow.save(),
+            currentUser.save(),
+            Follow.followedUser(currentUser, userToFollow)
+        ])
     }).then(function () {
-
-        // TODO update facebook graph?
-        /*if (!mainUser.get('authData') || !mainUser.get('authData').facebook
-         || !mainUser.get('authData').facebook.access_token) {
-         return;
-         }
-         return Parse.Cloud.httpRequest({
-         method: 'POST',
-         url: FB.API.url + 'og.follows',
-         params: {
-         access_token: mainUser.get('authData').facebook.access_token,
-         profile: MyCQs.baseUrl + userToFollow.get('slug')
-         }
-         }).then(function (httpResponse) {
-         var graphActionId;
-         if (httpResponse && httpResponse.data)
-         graphActionId = httpResponse.data.id;
-         return response.success({
-         graphActionId: graphActionId,
-         numberFollowing: mainUser.get('numberFollowing'),
-         numberOfFollowers: userToFollow.get('numberOfFollowers')
-         });
-         })
-         */
-
         response.success();
     }, function (error) {
         response.error(error);
@@ -1913,7 +1900,11 @@ Parse.Cloud.define("unfollowUser", function (request, response) {
     }).then(function (followerCount, followingCount) {
         userToUnfollow.set('numberOfFollowers', followerCount);
         currentUser.set('numberFollowing', followingCount);
-        return Parse.Promise.when([userToUnfollow.save(), currentUser.save()]);
+
+        return Parse.Promise.when([
+            userToUnfollow.save(),
+            currentUser.save(),
+            Follow.unfollowedUser(currentUser, userToUnfollow)]);
     }).then(function () {
         response.success();
     }, function (error) {

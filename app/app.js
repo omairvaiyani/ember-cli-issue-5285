@@ -24,4 +24,7 @@ var App = Ember.Application.extend({
 // Check initializers/session.js for main workload and loading state.
 loadInitializers(App, config.modulePrefix);
 
+// Get Stream
+App.StreamClient = stream.connect(config.getStream.publicKey, null, config.getStream.site);
+
 export default App;

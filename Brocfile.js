@@ -128,4 +128,12 @@ app.import({
     production: 'bower_components/jquery-knob/dist/jquery.knob.min.js'
 });
 
+/*
+ * Get Stream
+ */
+app.import({
+    development: 'bower_components/getstream/dist/js/getstream.js',
+    production: 'bower_components/getstream/dist/js_min/getstream.js'
+});
+
 module.exports = app.toTree();
