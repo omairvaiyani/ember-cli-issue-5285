@@ -69,10 +69,6 @@ Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, EstimateMemoryStrength
 
     // Demo Code
     getAndSetCurrentUserTiles: function () {
-        if (!this.get('showUserPage') || !this.get('currentUser.initialisedFor') ||
-            this.get('fetchingCurrentUserTiles'))
-            return;
-
         // To avoid multiple concurrent calls due to observer updates
         this.set('fetchingCurrentUserTiles', true);
 
@@ -102,12 +98,18 @@ Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, EstimateMemoryStrength
         }).then(function () {
             this.set('fetchingCurrentUserTiles', false);
         }.bind(this));
+    },
 
-        // Refresh tiles after 5 minutes
-        setTimeout(function () {
-            this.getAndSetCurrentUserTiles();
-        }.bind(this), 300000);
-    }.observes('showUserPage', 'currentUser.initialisedFor'),
+    setUserTilesRefresherCycle: function () {
+        var _this = this;
+        _this.set('refresherCycleIsSet', true);
+        _this.getAndSetCurrentUserTiles();
+
+        // Refresh tiles every 5 minutes
+        setInterval( function() {
+            _this.getAndSetCurrentUserTiles();
+        }, 300000);
+    },
 
     /**
      * @Property Show Current User Mini Profile

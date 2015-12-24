@@ -156,10 +156,11 @@ export default Ember.Controller.extend({
             Ember.set(adapter, 'headers.X-Parse-Session-Token', currentUser.get('sessionToken'));
 
             // Check if User has been Initialised
-            var promise = new Parse.Promise();
+            var promises = [],
+                initialiseUserPromise = new Parse.Promise();
 
             // Set Up Current User Tiles
-            this.get('controllers.index').getAndSetCurrentUserTiles();
+            this.get('controllers.index').setUserTilesRefresherCycle();
 
             if (_.contains(this.get('parseConfig').adminIds, this.get('currentUser.id')))
                 this.set('currentUser.isAdmin', true);
@@ -168,20 +169,19 @@ export default Ember.Controller.extend({
             // in the SessionInitializer along with the initialiseApp Cloud function
             // - else, we need the cloud function part here
             if (!currentUser.get('initialisedFor')) {
-                promise = ParseHelper.cloudFunction(this, 'initialiseApp', {}).then(function (response) {
+                initialiseUserPromise = ParseHelper.cloudFunction(this, 'initialiseApp', {}).then(function (response) {
                     // Returned user object has all pointer fields included
                     ParseHelper.handleUserWithIncludedData(this.store, response.user);
-
-                    EventTracker.profileUser(this.get('currentUser'));
                 }.bind(this), function (error) {
                     console.dir(error);
                 });
             } else {
-                promise.resolve();
-                EventTracker.profileUser(this.get('currentUser'));
+                initialiseUserPromise.resolve();
             }
+            promises.push(initialiseUserPromise);
 
-            promise.then(function () {
+            Promise.all(promises).then(function () {
+                EventTracker.profileUser(this.get('currentUser'));
                 return ParseHelper.cloudFunction(this, 'loadMyTestsList', {});
             }.bind(this)).then(function (response) {
                 ParseHelper.handleRelationalDataResponseForUser(this.store, currentUser, response);
