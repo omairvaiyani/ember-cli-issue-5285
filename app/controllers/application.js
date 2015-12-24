@@ -189,6 +189,12 @@ export default Ember.Controller.extend({
                 return ParseHelper.cloudFunction(this, 'loadFollowersAndFollowing', {});
             }.bind(this)).then(function (response) {
                 ParseHelper.handleRelationalDataResponseForUser(this.store, currentUser, response);
+
+                return ParseHelper.cloudFunction(this, 'fetchActivityFeed', {
+                    feed: "flat:"+currentUser.get('id')
+                });
+            }.bind(this)).then(function (activityFeed) {
+                //console.dir({feed: activityFeed});
             }.bind(this), function (error) {
                 console.dir(error);
             }).then(function () {
