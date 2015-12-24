@@ -8,7 +8,7 @@ export default Ember.Route.extend({
         return ParseHelper.cloudFunction(_this, 'fetchActivityFeed', {
             feed: 'flat:' + _this.controllerFor('application').get('currentUser.id')
         }).then(function (feed) {
-            ParseHelper.prepareActivitiesForEmber(_this, feed.activities);
+            ParseHelper.prepareActivitiesForEmber(_this.store, feed.activities);
             return feed;
         });
     },

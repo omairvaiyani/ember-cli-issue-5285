@@ -55,3 +55,32 @@
         a
           text-shadow 0 0 0
           font-size 12px !important
+
+.activity-notifications
+  .notification-counter
+    background white
+    color colorSecondary
+  .activity-notifications-dropdown
+    width 400px
+    height 300px
+    overflow hidden
+    cursor default
+    color colorText
+    text-transform none !important
+    hr
+      margin 0 0 -2px 0
+    .notifications-container
+      height 100%
+      overflow-y scroll
+      .no-message
+        width 100%
+        padding marginSecondary
+        text-align center
+      .activity-notification
+        cursor pointer
+        padding 12px marginPrimary
+        font-size 12px
+        &:hover
+          background alpha(black, 0.03);
+        .right
+          width calc(100% - 43px)

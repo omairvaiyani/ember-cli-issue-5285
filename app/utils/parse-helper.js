@@ -336,22 +336,74 @@ export default {
     },
 
     /**
+     * @Function Assign Notifications to Current User
+     * @param store
+     * @param currentUser
+     * @param notificationResponse
+     */
+    assignNotificationsToCurrentUser: function (store, currentUser, notificationResponse) {
+        currentUser.set('notificationFeedToken', notificationResponse.token);
+
+        var notifications = this.prepareGroupedActivitiesForEmber(store, notificationResponse.activities);
+        currentUser.set('notifications', new Ember.A());
+        currentUser.get('notifications').addObjects(notifications);
+
+        currentUser.set('totalUnseenNotifications', notificationResponse.unseen);
+        currentUser.set('totalUnreadNotifications', notificationResponse.unread);
+
+    },
+
+    /**
+     * @Function Prepare Activities for Ember
+     * Loops through each activity, and extracts
+     * the actor and object appropriately.
+     * @param store
+     * @param activities
+     */
+    prepareActivitiesForEmber: function (store, activities) {
+        var _this = this;
+        _.each(activities, function (activity) {
+            activity.actor = _this.extractActivityActor(store, activity);
+            activity.object = _this.extractActivityObject(store, activity);
+        });
+        return activities;
+    },
+
+    /**
+     * @Function Prepare Grouped Activities for Ember
+     * Loops through each activity, and extracts
+     * the actor and object appropriately.
+     * @param store
+     * @param {Array} groupedActivities
+     */
+    prepareGroupedActivitiesForEmber: function (store, groupedActivities) {
+        var _this = this;
+        _.each(groupedActivities, function (groupedActivity) {
+            _.each(groupedActivity.activities, function (activity) {
+                activity.actor = _this.extractActivityActor(store, activity);
+                activity.object = _this.extractActivityObject(store, activity);
+            });
+        });
+        return groupedActivities;
+    },
+
+    /**
      * @Function Extract Activity Actor
-     * @param context
+     * @param store
      * @param activity
      * @returns {DS.Model}
      */
-    extractActivityActor: function (context, activity) {
-        return this.extractRawPayload(context.store, 'parse-user', activity.actor_parse);
+    extractActivityActor: function (store, activity) {
+        return this.extractRawPayload(store, 'parse-user', activity.actor_parse);
     },
 
     /**
      * @Function Extract Activity Object
-     * @param context
+     * @param store
      * @param activity
      * @returns {DS.Model}
      */
-    extractActivityObject: function (context, activity) {
+    extractActivityObject: function (store, activity) {
         var className = activity.object_parse.className,
             type;
 
@@ -360,23 +412,8 @@ export default {
         else
             type = activity.object_parse.className.dasherize();
 
-        return this.extractRawPayload(context.store, type,
+        return this.extractRawPayload(store, type,
             activity.object_parse);
-    },
-
-    /**
-     * @Function Prepare Activities for Ember
-     * Loops through each activity, and extracts
-     * the actor and object appropriately.
-     * @param context
-     * @param activities
-     */
-    prepareActivitiesForEmber: function (context, activities) {
-        var _this = this;
-        _.each(activities, function (activity) {
-            activity.actor = _this.extractActivityActor(context, activity);
-            activity.object = _this.extractActivityObject(context, activity);
-        });
     }
 
 }

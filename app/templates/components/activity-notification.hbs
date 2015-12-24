@@ -1,0 +1,32 @@
+<div class="activity-notification">
+    {{profile-picture user=latestActor height=32 width=32 doNotLink=true class="inline-top margin-top-4"}}
+    <div class="inline-block right">
+        <p class="no-margin">
+            {{{actorNames}}}
+
+            {{#if followActivity}}
+                started following you!
+            {{/if}}
+            {{#if attemptActivity}}
+                {{#if multipleObjects}}
+                    took {{allObjects.length}} of your quizzes!
+                {{else}}
+                    took your quiz <strong class="linkify">{{latestObject.test.title}}</strong>
+                {{/if}}
+            {{/if}}
+        </p>
+        <p class="margin-top-8 margin-bottom-8">
+            {{#if attemptActivity}}
+                {{#if multipleActivities}}
+                    {{#each activity.activities as |innerActivity|}}
+                        <strong class="linkify">{{innerActivity.object.test.title}}</strong> <br>
+                    {{/each}}
+                {{/if}}
+            {{/if}}
+        </p>
+        <p class="small no-margin pull-right">
+            {{from-now time=latestTime
+            showIcon=true mini=true}}
+        </p>
+    </div>
+</div>

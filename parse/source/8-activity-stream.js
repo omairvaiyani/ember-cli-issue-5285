@@ -19,7 +19,6 @@ function addActivityToStream(actor, verb, object, to) {
     });
 
     logger.log("activity-stream", "activity to be fed", activity);
-    console.error("activity -> " + JSON.stringify(activity));
 
     var feed = GetstreamClient.feed(activity.feed_slug, activity.feed_user_id);
 
@@ -29,9 +28,11 @@ function addActivityToStream(actor, verb, object, to) {
 /**
  * @Function Prepare Activity for Dispatch
  * @param {Object} activity
+ * @param {Parse.User} currentUser
  * @returns {Object} activity
  */
 function prepareActivityForDispatch(activity, currentUser) {
+
     // Minimise actor if not current user
     if (activity.actor_parse.id !== currentUser.id)
         activity.actor_parse = activity.actor_parse.minimalProfile();
@@ -58,6 +59,17 @@ function prepareActivityForDispatch(activity, currentUser) {
     return activity;
 }
 
+/**
+ * @Function Prepare Grouped Activity for Dispatch
+ * @param groupedActivity
+ * @param currentUser
+ */
+function prepareGroupedActivityForDispatch(groupedActivity, currentUser) {
+    _.each(groupedActivity.activities, function (activity) {
+        prepareActivityForDispatch(activity, currentUser);
+    });
+}
+
 /*
  * View to retrieve the feed, expects feed in the format user:1
  * Accepts params
@@ -82,16 +94,22 @@ Parse.Cloud.define("fetchActivityFeed", function (request, response) {
     }
     // initialize the feed class
     var feed = GetstreamClient.feed(feedSlug, userId);
-    logger.log("activity-stream", "fetch feed", feed);
+    logger.log("activity-stream", "fetching feed", feed);
     Parse.Cloud.useMasterKey();
     feed.get(params, function (httpResponse) {
-        var activities = httpResponse.data.results;
+        var activities = httpResponse.data.results,
+            unread = httpResponse.data.unread,
+            unseen = httpResponse.data.unseen;
+        logger.log("activity-stream", "feed data", httpResponse.data);
+
         return Parse.Cloud.run('enrichActivityStream', {activities: activities, user: request.user.toJSON()})
             .then(function (activities) {
                 response.success({
                     activities: activities,
                     feed: feedIdentifier,
-                    token: feed.token
+                    token: feed.token,
+                    unread: unread,
+                    unseen: unseen
                 });
             }, function (error) {
                 response.error(error);
@@ -103,10 +121,8 @@ Parse.Cloud.define('enrichActivityStream', function (request, response) {
     var activities = request.params.activities,
         currentUser = request.user ? request.user : request.params.user;
 
-    if(!currentUser)
+    if (!currentUser)
         return response.error("You must send current user.");
-
-    logger.log("activity-stream", "user", currentUser);
 
     // enrich the response with the database values where needed
 
@@ -119,7 +135,10 @@ Parse.Cloud.define('enrichActivityStream', function (request, response) {
     Parse.Cloud.useMasterKey();
     return GetstreamUtils.enrich(activities, includes, currentUser).then(function (enrichedActivities) {
         _.each(enrichedActivities, function (activity) {
-            prepareActivityForDispatch(activity, currentUser);
+            if (activity.group)
+                prepareGroupedActivityForDispatch(activity, currentUser);
+            else
+                prepareActivityForDispatch(activity, currentUser);
         });
 
         response.success(enrichedActivities);

@@ -69,8 +69,23 @@ function enrich(activities, includes, currentUser) {
     var activityIds = [];
     _.each(activities, function (activity) {
         activityIds.push(activity.id);
+
+        if (activity.group) {
+            // Notification or Aggregate inner activities
+            _.each(activity.activities, function (innerActivity) {
+                _.each(innerActivity, function (value) {
+                    if (value && value.indexOf('ref') === 0) {
+                        var parts = value.split(':');
+                        if (!(parts[1] in lookup)) {
+                            lookup[parts[1]] = [];
+                        }
+                        lookup[parts[1]].push(parts[2]);
+                    }
+                });
+            });
+        }
         _.each(activity, function (value) {
-            if (value && value.indexOf('ref') === 0) {
+            if (value && typeof value === "string" && value.indexOf('ref') === 0) {
                 var parts = value.split(':');
                 if (!(parts[1] in lookup)) {
                     lookup[parts[1]] = [];
@@ -78,9 +93,10 @@ function enrich(activities, includes, currentUser) {
                 lookup[parts[1]].push(parts[2]);
             }
         });
+
     });
 
-    // we add all the neccesary queries to this list of promises
+    // we add all the necessary queries to this list of promises
     var promises = [];
 
     // Query which activities the user already likes
@@ -136,8 +152,21 @@ function enrich(activities, includes, currentUser) {
 
         // now we set the data
         _.each(activities, function (activity) {
+            if (activity.group) {
+                _.each(activity.activities, function (innerActivity) {
+                    _.each(innerActivity, function (value, field) {
+                        if (value && typeof value === "string" && value.indexOf('ref') === 0) {
+                            var parts = value.split(':');
+                            var parseModels = resultHash[parts[1]];
+                            innerActivity[field + '_parse'] = parseModels && parseModels[parts[2]];
+                        }
+                        // set the innerActivity liked state
+                        innerActivity.liked = innerActivity.id in doILikeHash;
+                    });
+                });
+            }
             _.each(activity, function (value, field) {
-                if (value && value.indexOf('ref') === 0) {
+                if (value && typeof value === "string" && value.indexOf('ref') === 0) {
                     var parts = value.split(':');
                     var parseModels = resultHash[parts[1]];
                     activity[field + '_parse'] = parseModels && parseModels[parts[2]];
@@ -145,7 +174,6 @@ function enrich(activities, includes, currentUser) {
             });
             // set the liked state
             activity.liked = activity.id in doILikeHash;
-
         });
         return activities;
     }, function () {

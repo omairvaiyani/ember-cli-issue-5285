@@ -12,7 +12,7 @@ export default Ember.Controller.extend(CurrentUser, {
             ParseHelper.cloudFunction(_this, 'enrichActivityStream', {
                 activities: data.new
             }).then(function (activities) {
-                ParseHelper.prepareActivitiesForEmber(_this, activities);
+                ParseHelper.prepareActivitiesForEmber(_this.store, activities);
                 _this.get('model.activities').unshiftObjects(activities);
             });
         });

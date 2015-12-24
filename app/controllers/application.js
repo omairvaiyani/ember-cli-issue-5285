@@ -144,11 +144,12 @@ export default Ember.Controller.extend({
      * website load, then it is called.
      */
     manageCurrentUserSession: function () {
-        var currentUser = this.get('currentUser'),
-            adapter = this.store.adapterFor("parse-user");
+        var _this = this,
+            currentUser = _this.get('currentUser'),
+            adapter = _this.store.adapterFor("parse-user");
 
         if (currentUser) {
-            this.send('bootIntercomCommunications', currentUser);
+            _this.send('bootIntercomCommunications', currentUser);
 
             // Session Token Handling
             // May no longer have it due to object manipulation after 'intialiseApp' below
@@ -160,40 +161,46 @@ export default Ember.Controller.extend({
                 initialiseUserPromise = new Parse.Promise();
 
             // Set Up Current User Tiles
-            this.get('controllers.index').setUserTilesRefresherCycle();
+            _this.get('controllers.index').setUserTilesRefresherCycle();
 
-            if (_.contains(this.get('parseConfig').adminIds, this.get('currentUser.id')))
-                this.set('currentUser.isAdmin', true);
+            if (_.contains(_this.get('parseConfig').adminIds, _this.get('currentUser.id')))
+                _this.set('currentUser.isAdmin', true);
 
             // If the user was previously logged in, sessionToken is validated
             // in the SessionInitializer along with the initialiseApp Cloud function
             // - else, we need the cloud function part here
             if (!currentUser.get('initialisedFor')) {
-                initialiseUserPromise = ParseHelper.cloudFunction(this, 'initialiseApp', {}).then(function (response) {
-                    // Returned user object has all pointer fields included
-                    ParseHelper.handleUserWithIncludedData(this.store, response.user);
-                }.bind(this), function (error) {
-                    console.dir(error);
-                });
+                initialiseUserPromise = ParseHelper.cloudFunction(_this, 'initialiseApp', {})
+                    .then(function (response) {
+                        // Returned user object has all pointer fields included
+                        ParseHelper.handleUserWithIncludedData(_this.store, response.user);
+                        if (response.notifications)
+                            ParseHelper.assignNotificationsToCurrentUser(_this.store, currentUser, response.notifications);
+
+                    }, function (error) {
+                        console.dir(error);
+                    });
             } else {
                 initialiseUserPromise.resolve();
             }
-            promises.push(initialiseUserPromise);
 
-            Promise.all(promises).then(function () {
-                EventTracker.profileUser(this.get('currentUser'));
-                return ParseHelper.cloudFunction(this, 'loadMyTestsList', {});
-            }.bind(this)).then(function (response) {
-                ParseHelper.handleRelationalDataResponseForUser(this.store, currentUser, response);
-                this.get('controllers.index/user').myTestsListUpdate();
-                return ParseHelper.cloudFunction(this, 'loadFollowersAndFollowing', {});
-            }.bind(this)).then(function (response) {
-                ParseHelper.handleRelationalDataResponseForUser(this.store, currentUser, response);
-            }.bind(this), function (error) {
+            promises.push(ParseHelper.cloudFunction(_this, 'loadMyTestsList', {}));
+            promises.push(ParseHelper.cloudFunction(_this, 'loadFollowersAndFollowing', {}));
+
+            promises.push(initialiseUserPromise);
+            Promise.all(promises).then(function (promiseResults) {
+                ParseHelper.handleRelationalDataResponseForUser(_this.store, currentUser, promiseResults[0]);
+                ParseHelper.handleRelationalDataResponseForUser(_this.store, currentUser, promiseResults[1]);
+                _this.get('controllers.index/user').myTestsListUpdate();
+
+                _this.listenForActivityNotifications();
+
+                EventTracker.profileUser(_this.get('currentUser'));
+            }, function (error) {
                 console.dir(error);
             }).then(function () {
-                this.send('decrementLoadingItems');
-            }.bind(this));
+                _this.send('decrementLoadingItems');
+            });
 
         } else {
             // User not logged in
@@ -201,25 +208,6 @@ export default Ember.Controller.extend({
             Ember.set(adapter, 'headers.X-Parse-Session-Token', null);
         }
     }.observes('currentUser'),
-
-    currentUserMessagesDidChange: function () {
-        if (!this.get('currentUser'))
-            return;
-        if (!this.get('currentUser.messages')) {
-            this.set('currentUser.totalUnreadMessages', 0);
-            this.send('updateNotificationsCounter');
-            return;
-        }
-        var totalUnreadMessages = 0;
-        if (this.get('currentUser.messages.length')) {
-            this.get('currentUser.messages').forEach(function (message) {
-                if (!message.get('read')) {
-                    totalUnreadMessages++;
-                }
-            });
-        }
-        this.set('currentUser.totalUnreadMessages', totalUnreadMessages);
-    }.observes('currentUser.messages.length'),
 
     newUser: {
         name: '',
@@ -281,84 +269,75 @@ export default Ember.Controller.extend({
         confirmPassword: ""
     },
 
-    /*
-     * Search in Navbar
+    /**
+     * @Function Listen for Activity Notifications
      */
-    searchClient: function () {
-        return algoliasearch("ONGKY2T0Y8", "8553807a02b101962e7bfa8c811fd105");
-    }.property(),
+    listenForActivityNotifications: function () {
+        var _this = this;
 
-    navbarSearchTerm: "",
-    navbarSearchResults: {tests: new Ember.A(), users: new Ember.A()},
+        _this.monitorActivityNotificationsDropDown(); // As good a place as any to call this once only function.
 
-    performNavbarSearch: function () {
-        var queries = [],
-            testQuery = {
-                indexName: "Test",
-                query: this.get('navbarSearchTerm'),
-                params: {
-                    hitsPerPage: 5
-                }
-            },
-            userQuery = {
-                indexName: "User",
-                query: this.get('navbarSearchTerm'),
-                params: {
-                    hitsPerPage: 5
-                }
-            };
-        queries.push(testQuery);
-        queries.push(userQuery);
-        this.get('searchClient').search(queries).then(function (response) {
-            var testResponse = response.results[0],
-                userResponse = response.results[1],
-                tests = ParseHelper.extractRawPayload(this.store, 'test', testResponse.hits),
-                users = ParseHelper.extractRawPayload(this.store, 'parse-user', userResponse.hits);
+        var notificationFeed = Ember.StreamClient.feed('notification', _this.get('currentUser.id'),
+            _this.get('currentUser.notificationFeedToken'));
 
-            // Algolia cache's results which should be great BUT
-            // Ember-Data removes the .id from payloads when extracting
-            // This causes an error on 'response.hits' cache as their
-            // 'id' has been removed.
-            this.get('searchClient').clearCache();
+        _this.set('currentUser.notificationFeed', notificationFeed);
 
-            this.set('navbarSearchTotalTestResults', testResponse.nbHits);
-            this.set('navbarSearchTotalUserResults', userResponse.nbHits);
-
-            this.get('navbarSearchResults.tests').clear();
-            this.get('navbarSearchResults.tests').addObjects(tests);
-
-            this.get('navbarSearchResults.users').clear();
-            this.get('navbarSearchResults.users').addObjects(users);
-
-            this.set('navbarSearchFetching', false);
-        }.bind(this));
+        notificationFeed.subscribe(function callback(data) {
+            ParseHelper.cloudFunction(_this, 'enrichActivityStream', {
+                activities: data.new
+            }).then(function (notifications) {
+                ParseHelper.prepareGroupedActivitiesForEmber(_this.store, notifications);
+                _this.get('currentUser.notifications').unshiftObjects(notifications);
+                _this.set('currentUser.totalUnseenNotifications', data.unseen);
+                _this.set('currentUser.totalReadNotifications', data.unread);
+            });
+        });
     },
 
-    throttleNavbarSearch: function () {
-        this.set('navbarSearchFetching', this.get('navbarSearchTerm.length') > 0);
+    /**
+     * @jQuery Monitor Activity Notifications Dropdown
+     *
+     * a) Send action on display (to mark all as 'seen')
+     *
+     * b) Stop bootstrap code from closing the container
+     * if user clicks within the dropdown
+     *
+     * This code is working well and does not leak the
+     * jQuery binder.
+     *
+     * Called once from this.listenForActivityNotifications
+     */
+    monitorActivityNotificationsDropDown: function () {
+        var _this = this;
+        $('.dropdown.activity-notifications').on({
+            "shown.bs.dropdown": function () {
+                this.closable = true;
+                _this.send('activityNotificationsShown');
+            },
+            "click": function (e) {
+                var target = $(e.target);
+                if (target.parents(".activity-notifications-dropdown").length)
+                    this.closable = false;
+                else
+                    this.closable = true;
+            },
+            "hide.bs.dropdown": function (e) {
+                var closable = this.closable;
+                this.closable = true;
+                return closable;
+            }
+        });
+    },
 
-        if (!this.get('navbarSearchTerm.length')) {
-            this.get('navbarSearchResults.tests').clear();
-            this.get('navbarSearchResults.users').clear();
-            this.set('navbarSearchTotalTestResults', 0);
-            this.set('navbarSearchTotalUserResults', 0);
-            return;
-        }
-        Ember.run.debounce(this, this.performNavbarSearch, 200);
-    }.observes('navbarSearchTerm.length'),
-
-    navbarSearchTotalTestResults: 0,
-    navbarSearchTotalUserResults: 0,
-    navbarSearchTotalResults: function () {
-        return this.get('navbarSearchTotalTestResults') + this.get('navbarSearchTotalUserResults');
-    }.property('navbarSearchTotalTestResults', 'navbarSearchTotalUserResults'),
-    navbarSearchMoreTestsToShow: function () {
-        return this.get('navbarSearchTotalTestResults') > this.get('navbarSearchResults.tests.length');
-    }.property('navbarSearchTotalTestResults', 'navbarSearchResults.tests.length'),
-
-    navbarSearchDual: function () {
-        return this.get('navbarSearchResults.tests.length') && this.get('navbarSearchResults.users.length');
-    }.property('navbarSearchResults.tests.length', 'navbarSearchResults.users.length'),
+    /**
+     * @Observer Update Notification Counter on Web Tab
+     */
+    updateNotificationsCounterOnWebTab: function () {
+        if (this.get('currentUser.totalUnseenNotifications'))
+            window.document.title = "(" + this.get('currentUser.totalUnseenNotifications') + ") " + window.document.title;
+        else if (window.document.title.charAt(0) === "(")
+            window.document.title = window.document.title.substr(window.document.title.indexOf(" ") + 1);
+    }.observes('currentUser.totalUnseenNotifications'),
 
     betaActivated: function () {
         return !!localStorage.betaActivationId;
@@ -375,28 +354,24 @@ export default Ember.Controller.extend({
                 this.decrementProperty('loadingItems');
         },
 
-        markMessageAsRead: function (message) {
-            if (!message.get('read')) {
-                message.set('read', true);
-                if (this.get('currentUser.totalUnreadMessages'))
-                    this.decrementProperty('currentUser.totalUnreadMessages');
-                message.save();
+        /**
+         * @Action Activity Notifications Shown
+         * The Activity Notification dropdown has been
+         * opened.
+         * If there are any unseen notifications:
+         * - We will notify our stream to mark
+         *   all notifications as 'seen'.
+         * - Update the total unseen and unread
+         *   counter with the server response
+         */
+        activityNotificationsShown: function () {
+            var _this = this;
+            if (_this.get('currentUser.totalUnseenNotifications') && _this.get('currentUser.notificationFeed')) {
+                _this.get('currentUser.notificationFeed').get({mark_seen: true}).then(function (response) {
+                    _this.set('currentUser.totalUnseenNotifications', response.unseen);
+                    _this.set('currentUser.totalReadNotifications', response.unread);
+                });
             }
-        },
-
-        markMessageAsUnread: function (message) {
-            if (message.get('read')) {
-                message.set('read', false);
-                this.incrementProperty('currentUser.totalUnreadMessages');
-                message.save();
-            }
-        },
-
-        updateNotificationsCounter: function () {
-            if (this.get('currentUser.totalUnreadMessages'))
-                window.document.title = "(" + this.get('currentUser.totalUnreadMessages') + ") " + window.document.title;
-            else if (window.document.title.charAt(0) === "(")
-                window.document.title = window.document.title.substr(window.document.title.indexOf(" ") + 1);
         },
 
         // Called from the search icon

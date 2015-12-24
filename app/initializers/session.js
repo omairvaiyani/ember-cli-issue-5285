@@ -65,6 +65,8 @@ export default {
             // User
             if (response.user) {
                 var currentUser = ParseHelper.handleUserWithIncludedData(store, response.user);
+                if (response.notifications)
+                    ParseHelper.assignNotificationsToCurrentUser(store, currentUser, response.notifications);
 
                 application.register('user:current', currentUser, {instantiate: false, singleton: true});
                 application.inject('controller:application', 'currentUser', 'user:current');

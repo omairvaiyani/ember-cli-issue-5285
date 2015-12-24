@@ -140,6 +140,7 @@ Parse.Cloud.define("initialiseWebsiteForUser", function (request, response) {
  * - - Level
  * - - EarnedBadges
  * - - BadgeProgressions (with Badge)
+ * - Get Notification Feed
  *
  * @return {Object} {config, categories, user}
  */
@@ -160,13 +161,16 @@ Parse.Cloud.define('initialiseApp', function (request, response) {
         userQuery.include('earnedBadges');
         userQuery.include('badgeProgressions.badge');
         promises.push(userQuery.get(user.id));
+
+        promises.push(Parse.Cloud.run('fetchActivityFeed', {feed: "notification:"+user.id}));
     }
 
-    Parse.Promise.when(promises).then(function (config, categories, user) {
+    Parse.Promise.when(promises).then(function (config, categories, user, notifications) {
         var result = {
             config: config,
             categories: categories,
-            user: user
+            user: user,
+            notifications: notifications
         };
         response.success(result);
     }, function (error) {
