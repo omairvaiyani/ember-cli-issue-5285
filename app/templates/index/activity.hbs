@@ -1,0 +1,13 @@
+<div class="container-fluid">
+    <section class="row">
+        <article class="col-sm-8">
+            {{#each model.activities as |activity|}}
+                {{activity-card activity=activity parentController=this}}
+            {{/each}}
+        </article>
+
+        <article class="col-sm-4 col-fix-right">
+
+        </article>
+    </section>
+</div>

@@ -333,6 +333,50 @@ export default {
             if (educationCohort)
                 currentUser.set('educationCohort', educationCohort);
         }
+    },
+
+    /**
+     * @Function Extract Activity Actor
+     * @param context
+     * @param activity
+     * @returns {DS.Model}
+     */
+    extractActivityActor: function (context, activity) {
+        return this.extractRawPayload(context.store, 'parse-user', activity.actor_parse);
+    },
+
+    /**
+     * @Function Extract Activity Object
+     * @param context
+     * @param activity
+     * @returns {DS.Model}
+     */
+    extractActivityObject: function (context, activity) {
+        var className = activity.object_parse.className,
+            type;
+
+        if (className === "_User")
+            type = "parse-user";
+        else
+            type = activity.object_parse.className.dasherize();
+
+        return this.extractRawPayload(context.store, type,
+            activity.object_parse);
+    },
+
+    /**
+     * @Function Prepare Activities for Ember
+     * Loops through each activity, and extracts
+     * the actor and object appropriately.
+     * @param context
+     * @param activities
+     */
+    prepareActivitiesForEmber: function (context, activities) {
+        var _this = this;
+        _.each(activities, function (activity) {
+            activity.actor = _this.extractActivityActor(context, activity);
+            activity.object = _this.extractActivityObject(context, activity);
+        });
     }
 
 }

@@ -32,6 +32,7 @@ Router.map(function () {
     this.route('index', {path: ''}, function() {
       this.route('user', {path: '/:user_slug'});
       this.route('progress');
+      this.route('activity');
     });
 
     /*

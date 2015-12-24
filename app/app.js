@@ -25,6 +25,6 @@ var App = Ember.Application.extend({
 loadInitializers(App, config.modulePrefix);
 
 // Get Stream
-App.StreamClient = stream.connect(config.getStream.publicKey, null, config.getStream.site);
+Ember.StreamClient = stream.connect(config.getStream.publicKey, null, config.getStream.site);
 
 export default App;

@@ -256,7 +256,7 @@ Parse.Cloud.afterSave(Attempt, function (request) {
             });
             // Add this new attempt as the latest
             user.latestTestAttempts().add(attempt);
-            user.save();
+            return user.save();
             /*
              TODO remove this once set up on afterSave.UserEvent
              promises.push(updateActivityStream(request, {

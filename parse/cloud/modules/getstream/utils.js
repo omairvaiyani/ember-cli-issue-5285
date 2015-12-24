@@ -59,7 +59,7 @@ exports.parseToActivity = function parseToActivity(activityObject) {
     return activity;
 };
 
-function enrich(activities, logger) {
+function enrich(activities, includes, currentUser) {
     /*
      * Takes the given activities from getstream.io and looks up the needed
      * references from the parse database
@@ -69,7 +69,7 @@ function enrich(activities, logger) {
     var activityIds = [];
     _.each(activities, function (activity) {
         activityIds.push(activity.id);
-        _.each(activity, function (value, field) {
+        _.each(activity, function (value) {
             if (value && value.indexOf('ref') === 0) {
                 var parts = value.split(':');
                 if (!(parts[1] in lookup)) {
@@ -84,7 +84,6 @@ function enrich(activities, logger) {
     var promises = [];
 
     // Query which activities the user already likes
-    var currentUser = Parse.User.current();
     if (currentUser) {
         var doILikeQuery = new Parse.Query('Like');
         doILikeQuery.containedIn('activityId', activityIds);
@@ -100,6 +99,11 @@ function enrich(activities, logger) {
     _.each(lookup, function (ids, className) {
         var query = new Parse.Query(normalizeModelClass(className));
         query.containedIn("objectId", ids);
+        if (_.contains(includes.classNames, className)) {
+            _.each(includes[className], function (include) {
+                query.include(include);
+            });
+        }
         var promise = query.find();
         promises.push(promise);
     });
@@ -116,7 +120,6 @@ function enrich(activities, logger) {
                 doILikeHash[activityId] = like;
             });
         }
-        ;
 
         // create the result hash
         var resultSets = _.toArray(arguments).slice(1);
