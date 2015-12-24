@@ -318,6 +318,7 @@ textarea.form-input
 
 .list-card
   padding marginSecondary
+  overflow hidden /* needed with large border radii */
   .left
     width: 104px
     height 96px
@@ -390,7 +391,7 @@ textarea.form-input
     text-align center
     @media (min-width screenSmall)
       text-align left
-    button
+    .btn-ghost
       margin marginPrimary 0 0 0
       @media (min-width screenSmall)
         float right
