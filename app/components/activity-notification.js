@@ -35,8 +35,8 @@ export default ActivityCard.extend({
     }.property('latestActivity'),
 
     latestTime: function () {
-        return this.get('latestObject').time;
-    }.property('latestObject'),
+        return this.get('latestActivity').time;
+    }.property('latestActivity'),
 
     allActors: function () {
         var actors = new Ember.A();
