@@ -76,9 +76,9 @@ export default ActivityCard.extend({
                 if (index === 0)
                     return;
 
-                if (index === (actorCount - 1))
+                if (index === actorCount)
                     actorNames += " and " + _this.linkifyText(actor.get('name'));
-                else if (index < 2)
+                else if (index < 3)
                     actorNames += ", " + _this.linkifyText(actor.get('name'));
             });
             if (actorCount > 3) {
