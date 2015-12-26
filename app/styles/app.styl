@@ -1102,6 +1102,8 @@ body {
   padding-bottom 460px
   &.no-padding-bottom
     padding-bottom 0
+  .wrapper > .constructor /* Needed fro dropdown menu on shorter pages */
+    min-height 600px
   @media (min-width: screenSmall)
     min-height calc(100% + 230px)
     padding-bottom 290px
