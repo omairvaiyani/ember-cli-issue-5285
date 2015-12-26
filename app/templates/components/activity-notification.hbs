@@ -33,7 +33,7 @@
             {{#if attemptActivity}}
                 {{#if multipleTargets}}
                     {{#each allTargets as |test|}}
-                        {{#link-to 'testInfo' test.slug class="no-close"}}
+                        {{#link-to 'testInfo' test.slug class="no-close" bubbles=false}}
                             <strong>{{test.title}}</strong>
                         {{/link-to}}
                         <br>
