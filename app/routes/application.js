@@ -154,7 +154,6 @@ export default Ember.Route.extend({
                     function (user) {
                         controller.set('currentUser', user);
                         this.send('closeModal');
-                        this.send('redirectAfterLogin');
                     }.bind(this),
 
                     function (error) {
@@ -292,14 +291,7 @@ export default Ember.Route.extend({
                         EventTracker.recordEvent(EventTracker.USER_REGISTERED, {type: type});
 
                         this.set('applicationController.currentUser.firstTimeLogin', false);
-                        // If .redirect is set, this is called from new onboarding process
-                        if (!this.get('applicationController.redirect')) {
-                            // Else, they are in the old process
-                            this.set('applicationController.redirectAfterLoginToRoute', 'join.personalise');
-                            this.set('applicationController.redirectAfterLoginToController', 'join');
-                        }
                     }
-                    this.send('redirectAfterLogin');
                 }.bind(this),
                 function (error) {
                     console.log("Error with ParseUser.signup() in: registerUser");
@@ -364,25 +356,6 @@ export default Ember.Route.extend({
                         controller.set('loginMessage.error', "Error " + error.code);
                 }.bind(this)
             });
-        },
-
-        // @Deprecated - Being replaced by redirectRoute
-        redirectAfterLogin: function () {
-            if (this.get('applicationController.redirect'))
-                return this.send('redirectRoute');
-
-            // Old code, still in action.
-            if (this.get('applicationController.redirectAfterLoginToRoute')) {
-                this.transitionTo(this.get('applicationController.redirectAfterLoginToRoute'));
-                if (this.get('applicationController.redirectAfterLoginToController'))
-                    this.controllerFor(this.get('applicationController.redirectAfterLoginToController'))
-                        .send('returnedFromRedirect');
-                else
-                    this.controllerFor(this.get('applicationController.redirectAfterLoginToRoute'))
-                        .send('returnedFromRedirect');
-                this.set('applicationController.redirectAfterLoginToRoute', null);
-            } else
-                this.transitionTo('index');
         },
 
         /**
@@ -598,34 +571,6 @@ export default Ember.Route.extend({
                 this.get('applicationController').decrementProperty('loadingItems');
         },
 
-        sendPush: function (controller, type, sendObject) {
-            switch (type) {
-                case "toMobile":
-                    controller.set('sendToMobileButtonText', "Sending...");
-                    Parse.Cloud.run('sendPushToUser',
-                        {
-                            recipientUserId: this.get('currentUser.id'),
-                            message: "Hey check out this test!",
-                            testId: sendObject.get('id'),
-                            type: "sendToMobile"
-                        }, {
-                            success: function (response) {
-                                controller.set('sendToMobileButtonText', "Sent!");
-                                setInterval(function () {
-                                    controller.set('sendToMobileButtonText', "Send again");
-                                }, 3000);
-                            }.bind(this),
-                            error: function (error) {
-                                controller.set('sendToMobileButtonText', "Error, try again.");
-                                setInterval(function () {
-                                    controller.set('sendToMobileButtonText', "Send again");
-                                }, 3000);
-                                console.log("There was an error: " + error);
-                            }.bind(this)
-                        });
-                    break;
-            }
-        },
 
         /**
          * @Action Add Notification
@@ -685,25 +630,6 @@ export default Ember.Route.extend({
             return promise;
         },
 
-        activateSiteSearch: function () {
-            this.set('preSearchRoute', this.get('applicationController.currentPath'));
-            this.transitionTo('search');
-            this.controllerFor('application').set('inSearchMode', true);
-            setTimeout(function () {
-                Ember.$('#site-search-input').focus();
-            }, 500);
-        },
-
-        deactivateSiteSearch: function () {
-            if (this.get('applicationController.currentPath') === 'search') {
-                if (this.get('preSearchRoute'))
-                    this.transitionTo(this.get('preSearchRoute'));
-                else
-                    this.transitionTo('index');
-            }
-            this.controllerFor('application').set('inSearchMode', false);
-        },
-
         /**
          * @Action Save Community Test
          *
@@ -756,43 +682,6 @@ export default Ember.Route.extend({
                 }, function (error) {
                     console.dir(error);
                 });
-        },
-
-        /**
-         * @DEPRECATED (Use utils/event-tracker.recordEvent)
-         * Analytics action for events
-         * @param event {String} e.g. Test created
-         * @param object {Object} (optional) e.g. Test
-         */
-        recordEvent: function (event, object) {
-            /*
-             * Amplitude
-             */
-            /*
-             if (!object)
-             amplitude.logEvent(event);
-             else {
-             var eventData;
-             switch (event) {
-             case Constants.TEST_CREATED:
-             eventData = {
-             title: object.get('title'),
-             category: object.get('category.name')
-             };
-             break;
-             case Constants.TEST_TAKEN:
-             eventData = {
-             title: object.get('title'),
-             category: object.get('category.name'),
-             score: object.get('score')
-             };
-             break;
-             }
-             amplitude.logEvent(event, eventData);
-             }
-             */
         }
-
-
     }
 });
