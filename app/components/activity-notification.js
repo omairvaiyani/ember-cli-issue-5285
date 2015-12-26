@@ -78,9 +78,14 @@ export default ActivityCard.extend({
 
                 if (index === (actorCount - 1))
                     actorNames += " and " + _this.linkifyText(actor.get('name'));
-                else
+                else if (index < 2)
                     actorNames += ", " + _this.linkifyText(actor.get('name'));
             });
+            if(actorCount > 3) {
+                var otherCount = actorCount - 3,
+                    others = otherCount > 1 ? "others" : "other";
+                actorNames += " and " + _this.linkifyText(otherCount +  " " + others);
+            }
         }
         return actorNames;
     }.property('allActors.length', 'latestActor'),
