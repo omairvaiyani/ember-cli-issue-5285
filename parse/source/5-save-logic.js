@@ -355,21 +355,30 @@ Parse.Cloud.afterSave(Follow, function (request) {
 });
 
 /**
- * @AfterDelete Activity
- * Remove Activity Stream
+ * @AfterDelete Follow
+ * Remove Activity Stream and Following User from
+ * Current User.
  */
 Parse.Cloud.afterDelete(Follow, function (request) {
-    var follow = request.object;
+    var follow = request.object,
+        promises = [];
 
     // trigger fanout & unfollow
-    var activity = GetstreamUtils.parseToActivity(follow),
-        feed = GetstreamClient.feed('user', follow.user().id);
+    var feed = GetstreamClient.feed('user', follow.user().id),
+        activity = GetstreamUtils.parseToActivity({
+            actor: follow.user(),
+            object: follow,
+            verb: "followed"
+        });
 
-    feed.removeActivity({
+    logger.log("activity-stream", "remove follow", activity);
+    promises.push(feed.removeActivity({
         foreignId: activity.foreign_id
-    }, GetstreamUtils.createHandler(logger));
+    }, GetstreamUtils.createHandler(logger)));
 
     // Remove previously followed user from user's feed
     var flat = GetstreamClient.feed('flat', follow.user().id);
-    flat.unfollow('user', follow.following().id, GetstreamUtils.createHandler(logger));
+    promises.push(flat.unfollow('user', follow.following().id, GetstreamUtils.createHandler(logger)));
+
+    return Parse.Promise.when(promises);
 });

@@ -283,13 +283,26 @@ export default Ember.Controller.extend({
         _this.set('currentUser.notificationFeed', notificationFeed);
 
         notificationFeed.subscribe(function callback(data) {
+
+            if (data.deleted) {
+                console.dir(data.deleted);
+                _.each(data.deleted, function (id) {
+                    _this.get('currentUser.notifications').removeObject(
+                        _this.get('currentUser.notifications').findBy('id', id)
+                    )
+                });
+            }
+
             ParseHelper.cloudFunction(_this, 'enrichActivityStream', {
                 activities: data.new
-            }).then(function (notifications) {
-                ParseHelper.prepareGroupedActivitiesForEmber(_this.store, notifications);
-                _this.get('currentUser.notifications').unshiftObjects(notifications);
+            }).then(function (enrichedNotifications) {
+                ParseHelper.prepareGroupedActivitiesForEmber(_this.store, enrichedNotifications);
+
+                _this.get('currentUser.notifications').unshiftObjects(enrichedNotifications);
                 _this.set('currentUser.totalUnseenNotifications', data.unseen);
                 _this.set('currentUser.totalReadNotifications', data.unread);
+
+
             });
         });
     },
