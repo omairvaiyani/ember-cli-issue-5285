@@ -393,7 +393,7 @@ export default {
      * @returns {DS.Model}
      */
     extractActivityObject: function (store, activity, field) {
-        if (!store || !activity || !field)
+        if (!store || !activity || !field || !activity[field])
             return;
 
         var className = activity[field].className,

@@ -28,6 +28,22 @@ function addActivityToStream(actor, verb, object, to, target) {
 }
 
 /**
+ * @Function Remove Activity from Stream
+ * @param {Parse.User} currentUser
+ * @param {Parse.Object} object
+ * @returns {*}
+ */
+function removeActivityFromStream(currentUser, object) {
+    var feed = GetstreamClient.feed('user', currentUser.id);
+    return feed.removeActivity({
+        foreignId: GetstreamUtils.parseToActivity({
+            actor: currentUser,
+            object: object
+        }).foreign_id
+    }, GetstreamUtils.createHandler(logger));
+}
+
+/**
  * @Function Prepare Activity for Dispatch
  *
  * - Minimised any non-self user profiles
@@ -49,8 +65,18 @@ function prepareActivityForDispatch(activity, currentUser) {
     var title = activity.actor.name;
 
     switch (activity.verb) {
+        case "created quiz":
+            var test = activity.object;
+            if (!test) {
+                activity.shouldBeRemoved = true;
+                return activity;
+            }
+            if(test.author())
+                test.author().minimalProfile();
+            title += " created " + test.title();
+            break;
         case "took quiz":
-            var test = activity.target_parse;
+            var test = activity.target;
             if (!test) {
                 activity.shouldBeRemoved = true;
                 return activity;
@@ -59,7 +85,7 @@ function prepareActivityForDispatch(activity, currentUser) {
             title += " took " + test.title();
             break;
         case "followed":
-            var following = activity.target_parse;
+            var following = activity.target;
             if (!following || (currentUser.id === following.id)) {
                 activity.shouldBeRemoved = true;
                 return activity;
@@ -67,6 +93,9 @@ function prepareActivityForDispatch(activity, currentUser) {
             activity.target = following.minimalProfile(currentUser);
             title += " started following " + following.name;
             break;
+        default:
+            activity.shouldBeRemoved = true;
+            return activity;
     }
     activity.title = title;
     return activity;

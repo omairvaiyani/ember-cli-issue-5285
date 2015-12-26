@@ -44,10 +44,13 @@ exports.parseToActivity = function parseToActivity(activityObject) {
     // default to the activity if object is not specified
     activity.object = serializeId(activityObject.object);
     activity.foreign_id = serializeId(activityObject.object);
+
     if (activityObject.target)
         activity.target = serializeId(activity.target);
+
     activity.feed_slug = 'user';
     activity.feed_user_id = activityObject.actor.id;
+
     if (activityObject.to) {
         var notificationArray = [];
         _.each(activityObject.to, function (to) {

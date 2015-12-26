@@ -15,13 +15,40 @@
                     took your quiz <strong class="linkify">{{latestObject.test.title}}</strong>
                 {{/if}}
             {{/if}}
+
+            {{#if createdTestActivity}}
+                {{#if multipleObjects}}
+                    created {{allObjects.length}} new quizzes!
+                {{else}}
+                    created a new <strong class="linkify">{{latestObject.category.name}}</strong> quiz!
+                {{/if}}
+            {{/if}}
         </p>
         <p class="margin-top-8 margin-bottom-0">
             {{#if attemptActivity}}
                 {{#if multipleTargets}}
                     {{#each allTargets as |test|}}
-                        <strong class="linkify">{{test.title}}</strong> <br>
+                        {{#link-to 'testInfo' test.slug class="no-close"}}
+                            <strong>{{test.title}}</strong>
+                        {{/link-to}}
+                        <br>
                     {{/each}}
+                {{/if}}
+            {{/if}}
+
+            {{#if createdTestActivity}}
+                {{#if multipleObjects}}
+                    {{#each allObjects as |test|}}
+                        {{#link-to 'testInfo' test.slug class="no-close"}}
+                            <strong>{{test.title}}</strong>
+                        {{/link-to}}
+                        <br>
+                    {{/each}}
+                {{else}}
+                    {{#link-to 'testInfo' latestObject.slug class="no-close"}}
+                        <strong>{{latestObject.title}}</strong>
+                    {{/link-to}}
+                    with {{latestObject.totalQuestions}} {{pluralize-word "question" latestObject.totalQuestions}}!
                 {{/if}}
             {{/if}}
         </p>

@@ -3165,6 +3165,7 @@ Parse.Cloud.beforeSave(Test, function (request, response) {
             // If publicity is now private, remove from search index.
             if (!test.isPublic()) {
                 promises.push(test.deleteIndexObject());
+                promises.push(removeActivityFromStream(user ? user : test.author(), test));
             }
             var ACL = test.getACL();
             ACL.setPublicReadAccess(test.isPublic());
@@ -3184,7 +3185,9 @@ Parse.Cloud.beforeSave(Test, function (request, response) {
  *
  */
 Parse.Cloud.afterSave(Test, function (request) {
-    var test = request.object;
+    var user = request.user,
+        test = request.object,
+        promises = [];
 
     if (!test.existed()) {
         // New test logic
@@ -3193,8 +3196,12 @@ Parse.Cloud.afterSave(Test, function (request) {
     }
     if (test.isPublic()) {
         // Add/Update search index (async)
-        test.indexObject();
+        promises.push(test.indexObject());
+    } else {
+        // Object will be removed from search index
+        // and activity stream in beforeSave
     }
+    return Parse.Promise.when(promises);
 });
 
 /**
@@ -3202,8 +3209,17 @@ Parse.Cloud.afterSave(Test, function (request) {
  * Removes from search index.
  */
 Parse.Cloud.afterDelete(Test, function (request) {
-    var object = request.object;
-    return testIndex.deleteObject(object.id);
+    var test = request.object,
+        user = request.user,
+        promises = [];
+
+    promises.push(testIndex.deleteObject(test.id));
+
+    var currentUser = user ? user : test.author();
+    if (currentUser)
+        promises.push(removeActivityFromStream(currentUser, test));
+
+    return Parse.Promise.when(promises);
 });
 
 /**
@@ -3962,7 +3978,10 @@ Parse.Cloud.define('createNewTest', function (request, response) {
         user.increment('numberOfTestsCreated');
         user.createdTests().add(test);
         // Creates a new userEvent and increments the users points.
-        return UserEvent.newEvent(UserEvent.CREATED_TEST, test, user);
+        var promises = [UserEvent.newEvent(UserEvent.CREATED_TEST, test, user)];
+        if (test.isPublic())
+            promises.push(addActivityToStream(user, 'created quiz', test));
+        return Parse.Promise.when(promises);
     }).then(function (userEvent) {
         // Check Level Up has been moved to UserEvent.newEvent(), and stored on userEvent.
         // return user.checkLevelUp();
@@ -5250,7 +5269,7 @@ Parse.Cloud.define("followUser", function (request, response) {
     var currentUser = request.user,
         userToFollow = new Parse.User();
 
-    if(request.params.currentUserId)  {
+    if (request.params.currentUserId) {
         currentUser = new Parse.User();
         currentUser.id = request.params.currentUserId;
     }
@@ -5977,6 +5996,22 @@ function addActivityToStream(actor, verb, object, to, target) {
 }
 
 /**
+ * @Function Remove Activity from Stream
+ * @param {Parse.User} currentUser
+ * @param {Parse.Object} object
+ * @returns {*}
+ */
+function removeActivityFromStream(currentUser, object) {
+    var feed = GetstreamClient.feed('user', currentUser.id);
+    return feed.removeActivity({
+        foreignId: GetstreamUtils.parseToActivity({
+            actor: currentUser,
+            object: object
+        }).foreign_id
+    }, GetstreamUtils.createHandler(logger));
+}
+
+/**
  * @Function Prepare Activity for Dispatch
  *
  * - Minimised any non-self user profiles
@@ -5998,8 +6033,18 @@ function prepareActivityForDispatch(activity, currentUser) {
     var title = activity.actor.name;
 
     switch (activity.verb) {
+        case "created quiz":
+            var test = activity.object;
+            if (!test) {
+                activity.shouldBeRemoved = true;
+                return activity;
+            }
+            if(test.author())
+                test.author().minimalProfile();
+            title += " created " + test.title();
+            break;
         case "took quiz":
-            var test = activity.target_parse;
+            var test = activity.target;
             if (!test) {
                 activity.shouldBeRemoved = true;
                 return activity;
@@ -6008,7 +6053,7 @@ function prepareActivityForDispatch(activity, currentUser) {
             title += " took " + test.title();
             break;
         case "followed":
-            var following = activity.target_parse;
+            var following = activity.target;
             if (!following || (currentUser.id === following.id)) {
                 activity.shouldBeRemoved = true;
                 return activity;
@@ -6016,6 +6061,9 @@ function prepareActivityForDispatch(activity, currentUser) {
             activity.target = following.minimalProfile(currentUser);
             title += " started following " + following.name;
             break;
+        default:
+            activity.shouldBeRemoved = true;
+            return activity;
     }
     activity.title = title;
     return activity;

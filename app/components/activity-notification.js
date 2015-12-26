@@ -97,6 +97,9 @@ export default ActivityCard.extend({
     actions: {
         notificationClicked: function () {
             switch(this.get('activity.verb')) {
+                case "created quiz":
+                    this.get('parentController').transitionTo('testInfo', this.get('latestObject.slug'));
+                    break;
                 case "followed":
                     this.get('parentController').transitionTo('index.user', this.get('latestActor.slug'));
                     break;

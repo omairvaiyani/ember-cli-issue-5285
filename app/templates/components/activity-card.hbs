@@ -10,6 +10,18 @@
             {{#link-to 'index.user' activity.actor.slug}}
                 {{activity.actor.name}}
             {{/link-to}}
+
+            {{#if createdTestActivity}}
+                created a new
+                {{#link-to 'category' activity.object.category.slug}}
+                    {{activity.object.category.name}}
+                {{/link-to}}
+                quiz called
+                {{#link-to 'testInfo' activity.object.slug}}
+                    {{activity.object.title}}
+                {{/link-to}}
+            {{/if}}
+
             {{#if attemptActivity}}
                 {{#if activity.object.score}}
                     scored {{activity.object.score}}% on
@@ -17,10 +29,11 @@
                     took
                 {{/if}}
 
-                {{#link-to 'test' activity.object.test.slug}}
-                    {{activity.object.test.title}}
+                {{#link-to 'testInfo' activity.target.slug}}
+                    {{activity.target.title}}
                 {{/link-to}}
             {{/if}}
+
             {{#if followActivity}}
                 started following
                 {{#link-to 'index.user' activity.object.following.slug}}
@@ -44,14 +57,21 @@
         <section class="row">
             <article class="col-xs-12 col-sm-6 col-sm-push-6">
 
-                {{#if showBeatScore}}
+                {{#if attemptActivity}}
                     <button class="btn btn-info btn-ghost"
                         {{action 'openModal' 'browse/modal/test-info' 'browse.modal.testInfo'
-                        activity.object.test}}>
-                        Beat {{activity.actor.firstName}}'s Score
+                        activity.target}}>
+                        Take Quiz
                     </button>
                 {{/if}}
 
+                {{#if createdTestActivity}}
+                    <button class="btn btn-info btn-ghost"
+                        {{action 'openModal' 'browse/modal/test-info' 'browse.modal.testInfo'
+                        activity.object}}>
+                        Take Quiz
+                    </button>
+                {{/if}}
 
                 {{#if showViewProfile}}
                     {{#link-to 'index.user' activity.object.following.slug tagName='button'

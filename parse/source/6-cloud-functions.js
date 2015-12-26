@@ -528,7 +528,10 @@ Parse.Cloud.define('createNewTest', function (request, response) {
         user.increment('numberOfTestsCreated');
         user.createdTests().add(test);
         // Creates a new userEvent and increments the users points.
-        return UserEvent.newEvent(UserEvent.CREATED_TEST, test, user);
+        var promises = [UserEvent.newEvent(UserEvent.CREATED_TEST, test, user)];
+        if (test.isPublic())
+            promises.push(addActivityToStream(user, 'created quiz', test));
+        return Parse.Promise.when(promises);
     }).then(function (userEvent) {
         // Check Level Up has been moved to UserEvent.newEvent(), and stored on userEvent.
         // return user.checkLevelUp();
@@ -1816,7 +1819,7 @@ Parse.Cloud.define("followUser", function (request, response) {
     var currentUser = request.user,
         userToFollow = new Parse.User();
 
-    if(request.params.currentUserId)  {
+    if (request.params.currentUserId) {
         currentUser = new Parse.User();
         currentUser.id = request.params.currentUserId;
     }

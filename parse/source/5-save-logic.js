@@ -114,6 +114,7 @@ Parse.Cloud.beforeSave(Test, function (request, response) {
             // If publicity is now private, remove from search index.
             if (!test.isPublic()) {
                 promises.push(test.deleteIndexObject());
+                promises.push(removeActivityFromStream(user ? user : test.author(), test));
             }
             var ACL = test.getACL();
             ACL.setPublicReadAccess(test.isPublic());
@@ -133,7 +134,9 @@ Parse.Cloud.beforeSave(Test, function (request, response) {
  *
  */
 Parse.Cloud.afterSave(Test, function (request) {
-    var test = request.object;
+    var user = request.user,
+        test = request.object,
+        promises = [];
 
     if (!test.existed()) {
         // New test logic
@@ -142,8 +145,12 @@ Parse.Cloud.afterSave(Test, function (request) {
     }
     if (test.isPublic()) {
         // Add/Update search index (async)
-        test.indexObject();
+        promises.push(test.indexObject());
+    } else {
+        // Object will be removed from search index
+        // and activity stream in beforeSave
     }
+    return Parse.Promise.when(promises);
 });
 
 /**
@@ -151,8 +158,17 @@ Parse.Cloud.afterSave(Test, function (request) {
  * Removes from search index.
  */
 Parse.Cloud.afterDelete(Test, function (request) {
-    var object = request.object;
-    return testIndex.deleteObject(object.id);
+    var test = request.object,
+        user = request.user,
+        promises = [];
+
+    promises.push(testIndex.deleteObject(test.id));
+
+    var currentUser = user ? user : test.author();
+    if (currentUser)
+        promises.push(removeActivityFromStream(currentUser, test));
+
+    return Parse.Promise.when(promises);
 });
 
 /**

@@ -9,6 +9,10 @@ export default Ember.Component.extend({
         return this.get('activity.verb') === "followed";
     }.property("activity.verb"),
 
+    createdTestActivity: function () {
+        return this.get('activity.verb') === "created quiz";
+    }.property("activity.verb"),
+
     showBeatScore: function () {
         return this.get('attemptActivity');
     }.property('attemptActivity'),
