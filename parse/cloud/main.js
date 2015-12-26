@@ -3009,7 +3009,41 @@ var getAuthorsFromTestsSearch = function (tests) {
 };/*
  * BACKGROUND JOBS
  */
-/*
+
+/**
+ * @BackgroundJob TEMP Replicate Followers on Stream
+ *
+ * Call when truncating follower relations on Stream
+ *
+ */
+Parse.Cloud.job('TEMP_replicateFollowersOnStream', function (request, status) {
+    Parse.Cloud.useMasterKey();
+
+    var totalFollowingsAdded = 0;
+
+    var userQuery = new Parse.Query(Parse.User);
+    userQuery.greaterThan('numberFollowing', 0);
+    userQuery.find().then(function (users) {
+        var perUserPromise = [];
+        _.each(users, function (user) {
+            var followingRelationQuery = user.following().query();
+            var promise = followingRelationQuery.find().then(function (following) {
+                var followPromises = [];
+                _.each(following, function (userToFollow) {
+                    followPromises.push(Parse.Cloud.run('followUser', {userIdToFollow: userToFollow.id, currentUserId: user.id}));
+                    totalFollowingsAdded++;
+                });
+                return Parse.Promise.when(followPromises);
+            });
+            perUserPromise.push(promise);
+        });
+        return Parse.Promise.when(perUserPromise);
+    }).then(function () {
+        status.success("Added " + totalFollowingsAdded + " follow relations");
+    }, function (error) {
+        status.error(error);
+    });
+});/*
  * SAVE LOGIC
  */
 
@@ -3356,7 +3390,7 @@ Parse.Cloud.afterSave(Follow, function (request) {
     if (!follow.existed()) {
         logger.log("activity-stream", "saving follow");
 
-        promises.push(addActivityToStream(follow.user(), "followed", follow, [follow.following()]));
+        promises.push(addActivityToStream(follow.user(), "followed", follow, [follow.following()], follow.following()));
 
         var flat = GetstreamClient.feed('flat', follow.user().id);
         promises.push(flat.follow('user', follow.following().id, GetstreamUtils.createHandler(logger)));
@@ -3556,7 +3590,7 @@ Parse.Cloud.define('initialiseApp', function (request, response) {
         userQuery.include('badgeProgressions.badge');
         promises.push(userQuery.get(user.id));
 
-        promises.push(Parse.Cloud.run('fetchActivityFeed', {feed: "notification:"+user.id}));
+        promises.push(Parse.Cloud.run('fetchActivityFeed', {feed: "notification:" + user.id}));
     }
 
     Parse.Promise.when(promises).then(function (config, categories, user, notifications) {
@@ -5210,6 +5244,11 @@ Parse.Cloud.define("followUser", function (request, response) {
     var currentUser = request.user,
         userToFollow = new Parse.User();
 
+    if(request.params.currentUserId)  {
+        currentUser = new Parse.User();
+        currentUser.id = request.params.currentUserId;
+    }
+
     if (!currentUser) {
         return response.error("You must be logged in.");
     }
@@ -5411,19 +5450,7 @@ Parse.Cloud.define('preFacebookSignUp', function (request, response) {
     }, function (error) {
         response.error(error);
     });
-});
-
-
-/**
- * @CloudFunction Create a New Badge
- */
-Parse.Cloud.define('createNewBadge', function (request, response) {
-    Parse.Cloud.useMasterKey();
-
-    // TODO
-});
-
-/*
+});/*
  * TASK WORKER
  */
 /*function handleComingFromTask(object) {
@@ -5959,11 +5986,16 @@ function addActivityToStream(actor, verb, object, to, target) {
  */
 function prepareActivityForDispatch(activity, currentUser) {
 
+    var minimiseUserProfile = function (user) {
+        // Minimise actor if not current user
+        if (user.id !== currentUser.id)
+            return user.minimalProfile();
+        else
+            return user.toJSON(); // to homogenise not using .get() functionality
+    };
+
     // Minimise actor if not current user
-    if (activity.actor_parse.id !== currentUser.id)
-        activity.actor_parse = activity.actor_parse.minimalProfile();
-    else
-        activity.actor_parse = activity.actor_parse.toJSON(); // to avoid .get() functionality below
+    activity.actor_parse = minimiseUserProfile(activity.actor_parse);
 
     // Activity title
     var title = activity.actor_parse.name;
@@ -5977,16 +6009,13 @@ function prepareActivityForDispatch(activity, currentUser) {
             title += " took " + activity.target_parse.title();
             break;
         case "followed":
-            if (!activity.object_parse || (currentUser.id === activity.object_parse.following().id)) {
+            var following = activity.target_parse;
+            if (!following || (currentUser.id === following.id)) {
                 activity.shouldBeRemoved = true;
                 return activity;
             }
-            var following = activity.object_parse.following();
-            if (following.id !== currentUser.id)
-                activity.object_parse.following = following.minimalProfile();
-            else
-                activity.object_parse.following = following.toJSON();
-            title += " started following " + activity.object_parse.following.name;
+            activity.target_parse.following = minimiseUserProfile(following);
+            title += " started following " + following.name;
             break;
     }
     activity.title = title;
