@@ -29,15 +29,15 @@ function addActivityToStream(actor, verb, object, to, target) {
 
 /**
  * @Function Remove Activity from Stream
- * @param {Parse.User} currentUser
+ * @param {String} feedId
  * @param {Parse.Object} object
  * @returns {*}
  */
-function removeActivityFromStream(currentUser, object) {
-    var feed = GetstreamClient.feed('user', currentUser.id);
+function removeActivityFromStream(feedId, actor, object) {
+    var feed = GetstreamClient.feed('user', feedId);
     return feed.removeActivity({
         foreignId: GetstreamUtils.parseToActivity({
-            actor: currentUser,
+            actor: actor,
             object: object
         }).foreign_id
     }, GetstreamUtils.createHandler(logger));

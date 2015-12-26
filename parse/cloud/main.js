@@ -3122,8 +3122,24 @@ Parse.Cloud.afterSave(Parse.User, function (request) {
  * Removes from search index.
  */
 Parse.Cloud.afterDelete(Parse.User, function (request) {
-    var object = request.object;
-    return userIndex.deleteObject(object.id);
+    var user = request.object,
+        promises = [];
+
+    promises.push(userIndex.deleteObject(user.id));
+    promises.push(removeActivityFromStream("all", user, user));
+
+    var followerQuery = new Parse.Query(Follow);
+    followerQuery.equalTo('user', user);
+
+    var followingQuery = new Parse.Query(Follow);
+    followingQuery.equalTo('following', user);
+
+    var followQuery = Parse.Query.or(followerQuery, followingQuery);
+    var followDeletePromise = followQuery.find().then(function (follow) {
+        return Parse.Object.destroyAll(follow);
+    });
+    promises.push(followDeletePromise);
+    return Parse.Promise.when(followDeletePromise);
 });
 
 /**
@@ -3165,7 +3181,7 @@ Parse.Cloud.beforeSave(Test, function (request, response) {
             // If publicity is now private, remove from search index.
             if (!test.isPublic()) {
                 promises.push(test.deleteIndexObject());
-                promises.push(removeActivityFromStream(user ? user : test.author(), test));
+                promises.push(removeActivityFromStream(test.author().id, test.author(), test));
             }
             var ACL = test.getACL();
             ACL.setPublicReadAccess(test.isPublic());
@@ -3185,8 +3201,7 @@ Parse.Cloud.beforeSave(Test, function (request, response) {
  *
  */
 Parse.Cloud.afterSave(Test, function (request) {
-    var user = request.user,
-        test = request.object,
+    var test = request.object,
         promises = [];
 
     if (!test.existed()) {
@@ -3217,7 +3232,7 @@ Parse.Cloud.afterDelete(Test, function (request) {
 
     var currentUser = user ? user : test.author();
     if (currentUser)
-        promises.push(removeActivityFromStream(currentUser, test));
+        promises.push(removeActivityFromStream(test.author().id, test.author(), test));
 
     return Parse.Promise.when(promises);
 });
@@ -5997,15 +6012,15 @@ function addActivityToStream(actor, verb, object, to, target) {
 
 /**
  * @Function Remove Activity from Stream
- * @param {Parse.User} currentUser
+ * @param {String} feedId
  * @param {Parse.Object} object
  * @returns {*}
  */
-function removeActivityFromStream(currentUser, object) {
-    var feed = GetstreamClient.feed('user', currentUser.id);
+function removeActivityFromStream(feedId, actor, object) {
+    var feed = GetstreamClient.feed('user', feedId);
     return feed.removeActivity({
         foreignId: GetstreamUtils.parseToActivity({
-            actor: currentUser,
+            actor: actor,
             object: object
         }).foreign_id
     }, GetstreamUtils.createHandler(logger));
