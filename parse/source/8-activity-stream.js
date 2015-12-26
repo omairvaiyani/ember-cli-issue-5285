@@ -43,11 +43,16 @@ function addActivityToStream(actor, verb, object, to, target) {
  */
 function prepareActivityForDispatch(activity, currentUser) {
 
+    var minimiseUserProfile = function (user) {
+        // Minimise actor if not current user
+        if (user.id !== currentUser.id)
+            return user.minimalProfile();
+        else
+            return user.toJSON(); // to homogenise not using .get() functionality
+    };
+
     // Minimise actor if not current user
-    if (activity.actor_parse.id !== currentUser.id)
-        activity.actor_parse = activity.actor_parse.minimalProfile();
-    else
-        activity.actor_parse = activity.actor_parse.toJSON(); // to avoid .get() functionality below
+    activity.actor_parse = minimiseUserProfile(activity.actor_parse);
 
     // Activity title
     var title = activity.actor_parse.name;
@@ -61,16 +66,13 @@ function prepareActivityForDispatch(activity, currentUser) {
             title += " took " + activity.target_parse.title();
             break;
         case "followed":
-            if (!activity.object_parse || (currentUser.id === activity.object_parse.following().id)) {
+            var following = activity.target_parse;
+            if (!following || (currentUser.id === following.id)) {
                 activity.shouldBeRemoved = true;
                 return activity;
             }
-            var following = activity.object_parse.following();
-            if (following.id !== currentUser.id)
-                activity.object_parse.following = following.minimalProfile();
-            else
-                activity.object_parse.following = following.toJSON();
-            title += " started following " + activity.object_parse.following.name;
+            activity.target_parse.following = minimiseUserProfile(following);
+            title += " started following " + following.name;
             break;
     }
     activity.title = title;

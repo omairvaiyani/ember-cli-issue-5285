@@ -162,7 +162,7 @@ Parse.Cloud.define('initialiseApp', function (request, response) {
         userQuery.include('badgeProgressions.badge');
         promises.push(userQuery.get(user.id));
 
-        promises.push(Parse.Cloud.run('fetchActivityFeed', {feed: "notification:"+user.id}));
+        promises.push(Parse.Cloud.run('fetchActivityFeed', {feed: "notification:" + user.id}));
     }
 
     Parse.Promise.when(promises).then(function (config, categories, user, notifications) {
@@ -1816,6 +1816,11 @@ Parse.Cloud.define("followUser", function (request, response) {
     var currentUser = request.user,
         userToFollow = new Parse.User();
 
+    if(request.params.currentUserId)  {
+        currentUser = new Parse.User();
+        currentUser.id = request.params.currentUserId;
+    }
+
     if (!currentUser) {
         return response.error("You must be logged in.");
     }
@@ -2018,14 +2023,3 @@ Parse.Cloud.define('preFacebookSignUp', function (request, response) {
         response.error(error);
     });
 });
-
-
-/**
- * @CloudFunction Create a New Badge
- */
-Parse.Cloud.define('createNewBadge', function (request, response) {
-    Parse.Cloud.useMasterKey();
-
-    // TODO
-});
-

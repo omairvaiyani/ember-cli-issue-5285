@@ -345,7 +345,7 @@ Parse.Cloud.afterSave(Follow, function (request) {
     if (!follow.existed()) {
         logger.log("activity-stream", "saving follow");
 
-        promises.push(addActivityToStream(follow.user(), "followed", follow, [follow.following()]));
+        promises.push(addActivityToStream(follow.user(), "followed", follow, [follow.following()], follow.following()));
 
         var flat = GetstreamClient.feed('flat', follow.user().id);
         promises.push(flat.follow('user', follow.following().id, GetstreamUtils.createHandler(logger)));
