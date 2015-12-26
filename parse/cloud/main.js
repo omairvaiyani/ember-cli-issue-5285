@@ -4254,7 +4254,7 @@ Parse.Cloud.define('finaliseNewAttempt', function (request, status) {
 
         promises.push(UserEvent.newEvent("finishedQuiz", [attempt], user));
 
-        promises.push(addActivityToStream(user, "took quiz", attempt, [attempt.test().author()]));
+        promises.push(addActivityToStream(user, "took quiz", attempt, [attempt.test().author()], attempt.test()));
 
         return Parse.Promise.when(promises);
     }).then(function (uniqueResponses, userEvent) {
@@ -5914,15 +5914,17 @@ Parse.Cloud.job('workQueue', function (request, status) {
  * @param {String} verb
  * @param {Parse.Object} object
  * @param {Array<Parse.User>} to
+ * @param {Parse.Object} target
  * @returns {*}
  */
-function addActivityToStream(actor, verb, object, to) {
+function addActivityToStream(actor, verb, object, to, target) {
     // trigger fanout
     var activity = GetstreamUtils.parseToActivity({
         actor: actor,
         verb: verb,
         object: object,
-        to: to
+        to: to,
+        target: target
     });
 
     logger.log("activity-stream", "activity to be fed", activity);
@@ -5959,14 +5961,14 @@ function prepareActivityForDispatch(activity, currentUser) {
 
     switch (activity.verb) {
         case "took quiz":
-            if (!activity.object_parse || !activity.object_parse.test()) {
+            if (!activity.target_parse) {
                 activity.shouldBeRemoved = true;
                 return activity;
             }
-            title += " took " + activity.object_parse.test().title();
+            title += " took " + activity.target_parse.title();
             break;
         case "followed":
-            if (!activity.object_parse) {
+            if (!activity.object_parse || (currentUser.id === activity.object_parse.following().id)) {
                 activity.shouldBeRemoved = true;
                 return activity;
             }
@@ -6064,9 +6066,8 @@ Parse.Cloud.define('enrichActivityStream', function (request, response) {
     // enrich the response with the database values where needed
 
     var includes = {
-        classNames: ["Attempt", "Test", "Follow"],
-        Attempt: ["test"],
-        Test: ["questions"],
+        classNames: ["Test", "Follow"],
+        Test: ["questions", "author"],
         Follow: ["following"]
     };
     Parse.Cloud.useMasterKey();
@@ -6074,12 +6075,11 @@ Parse.Cloud.define('enrichActivityStream', function (request, response) {
 
         // Prepare each activity (and inner activities for grouped feeds) for dispatch
         // Check each activity (and inner) if they need removing, set a remove flag
-        var activitiesThatShouldBeDeleted = [];
         _.each(enrichedActivities, function (activity) {
             if (activity.group)
-                prepareGroupedActivityForDispatch(activity, currentUser, activitiesThatShouldBeDeleted);
+                prepareGroupedActivityForDispatch(activity, currentUser);
             else
-                prepareActivityForDispatch(activity, currentUser, activitiesThatShouldBeDeleted);
+                prepareActivityForDispatch(activity, currentUser);
         });
 
         response.success(enrichedActivities);

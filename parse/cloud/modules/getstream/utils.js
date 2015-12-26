@@ -44,6 +44,8 @@ exports.parseToActivity = function parseToActivity(activityObject) {
     // default to the activity if object is not specified
     activity.object = serializeId(activityObject.object);
     activity.foreign_id = serializeId(activityObject.object);
+    if(activityObject.target)
+        activity.target = serializeId(activity.target);
     activity.feed_slug = 'user';
     activity.feed_user_id = activityObject.actor.id;
     if (activityObject.to) {
@@ -59,6 +61,13 @@ exports.parseToActivity = function parseToActivity(activityObject) {
     return activity;
 };
 
+/**
+ * @Function Enrich
+ * @param {Array} activities
+ * @param {Object} includes
+ * @param {Parse.User} currentUser
+ * @returns {*}
+ */
 function enrich(activities, includes, currentUser) {
     /*
      * Takes the given activities from getstream.io and looks up the needed

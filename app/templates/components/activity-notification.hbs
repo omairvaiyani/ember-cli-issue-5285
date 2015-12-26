@@ -7,26 +7,26 @@
             {{#if followActivity}}
                 started following you!
             {{/if}}
+
             {{#if attemptActivity}}
-                {{#if multipleObjects}}
-                    took {{allObjects.length}} of your quizzes!
+                {{#if multipleTargets}}
+                    took {{allTargets.length}} of your quizzes!
                 {{else}}
                     took your quiz <strong class="linkify">{{latestObject.test.title}}</strong>
                 {{/if}}
             {{/if}}
         </p>
-        <p class="margin-top-8 margin-bottom-8">
+        <p class="margin-top-8 margin-bottom-0">
             {{#if attemptActivity}}
-                {{#if multipleActivities}}
-                    {{#each activity.activities as |innerActivity|}}
-                        <strong class="linkify">{{innerActivity.object.test.title}}</strong> <br>
+                {{#if multipleTargets}}
+                    {{#each allTargets as |test|}}
+                        <strong class="linkify">{{test.title}}</strong> <br>
                     {{/each}}
                 {{/if}}
             {{/if}}
         </p>
         <p class="small no-margin pull-right">
-            {{from-now time=latestTime
-            showIcon=true mini=true}}
+            {{from-now time=latestTime showIcon=true mini=true}}
         </p>
     </div>
 </div>
