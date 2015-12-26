@@ -38,7 +38,6 @@ export default ActivityCard.extend({
     allObjects: function () {
         var objects = new Ember.A();
         _.each(this.get('activity.activities'), function (innerActivity) {
-            console.dir(innerActivity.object);
             if (!objects.contains(innerActivity.object))
                 objects.pushObject(innerActivity.object);
         });

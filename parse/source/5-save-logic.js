@@ -364,6 +364,7 @@ Parse.Cloud.afterDelete(Follow, function (request) {
     // trigger fanout & unfollow
     var activity = GetstreamUtils.parseToActivity(follow),
         feed = GetstreamClient.feed('user', follow.user().id);
+
     feed.removeActivity({
         foreignId: activity.foreign_id
     }, GetstreamUtils.createHandler(logger));

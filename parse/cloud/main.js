@@ -3375,6 +3375,7 @@ Parse.Cloud.afterDelete(Follow, function (request) {
     // trigger fanout & unfollow
     var activity = GetstreamUtils.parseToActivity(follow),
         feed = GetstreamClient.feed('user', follow.user().id);
+
     feed.removeActivity({
         foreignId: activity.foreign_id
     }, GetstreamUtils.createHandler(logger));
@@ -5933,6 +5934,14 @@ function addActivityToStream(actor, verb, object, to) {
 
 /**
  * @Function Prepare Activity for Dispatch
+ *
+ * - Minimised any non-self user profiles
+ * - Creates a useful title for display
+ * - Sets a flag on activities without the
+ *   necessary parse objects, so that
+ *   they can be deleted by the Cloud
+ *   Function which called this function.
+ *
  * @param {Object} activity
  * @param {Parse.User} currentUser
  * @returns {Object} activity
@@ -5950,9 +5959,17 @@ function prepareActivityForDispatch(activity, currentUser) {
 
     switch (activity.verb) {
         case "took quiz":
+            if (!activity.object_parse || !activity.object_parse.test()) {
+                activity.shouldBeRemoved = true;
+                return activity;
+            }
             title += " took " + activity.object_parse.test().title();
             break;
         case "followed":
+            if (!activity.object_parse) {
+                activity.shouldBeRemoved = true;
+                return activity;
+            }
             var following = activity.object_parse.following();
             if (following.id !== currentUser.id)
                 activity.object_parse.following = following.minimalProfile();
@@ -5967,8 +5984,9 @@ function prepareActivityForDispatch(activity, currentUser) {
 
 /**
  * @Function Prepare Grouped Activity for Dispatch
- * @param groupedActivity
- * @param currentUser
+ * @param {Array} groupedActivity
+ * @param {Parse.User} currentUser
+ * @return {Array} groupedActivities
  */
 function prepareGroupedActivityForDispatch(groupedActivity, currentUser) {
     _.each(groupedActivity.activities, function (activity) {
@@ -6008,10 +6026,23 @@ Parse.Cloud.define("fetchActivityFeed", function (request, response) {
             unseen = httpResponse.data.unseen;
         logger.log("activity-stream", "feed data", httpResponse.data);
 
+        var preparedActivities = [];
         return Parse.Cloud.run('enrichActivityStream', {activities: activities, user: request.user.toJSON()})
             .then(function (activities) {
+                var removeActivitiesPromise = [];
+                _.each(activities, function (activity) {
+                    if (activity.shouldBeRemoved) {
+                        removeActivitiesPromise.push(feed.removeActivity({
+                            foreignId: activity.foreign_id
+                        }, GetstreamUtils.createHandler(logger)))
+                    } else {
+                        preparedActivities.push(activity);
+                    }
+                });
+                return Parse.Promise.when(removeActivitiesPromise);
+            }).then(function () {
                 response.success({
-                    activities: activities,
+                    activities: preparedActivities,
                     feed: feedIdentifier,
                     token: feed.token,
                     unread: unread,
@@ -6040,11 +6071,15 @@ Parse.Cloud.define('enrichActivityStream', function (request, response) {
     };
     Parse.Cloud.useMasterKey();
     return GetstreamUtils.enrich(activities, includes, currentUser).then(function (enrichedActivities) {
+
+        // Prepare each activity (and inner activities for grouped feeds) for dispatch
+        // Check each activity (and inner) if they need removing, set a remove flag
+        var activitiesThatShouldBeDeleted = [];
         _.each(enrichedActivities, function (activity) {
             if (activity.group)
-                prepareGroupedActivityForDispatch(activity, currentUser);
+                prepareGroupedActivityForDispatch(activity, currentUser, activitiesThatShouldBeDeleted);
             else
-                prepareActivityForDispatch(activity, currentUser);
+                prepareActivityForDispatch(activity, currentUser, activitiesThatShouldBeDeleted);
         });
 
         response.success(enrichedActivities);
