@@ -283,19 +283,21 @@ export default Ember.Controller.extend({
         _this.set('currentUser.notificationFeed', notificationFeed);
 
         notificationFeed.subscribe(function callback(data) {
-
-            if (data.deleted) {
-                console.dir(data.deleted);
-                _.each(data.deleted, function (id) {
-                    _this.get('currentUser.notifications').removeObject(
-                        _this.get('currentUser.notifications').findBy('id', id)
-                    )
-                });
-            }
-
             ParseHelper.cloudFunction(_this, 'enrichActivityStream', {
                 activities: data.new
             }).then(function (enrichedNotifications) {
+
+                // Better to delete here due to the delay
+                // in enrichment (some activities are replaced
+                // rather than deleted per se)
+                if (data.deleted) {
+                    _.each(data.deleted, function (id) {
+                        _this.get('currentUser.notifications').removeObject(
+                            _this.get('currentUser.notifications').findBy('id', id)
+                        )
+                    });
+                }
+
                 ParseHelper.prepareGroupedActivitiesForEmber(_this.store, enrichedNotifications);
 
                 _this.get('currentUser.notifications').unshiftObjects(enrichedNotifications);
