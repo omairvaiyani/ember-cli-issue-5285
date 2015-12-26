@@ -18,6 +18,19 @@
  }*/
 
 var WorkTask = Parse.Object.extend('WorkTask');
+
+// Available actions are defined here and link to their function.
+var WorkActions = {
+    srCycle: srCycleTask,
+    dailyRecap: dailyRecapTask,
+    updateTestStatsAfterAttempt: updateTestStatsAfterAttemptTask,
+    notifyFacebookFriendsAboutJoin: notifyFacebookFriendsAboutJoinTask
+};
+
+var TASK_SR_CYCLE = "srCycle";
+var TASK_DAILY_RECAP = "dailyRecap";
+var TASK_UPDATE_TEST_STATS_AFTER_ATTEMPT = "updateTestStatsAfterAttempt";
+var TASK_NOTIFY_FACEBOOK_FRIENDS_ABOUT_JOIN = "notifyFacebookFriendsAboutJoin";
 /**
  * @Function Task Creator
  *
@@ -38,12 +51,6 @@ function taskCreator(taskType, taskAction, taskParameters, taskObjects) {
     }, {useMasterKey: true});
 }
 
-// Available actions are defined here and link to their function.
-var WorkActions = {
-    srCycle: srCycleTask,
-    dailyRecap: dailyRecapTask,
-    updateTestStatsAfterAttempt: updateTestStatsAfterAttemptTask
-};
 /**
  * @Task SR Cycle
  * Every 5 minutes, this task loops through
@@ -297,7 +304,7 @@ function dailyRecapTask(task) {
             var now = moment().tz(user.timeZone());
 
             // Only send out recap at 9pm.
-            if(now.hour() !== 9)
+            if (now.hour() !== 9)
                 return;
 
             var createdTestsQuery = user.createdTests().query(),
@@ -429,6 +436,53 @@ function updateTestStatsAfterAttemptTask(task, params, objects) {
     }, function (error) {
         console.error(JSON.stringify(error));
     });
+}
+
+
+/**
+ * @Task Notify Facebook Friends about Join
+ *
+ * @param {String} task
+ * @returns {WorkTask}
+ */
+function notifyFacebookFriendsAboutJoinTask(task, params, objects) {
+    Parse.Cloud.useMasterKey();
+
+    var user = objects [0],
+        facebookFriends = user.get('fbFriends') ? user.get('fbFriends') : [];
+
+    logger.log("activity-stream", "Notify Facebook Friends about " +user.name() + " joining");
+
+    var friendsQuery = new Parse.Query(Parse.User);
+    friendsQuery.containedIn('fbid', facebookFriends);
+    friendsQuery.limit(1000);
+    return friendsQuery.find().then(function (friends) {
+        logger.log("activity-stream", "fb friends to notify about join: " + friends.length);
+        return addActivityToStream(user, "joined", user, friends);
+    }).then(function () {
+        var changes = {
+            taskClaimed: 1,
+            taskStatus: 'done',
+            taskMessage: ''
+        };
+        return task.save(changes, {useMasterKey: true});
+    }, function (error) {
+        logger.log("activity-stream", "error", error);
+    });
+
+}
+
+/**
+ * @Task New Task Template
+ */
+function newTaskTemplate(task, params, objects) {
+    Parse.Cloud.useMasterKey();
+
+    var changes = {
+        taskStatus: 'done',
+        taskMessage: ''
+    };
+    return task.save(changes, {useMasterKey: true});
 }
 
 /**

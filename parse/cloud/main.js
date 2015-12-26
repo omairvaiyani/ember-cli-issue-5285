@@ -3105,6 +3105,11 @@ Parse.Cloud.afterSave(Parse.User, function (request) {
         // NOTE: storing as string might not work?
         user.set('intercomHash', CryptoJS.SHA256(user.id, intercomKey).toString());
         promises.push(user.save());
+
+        // Notify Facebook Friends About Joining Synap
+        // ** We also create the join activity here, so call this function
+        // Regardless of whether this is a fb user or not! **
+        promises.push(taskCreator('Notifications', TASK_NOTIFY_FACEBOOK_FRIENDS_ABOUT_JOIN, {}, [user]));
     } else {
         // Old user
         if (!user.get('intercomHash')) {
@@ -3308,7 +3313,7 @@ Parse.Cloud.afterSave(Attempt, function (request) {
 
     if (!attempt.existed()) {
         // Test stats will be updated within 60 seconds
-        var taskCreatorPromise = taskCreator('Statistics', 'updateTestStatsAfterAttempt',
+        var taskCreatorPromise = taskCreator('Statistics', TASK_UPDATE_TEST_STATS_AFTER_ATTEMPT,
             {}, [attempt.test(), attempt.questions(), attempt, user]);
 
         var userUpdatePromise = attempt.test().fetchIfNeeded().then(function (test) {
@@ -5510,6 +5515,19 @@ Parse.Cloud.define('preFacebookSignUp', function (request, response) {
  }*/
 
 var WorkTask = Parse.Object.extend('WorkTask');
+
+// Available actions are defined here and link to their function.
+var WorkActions = {
+    srCycle: srCycleTask,
+    dailyRecap: dailyRecapTask,
+    updateTestStatsAfterAttempt: updateTestStatsAfterAttemptTask,
+    notifyFacebookFriendsAboutJoin: notifyFacebookFriendsAboutJoinTask
+};
+
+var TASK_SR_CYCLE = "srCycle";
+var TASK_DAILY_RECAP = "dailyRecap";
+var TASK_UPDATE_TEST_STATS_AFTER_ATTEMPT = "updateTestStatsAfterAttempt";
+var TASK_NOTIFY_FACEBOOK_FRIENDS_ABOUT_JOIN = "notifyFacebookFriendsAboutJoin";
 /**
  * @Function Task Creator
  *
@@ -5530,12 +5548,6 @@ function taskCreator(taskType, taskAction, taskParameters, taskObjects) {
     }, {useMasterKey: true});
 }
 
-// Available actions are defined here and link to their function.
-var WorkActions = {
-    srCycle: srCycleTask,
-    dailyRecap: dailyRecapTask,
-    updateTestStatsAfterAttempt: updateTestStatsAfterAttemptTask
-};
 /**
  * @Task SR Cycle
  * Every 5 minutes, this task loops through
@@ -5789,7 +5801,7 @@ function dailyRecapTask(task) {
             var now = moment().tz(user.timeZone());
 
             // Only send out recap at 9pm.
-            if(now.hour() !== 9)
+            if (now.hour() !== 9)
                 return;
 
             var createdTestsQuery = user.createdTests().query(),
@@ -5923,6 +5935,53 @@ function updateTestStatsAfterAttemptTask(task, params, objects) {
     });
 }
 
+
+/**
+ * @Task Notify Facebook Friends about Join
+ *
+ * @param {String} task
+ * @returns {WorkTask}
+ */
+function notifyFacebookFriendsAboutJoinTask(task, params, objects) {
+    Parse.Cloud.useMasterKey();
+
+    var user = objects [0],
+        facebookFriends = user.get('fbFriends') ? user.get('fbFriends') : [];
+
+    logger.log("activity-stream", "Notify Facebook Friends about " +user.name() + " joining");
+
+    var friendsQuery = new Parse.Query(Parse.User);
+    friendsQuery.containedIn('fbid', facebookFriends);
+    friendsQuery.limit(1000);
+    return friendsQuery.find().then(function (friends) {
+        logger.log("activity-stream", "fb friends to notify about join: " + friends.length);
+        return addActivityToStream(user, "joined", user, friends);
+    }).then(function () {
+        var changes = {
+            taskClaimed: 1,
+            taskStatus: 'done',
+            taskMessage: ''
+        };
+        return task.save(changes, {useMasterKey: true});
+    }, function (error) {
+        logger.log("activity-stream", "error", error);
+    });
+
+}
+
+/**
+ * @Task New Task Template
+ */
+function newTaskTemplate(task, params, objects) {
+    Parse.Cloud.useMasterKey();
+
+    var changes = {
+        taskStatus: 'done',
+        taskMessage: ''
+    };
+    return task.save(changes, {useMasterKey: true});
+}
+
 /**
  * @Function Is Task Scheduled for Now
  * Some tasks are only meant to run at
@@ -6041,6 +6100,10 @@ function removeActivityFromStream(feedId, actor, object) {
  * @returns {Object} activity
  */
 function prepareActivityForDispatch(activity, currentUser) {
+    if(!activity.actor) {
+        activity.shouldBeRemoved = true;
+        return activity;
+    }
     // Minimise actor if not current user
     activity.actor = activity.actor.minimalProfile(currentUser);
 

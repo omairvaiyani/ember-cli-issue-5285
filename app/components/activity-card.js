@@ -1,6 +1,10 @@
 import Ember from 'ember';
 
 export default Ember.Component.extend({
+    joinedActivity: function () {
+        return this.get('activity.verb') === "joined";
+    }.property("activity.verb"),
+
     attemptActivity: function () {
         return this.get('activity.verb') === "took quiz";
     }.property("activity.verb"),

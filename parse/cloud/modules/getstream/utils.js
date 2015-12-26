@@ -41,9 +41,10 @@ exports.parseToActivity = function parseToActivity(activityObject) {
     var activity = _.clone(activityObject);
     activity.actor = serializeId(activityObject.actor);
 
-    // default to the activity if object is not specified
-    activity.object = serializeId(activityObject.object);
-    activity.foreign_id = serializeId(activityObject.object);
+    if (activityObject.object)
+        activity.object = serializeId(activityObject.object);
+
+    activity.foreign_id = serializeId(activityObject.object ? activityObject.object : activityObject.actor);
 
     if (activityObject.target)
         activity.target = serializeId(activity.target);
@@ -60,8 +61,10 @@ exports.parseToActivity = function parseToActivity(activityObject) {
     }
 
     // time and foreign id together ensure uniqueness
-    if (!activity.time && activity.object.createdAt)
+    if (!activity.time && activity.object && activity.object.createdAt)
         activity.time = activityObject.object.createdAt.toISOString();
+    else if (activity.actor && activity.actor.createdAt)
+        activity.time = activity.actor.createdAt.toISOString();
     else
         activity.time = new Date().toISOString();
 

@@ -58,6 +58,10 @@ function removeActivityFromStream(feedId, actor, object) {
  * @returns {Object} activity
  */
 function prepareActivityForDispatch(activity, currentUser) {
+    if(!activity.actor) {
+        activity.shouldBeRemoved = true;
+        return activity;
+    }
     // Minimise actor if not current user
     activity.actor = activity.actor.minimalProfile(currentUser);
 

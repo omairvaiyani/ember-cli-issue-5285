@@ -2,7 +2,12 @@
     {{profile-picture user=latestActor height=32 width=32 doNotLink=true class="inline-top margin-top-4"}}
     <div class="inline-block right">
         <p class="no-margin">
-            {{{actorNames}}}
+            {{#unless joinedActivity}}
+                {{{actorNames}}}
+            {{else}}
+                You Facebook friend <strong class="linkify">{{latestActor.name}}</strong> joined
+                Synap!
+            {{/unless}}
 
             {{#if followActivity}}
                 started following you!

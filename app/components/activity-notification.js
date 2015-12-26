@@ -106,6 +106,9 @@ export default ActivityCard.extend({
                 case "took quiz":
                     this.get('parentController').transitionTo('testInfo', this.get('latestTarget.slug'));
                     break;
+                case "joined":
+                    this.get('parentController').transitionTo('index.user', this.get('latestActor.slug'));
+                    break;
             }
         }
 

@@ -54,7 +54,11 @@ Parse.Cloud.afterSave(Parse.User, function (request) {
         // NOTE: storing as string might not work?
         user.set('intercomHash', CryptoJS.SHA256(user.id, intercomKey).toString());
         promises.push(user.save());
-        
+
+        // Notify Facebook Friends About Joining Synap
+        // ** We also create the join activity here, so call this function
+        // Regardless of whether this is a fb user or not! **
+        promises.push(taskCreator('Notifications', TASK_NOTIFY_FACEBOOK_FRIENDS_ABOUT_JOIN, {}, [user]));
     } else {
         // Old user
         if (!user.get('intercomHash')) {
@@ -258,7 +262,7 @@ Parse.Cloud.afterSave(Attempt, function (request) {
 
     if (!attempt.existed()) {
         // Test stats will be updated within 60 seconds
-        var taskCreatorPromise = taskCreator('Statistics', 'updateTestStatsAfterAttempt',
+        var taskCreatorPromise = taskCreator('Statistics', TASK_UPDATE_TEST_STATS_AFTER_ATTEMPT,
             {}, [attempt.test(), attempt.questions(), attempt, user]);
 
         var userUpdatePromise = attempt.test().fetchIfNeeded().then(function (test) {
