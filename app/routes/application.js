@@ -683,5 +683,6 @@ export default Ember.Route.extend({
                     console.dir(error);
                 });
         }
+
     }
 });

@@ -42,28 +42,21 @@ function addActivityToStream(actor, verb, object, to, target) {
  * @returns {Object} activity
  */
 function prepareActivityForDispatch(activity, currentUser) {
-
-    var minimiseUserProfile = function (user) {
-        // Minimise actor if not current user
-        if (user.id !== currentUser.id)
-            return user.minimalProfile();
-        else
-            return user.toJSON(); // to homogenise not using .get() functionality
-    };
-
     // Minimise actor if not current user
-    activity.actor_parse = minimiseUserProfile(activity.actor_parse);
+    activity.actor = activity.actor.minimalProfile(currentUser);
 
     // Activity title
-    var title = activity.actor_parse.name;
+    var title = activity.actor.name;
 
     switch (activity.verb) {
         case "took quiz":
-            if (!activity.target_parse) {
+            var test = activity.target_parse;
+            if (!test) {
                 activity.shouldBeRemoved = true;
                 return activity;
             }
-            title += " took " + activity.target_parse.title();
+            activity.target = test;
+            title += " took " + test.title();
             break;
         case "followed":
             var following = activity.target_parse;
@@ -71,7 +64,7 @@ function prepareActivityForDispatch(activity, currentUser) {
                 activity.shouldBeRemoved = true;
                 return activity;
             }
-            activity.target_parse.following = minimiseUserProfile(following);
+            activity.target = following.minimalProfile(currentUser);
             title += " started following " + following.name;
             break;
     }

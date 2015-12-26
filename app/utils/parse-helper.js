@@ -363,8 +363,9 @@ export default {
     prepareActivitiesForEmber: function (store, activities) {
         var _this = this;
         _.each(activities, function (activity) {
-            activity.actor = _this.extractActivityActor(store, activity);
-            activity.object = _this.extractActivityObject(store, activity);
+            activity.actor = _this.extractActivityObject(store, activity, "actor");
+            activity.object = _this.extractActivityObject(store, activity, "object");
+            activity.target = _this.extractActivityObject(store, activity, "target");
         });
         return activities;
     },
@@ -379,41 +380,32 @@ export default {
     prepareGroupedActivitiesForEmber: function (store, groupedActivities) {
         var _this = this;
         _.each(groupedActivities, function (groupedActivity) {
-            _.each(groupedActivity.activities, function (activity) {
-                activity.actor = _this.extractActivityActor(store, activity);
-                activity.object = _this.extractActivityObject(store, activity);
-            });
+            _this.prepareActivitiesForEmber(store, groupedActivity.activities);
         });
         return groupedActivities;
     },
 
     /**
-     * @Function Extract Activity Actor
-     * @param store
-     * @param activity
-     * @returns {DS.Model}
-     */
-    extractActivityActor: function (store, activity) {
-        return this.extractRawPayload(store, 'parse-user', activity.actor_parse);
-    },
-
-    /**
      * @Function Extract Activity Object
-     * @param store
-     * @param activity
+     * @param {DS.Store} store
+     * @param {Object} activity
+     * @param {String} field
      * @returns {DS.Model}
      */
-    extractActivityObject: function (store, activity) {
-        var className = activity.object_parse.className,
+    extractActivityObject: function (store, activity, field) {
+        if (!store || !activity || !field)
+            return;
+
+        var className = activity[field].className,
             type;
 
         if (className === "_User")
             type = "parse-user";
         else
-            type = activity.object_parse.className.dasherize();
+            type = activity[field].className.dasherize();
 
         return this.extractRawPayload(store, type,
-            activity.object_parse);
+            activity[field]);
     }
 
 }

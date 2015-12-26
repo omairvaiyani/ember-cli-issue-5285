@@ -171,7 +171,7 @@ function enrich(activities, includes, currentUser) {
                         if (value && typeof value === "string" && value.indexOf('ref') === 0) {
                             var parts = value.split(':');
                             var parseModels = resultHash[parts[1]];
-                            innerActivity[field + '_parse'] = parseModels && parseModels[parts[2]];
+                            innerActivity[field] = parseModels && parseModels[parts[2]];
                         }
                         // set the innerActivity liked state
                         innerActivity.liked = innerActivity.id in doILikeHash;
@@ -182,7 +182,7 @@ function enrich(activities, includes, currentUser) {
                 if (value && typeof value === "string" && value.indexOf('ref') === 0) {
                     var parts = value.split(':');
                     var parseModels = resultHash[parts[1]];
-                    activity[field + '_parse'] = parseModels && parseModels[parts[2]];
+                    activity[field] = parseModels && parseModels[parts[2]];
                 }
             });
             // set the liked state

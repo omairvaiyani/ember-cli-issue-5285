@@ -248,14 +248,22 @@ Parse.User.prototype.setDefaults = function () {
  * This returns a user's profile without any
  * sensitive data. Use this whenever sending
  * a user object through CC or when indexing.
+ * @param {Parse.User} currentUser (optional)
  * @return {Object}
  */
-Parse.User.prototype.minimalProfile = function () {
+Parse.User.prototype.minimalProfile = function (currentUser) {
     var badgeProgressions = this.badgeProgressions(),
-        educationCohort = this.educationCohort();
+        educationCohort = this.educationCohort(),
+        object = this.toJSON();
 
-    var object = this.toJSON(),
-        propertiesToRemove = ['ACL', 'authData', 'devices', 'email', 'emailNotifications', 'emailVerified',
+    object.badgeProgressions = badgeProgressions;
+    object.educationCohort = educationCohort;
+    object.className = "_User";
+
+    if(currentUser && this.id === currentUser.id)
+        return object;
+
+    var propertiesToRemove = ['ACL', 'authData', 'devices', 'email', 'emailNotifications', 'emailVerified',
             'fbEducation', 'followers', 'following', 'gender', 'savedTests', 'srCompletedAttempts', 'testAttempts',
             'fbFriends', 'firstTimeLogin', 'isPremium', 'intercomHash', 'password', 'pushNotifications', 'receivePromotionalEmails',
             'srActivated', 'srDoNotDisturbTimes', 'srLatestTest', 'srIntensityLevel', 'srNextDue', 'srNotifyByEmail',
@@ -265,8 +273,6 @@ Parse.User.prototype.minimalProfile = function () {
         object[property] = undefined;
     });
 
-    object.badgeProgressions = badgeProgressions;
-    object.educationCohort = educationCohort;
     return object;
 };
 /**

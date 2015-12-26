@@ -19,11 +19,6 @@ export default Ember.Controller.extend({
         // will ensure this input focus is not leaked.
         this.send('navbarSearchHardBlur');
 
-        if (window.prerenderReady) {
-            if (this.get('currentPath') !== 'search')
-                this.send('deactivateSiteSearch');
-        }
-
         window.Intercom('update');
 
         var path = this.get('currentPath'),
@@ -329,9 +324,31 @@ export default Ember.Controller.extend({
                 this.closable = true;
                 _this.send('activityNotificationsShown');
             },
+            /**
+             * @jQuery Click
+             *
+             * Decide whether "hide.bs.dropdown"
+             * should hide or not.
+             * Keep open IF:
+             * - Clicked a no-close classed element
+             *   within a notification
+             * Or
+             * - Clicked anywhere in the dropdown
+             *   other than a notification
+             *
+             * @param {jQuery.event} e
+             */
             "click": function (e) {
-                var target = $(e.target);
-                if (target.parents(".activity-notifications-dropdown").length)
+                var target = $(e.target),
+                    isThisWithinTheDropdownContainer = target.parents(".activity-notifications-dropdown").length,
+                    isThisWithinTheNotificationContainer = target.parents(".activity-notification").length,
+                    isThisWithinANoCloseElement = target.parents(".activity-notification-no-close").length;
+
+                if (isThisWithinANoCloseElement)
+                    this.closable = false;
+                else if (isThisWithinTheNotificationContainer)
+                    this.closable = true;
+                else if (isThisWithinTheDropdownContainer)
                     this.closable = false;
                 else
                     this.closable = true;

@@ -24,19 +24,19 @@ export default ActivityCard.extend({
 
     latestActor: function () {
         return this.get('latestActivity').actor;
-    }.property('latestActivity'),
+    }.property('latestActivity.actor'),
 
     latestObject: function () {
         return this.get('latestActivity').object;
-    }.property('latestActivity'),
+    }.property('latestActivity.object'),
 
     latestTarget: function () {
         return this.get('latestActivity').target;
-    }.property('latestActivity'),
+    }.property('latestActivity.target'),
 
     latestTime: function () {
         return this.get('latestActivity').time;
-    }.property('latestActivity'),
+    }.property('latestActivity.time'),
 
     allActors: function () {
         var actors = new Ember.A();
@@ -81,10 +81,10 @@ export default ActivityCard.extend({
                 else if (index < 2)
                     actorNames += ", " + _this.linkifyText(actor.get('name'));
             });
-            if(actorCount > 3) {
+            if (actorCount > 3) {
                 var otherCount = actorCount - 3,
                     others = otherCount > 1 ? "others" : "other";
-                actorNames += " and " + _this.linkifyText(otherCount +  " " + others);
+                actorNames += " and " + _this.linkifyText(otherCount + " " + others);
             }
         }
         return actorNames;
@@ -92,6 +92,20 @@ export default ActivityCard.extend({
 
     linkifyText: function (text) {
         return "<strong class='linkify'>" + text + "</strong>";
+    },
+
+    actions: {
+        notificationClicked: function () {
+            switch(this.get('activity.verb')) {
+                case "followed":
+                    this.get('parentController').transitionTo('index.user', this.get('latestActor.slug'));
+                    break;
+                case "took quiz":
+                    this.get('parentController').transitionTo('testInfo', this.get('latestTarget.slug'));
+                    break;
+            }
+        }
+
     }
 
 
