@@ -147,7 +147,7 @@
                 </article>
                 <article class="col-xs-12 col-sm-6">
                     <button class="btn btn-info btn-ghost"
-                        {{action 'openModal' 'browse/modal/test-info' test}}>
+                        {{action 'openModal'}}>
                         {{testActionLabel}}
                     </button>
                 </article>
@@ -157,13 +157,13 @@
 {{/if}}
 
 {{#if miniListCard}}
-    <div class="card list-card margin-top-16 mini" {{action 'openTestModal'}}>
+    <div class="card list-card margin-top-16 mini" {{action 'openModal'}}>
         <section class="row">
             <article class="col-xs-12">
                 <div class="inline-top margin-top-4">
                     {{profile-picture user=test.author}}
                 </div>
-                <div class="inline-top">
+                <div class="inline-top right-mini">
                     <p class="title no-margin">{{test.title}}</p>
 
                     <p class="subtitle small">by {{test.author.name}}</p>
@@ -202,7 +202,7 @@
 
         <div class="bottom">
             <button class="btn btn-info btn-ghost btn-block"
-                {{action 'openModal' 'browse/modal/test-info' test}}>
+                {{action 'openModal'}}>
                 {{testActionLabel}}
             </button>
         </div>
