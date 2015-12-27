@@ -90,7 +90,7 @@ export default Ember.Route.extend(RouteHistory, {
 
         }
         window.scrollTo(0, 0);
-        controller.send('switchTabInFriendsList', 'followers');
+        controller.send('resetPage');
     },
 
 

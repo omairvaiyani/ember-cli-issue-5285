@@ -354,6 +354,13 @@ export default Ember.Controller.extend(CurrentUser, SortBy, DeleteWithUndo, {
 
 
     actions: {
+        resetPage: function () {
+            var controller = this;
+            controller.send('switchTabInFriendsList', 'followers');
+            controller.set('myTestsListType', controller.get('myTestsListTypes')[0]);
+            controller.set('myTestsListFilter', '');
+        },
+
         /**
          * Test List Filtering
          */
