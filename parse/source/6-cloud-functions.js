@@ -2026,3 +2026,40 @@ Parse.Cloud.define('preFacebookSignUp', function (request, response) {
         response.error(error);
     });
 });
+
+Parse.Cloud.define('unlikeActivity', function (request, response) {
+    Parse.Cloud.useMasterKey();
+
+    var activityId = request.params.activityId,
+        user = request.user,
+        promises = [];
+
+    var feed = GetstreamClient.feed('user', user.id);
+    var deleteActivityPromise = feed.removeActivity({id: activityId}, GetstreamUtils.createHandler(logger));
+    promises.push(deleteActivityPromise);
+
+    var removeLikeQuery = new Parse.Query(Like);
+    removeLikeQuery.equalTo('liker', user);
+    removeLikeQuery.equalTo('activityId', activityId);
+    removeLikeQuery.include('test', 'attempt', 'follow', 'user');
+    var removeLikePromise = removeLikeQuery.find().then(function (likes) {
+        var innerPromises = [];
+
+        _.each(likes, function (like) {
+            var object = like.get(like.activityType());
+            object.set('likes', -1);
+            innerPromises.push(object.save());
+        });
+
+        return Parse.Promise.when([Parse.Object.destroyAll(likes), innerPromises]);
+    });
+    promises.push(removeLikePromise);
+
+    return Parse.Promise.when(promises).then(function () {
+        response.success();
+    }, function () {
+        response.error();
+    });
+});
+
+

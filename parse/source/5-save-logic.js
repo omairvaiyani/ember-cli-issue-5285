@@ -478,30 +478,3 @@ Parse.Cloud.afterSave("Like", function (request) {
         return Parse.Promise.when([objectToLike.save(), feed.addActivity(activity, GetstreamUtils.createHandler(logger))]);
     });
 });
-
-
-/**
- * @AfterDelete Like
- */
-Parse.Cloud.afterDelete("Like", function (request) {
-    // trigger fanout
-    var like = request.object,
-        liker = request.user,
-        likeObjectQuery = new Parse.Query(like.get(like.activityType()).className);
-
-    Parse.Cloud.useMasterKey();
-    return likeObjectQuery.get(like.get(like.activityType()).id).then(function (objectToUnike) {
-        objectToUnike.increment('likes', -1);
-        var activity = GetstreamUtils.parseToActivity({
-            actor: liker,
-            object: objectToUnike,
-            verb: 'liked'
-        });
-
-        var feed = GetstreamClient.feed('user', liker.id);
-
-        return Parse.Promise.when([objectToUnike.save(), feed.removeActivity({
-            foreign_id: activity.foreign_id
-        }, GetstreamUtils.createHandler(logger))]);
-    });
-});

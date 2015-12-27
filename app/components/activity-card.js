@@ -72,6 +72,10 @@ export default Ember.Component.extend({
 
         unlike: function () {
             this.get('activity').object.decrementProperty('likes');
+
+            ParseHelper.cloudFunction(this.get('parentController'), 'unlikeActivity', {
+                activityId: this.get('activity').id
+            });
         }
     }
 });

@@ -3600,33 +3600,6 @@ Parse.Cloud.afterSave("Like", function (request) {
 
         return Parse.Promise.when([objectToLike.save(), feed.addActivity(activity, GetstreamUtils.createHandler(logger))]);
     });
-});
-
-
-/**
- * @AfterDelete Like
- */
-Parse.Cloud.afterDelete("Like", function (request) {
-    // trigger fanout
-    var like = request.object,
-        liker = request.user,
-        likeObjectQuery = new Parse.Query(like.get(like.activityType()).className);
-
-    Parse.Cloud.useMasterKey();
-    return likeObjectQuery.get(like.get(like.activityType()).id).then(function (objectToUnike) {
-        objectToUnike.increment('likes', -1);
-        var activity = GetstreamUtils.parseToActivity({
-            actor: liker,
-            object: objectToUnike,
-            verb: 'liked'
-        });
-
-        var feed = GetstreamClient.feed('user', liker.id);
-
-        return Parse.Promise.when([objectToUnike.save(), feed.removeActivity({
-            foreign_id: activity.foreign_id
-        }, GetstreamUtils.createHandler(logger))]);
-    });
 });/*
  * CLOUD FUNCTIONS
  */
@@ -5654,7 +5627,45 @@ Parse.Cloud.define('preFacebookSignUp', function (request, response) {
     }, function (error) {
         response.error(error);
     });
-});/*
+});
+
+Parse.Cloud.define('unlikeActivity', function (request, response) {
+    Parse.Cloud.useMasterKey();
+
+    var activityId = request.params.activityId,
+        user = request.user,
+        promises = [];
+
+    var feed = GetstreamClient.feed('user', user.id);
+    var deleteActivityPromise = feed.removeActivity({id: activityId}, GetstreamUtils.createHandler(logger));
+    promises.push(deleteActivityPromise);
+
+    var removeLikeQuery = new Parse.Query(Like);
+    removeLikeQuery.equalTo('liker', user);
+    removeLikeQuery.equalTo('activityId', activityId);
+    removeLikeQuery.include('test', 'attempt', 'follow', 'user');
+    var removeLikePromise = removeLikeQuery.find().then(function (likes) {
+        var innerPromises = [];
+
+        _.each(likes, function (like) {
+            var object = like.get(like.activityType());
+            object.set('likes', -1);
+            innerPromises.push(object.save());
+        });
+
+        return Parse.Promise.when([Parse.Object.destroyAll(likes), innerPromises]);
+    });
+    promises.push(removeLikePromise);
+
+    return Parse.Promise.when(promises).then(function () {
+        response.success();
+    }, function () {
+        response.error();
+    });
+});
+
+
+/*
  * TASK WORKER
  */
 /*function handleComingFromTask(object) {
