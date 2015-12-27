@@ -83,10 +83,17 @@
 
             </article>
             <article class="col-xs-12 col-sm-6 col-sm-pull-6 text-left">
-                <span class="like-button linkify margin-left-8 margin-right-8">
-                    <i class="fa fa-fw fa-thumbs-up"></i>
+
+                <span class="like-button linkify margin-left-8 margin-right-8" {{action 'toggleLike'}}>
+                    <i {{bind-attr class=":fa :fa-fw activity.liked:fa-thumbs-up:fa-thumbs-o-up"}}></i>
+                    {{#if activity.object.likes}}
+                        {{activity.object.likes}}
+                    {{/if}}
                 </span>
-                <small>Be the first to like this</small>
+
+                {{#unless activity.object.likes}}
+                    <small>Be the first to like this</small>
+                {{/unless}}
             </article>
         </section>
     </div>

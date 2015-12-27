@@ -404,8 +404,10 @@ export default {
         else
             type = activity[field].className.dasherize();
 
-        return this.extractRawPayload(store, type,
-            activity[field]);
+        var extractedObject = this.extractRawPayload(store, type,
+            _.clone(activity[field]));
+
+        return extractedObject;
     }
 
 }

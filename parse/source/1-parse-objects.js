@@ -1046,47 +1046,6 @@ var UserEvent = Parse.Object.extend("UserEvent", {
 
 /****
  * --------
- * Follow
- * --------
- *
- **/
-var Follow = Parse.Object.extend("Follow", {
-    /**
-     * @Property user
-     * @returns {Parse.User}
-     */
-    user: function () {
-        return this.get('user');
-    },
-
-    /**
-     * @Property following
-     * @returns {Parse.User}
-     */
-    following: function () {
-        return this.get('following');
-    }
-}, {
-    followedUser: function (user, userToFollow) {
-        var follow = new Follow();
-        follow.set('user', user);
-        follow.set('following', userToFollow);
-        follow.setACL(new Parse.ACL().setPublicReadAccess(true));
-        return follow.save();
-    },
-
-    unfollowedUser: function (user, userToUnfollow) {
-        var unfollowQuery = new Parse.Query(Follow);
-        unfollowQuery.equalTo('user', user);
-        unfollowQuery.equalTo('following', userToUnfollow);
-        return unfollowQuery.find().then(function (result) {
-            return Parse.Object.destroyAll(result);
-        });
-    }
-});
-
-/****
- * --------
  * Category
  * --------
  *
@@ -2677,3 +2636,115 @@ var BadgeProgress = Parse.Object.extend("BadgeProgress", {
         return this.get('isUnlocked');
     }
 }, {});
+
+
+/****
+ * --------
+ * Follow
+ * --------
+ *
+ **/
+var Follow = Parse.Object.extend("Follow", {
+    /**
+     * @Property user
+     * @returns {Parse.User}
+     */
+    user: function () {
+        return this.get('user');
+    },
+
+    /**
+     * @Property following
+     * @returns {Parse.User}
+     */
+    following: function () {
+        return this.get('following');
+    }
+}, {
+    followedUser: function (user, userToFollow) {
+        var follow = new Follow();
+        follow.set('user', user);
+        follow.set('following', userToFollow);
+        follow.setACL(new Parse.ACL().setPublicReadAccess(true));
+        return follow.save();
+    },
+
+    unfollowedUser: function (user, userToUnfollow) {
+        var unfollowQuery = new Parse.Query(Follow);
+        unfollowQuery.equalTo('user', user);
+        unfollowQuery.equalTo('following', userToUnfollow);
+        return unfollowQuery.find().then(function (result) {
+            return Parse.Object.destroyAll(result);
+        });
+    }
+});
+
+
+/****
+ * --------
+ * Like
+ * --------
+ *
+ **/
+var Like = Parse.Object.extend("Like", {
+    /**
+     * @Property liker
+     * @returns {Parse.User}
+     */
+    liker: function () {
+        return this.get('liker');
+    },
+    /**
+     * @Property activityId
+     * @returns {String}
+     */
+    activityId: function () {
+        return this.get('activityId');
+    },
+
+    /**
+     * @Property activityActor
+     * @returns {Parse.User}
+     */
+    activityActor: function () {
+        return this.get('activityActor');
+    },
+
+    /**
+     * @Property activityType
+     * @returns {String}
+     */
+    activityType: function () {
+        return this.get('activityType');
+    },
+    /**
+     * @Property test
+     * @returns {Test}
+     */
+    test: function () {
+        return this.get('test');
+    },
+    /**
+     * @Property attempt
+     * @returns {Attempt}
+     */
+    attempt: function () {
+        return this.get('attempt');
+    },
+    /**
+     * @Property user
+     * @returns {Parse.User}
+     */
+    user: function () {
+        return this.get('user');
+    },
+    /**
+     * @Property follow
+     * @returns {Follow}
+     */
+    follow: function () {
+        return this.get('follow');
+    }
+}, {
+
+});

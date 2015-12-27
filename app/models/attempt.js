@@ -10,8 +10,5 @@ export default DS.Model.extend(ParseMixin, {
     timeStarted: DS.attr('date'),
     timeCompleted: DS.attr('date'),
     isSpacedRepetition: DS.attr('boolean'),
-    // @Deprecated
-    parseClassName: function () {
-        return "Attempt";
-    }
+    likes: DS.attr('number', {defaultValue: 0})
 });

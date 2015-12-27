@@ -22,7 +22,7 @@ export default DS.Model.extend(ParseMixin, {
     oldId: DS.attr('string'),
     totalQuestions: DS.attr('number'),
     difficulty: DS.attr('number', {defaultValue: 50}),
-
+    likes: DS.attr('number', {defaultValue: 0}),
 
     /**
      * @Property Latest Attempts

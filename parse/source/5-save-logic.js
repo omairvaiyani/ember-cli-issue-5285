@@ -372,6 +372,22 @@ Parse.Cloud.beforeSave(UniqueResponse, function (request, response) {
 });
 
 /**
+ * @BeforeSave Follow
+ */
+Parse.Cloud.beforeSave("Follow", function (request, response) {
+    // trigger fanout
+    var follow = request.object;
+
+    if(follow.isNew() || !follow.getACL()) {
+        var ACL = new Parse.ACL();
+        ACL.setPublicReadAccess(true);
+        follow.setACL(ACL);
+    }
+
+    response.success();
+});
+
+/**
  * @AfterSave Follow
  * Activity Stream
  */
@@ -417,4 +433,75 @@ Parse.Cloud.afterDelete(Follow, function (request) {
     promises.push(flat.unfollow('user', follow.following().id, GetstreamUtils.createHandler(logger)));
 
     return Parse.Promise.when(promises);
+});
+
+/**
+ * @BeforeSave Like
+ */
+Parse.Cloud.beforeSave("Like", function (request, response) {
+    // trigger fanout
+    var like = request.object;
+
+    if(like.isNew()) {
+        var ACL = new Parse.ACL();
+        ACL.setPublicReadAccess(true);
+        like.setACL(ACL);
+    }
+
+    response.success();
+});
+
+/**
+ * @AfterSave Like
+ */
+Parse.Cloud.afterSave("Like", function (request) {
+    // trigger fanout
+    var like = request.object,
+        liker = request.user,
+        likeObjectQuery = new Parse.Query(like.get(like.activityType()).className);
+
+    if(like.existed())
+        return;
+
+    Parse.Cloud.useMasterKey();
+    return likeObjectQuery.get(like.get(like.activityType()).id).then(function (objectToLike) {
+        objectToLike.increment('likes');
+        var activity = GetstreamUtils.parseToActivity({
+            actor: liker,
+            object: objectToLike,
+            verb: 'liked',
+            to: [like.activityActor()]
+        });
+
+        var feed = GetstreamClient.feed('user', liker.id);
+
+        return Parse.Promise.when([objectToLike.save(), feed.addActivity(activity, GetstreamUtils.createHandler(logger))]);
+    });
+});
+
+
+/**
+ * @AfterDelete Like
+ */
+Parse.Cloud.afterDelete("Like", function (request) {
+    // trigger fanout
+    var like = request.object,
+        liker = request.user,
+        likeObjectQuery = new Parse.Query(like.get(like.activityType()).className);
+
+    Parse.Cloud.useMasterKey();
+    return likeObjectQuery.get(like.get(like.activityType()).id).then(function (objectToUnike) {
+        objectToUnike.increment('likes', -1);
+        var activity = GetstreamUtils.parseToActivity({
+            actor: liker,
+            object: objectToUnike,
+            verb: 'liked'
+        });
+
+        var feed = GetstreamClient.feed('user', liker.id);
+
+        return Parse.Promise.when([objectToUnike.save(), feed.removeActivity({
+            foreign_id: activity.foreign_id
+        }, GetstreamUtils.createHandler(logger))]);
+    });
 });

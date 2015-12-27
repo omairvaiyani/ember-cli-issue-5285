@@ -1046,47 +1046,6 @@ var UserEvent = Parse.Object.extend("UserEvent", {
 
 /****
  * --------
- * Follow
- * --------
- *
- **/
-var Follow = Parse.Object.extend("Follow", {
-    /**
-     * @Property user
-     * @returns {Parse.User}
-     */
-    user: function () {
-        return this.get('user');
-    },
-
-    /**
-     * @Property following
-     * @returns {Parse.User}
-     */
-    following: function () {
-        return this.get('following');
-    }
-}, {
-    followedUser: function (user, userToFollow) {
-        var follow = new Follow();
-        follow.set('user', user);
-        follow.set('following', userToFollow);
-        follow.setACL(new Parse.ACL().setPublicReadAccess(true));
-        return follow.save();
-    },
-
-    unfollowedUser: function (user, userToUnfollow) {
-        var unfollowQuery = new Parse.Query(Follow);
-        unfollowQuery.equalTo('user', user);
-        unfollowQuery.equalTo('following', userToUnfollow);
-        return unfollowQuery.find().then(function (result) {
-            return Parse.Object.destroyAll(result);
-        });
-    }
-});
-
-/****
- * --------
  * Category
  * --------
  *
@@ -2676,7 +2635,120 @@ var BadgeProgress = Parse.Object.extend("BadgeProgress", {
     isUnlocked: function () {
         return this.get('isUnlocked');
     }
-}, {});// Concat source to main.js with 'cat source/*.js > cloud/main.js'
+}, {});
+
+
+/****
+ * --------
+ * Follow
+ * --------
+ *
+ **/
+var Follow = Parse.Object.extend("Follow", {
+    /**
+     * @Property user
+     * @returns {Parse.User}
+     */
+    user: function () {
+        return this.get('user');
+    },
+
+    /**
+     * @Property following
+     * @returns {Parse.User}
+     */
+    following: function () {
+        return this.get('following');
+    }
+}, {
+    followedUser: function (user, userToFollow) {
+        var follow = new Follow();
+        follow.set('user', user);
+        follow.set('following', userToFollow);
+        follow.setACL(new Parse.ACL().setPublicReadAccess(true));
+        return follow.save();
+    },
+
+    unfollowedUser: function (user, userToUnfollow) {
+        var unfollowQuery = new Parse.Query(Follow);
+        unfollowQuery.equalTo('user', user);
+        unfollowQuery.equalTo('following', userToUnfollow);
+        return unfollowQuery.find().then(function (result) {
+            return Parse.Object.destroyAll(result);
+        });
+    }
+});
+
+
+/****
+ * --------
+ * Like
+ * --------
+ *
+ **/
+var Like = Parse.Object.extend("Like", {
+    /**
+     * @Property liker
+     * @returns {Parse.User}
+     */
+    liker: function () {
+        return this.get('liker');
+    },
+    /**
+     * @Property activityId
+     * @returns {String}
+     */
+    activityId: function () {
+        return this.get('activityId');
+    },
+
+    /**
+     * @Property activityActor
+     * @returns {Parse.User}
+     */
+    activityActor: function () {
+        return this.get('activityActor');
+    },
+
+    /**
+     * @Property activityType
+     * @returns {String}
+     */
+    activityType: function () {
+        return this.get('activityType');
+    },
+    /**
+     * @Property test
+     * @returns {Test}
+     */
+    test: function () {
+        return this.get('test');
+    },
+    /**
+     * @Property attempt
+     * @returns {Attempt}
+     */
+    attempt: function () {
+        return this.get('attempt');
+    },
+    /**
+     * @Property user
+     * @returns {Parse.User}
+     */
+    user: function () {
+        return this.get('user');
+    },
+    /**
+     * @Property follow
+     * @returns {Follow}
+     */
+    follow: function () {
+        return this.get('follow');
+    }
+}, {
+
+});
+// Concat source to main.js with 'cat source/*.js > cloud/main.js'
 
 var _ = require("underscore"),
     moment = require('cloud/moment-timezone-with-data.js'),
@@ -3423,6 +3495,22 @@ Parse.Cloud.beforeSave(UniqueResponse, function (request, response) {
 });
 
 /**
+ * @BeforeSave Follow
+ */
+Parse.Cloud.beforeSave("Follow", function (request, response) {
+    // trigger fanout
+    var follow = request.object;
+
+    if(follow.isNew() || !follow.getACL()) {
+        var ACL = new Parse.ACL();
+        ACL.setPublicReadAccess(true);
+        follow.setACL(ACL);
+    }
+
+    response.success();
+});
+
+/**
  * @AfterSave Follow
  * Activity Stream
  */
@@ -3468,6 +3556,77 @@ Parse.Cloud.afterDelete(Follow, function (request) {
     promises.push(flat.unfollow('user', follow.following().id, GetstreamUtils.createHandler(logger)));
 
     return Parse.Promise.when(promises);
+});
+
+/**
+ * @BeforeSave Like
+ */
+Parse.Cloud.beforeSave("Like", function (request, response) {
+    // trigger fanout
+    var like = request.object;
+
+    if(like.isNew()) {
+        var ACL = new Parse.ACL();
+        ACL.setPublicReadAccess(true);
+        like.setACL(ACL);
+    }
+
+    response.success();
+});
+
+/**
+ * @AfterSave Like
+ */
+Parse.Cloud.afterSave("Like", function (request) {
+    // trigger fanout
+    var like = request.object,
+        liker = request.user,
+        likeObjectQuery = new Parse.Query(like.get(like.activityType()).className);
+
+    if(like.existed())
+        return;
+
+    Parse.Cloud.useMasterKey();
+    return likeObjectQuery.get(like.get(like.activityType()).id).then(function (objectToLike) {
+        objectToLike.increment('likes');
+        var activity = GetstreamUtils.parseToActivity({
+            actor: liker,
+            object: objectToLike,
+            verb: 'liked',
+            to: [like.activityActor()]
+        });
+
+        var feed = GetstreamClient.feed('user', liker.id);
+
+        return Parse.Promise.when([objectToLike.save(), feed.addActivity(activity, GetstreamUtils.createHandler(logger))]);
+    });
+});
+
+
+/**
+ * @AfterDelete Like
+ */
+Parse.Cloud.afterDelete("Like", function (request) {
+    // trigger fanout
+    var like = request.object,
+        liker = request.user,
+        likeObjectQuery = new Parse.Query(like.get(like.activityType()).className);
+
+    Parse.Cloud.useMasterKey();
+    return likeObjectQuery.get(like.get(like.activityType()).id).then(function (objectToUnike) {
+        objectToUnike.increment('likes', -1);
+        var activity = GetstreamUtils.parseToActivity({
+            actor: liker,
+            object: objectToUnike,
+            verb: 'liked'
+        });
+
+        var feed = GetstreamClient.feed('user', liker.id);
+
+        return Parse.Promise.when([objectToUnike.save(), feed.removeActivity({
+            foreign_id: activity.foreign_id
+        }, GetstreamUtils.createHandler(logger))]);
+    });
 });/*
  * CLOUD FUNCTIONS
  */
@@ -6192,7 +6351,7 @@ Parse.Cloud.define("fetchActivityFeed", function (request, response) {
         logger.log("activity-stream", "feed data", httpResponse.data);
 
         var preparedActivities = [];
-        return Parse.Cloud.run('enrichActivityStream', {activities: activities, user: request.user.toJSON()})
+        return Parse.Cloud.run('enrichActivityStream', {activities: activities, currentUserId: request.user.id})
             .then(function (activities) {
                 var removeActivitiesPromise = [];
                 _.each(activities, function (activity) {
@@ -6221,7 +6380,13 @@ Parse.Cloud.define("fetchActivityFeed", function (request, response) {
 
 Parse.Cloud.define('enrichActivityStream', function (request, response) {
     var activities = request.params.activities,
-        currentUser = request.user ? request.user : request.params.user;
+        currentUser = request.user,
+        currentUserId = request.params.currentUserId;
+
+    if(!currentUser) {
+        currentUser = new Parse.User();
+        currentUser.id = currentUserId;
+    }
 
     if (!currentUser)
         return response.error("You must send current user.");

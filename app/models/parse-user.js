@@ -20,7 +20,7 @@ var ParseUser = ParseUserModel.extend(ParseMixin, {
     authData: DS.attr(),
     firstTimeLogin: DS.attr('boolean'),
     intercomHash: DS.attr('string'),
-
+    likes: DS.attr('number', {defaultValue: 0}),
     /*
      * Profile
      */

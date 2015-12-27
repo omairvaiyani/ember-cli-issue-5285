@@ -122,7 +122,7 @@ function enrich(activities, includes, currentUser) {
     if (currentUser) {
         var doILikeQuery = new Parse.Query('Like');
         doILikeQuery.containedIn('activityId', activityIds);
-        doILikeQuery.equalTo('actor', currentUser);
+        doILikeQuery.equalTo('liker', currentUser);
         var likePromise = doILikeQuery.find();
         promises.push(likePromise);
     } else {

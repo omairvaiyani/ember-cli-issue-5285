@@ -38,6 +38,10 @@ export default ActivityCard.extend({
         return this.get('latestActivity').time;
     }.property('latestActivity.time'),
 
+    likeActivity: function () {
+        return this.get('activity.verb') === "liked";
+    }.property('activity.verb'),
+
     allActors: function () {
         var actors = new Ember.A();
         _.each(this.get('activity.activities'), function (innerActivity) {

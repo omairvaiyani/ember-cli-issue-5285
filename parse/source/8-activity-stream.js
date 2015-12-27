@@ -150,7 +150,7 @@ Parse.Cloud.define("fetchActivityFeed", function (request, response) {
         logger.log("activity-stream", "feed data", httpResponse.data);
 
         var preparedActivities = [];
-        return Parse.Cloud.run('enrichActivityStream', {activities: activities, user: request.user.toJSON()})
+        return Parse.Cloud.run('enrichActivityStream', {activities: activities, currentUserId: request.user.id})
             .then(function (activities) {
                 var removeActivitiesPromise = [];
                 _.each(activities, function (activity) {
@@ -179,7 +179,13 @@ Parse.Cloud.define("fetchActivityFeed", function (request, response) {
 
 Parse.Cloud.define('enrichActivityStream', function (request, response) {
     var activities = request.params.activities,
-        currentUser = request.user ? request.user : request.params.user;
+        currentUser = request.user,
+        currentUserId = request.params.currentUserId;
+
+    if(!currentUser) {
+        currentUser = new Parse.User();
+        currentUser.id = currentUserId;
+    }
 
     if (!currentUser)
         return response.error("You must send current user.");
