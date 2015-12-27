@@ -92,8 +92,8 @@ app.import({
  * PARSE JAVASCRIPT SDK
  */
 app.import({
-    development: 'bower_components/parse-js-sdk/lib/parse.js',
-    production: 'bower_components/parse-js-sdk/lib/parse.min.js'
+    development: 'bower_components/parse/parse.js',
+    production: 'bower_components/parse/parse.min.js'
 });
 
 /*
