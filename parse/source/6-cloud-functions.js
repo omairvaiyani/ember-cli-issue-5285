@@ -1958,17 +1958,17 @@ Parse.Cloud.define('performSearch', function (request, response) {
 
         var tests;
         if (multipleQueries) {
-            tests = searchResults.results[0];
+            tests = searchResults.results[0].hits;
         } else if (indexName.startsWith("Test"))
             tests = searchResults.hits;
 
         if (tests)
-            return getAuthorsFromTestsSearch(tests.hits);
-    }).then(function (testHits) {
+            return getAuthorsFromTestsSearch(tests);
+    }).then(function (tests) {
         if (multipleQueries)
-            searchResults.results[0].hits = testHits;
+            searchResults.results[0].hits = tests ? tests : [];
         else if (indexName.startsWith("Test"))
-            searchResults.hits = tests;
+            searchResults.hits = tests ? tests : [];
 
         response.success(searchResults);
     }, function (error) {

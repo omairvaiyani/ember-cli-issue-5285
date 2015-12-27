@@ -288,20 +288,14 @@ var sendEmail = function (templateName, email, user, data) {
  */
 var getAuthorsFromTestsSearch = function (tests) {
     var authorObjectIds = [];
-    logger.log("perform-search", "author id" + tests[0].author.id);
-    logger.log("perform-search", "author objectId" + tests[0].author.objectId);
-    logger.log("perform-search", "author objectID" + tests[0].author.objectID);
-    logger.log("perform-search", "author ID" + tests[0].author.ID);
     _.each(tests, function (test) {
         if (test.author) {
             authorObjectIds.push(test.author.objectId ? test.author.objectId : test.author.id);
         }
     });
-    logger.log("perform-search", "test author object ids", authorObjectIds);
     var authorQuery = new Parse.Query(Parse.User);
     authorQuery.containedIn("objectId", authorObjectIds);
     return authorQuery.find().then(function (authors) {
-        logger.log("perform-search", "authors found", authors.length);
         var minimisedAuthors = [];
 
         _.each(authors, function (author) {
