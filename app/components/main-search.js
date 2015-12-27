@@ -8,7 +8,11 @@ export default Ember.Component.extend({
         return algoliasearch("ONGKY2T0Y8", "8553807a02b101962e7bfa8c811fd105");
     }.property(),
 
-    searchTerm: null,
+    searchTerm: '',
+
+    searchPlaceholder: '',
+
+    navbarSearchIsFocused: false,
 
     inlineResults: false,
 
@@ -112,6 +116,9 @@ export default Ember.Component.extend({
         return this.get('navbarSearchResults.tests.length') && this.get('navbarSearchResults.users.length');
     }.property('navbarSearchResults.tests.length', 'navbarSearchResults.users.length'),
 
+    monitorPageChange: function () {
+    }.on('init'),
+
     actions: {
         // Called from the search icon
         focusOnNavbarSearch: function () {
@@ -162,15 +169,13 @@ export default Ember.Component.extend({
                 });
         },
 
-        searchItemClicked: function (object, className) {
-            if (className === 'test')
-                this.transitionToRoute('testInfo', object.slug);
-            else if (className === 'parse-user')
-                this.transitionToRoute('user', object.slug);
-        },
-
         openModal: function (a, b, c) {
             this.get('parentController').send('openModal', a, b, c);
+        },
+
+        itemClicked: function () {
+            // Called from user-card for now
+            this.send('navbarSearchHardBlur');
         }
     }
 });

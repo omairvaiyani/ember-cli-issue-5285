@@ -34,6 +34,31 @@
   .navbar-right
     text-transform none
     font-size 14px
+    .navbar-search-container
+      padding-top marginSecondary
+      &:hover
+        background transparent
+      .main-search
+        color colorText
+        font-size 12px
+        input
+          height: 34px;
+          border-radius: 20px;
+          padding-right: 34px;
+        .search-icon
+          color colorSecondary
+          top 8px
+          right 12px
+        .close-icon
+          color colorRed
+          top 9px
+          right 14px
+        .search-popdown
+          right: 0
+          left initial
+          top 42px
+          min-width 378px
+          cursor auto
     li > a.navbar-right-adjust
       padding-top 11px !important
       padding-bottom 11px !important

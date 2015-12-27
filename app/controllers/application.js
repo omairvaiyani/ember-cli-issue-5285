@@ -37,7 +37,6 @@ export default Ember.Controller.extend({
                 title += defaultTitle;
                 if (!this.get('currentUser')) {
                     this.set('navbarTransparent', true);
-                    this.set('hideNavbarSearch', true);
                     this.get('controllers.index').resizeIndexCover();
                     this.get('controllers.index').shouldShowStats();
                 }
@@ -406,39 +405,7 @@ export default Ember.Controller.extend({
             }
         },
 
-        // Called from the search icon
-        focusOnNavbarSearch: function () {
-            $('#navbar-search-input').focus();
-        },
-
-        // input focus-in action
-        navbarSearchFocused: function () {
-            this.set('navbarSearchIsFocused', true);
-        },
-
-        // By click outside the input or results (includes the X span)
-        navbarSearchBlurred: function () {
-            // Set up a jQuery function to hide the input
-            // if clicked outside the form-control or
-            // the popdown results div, or the X span.
-            if (!this.get('jqueryNavbarSearchHiderSet')) {
-                $(document).mouseup(function (e) {
-                    var container = $("#navbar-search-container"),
-                        modal = $("#myModal");
-                    if (!container.is(e.target) && !modal.is(e.target)
-                        && (_.contains(e.target.classList, "close-icon") ||
-                            (container.has(e.target).length === 0 &&
-                            modal.has(e.target).length === 0)
-                        )) {
-                        this.send('navbarSearchHardBlur');
-                    }
-                }.bind(this));
-                this.set('jqueryNavbarSearchHiderSet', true);
-            }
-        },
-
-        // called by actions.navbarSearchBlurred
-        // or currentPathChange
+        // called by  this.currentPathChange()
         navbarSearchHardBlur: function () {
             this.set('navbarSearchIsFocused', false);
             this.set('navbarSearchTerm', "");
@@ -450,13 +417,6 @@ export default Ember.Controller.extend({
                 {
                     queryParams: {searchTerm: this.get('navbarSearchTerm')}
                 });
-        },
-
-        searchItemClicked: function (object, className) {
-            if (className === 'test')
-                this.transitionToRoute('testInfo', object.slug);
-            else if (className === 'parse-user')
-                this.transitionToRoute('user', object.slug);
         },
 
         changePassword: function (callback) {

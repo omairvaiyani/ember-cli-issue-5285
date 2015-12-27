@@ -180,7 +180,7 @@ export default Ember.Component.extend({
             this.get('parentController').send('dismissLatestSRTest');
         },
 
-        openModal: function () {
+        openTestModal: function () {
             this.get('parentController').send('openModal', 'browse/modal/test-info', 'browse.modal.testInfo',
                 this.get('test'));
         },
@@ -194,8 +194,7 @@ export default Ember.Component.extend({
         },
 
         fetchMemoryStrengthData: function () {
-            return;
-            this.get('parentController').send('fetchMemoryStrengthDataForTest', this.get('test'));
+            //this.get('parentController').send('fetchMemoryStrengthDataForTest', this.get('test'));
         },
 
         shareTest: function () {

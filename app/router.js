@@ -29,10 +29,10 @@ Router.map(function () {
      * @Route Index
      * /user
      */
-    this.route('index', {path: ''}, function() {
-      this.route('user', {path: '/:user_slug'});
-      this.route('progress');
-      this.route('activity');
+    this.route('index', {path: ''}, function () {
+        this.route('user', {path: '/:user_slug'});
+        this.route('progress');
+        this.route('activity');
     });
 
     /*
@@ -143,13 +143,13 @@ Router.map(function () {
     });
 });
 
-/*Router.reopen({
- notifyGoogleAnalytics: function () {
- return ga('send', 'pageview', {
- 'page': this.get('url'),
- 'title': window.document.title
- });
- }.on('didTransition')
- });*/
+Router.reopen({
+    notifyGoogleAnalytics: function () {
+        return ga('send', 'pageview', {
+            'page': this.get('url'),
+            'title': window.document.title
+        });
+    }.on('didTransition')
+});
 
 export default Router;

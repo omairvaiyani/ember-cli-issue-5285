@@ -48,11 +48,11 @@
 
                 <ul class="nav navbar-nav navbar-right">
                     {{#if currentUser}}
-                        {{#link-to 'browse' tagName='li' title='Search for quizzes'}}
-                            {{#link-to 'browse' tagName='a'}}
-                                Browse
-                            {{/link-to}}
-                        {{/link-to}}
+                        <li class="navbar-search-container margin-right-16">
+                            {{main-search parentController=this searchTerm=navbarSearchTerm
+                            searchPlaceholder="Search Synap" navbarSearchIsFocused=navbarSearchIsFocused}}
+                        </li>
+
                         {{#link-to 'create' tagName='li' title='Being Creating an MCQ Quiz'}}
                             {{#link-to 'create' tagName='a'}}
                                 Create a Quiz

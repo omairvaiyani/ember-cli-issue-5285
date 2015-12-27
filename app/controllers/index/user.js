@@ -178,7 +178,7 @@ export default Ember.Controller.extend(CurrentUser, SortBy, DeleteWithUndo, {
         if (this.get('isCurrentUser')) {
             return "Search your quizzes";
         } else {
-            return "Search " + this.get('model.name') + "' Quizzes";
+            return "Search " + this.get('model.firstName').toPossessive() + " Quizzes";
         }
     }.property('isCurrentUser', 'model'),
 

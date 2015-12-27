@@ -21,5 +21,12 @@ export default {
                 return this.indexOf(str) == 0;
             };
         }
+
+        String.prototype.toPossessive = function () {
+            if(this.slice(-1).toLowerCase() === 's')
+                return this + "'";
+            else
+                return this + "'s";
+        };
     }
 };

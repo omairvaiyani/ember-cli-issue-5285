@@ -76,6 +76,14 @@ export default Ember.Component.extend({
 
         goToUserProfile: function () {
             this.get('parentController').transitionTo('index.user', this.get('user.slug'));
+
+            // Parent Component will be MainSearch
+            if(this.get('parentComponent')) {
+                // This ensures that the search is hidden
+                // even when going between different models
+                // within the same route
+                this.get('parentComponent').send('itemClicked');
+            }
         },
 
         followUser: function (user) {

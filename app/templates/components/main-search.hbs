@@ -60,7 +60,8 @@ placeholder=searchPlaceholder}}
                             {{/unless}}
 
                             {{#each navbarSearchResults.users as |user|}}
-                                {{user-card user=user parentController=parentController cardType="miniList"}}
+                                {{user-card user=user parentController=parentController cardType="miniList"
+                                parentComponent=this}}
                             {{/each}}
                         </article>
 
