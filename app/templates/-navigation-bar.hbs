@@ -27,11 +27,6 @@
                                 Home
                             {{/link-to}}
                         {{/link-to}}
-                        {{#link-to 'create' tagName='li' title='Create an MCQ Quiz'}}
-                            {{#link-to 'create' tagName='a'}}
-                                Create
-                            {{/link-to}}
-                        {{/link-to}}
                         {{#link-to 'browse' tagName='li' title='Search for quizzes'}}
                             {{#link-to 'browse' tagName='a'}}
                                 Browse
@@ -65,6 +60,12 @@
 
                 <ul class="nav navbar-nav navbar-right">
                     {{#if currentUser}}
+                        {{#link-to 'create' tagName='li' title='Being Creating an MCQ Quiz'}}
+                            {{#link-to 'create' tagName='a'}}
+                                Create a Quiz
+                            {{/link-to}}
+                        {{/link-to}}
+
                         {{partial 'application/navbar/current-user'}}
                     {{else}}
                         <li class="log-in-join">
