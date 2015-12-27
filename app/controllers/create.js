@@ -145,10 +145,6 @@ export default Ember.Controller.extend(CurrentUser, DeleteWithUndo, TagsAndCats,
         },
 
         saveTest: function (callback) {
-            if (!this.get('model.category.content')) {
-                console.log("No category set!");
-                return;
-            }
             this.set('model.title', this.get('model.title').capitalize());
             if (typeof this.get('model.tags') === 'string')
                 this.set('model.tags', this.get('model.tags').split(','));
