@@ -1760,6 +1760,16 @@ var Attempt = Parse.Object.extend("Attempt", {
     },
 
     /**
+     * @Function Hide Score
+     */
+    hideScore: function () {
+        var attempt = this.toJSON();
+        attempt.className = "Attempt";
+        attempt.score = undefined;
+        return attempt;
+    },
+
+    /**
      * @Function Set Defaults
      * Sets timeTaken in seconds
      * to complete attempt.

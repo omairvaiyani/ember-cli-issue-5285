@@ -1760,6 +1760,16 @@ var Attempt = Parse.Object.extend("Attempt", {
     },
 
     /**
+     * @Function Hide Score
+     */
+    hideScore: function () {
+        var attempt = this.toJSON();
+        attempt.className = "Attempt";
+        attempt.score = undefined;
+        return attempt;
+    },
+
+    /**
      * @Function Set Defaults
      * Sets timeTaken in seconds
      * to complete attempt.
@@ -6292,12 +6302,15 @@ function prepareActivityForDispatch(activity, currentUser) {
             title += " created " + test.title();
             break;
         case "took quiz":
-            var test = activity.target;
-            if (!test) {
+            var test = activity.target,
+                attempt = activity.object;
+            if (!test && !attempt) {
                 activity.shouldBeRemoved = true;
                 return activity;
             }
-            activity.target = test;
+            // Hide Score from Attempt
+            activity.object = attempt.hideScore();
+
             title += " took " + test.title();
             break;
         case "followed":
