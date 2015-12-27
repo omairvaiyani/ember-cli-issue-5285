@@ -260,14 +260,14 @@ Parse.User.prototype.minimalProfile = function (currentUser) {
     object.educationCohort = educationCohort;
     object.className = "_User";
 
-    if(currentUser && this.id === currentUser.id)
+    if (currentUser && this.id === currentUser.id)
         return object;
 
     var propertiesToRemove = ['ACL', 'authData', 'devices', 'email', 'emailNotifications', 'emailVerified',
-            'fbEducation', 'followers', 'following', 'gender', 'savedTests', 'srCompletedAttempts', 'testAttempts',
-            'fbFriends', 'firstTimeLogin', 'isPremium', 'intercomHash', 'password', 'pushNotifications', 'receivePromotionalEmails',
-            'srActivated', 'srDoNotDisturbTimes', 'srLatestTest', 'srIntensityLevel', 'srNextDue', 'srNotifyByEmail',
-            'srNotifyByPush', 'stripeToken', 'timeZone', 'username', 'uniqueResponses', 'userEvents'];
+        'fbEducation', 'followers', 'following', 'gender', 'savedTests', 'srCompletedAttempts', 'testAttempts',
+        'fbFriends', 'firstTimeLogin', 'isPremium', 'intercomHash', 'password', 'pushNotifications', 'receivePromotionalEmails',
+        'srActivated', 'srDoNotDisturbTimes', 'srLatestTest', 'srIntensityLevel', 'srNextDue', 'srNotifyByEmail',
+        'srNotifyByPush', 'stripeToken', 'timeZone', 'username', 'uniqueResponses', 'userEvents'];
 
     _.each(propertiesToRemove, function (property) {
         object[property] = undefined;
@@ -1101,8 +1101,6 @@ var Test = Parse.Object.extend("Test", {
      * Converts this into an indexable object
      * and saves it to the search index.
      *
-     * Minimises test.author and removes ACL.
-     *
      * @returns {Parse.Promise}
      */
     indexObject: function () {
@@ -1110,10 +1108,7 @@ var Test = Parse.Object.extend("Test", {
         object.objectID = this.id;
         object.ACL = undefined;
         object._tags = this.tags();
-        return this.author().fetchIfNeeded().then(function (author) {
-            object.author = author.minimalProfile();
-            return testIndex.saveObject(object);
-        }.bind(this));
+        return testIndex.saveObject(object);
     },
     /**
      * @Property title
@@ -2755,6 +2750,4 @@ var Like = Parse.Object.extend("Like", {
     follow: function () {
         return this.get('follow');
     }
-}, {
-
-});
+}, {});

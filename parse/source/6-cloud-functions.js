@@ -1959,10 +1959,10 @@ Parse.Cloud.define('performSearch', function (request, response) {
             tests = searchResults.hits;
 
         if (tests)
-            return getAuthorsFromTestsSearch(tests);
-    }).then(function (tests) {
+            return getAuthorsFromTestsSearch(tests.hits);
+    }).then(function (testHits) {
         if (multipleQueries)
-            searchResults.results[0] = tests;
+            searchResults.results[0].hits = testHits;
         else if (indexName.startsWith("Test"))
             searchResults.hits = tests;
 

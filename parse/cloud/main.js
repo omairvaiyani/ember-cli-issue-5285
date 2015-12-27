@@ -260,14 +260,14 @@ Parse.User.prototype.minimalProfile = function (currentUser) {
     object.educationCohort = educationCohort;
     object.className = "_User";
 
-    if(currentUser && this.id === currentUser.id)
+    if (currentUser && this.id === currentUser.id)
         return object;
 
     var propertiesToRemove = ['ACL', 'authData', 'devices', 'email', 'emailNotifications', 'emailVerified',
-            'fbEducation', 'followers', 'following', 'gender', 'savedTests', 'srCompletedAttempts', 'testAttempts',
-            'fbFriends', 'firstTimeLogin', 'isPremium', 'intercomHash', 'password', 'pushNotifications', 'receivePromotionalEmails',
-            'srActivated', 'srDoNotDisturbTimes', 'srLatestTest', 'srIntensityLevel', 'srNextDue', 'srNotifyByEmail',
-            'srNotifyByPush', 'stripeToken', 'timeZone', 'username', 'uniqueResponses', 'userEvents'];
+        'fbEducation', 'followers', 'following', 'gender', 'savedTests', 'srCompletedAttempts', 'testAttempts',
+        'fbFriends', 'firstTimeLogin', 'isPremium', 'intercomHash', 'password', 'pushNotifications', 'receivePromotionalEmails',
+        'srActivated', 'srDoNotDisturbTimes', 'srLatestTest', 'srIntensityLevel', 'srNextDue', 'srNotifyByEmail',
+        'srNotifyByPush', 'stripeToken', 'timeZone', 'username', 'uniqueResponses', 'userEvents'];
 
     _.each(propertiesToRemove, function (property) {
         object[property] = undefined;
@@ -1101,8 +1101,6 @@ var Test = Parse.Object.extend("Test", {
      * Converts this into an indexable object
      * and saves it to the search index.
      *
-     * Minimises test.author and removes ACL.
-     *
      * @returns {Parse.Promise}
      */
     indexObject: function () {
@@ -1110,10 +1108,7 @@ var Test = Parse.Object.extend("Test", {
         object.objectID = this.id;
         object.ACL = undefined;
         object._tags = this.tags();
-        return this.author().fetchIfNeeded().then(function (author) {
-            object.author = author.minimalProfile();
-            return testIndex.saveObject(object);
-        }.bind(this));
+        return testIndex.saveObject(object);
     },
     /**
      * @Property title
@@ -2755,9 +2750,7 @@ var Like = Parse.Object.extend("Like", {
     follow: function () {
         return this.get('follow');
     }
-}, {
-
-});
+}, {});
 // Concat source to main.js with 'cat source/*.js > cloud/main.js'
 
 var _ = require("underscore"),
@@ -3070,23 +3063,39 @@ var sendEmail = function (templateName, email, user, data) {
     });
 };
 
+/**
+ * @Function Get Authors from Tests Search
+ *
+ * We no longer store author data on
+ * the search index. This is due to
+ * syncing issues. It is better to
+ * retrieve data on the fly.
+ *
+ * @param tests
+ * @returns {*}
+ */
 var getAuthorsFromTestsSearch = function (tests) {
     var authorObjectIds = [];
+    logger.log("perform-search", "author id" + tests[0].author.id);
+    logger.log("perform-search", "author objectId" + tests[0].author.objectId);
+    logger.log("perform-search", "author objectID" + tests[0].author.objectID);
+    logger.log("perform-search", "author ID" + tests[0].author.ID);
     _.each(tests, function (test) {
-        if (test.author && test.author.objectId) {
-            authorObjectIds.push(test.author.objectId);
+        if (test.author) {
+            authorObjectIds.push(test.author.objectId ? test.author.objectId : test.author.id);
         }
     });
-    logger.log("authorObjectIds", authorObjectIds);
+    logger.log("perform-search", "test author object ids", authorObjectIds);
     var authorQuery = new Parse.Query(Parse.User);
     authorQuery.containedIn("objectId", authorObjectIds);
     return authorQuery.find().then(function (authors) {
-        logger.log("authors-found", authors.length);
+        logger.log("perform-search", "authors found", authors.length);
         var minimisedAuthors = [];
+
         _.each(authors, function (author) {
             minimisedAuthors.push(author.minimalProfile());
         });
-        logger.log("minified-authors", minimisedAuthors);
+
         _.each(tests, function (test) {
             test.author = _.filter(minimisedAuthors, function (author) {
                 return author.objectId === test.author.objectId;
@@ -5571,10 +5580,10 @@ Parse.Cloud.define('performSearch', function (request, response) {
             tests = searchResults.hits;
 
         if (tests)
-            return getAuthorsFromTestsSearch(tests);
-    }).then(function (tests) {
+            return getAuthorsFromTestsSearch(tests.hits);
+    }).then(function (testHits) {
         if (multipleQueries)
-            searchResults.results[0] = tests;
+            searchResults.results[0].hits = testHits;
         else if (indexName.startsWith("Test"))
             searchResults.hits = tests;
 
