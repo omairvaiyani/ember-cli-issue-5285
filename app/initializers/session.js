@@ -20,7 +20,7 @@ import ParseHelper from '../utils/parse-helper';
  */
 export default {
     name: 'session',
-    after: 'parse-user-reopen',
+    after: 'prototype-modifications',
 
     initialize: function (container, application) {
         var sessionToken = localStorage.sessionToken,

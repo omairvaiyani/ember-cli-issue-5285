@@ -8,7 +8,7 @@
     <div class="activity-notifications-dropdown dropdown-menu" role="menu">
         <div class="top-controls"></div>
         <hr class="full-hr"/>
-        <div class="notifications-container">
+        <div class="notifications-container parent-no-scroll">
             {{#each currentUser.notifications as |notification|}}
                 {{activity-notification activity=notification parentController=this}}
                 <hr class="full-hr"/>
