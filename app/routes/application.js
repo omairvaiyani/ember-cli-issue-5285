@@ -191,7 +191,7 @@ export default Ember.Route.extend({
                 }
             }.bind(this), {
                 scope: 'public_profile, user_friends, user_about_me, user_education_history,' +
-                'email, user_location'
+                'email'
             });
         },
         /**
