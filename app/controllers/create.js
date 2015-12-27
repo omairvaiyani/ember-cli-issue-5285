@@ -83,7 +83,8 @@ export default Ember.Controller.extend(CurrentUser, DeleteWithUndo, TagsAndCats,
                 this.send('addNotification', notification);
                 error = true;
             }
-            if (!this.get('model.category.content')) {
+            // @Deprecated Categories are deprecated
+            /*if (!this.get('model.category.content')) {
                 notification = {
                     type: "warning",
                     title: "Category not set!",
@@ -91,7 +92,7 @@ export default Ember.Controller.extend(CurrentUser, DeleteWithUndo, TagsAndCats,
                 };
                 this.send('addNotification', notification);
                 error = true;
-            }
+            }*/
             if (this.get('inJoinProcess')) {
                 if (this.get('joinStep.create.active')) {
                     this.send('goToJoinStep', 'join');

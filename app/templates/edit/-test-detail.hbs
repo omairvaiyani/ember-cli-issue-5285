@@ -18,7 +18,8 @@
         </section>
     </article>
 
-    {{!-- Category column --}}
+    {{!-- @Deprecated Category column --}}
+    {{!--
     <article class="col-xs-12 col-md-5 col-fix-right margin-bottom-16">
         <section class="row">
             <article class="col-xs-12">
@@ -29,11 +30,15 @@
         {{category-tags test=model canEdit=true parentController=this}}
 
     </article>
-</section>
+    --}}
 
-{{!-- Tags row --}}
-<section class="row margin-bottom-16">
-    <article class="col-xs-12">
+    {{!-- Tags row --}}
+    <article class="col-md-5 col-fix-right">
+        <section class="row">
+            <article class="col-xs-12">
+                <h4>Tags</h4>
+            </article>
+        </section>
         {{module-tags tags=model.tags canEdit=true parentController=this}}
     </article>
 </section>
@@ -68,7 +73,7 @@
 
         <section class="row margin-bottom-16">
             <article class="col-xs-12">
-               {{visibility-switch checked=model.isPublic}}
+                {{visibility-switch checked=model.isPublic}}
             </article>
         </section>
     </article>

@@ -1265,7 +1265,7 @@ var Test = Parse.Object.extend("Test", {
      * @returns {Test}
      */
     setDefaults: function () {
-        var numberProps = ["quality", "averageScore",
+        var numberProps = ["quality", "averageScore", "likes",
             "averageUniqueScore", "numberOfAttempts", "numberOfUniqueAttempts",
             "totalQuestions"];
 
