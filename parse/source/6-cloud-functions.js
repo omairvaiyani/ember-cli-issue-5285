@@ -872,7 +872,11 @@ Parse.Cloud.define('finaliseNewAttempt', function (request, status) {
 
         promises.push(UserEvent.newEvent("finishedQuiz", [attempt], user));
 
-        promises.push(addActivityToStream(user, "took quiz", attempt, [attempt.test().author()], attempt.test()));
+        var notify = [];
+        if(attempt.test().author().id !== user.id)
+            notify.push(attempt.test().author());
+
+        promises.push(addActivityToStream(user, "took quiz", attempt, notify, attempt.test()));
 
         return Parse.Promise.when(promises);
     }).then(function (uniqueResponses, userEvent) {
