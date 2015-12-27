@@ -45,6 +45,10 @@ export default Ember.Controller.extend(CurrentUser, SortBy, DeleteWithUndo, {
      * to include in the myTests list
      * by way of a radio button group.
      */
+    myTestsListIsFavourites: function () {
+        return this.get('myTestsListType').value === "savedTests";
+    }.property('myTestsListType'),
+
     myTestsListTypes: [
         {value: 'myTests', label: "All Tests"},
         {value: 'createdTests', label: "Tests I Made"},
@@ -116,10 +120,26 @@ export default Ember.Controller.extend(CurrentUser, SortBy, DeleteWithUndo, {
         // The finalList var allows us to filter
         // this list only if needed, separating concerns.
         if (this.get('myTestsListFilter.length')) {
-            var regex = new RegExp(this.get('myTestsListFilter').trim().toLowerCase(), 'gi');
+            var regex = new RegExp(this.get('myTestsListFilter').trim().toLowerCase(), 'gi'),
+                propertiesToFilter = ['title', 'description', 'tags', 'category.name'];
+
             finalList = finalList.filter(function (test) {
-                return test.get('title').toLowerCase().match(regex)
-                    || (test.get('description.length') && test.get('description').toLowerCase().match(regex));
+                var match = false;
+                _.each(propertiesToFilter, function (prop) {
+                    if (match)
+                        return;
+                    if (prop === 'tags' && test.get(prop + '.length')) {
+                        _.each(test.get(prop), function (tag) {
+                            if(match)
+                                return;
+                            if (tag.toLowerCase().match(regex))
+                                match = true;
+                        });
+                    } else if (test.get(prop + ".length") && test.get(prop).toLowerCase().match(regex)) {
+                        match = true;
+                    }
+                });
+                return match;
             });
         }
 
@@ -149,10 +169,18 @@ export default Ember.Controller.extend(CurrentUser, SortBy, DeleteWithUndo, {
      * are added/removed in quick succession.
      */
     myTestsListThrottle: function () {
-        Ember.run.debounce(this, this.myTestsListUpdate, 50);
+        Ember.run.debounce(this, this.myTestsListUpdate, 200);
     }.observes('model.id.length', 'model.myTests.length', 'myTestsListType', 'listOrder', 'myTestsListFilter.length',
         'model.myTests.@each.title.length', 'model.myTests.@each.createdAt',
         'model.myTests.@each.memoryStrength', 'activeTags.length', 'activeCategories.length'),
+
+    myTestsListFilterPlaceholder: function () {
+        if (this.get('isCurrentUser')) {
+            return "Search your quizzes";
+        } else {
+            return "Search " + this.get('model.name') + "' Quizzes";
+        }
+    }.property('isCurrentUser', 'model'),
 
     /*
      * COURSE SELECTION
@@ -326,6 +354,19 @@ export default Ember.Controller.extend(CurrentUser, SortBy, DeleteWithUndo, {
 
 
     actions: {
+        /**
+         * Test List Filtering
+         */
+
+        /**
+         * @Action Toggle Favourites Filter
+         */
+        toggleFavouritesFilter: function () {
+            if (this.get('myTestsListIsFavourites'))
+                this.set('myTestsListType', this.get('myTestsListTypes')[0]);
+            else
+                this.set('myTestsListType', this.get('myTestsListTypes')[2]);
+        },
 
         removeImage: function () {
             this.set('model.profilePicture', undefined);

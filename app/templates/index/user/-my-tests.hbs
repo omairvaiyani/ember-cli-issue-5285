@@ -1,3 +1,22 @@
+<section class="row margin-bottom-8">
+    <article class="col-sm-5">
+        <div class="input-group form-input-group">
+            <span class="input-group-addon">
+                <i class="fa fa-search search-icon"></i>
+            </span>
+            {{input type='text' class='form-input' value=myTestsListFilter placeholder=myTestsListFilterPlaceholder}}
+        </div>
+    </article>
+    <article class="col-sm-7 col-fix-right">
+        {{#tool-tipster title="Toggle Favourites"}}
+            <button {{bind-attr class=":btn :btn-default :no-margin :favourites-filter myTestsListIsFavourites:is-active"}}
+                {{action 'toggleFavouritesFilter'}}>
+                <i {{bind-attr class=":fa :fa-fw myTestsListIsFavourites:fa-heart:fa-heart-o :icon"}}></i>
+            </button>
+        {{/tool-tipster}}
+    </article>
+</section>
+
 <section class="row">
     <article class="col-xs-3 col-sm-4">
         <h5>{{myTestsList.length}} {{pluralize-word 'quiz' myTestsList.length 'quizzes'}}</h5>
