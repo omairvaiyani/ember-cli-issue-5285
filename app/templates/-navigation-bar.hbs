@@ -21,18 +21,6 @@
             <!-- Collect the nav links, forms, and other content for toggling -->
             <div class="collapse navbar-collapse" id="bs-navbar-collapsing">
                 <ul class="nav navbar-nav">
-                    {{#if currentUser}}
-                        {{#link-to 'index.index' tagName='li' title='My Home'}}
-                            {{#link-to 'index.index' tagName='a'}}
-                                Home
-                            {{/link-to}}
-                        {{/link-to}}
-                        {{#link-to 'browse' tagName='li' title='Search for quizzes'}}
-                            {{#link-to 'browse' tagName='a'}}
-                                Browse
-                            {{/link-to}}
-                        {{/link-to}}
-                    {{/if}}
                     <!-- About dropdown menu-->
                     {{#unless currentUser}}
                         {{#link-to 'about.team' tagName='li' title='Synap Team'}}
@@ -60,6 +48,11 @@
 
                 <ul class="nav navbar-nav navbar-right">
                     {{#if currentUser}}
+                        {{#link-to 'browse' tagName='li' title='Search for quizzes'}}
+                            {{#link-to 'browse' tagName='a'}}
+                                Browse
+                            {{/link-to}}
+                        {{/link-to}}
                         {{#link-to 'create' tagName='li' title='Being Creating an MCQ Quiz'}}
                             {{#link-to 'create' tagName='a'}}
                                 Create a Quiz
