@@ -180,7 +180,7 @@ export default Ember.Component.extend({
             this.get('parentController').send('dismissLatestSRTest');
         },
 
-        openTestModal: function () {
+        openModal: function () {
             this.get('parentController').send('openModal', 'browse/modal/test-info', 'browse.modal.testInfo',
                 this.get('test'));
         },

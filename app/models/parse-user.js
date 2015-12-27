@@ -47,7 +47,7 @@ var ParseUser = ParseUserModel.extend(ParseMixin, {
             return this.get('profilePicture.secureUrl') ? this.get('profilePicture.secureUrl') :
                 this.get('profilePicture.url');
         } else if (this.get('fbid')) {
-            return "https://graph.facebook.com/" + this.get('fbid') + "/picture?height=250&type=square";
+            return "https://graph.facebook.com/" + this.get('fbid') + "/picture?height=300&type=square";
         } else {
             return "https://d3uzzgmigql815.cloudfront.net/img/synap-silhouette.png";
         }
