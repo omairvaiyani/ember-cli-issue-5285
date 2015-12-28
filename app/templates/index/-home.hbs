@@ -1,38 +1,20 @@
 <section class="row margin-bottom-16">
-    {{#if showUserHomeNavigation}}
-        <article class="col-xs-12 col-sm-2">
-            <div class="panel panel-primary card">
-                <div class="panel-heading">
-                    <h3 class="panel-title">Home</h3>
-                </div>
-                <ul class="nav sidebar-nav">
-                    {{#link-to 'index.index' tagName='li'}}
-                        {{#link-to 'index.index'}}
-                            Overview
-                        {{/link-to}}
-                    {{/link-to}}
-                    {{#link-to 'index.user' currentUser.slug tagName='li'}}
-                        {{#link-to 'index.user' currentUser.slug}}
-                            My Study Area
-                        {{/link-to}}
-                    {{/link-to}}
-                    {{#link-to 'index.progress' tagName='li'}}
-                        {{#link-to 'index.progress'}}
-                            My Progress
-                        {{/link-to}}
-                    {{/link-to}}
-                    {{#link-to 'index.activity' tagName='li'}}
-                        {{#link-to 'index.activity'}}
-                            Friends Activity
-                        {{/link-to}}
-                    {{/link-to}}
-                </ul>
-            </div>
-        </article>
-    {{/if}}
-
-
-    <article {{bind-attr class=":col-xs-12 showUserHomeNavigation:col-sm-10 showUserHomeNavigation:col-fix-right"}}>
+    <article class="col-sm-9">
         {{outlet}}
     </article>
+
+    {{!-- Right Side column --}}
+    <article class="col-sm-3 col-fix-right">
+        <div class="card">
+            {{profile-picture user=currentUser}}
+            <div class="inline-top margin-top-4">
+                {{#link-to 'user' currentUser.slug}}
+                    <p class="margin-bottom-8"><strong>{{currentUser.name}}</strong></p>
+                {{/link-to}}
+                <p>{{currentUser.level.title}}</p>
+            </div>
+            {{level-progress points=currentUser.points level=currentUser.level}}
+        </div>
+    </article>
+
 </section>
