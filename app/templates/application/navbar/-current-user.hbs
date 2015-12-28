@@ -21,28 +21,41 @@
 </li>
 
 <li class='account-info-container'>
-    <a  class='navbar-right-adjust' id="accountDropdown" data-toggle="dropdown">
+    <a class='navbar-right-adjust' id="accountDropdown" data-toggle="dropdown">
         {{profile-picture user=currentUser height=30 width=30 doNotLink=true}}
     </a>
 
     <ul class="account-dropdown dropdown-menu" role="menu" aria-labelledby="accountDropdown">
         <li role="presentation">
-            {{#link-to 'index.user' currentUser.slug role="menuitem" tabindex="-1"}}
-                My Study
+            {{#link-to 'index.user' currentUser.slug role="menuitem" tabindex="0"}}
+                Profile
             {{/link-to}}
         </li>
-        <li role="presentation">
-            {{#link-to 'settings.index' role="menuitem" tabindex="-1"}}
+        <li>
+            {{#link-to 'index.progress' role="menuitem" tabindex="1"}}
+                Achievements
+            {{/link-to}}
+        </li>
+        <li>
+            {{#link-to 'index.progress' role="menuitem" tabindex="2"}}
+                Stats
+            {{/link-to}}
+        </li>
+        <li role="separator" class="divider"></li>
+        <li>
+            {{#link-to 'settings.index' role="menuitem" tabindex="3"}}
                 Settings
             {{/link-to}}
         </li>
-        <li role="presentation">
-            <a role="menuitem" tabindex="-1" href="http://support.synap.ac" target="_blank">
+        <li>
+            <a role="menuitem" tabindex="4" href="http://support.synap.ac" target="_blank">
                 Help
             </a>
         </li>
-        <li role="presentation"><a role="menuitem" tabindex="-1"
-            {{action 'logout'}}>Logout</a>
+        <li>
+            <a role="menuitem" tabindex="5" {{action 'logout'}}>
+                Logout
+            </a>
         </li>
     </ul>
 </li>
