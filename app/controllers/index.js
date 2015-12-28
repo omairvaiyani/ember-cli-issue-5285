@@ -67,7 +67,9 @@ Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, EstimateMemoryStrength
      ***
      */
 
-    // Demo Code
+    /**
+     * @Deprecated
+     */
     getAndSetCurrentUserTiles: function () {
         // To avoid multiple concurrent calls due to observer updates
         this.set('fetchingCurrentUserTiles', true);
@@ -90,9 +92,18 @@ Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, EstimateMemoryStrength
                 if (tile.test && !this.store.all('parse-user').filterBy('id', tile.test.id).objectAt(0))
                     ParseHelper.extractRawPayload(this.store, 'test', tile.test);
                 tiles.push(Ember.Object.create(tile));
+
+                if(tile.type === "spacedRepetition") {
+                    this.set('currentUser.srLatestTest', tile.test);
+                    // Temporary until tiles are deprecated
+                    this.set('currentUser.srLatestTestTile', tile);
+                }
+
             }.bind(this));
             this.get('currentUser.tiles').clear();
             this.get('currentUser.tiles').addObjects(tiles);
+
+
         }.bind(this), function (error) {
             console.dir(error);
         }).then(function () {
@@ -112,17 +123,14 @@ Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, EstimateMemoryStrength
     },
 
     /**
-     * @Property Show Current User Mini Profile
-     * Only show if
-     * - On index.index with currentUser
+     * @Property Show Sr Latest Test Box
+     * For now just show if the user
+     * has an SR Latest Test
      * @return {boolean}
      */
-    showCurrentUserMiniProfile: function () {
-        var currentPath = this.get('applicationController.currentPath');
-        if (this.get('currentUser') || currentPath === "index.index")
-            return true;
-
-    }.property('currentUser', 'applicationController.currentPath.length'),
+    showSrLatestTestBox: function () {
+        return this.get('currentUser.srLatestTest');
+    }.property('currentUser.srLatestTest'),
 
 
     /***

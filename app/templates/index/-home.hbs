@@ -5,6 +5,13 @@
 
     {{!-- Right Side column --}}
     <article class="col-sm-3 col-fix-right">
+
+        <div class="tiles-container">
+            {{#if showSrLatestTestBox}}
+                {{user-tile tile=currentUser.srLatestTestTile class=srLatestTestTile.type parentController=this}}
+            {{/if}}
+        </div>
+
         <div class="card">
             {{profile-picture user=currentUser}}
             <div class="inline-top margin-top-4">

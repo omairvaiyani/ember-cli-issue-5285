@@ -1,17 +1,13 @@
 <section class="row">
 
     <article class="col-xs-12">
-        <div class="tiles-container">
-            {{#if currentUser.tiles}}
-                {{#each currentUser.tiles as |tile|}}
-                    {{user-tile tile=tile class=tile.type parentController=this}}
-                {{/each}}
-            {{else}}
-                <h3 class="text-center">
-                    {{loading-bar isLoading=true class="loading-bar"}}
-                </h3>
-            {{/if}}
-        </div>
+
+        <h3 class="text-center">
+            {{!--
+            {{loading-bar isLoading=true class="loading-bar"}}
+            --}}
+        </h3>
+
     </article>
 
 </section>
