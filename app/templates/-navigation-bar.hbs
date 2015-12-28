@@ -21,8 +21,23 @@
             <!-- Collect the nav links, forms, and other content for toggling -->
             <div class="collapse navbar-collapse" id="bs-navbar-collapsing">
                 <ul class="nav navbar-nav">
-                    <!-- About dropdown menu-->
-                    {{#unless currentUser}}
+                    {{#if currentUser}}
+                        {{#link-to 'index' tagName='li' title='Home'}}
+                            {{#link-to 'index' tagName='a'}}
+                                Home
+                            {{/link-to}}
+                        {{/link-to}}
+                        {{#link-to 'browse' tagName='li' title='Explore the Community'}}
+                            {{#link-to 'browse' tagName='a'}}
+                                Explore
+                            {{/link-to}}
+                        {{/link-to}}
+                        {{#link-to 'browse' tagName='li' title='View your Library'}}
+                            {{#link-to 'browse' tagName='a'}}
+                                Library
+                            {{/link-to}}
+                        {{/link-to}}
+                    {{else}}
                         {{#link-to 'about.team' tagName='li' title='Synap Team'}}
                             {{#link-to 'about.team' tagName='a'}}
                                 About
@@ -43,7 +58,7 @@
                                 Contact
                             {{/link-to}}
                         {{/link-to}}
-                    {{/unless}}
+                    {{/if}}
                 </ul>
 
                 <ul class="nav navbar-nav navbar-right">
