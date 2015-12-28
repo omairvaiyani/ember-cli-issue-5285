@@ -844,6 +844,18 @@ input[type="range"]::-webkit-slider-thumb {
   background: #fff !important;
 }
 
+/* Default used in About. Heavily Adjusted in sections.styl */
+.tabbable-panel
+  .nav-tabs
+    background white
+    li
+      a
+        color darkgray !important
+      &.active
+        a
+          color colorPrimary !important
+          border-bottom 2px solid colorPrimary !important
+
 .taggable-input {
   height: auto !important;
 }
@@ -871,6 +883,7 @@ input[type="range"]::-webkit-slider-thumb {
     li
       float: none
 
+/* TODO Check for deprecation */
 .tag
   background: colorPrimary-400;
   white-space: nowrap;
@@ -946,11 +959,12 @@ input[type="range"]::-webkit-slider-thumb {
       background darken(colorSecondary, 10)
       &::before
         background darken(colorSecondary, 10)
+
 .tooltipstered
   cursor default
   display inline-block
   vertical-align middle
-  
+
 .tooltipster-default
   border-color colorPrimary-800
   background colorPrimary
