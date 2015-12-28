@@ -28,32 +28,38 @@
     <ul class="account-dropdown dropdown-menu" role="menu" aria-labelledby="accountDropdown">
         <li role="presentation">
             {{#link-to 'index.user' currentUser.slug role="menuitem" tabindex="0"}}
+                <i class="fa fa-fw fa-user margin-right-8"></i>
                 Profile
             {{/link-to}}
         </li>
         <li>
             {{#link-to 'index.progress' role="menuitem" tabindex="1"}}
+                <i class="fa fa-fw fa-trophy margin-right-8"></i>
                 Achievements
             {{/link-to}}
         </li>
         <li>
             {{#link-to 'index.progress' role="menuitem" tabindex="2"}}
+                <i class="fa fa-fw fa-pie-chart margin-right-8"></i>
                 Stats
             {{/link-to}}
         </li>
         <li role="separator" class="divider"></li>
         <li>
             {{#link-to 'settings.index' role="menuitem" tabindex="3"}}
+                <i class="fa fa-fw fa-cog margin-right-8"></i>
                 Settings
             {{/link-to}}
         </li>
         <li>
             <a role="menuitem" tabindex="4" href="http://support.synap.ac" target="_blank">
+                <i class="fa fa-fw fa-info-circle margin-right-8"></i>
                 Help
             </a>
         </li>
         <li>
             <a role="menuitem" tabindex="5" {{action 'logout'}}>
+                <i class="fa fa-fw fa-sign-out margin-right-8"></i>
                 Logout
             </a>
         </li>
