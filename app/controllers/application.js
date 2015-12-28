@@ -154,8 +154,11 @@ export default Ember.Controller.extend({
             var promises = [],
                 initialiseUserPromise = new Parse.Promise();
 
-            // Set Up Current User Tiles
+            // Set Up Current User Tiles (soon to be replaced fully by loadRecommendedItemsForUser
             _this.get('controllers.index').setUserTilesRefresherCycle();
+
+            // Load Recommended Items for Home
+            _this.get('controllers.index').loadRecommendedItemsForUser();
 
             if (_.contains(_this.get('parseConfig').adminIds, _this.get('currentUser.id')))
                 _this.set('currentUser.isAdmin', true);

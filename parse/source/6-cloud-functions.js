@@ -367,7 +367,7 @@ Parse.Cloud.define('refreshTilesForUser', function (request, response) {
     var user = request.user,
         tiles = [],
         srLatestTest,
-        recommendTest,
+        recommendTests,
         promises = [];
 
     if (!user)
@@ -389,7 +389,7 @@ Parse.Cloud.define('refreshTilesForUser', function (request, response) {
                 promises.push(srLatestTest = user.fetchSrLatestAttempt());
                 break;
             case "recommendedTest":
-                promises.push(recommendTest = user.getRecommendedTest());
+                promises.push(recommendTests = user.getRecommendedTests(1));
                 break;
             case "promptToActivateSR":
                 tiles.push({
@@ -418,18 +418,39 @@ Parse.Cloud.define('refreshTilesForUser', function (request, response) {
                 test: srLatestTest
             });
         }
-        if (recommendTest && (recommendTest = recommendTest._result[0])) {
+        if (recommendTests && (recommendTests = recommendTests._result[0])) {
+            var recommendedTest = _.shuffle(recommendTests)[0];
             tiles.push({
                 type: "recommendedTest",
                 label: "Recommended for you",
-                title: recommendTest.title(),
+                title: recommendedTest.title,
                 iconUrl: APP.baseCDN + 'img/features/take-quiz.png',
                 actionName: 'openTestModal',
                 actionLabel: 'Take Quiz',
-                test: recommendTest.minifyAuthorProfile()
+                test: recommendedTest
             });
         }
         response.success({tiles: tiles});
+    }, function (error) {
+        response.error(error);
+    });
+});
+
+/**
+ * @CloudFunction Load Recommended Items for User
+ *
+ * @return {Object} {recommendedItems}
+ */
+Parse.Cloud.define('loadRecommendedItemsForUser', function (request, response) {
+    var user = request.user,
+        skip = request.params.skip ? request.params.skip : 0;
+
+    if (!user)
+        return response.error(Parse.Error.SESSION_MISSING);
+
+    return user.getRecommendedTests(10, skip).then(function (recommendedTests) {
+        // Author profiles minimised in Parse.User.getRecommendedTests();
+        response.success({recommendedTests: recommendedTests});
     }, function (error) {
         response.error(error);
     });
@@ -873,7 +894,7 @@ Parse.Cloud.define('finaliseNewAttempt', function (request, status) {
         promises.push(UserEvent.newEvent("finishedQuiz", [attempt], user));
 
         var notify = [];
-        if(attempt.test().author().id !== user.id)
+        if (attempt.test().author().id !== user.id)
             notify.push(attempt.test().author());
 
         promises.push(addActivityToStream(user, "took quiz", attempt, notify, attempt.test()));

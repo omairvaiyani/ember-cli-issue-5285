@@ -160,29 +160,39 @@ Parse.Object.prototype.fetchSrLatestAttempt = function () {
  * Figures out a decent recommended test
  * for the user.
  *
- * @returns {Parse.Promise<Parse.Object>}
+ * ** Author Profiles Minimised here **
+ * Therefore, returned array of tests
+ * are ** JSON Objects **
+ *
+ * @param {number} limit
+ * @param {number} skip
+ * @returns {Parse.Promise<Array<Object>>}
  */
-Parse.User.prototype.getRecommendedTest = function () {
-    var testQueryFilterTags = new Parse.Query(Test);
-    testQueryFilterTags.containedIn('tags', this.moduleTags());
+Parse.User.prototype.getRecommendedTests = function (limit, skip) {
+    var testQueryFilterTags = new Parse.Query(Test),
+        _this = this;
 
-    // TODO check for previously used categories by user
+    testQueryFilterTags.containedIn('tags', _this.moduleTags());
+
     var testQueryFilterFollowing = new Parse.Query(Test),
-        innerQueryFollowing = this.following().query();
+        innerQueryFollowing = _this.following().query();
 
     testQueryFilterFollowing.matchesQuery('author', innerQueryFollowing);
 
     var mainQuery = Parse.Query.or(testQueryFilterTags, testQueryFilterFollowing);
     mainQuery.include('author', 'questions');
-    mainQuery.notEqualTo('author', this);
+    mainQuery.notEqualTo('author', _this);
     mainQuery.greaterThan('totalQuestions', 4);
     mainQuery.equalTo('isPublic', true);
     mainQuery.notEqualTo('isGenerated', true);
+    mainQuery.limit(limit ? limit : 10);
+    mainQuery.descending('createdAt');
+    if(skip)
+        mainQuery.skip(skip);
     // Masterkey to find author
     Parse.Cloud.useMasterKey();
     return mainQuery.find().then(function (tests) {
-        var recommendedTest = _.shuffle(tests)[0];
-        return Parse.Promise.as(recommendedTest);
+        return Parse.Promise.as(Test.minifyAuthorProfiles(tests, _this));
     }, function (error) {
         console.error("Parse.User.getRecommendedTests error: " + JSON.stringify(error));
     });
@@ -1345,11 +1355,12 @@ var Test = Parse.Object.extend("Test", {
      * as a plain Javascript object to send
      * the object without saving it.
      *
+     * @params {Parse.User} currentUser
      * @returns {Object}
      */
-    minifyAuthorProfile: function () {
+    minifyAuthorProfile: function (currentUser) {
         if (this.get('author')) {
-            var minimalProfile = this.get('author').minimalProfile();
+            var minimalProfile = this.get('author').minimalProfile(currentUser);
             this.set('author', minimalProfile);
 
             // This is to avoid error on modifying objects without saving.
@@ -1375,12 +1386,13 @@ var Test = Parse.Object.extend("Test", {
      * saving the modified objects.
      *
      * @param {Array<Test>} tests
+     * @param {Parse.User} currentUser
      * @returns {Array<Object>}
      */
-    minifyAuthorProfiles: function (tests) {
+    minifyAuthorProfiles: function (tests, currentUser) {
         var testsToJSONArray = [];
         _.each(tests, function (test) {
-            testsToJSONArray.push(test.minifyAuthorProfile());
+            testsToJSONArray.push(test.minifyAuthorProfile(currentUser));
         });
         return testsToJSONArray;
     }

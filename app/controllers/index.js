@@ -68,7 +68,27 @@ Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, EstimateMemoryStrength
      */
 
     /**
-     * @Deprecated
+     * @Function Load Recommended Items for User
+     *
+     * @params {number} skip
+     */
+    loadRecommendedItemsForUser: function (skip) {
+        var _this = this;
+
+        _this.set('fetchingHomeItems', true);
+
+        ParseHelper.cloudFunction(_this, 'loadRecommendedItemsForUser', {skip: skip}).then(function (result) {
+            var recommendedTests;
+            if (result.recommendedTests) {
+                recommendedTests = ParseHelper.extractRawPayload(_this.store, 'test', result.recommendedTests);
+                _this.set('recommendedTestsForUser', recommendedTests);
+                _this.set('fetchingHomeItems', false);
+            }
+        });
+    },
+
+    /**
+     * Soon to be deprecated, only using it to get SR Latest Test for Now
      */
     getAndSetCurrentUserTiles: function () {
         // To avoid multiple concurrent calls due to observer updates
@@ -93,7 +113,7 @@ Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, EstimateMemoryStrength
                     ParseHelper.extractRawPayload(this.store, 'test', tile.test);
                 tiles.push(Ember.Object.create(tile));
 
-                if(tile.type === "spacedRepetition") {
+                if (tile.type === "spacedRepetition") {
                     this.set('currentUser.srLatestTest', tile.test);
                     // Temporary until tiles are deprecated
                     this.set('currentUser.srLatestTestTile', tile);
@@ -117,7 +137,7 @@ Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, EstimateMemoryStrength
         _this.getAndSetCurrentUserTiles();
 
         // Refresh tiles every 5 minutes
-        setInterval( function() {
+        setInterval(function () {
             _this.getAndSetCurrentUserTiles();
         }, 300000);
     },

@@ -160,29 +160,39 @@ Parse.Object.prototype.fetchSrLatestAttempt = function () {
  * Figures out a decent recommended test
  * for the user.
  *
- * @returns {Parse.Promise<Parse.Object>}
+ * ** Author Profiles Minimised here **
+ * Therefore, returned array of tests
+ * are ** JSON Objects **
+ *
+ * @param {number} limit
+ * @param {number} skip
+ * @returns {Parse.Promise<Array<Object>>}
  */
-Parse.User.prototype.getRecommendedTest = function () {
-    var testQueryFilterTags = new Parse.Query(Test);
-    testQueryFilterTags.containedIn('tags', this.moduleTags());
+Parse.User.prototype.getRecommendedTests = function (limit, skip) {
+    var testQueryFilterTags = new Parse.Query(Test),
+        _this = this;
 
-    // TODO check for previously used categories by user
+    testQueryFilterTags.containedIn('tags', _this.moduleTags());
+
     var testQueryFilterFollowing = new Parse.Query(Test),
-        innerQueryFollowing = this.following().query();
+        innerQueryFollowing = _this.following().query();
 
     testQueryFilterFollowing.matchesQuery('author', innerQueryFollowing);
 
     var mainQuery = Parse.Query.or(testQueryFilterTags, testQueryFilterFollowing);
     mainQuery.include('author', 'questions');
-    mainQuery.notEqualTo('author', this);
+    mainQuery.notEqualTo('author', _this);
     mainQuery.greaterThan('totalQuestions', 4);
     mainQuery.equalTo('isPublic', true);
     mainQuery.notEqualTo('isGenerated', true);
+    mainQuery.limit(limit ? limit : 10);
+    mainQuery.descending('createdAt');
+    if(skip)
+        mainQuery.skip(skip);
     // Masterkey to find author
     Parse.Cloud.useMasterKey();
     return mainQuery.find().then(function (tests) {
-        var recommendedTest = _.shuffle(tests)[0];
-        return Parse.Promise.as(recommendedTest);
+        return Parse.Promise.as(Test.minifyAuthorProfiles(tests, _this));
     }, function (error) {
         console.error("Parse.User.getRecommendedTests error: " + JSON.stringify(error));
     });
@@ -1265,7 +1275,7 @@ var Test = Parse.Object.extend("Test", {
      * @returns {Test}
      */
     setDefaults: function () {
-        var numberProps = ["quality", "averageScore",
+        var numberProps = ["quality", "averageScore", "likes",
             "averageUniqueScore", "numberOfAttempts", "numberOfUniqueAttempts",
             "totalQuestions"];
 
@@ -1345,11 +1355,12 @@ var Test = Parse.Object.extend("Test", {
      * as a plain Javascript object to send
      * the object without saving it.
      *
+     * @params {Parse.User} currentUser
      * @returns {Object}
      */
-    minifyAuthorProfile: function () {
+    minifyAuthorProfile: function (currentUser) {
         if (this.get('author')) {
-            var minimalProfile = this.get('author').minimalProfile();
+            var minimalProfile = this.get('author').minimalProfile(currentUser);
             this.set('author', minimalProfile);
 
             // This is to avoid error on modifying objects without saving.
@@ -1375,12 +1386,13 @@ var Test = Parse.Object.extend("Test", {
      * saving the modified objects.
      *
      * @param {Array<Test>} tests
+     * @param {Parse.User} currentUser
      * @returns {Array<Object>}
      */
-    minifyAuthorProfiles: function (tests) {
+    minifyAuthorProfiles: function (tests, currentUser) {
         var testsToJSONArray = [];
         _.each(tests, function (test) {
-            testsToJSONArray.push(test.minifyAuthorProfile());
+            testsToJSONArray.push(test.minifyAuthorProfile(currentUser));
         });
         return testsToJSONArray;
     }
@@ -3982,7 +3994,7 @@ Parse.Cloud.define('refreshTilesForUser', function (request, response) {
     var user = request.user,
         tiles = [],
         srLatestTest,
-        recommendTest,
+        recommendTests,
         promises = [];
 
     if (!user)
@@ -4004,7 +4016,7 @@ Parse.Cloud.define('refreshTilesForUser', function (request, response) {
                 promises.push(srLatestTest = user.fetchSrLatestAttempt());
                 break;
             case "recommendedTest":
-                promises.push(recommendTest = user.getRecommendedTest());
+                promises.push(recommendTests = user.getRecommendedTests(1));
                 break;
             case "promptToActivateSR":
                 tiles.push({
@@ -4033,18 +4045,39 @@ Parse.Cloud.define('refreshTilesForUser', function (request, response) {
                 test: srLatestTest
             });
         }
-        if (recommendTest && (recommendTest = recommendTest._result[0])) {
+        if (recommendTests && (recommendTests = recommendTests._result[0])) {
+            var recommendedTest = _.shuffle(recommendTests)[0];
             tiles.push({
                 type: "recommendedTest",
                 label: "Recommended for you",
-                title: recommendTest.title(),
+                title: recommendedTest.title,
                 iconUrl: APP.baseCDN + 'img/features/take-quiz.png',
                 actionName: 'openTestModal',
                 actionLabel: 'Take Quiz',
-                test: recommendTest.minifyAuthorProfile()
+                test: recommendedTest
             });
         }
         response.success({tiles: tiles});
+    }, function (error) {
+        response.error(error);
+    });
+});
+
+/**
+ * @CloudFunction Load Recommended Items for User
+ *
+ * @return {Object} {recommendedItems}
+ */
+Parse.Cloud.define('loadRecommendedItemsForUser', function (request, response) {
+    var user = request.user,
+        skip = request.params.skip ? request.params.skip : 0;
+
+    if (!user)
+        return response.error(Parse.Error.SESSION_MISSING);
+
+    return user.getRecommendedTests(10, skip).then(function (recommendedTests) {
+        // Author profiles minimised in Parse.User.getRecommendedTests();
+        response.success({recommendedTests: recommendedTests});
     }, function (error) {
         response.error(error);
     });
@@ -4488,7 +4521,7 @@ Parse.Cloud.define('finaliseNewAttempt', function (request, status) {
         promises.push(UserEvent.newEvent("finishedQuiz", [attempt], user));
 
         var notify = [];
-        if(attempt.test().author().id !== user.id)
+        if (attempt.test().author().id !== user.id)
             notify.push(attempt.test().author());
 
         promises.push(addActivityToStream(user, "took quiz", attempt, notify, attempt.test()));
@@ -5583,7 +5616,7 @@ Parse.Cloud.define('performSearch', function (request, response) {
         if (multipleQueries)
             searchResults.results[0].hits = tests ? tests : [];
         else if (indexName.startsWith("Test"))
-            searchResults.hits = tests ? tests : []
+            searchResults.hits = tests ? tests : [];
 
         response.success(searchResults);
     }, function (error) {

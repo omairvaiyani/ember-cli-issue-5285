@@ -1,12 +1,18 @@
 <section class="row">
 
     <article class="col-xs-12">
+        <h4 class="margin-top-0 margin-bottom-8">Your Recommended Quizzes</h4>
+        {{#if fetchingHomeItems}}
+            <section class="row">
+                <article class="col-xs-12 text-center">
+                    {{loading-bar isLoading=true class="loading-bar"}}
+                </article>
+            </section>
+        {{/if}}
 
-        <h3 class="text-center">
-            {{!--
-            {{loading-bar isLoading=true class="loading-bar"}}
-            --}}
-        </h3>
+        {{#each recommendedTestsForUser as |test|}}
+            {{test-card test=test parentController=this}}
+        {{/each}}
 
     </article>
 
