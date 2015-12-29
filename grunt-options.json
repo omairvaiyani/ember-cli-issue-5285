@@ -1,17 +1,1 @@
-{
-    "AWS": {
-        "AccessKeyId": "AKIAJIQ6YM3TP4HQ2Y7A",
-        "SecretKey": "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",
-        "bucket": "synap-dev-assets"
-    },
-
-    "REDISTOGO": {
-        "host": "jack.redistogo.com",
-        "port": "9959",
-        "password": "9133e11ec07b2885c35237ab4aa85ecf"
-    },
-
-    "CDN": {
-        "cloudfront": "https://s3-eu-west-1.amazonaws.com/synap-dev-assets"
-    }
-}
+{}
