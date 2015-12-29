@@ -98,7 +98,7 @@ var ParseUser = ParseUserModel.extend(ParseMixin, {
      */
     createdTests: new Ember.A(),
     savedTests: new Ember.A(),
-
+    recentTests: new Ember.A(),
 
     /*
      * Interactions

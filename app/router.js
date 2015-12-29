@@ -138,8 +138,22 @@ Router.map(function () {
      * @Route Settings
      * /study
      */
-    this.route('settings', function () {
-        this.route('study');
+    this.route('settings', {path: 'settings'}, function () {
+        this.route('study', {path: '/study'});
+    });
+
+    /**
+     * @Route Library
+     * /index (overview)
+     * /created
+     * /favourites
+     * /recent
+     */
+    this.route('library', {path: 'library'}, function () {
+        this.route('index', {path: '/'});
+        this.route('created');
+        this.route('favourites');
+        this.route('recent');
     });
 });
 

@@ -1,10 +1,6 @@
 <section class="row margin-bottom-16">
-    <article class="col-sm-9">
-        {{outlet}}
-    </article>
-
-    {{!-- Right Side column --}}
-    <article class="col-sm-3 col-fix-right">
+    {{!-- Right Side column (Top and First on Mobile) --}}
+    <article class="col-sm-3 col-sm-push-9 col-fix-right">
 
         <div class="tiles-container">
             {{#if showSrLatestTestBox}}
@@ -22,6 +18,11 @@
             </div>
             {{level-progress points=currentUser.points level=currentUser.level}}
         </div>
+    </article>
+
+    {{!-- Main Recommendations Area --}}
+    <article class="col-sm-9 col-sm-pull-3">
+        {{outlet}}
     </article>
 
 </section>

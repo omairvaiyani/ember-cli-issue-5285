@@ -1,6 +1,10 @@
 import Ember from 'ember';
 
 export default Ember.Component.extend({
+    classNameBindings: [
+        'squareCard:inline-block'
+    ],
+
     defaultCard: function () {
         return !this.get('cardType') || this.get('cardType') === "default";
     }.property('cardType'),
@@ -15,6 +19,10 @@ export default Ember.Component.extend({
 
     testInfoCard: function () {
         return this.get('cardType') === "testInfo";
+    }.property('cardType'),
+
+    squareCard: function () {
+        return this.get('cardType') === "square";
     }.property('cardType'),
 
     currentUser: function () {

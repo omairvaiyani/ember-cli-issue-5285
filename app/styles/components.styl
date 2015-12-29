@@ -192,7 +192,8 @@
       &:hover
         .icon
           &::before
-            content '\f235' /* Change fa-user to fa-user-times */
+            content '\f235'
+        /* Change fa-user to fa-user-times */
         &::after
           content ''
 
@@ -418,6 +419,44 @@ textarea.form-input
     .subtitle
       font-size 12px
       margin-bottom 0
+  &.square
+    position relative
+    display inline-block
+    width 200px
+    height 200px
+    padding 0
+    .tags
+      position absolute
+      bottom 0
+      right 4px
+      text-align right
+      max-width calc(100% - 16px)
+      margin-bottom 0 !important
+      @media (min-width screenMedium)
+        top 4px
+        bottom inherit
+      .module-tag
+        margin-right 2px
+    .image
+      height 100%
+      width 100%
+      background-size cover
+      background-position 50%
+      border-radius cardBorderRadius
+    .title
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: alpha(black, 0.38);
+      margin-bottom: 0 !important;
+      border-radius: 0 0 cardBorderRadius cardBorderRadius
+      padding marginSecondary
+      color white
+      maxOneLine(24px, 38px)
+      cursor pointer
+      &:hover
+        background: alpha(black, 0.34);
 
 .main-search
   position relative
