@@ -425,6 +425,10 @@ textarea.form-input
     width 200px
     height 200px
     padding 0
+    cursor pointer
+    &:hover
+      .title
+        background: alpha(black, 0.34);
     .tags
       position absolute
       bottom 0
@@ -455,8 +459,6 @@ textarea.form-input
       color white
       maxOneLine(24px, 38px)
       cursor pointer
-      &:hover
-        background: alpha(black, 0.34);
 
 .main-search
   position relative

@@ -230,7 +230,7 @@
 
 
 {{#if squareCard}}
-    <div {{bind-attr class=":card :list-card :square"}}>
+    <div {{bind-attr class=":card :list-card :square"}} {{action 'openModal'}}>
         <div {{bind-attr style=coverImageStyle}} class="image"></div>
         {{module-tags test=test tags=test.tags canEdit=false inverseStyle=true small=true showMax=1}}
         <h5 class="title margin-bottom-8">
