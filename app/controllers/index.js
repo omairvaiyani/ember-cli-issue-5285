@@ -52,10 +52,10 @@ Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, EstimateMemoryStrength
      * else show.
      */
     showUserSideBar: function () {
-        if (this.get('applicationController.currentPath') === "index.index" && this.get('currentUser'))
-            return true;
-        else
-            return false;
+        return  this.get('currentUser') && (
+                this.get('applicationController.currentPath') === "index.index" ||
+                this.get('applicationController.currentPath') === "index.activity"
+            );
     }.property('currentUser', 'applicationController.currentPath.length'),
 
     isCurrentUser: function () {
