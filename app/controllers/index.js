@@ -46,17 +46,17 @@ Ember.Controller.extend(CurrentUser, TagsAndCats, SortBy, EstimateMemoryStrength
     }.property('currentUser', 'applicationController.currentPath.length'),
 
     /**
-     * @Property Show User Home Navigation
-     * Hide if
-     * - Index/UserRoute AND !isCurrentUser
+     * @Property Show User Side Bar
+     * Hide unless
+     * - Index/IndexRoute && CurrentUser
      * else show.
      */
-    showUserHomeNavigation: function () {
-        if (this.get('applicationController.currentPath') === "index.user")
-            return this.get('isCurrentUser');
-        else
+    showUserSideBar: function () {
+        if (this.get('applicationController.currentPath') === "index.index" && this.get('currentUser'))
             return true;
-    }.property('isCurrentUser', 'applicationController.currentPath.length'),
+        else
+            return false;
+    }.property('currentUser', 'applicationController.currentPath.length'),
 
     isCurrentUser: function () {
         return this.get('controllers.index/user.isCurrentUser');

@@ -1,27 +1,29 @@
 <section class="row margin-bottom-16">
     {{!-- Right Side column (Top and First on Mobile) --}}
-    <article class="col-sm-3 col-sm-push-9 col-fix-right">
+    {{#if showUserSideBar}}
+        <article class="col-sm-3 col-sm-push-9 col-fix-right">
 
-        <div class="tiles-container">
-            {{#if showSrLatestTestBox}}
-                {{user-tile tile=currentUser.srLatestTestTile class=srLatestTestTile.type parentController=this}}
-            {{/if}}
-        </div>
-
-        <div class="card">
-            {{profile-picture user=currentUser}}
-            <div class="inline-top margin-top-4">
-                {{#link-to 'user' currentUser.slug}}
-                    <p class="margin-bottom-8"><strong>{{currentUser.name}}</strong></p>
-                {{/link-to}}
-                <p>{{currentUser.level.title}}</p>
+            <div class="tiles-container">
+                {{#if showSrLatestTestBox}}
+                    {{user-tile tile=currentUser.srLatestTestTile class=srLatestTestTile.type parentController=this}}
+                {{/if}}
             </div>
-            {{level-progress points=currentUser.points level=currentUser.level}}
-        </div>
-    </article>
+
+            <div class="card">
+                {{profile-picture user=currentUser}}
+                <div class="inline-top margin-top-4">
+                    {{#link-to 'user' currentUser.slug}}
+                        <p class="margin-bottom-8"><strong>{{currentUser.name}}</strong></p>
+                    {{/link-to}}
+                    <p>{{currentUser.level.title}}</p>
+                </div>
+                {{level-progress points=currentUser.points level=currentUser.level}}
+            </div>
+        </article>
+    {{/if}}
 
     {{!-- Main Recommendations Area --}}
-    <article class="col-sm-9 col-sm-pull-3">
+    <article {{bind-attr class="showUserSideBar:col-sm-9:col-xs-12 showUserSideBar:col-sm-pull-3"}}>
         {{outlet}}
     </article>
 
